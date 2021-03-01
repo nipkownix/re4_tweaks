@@ -9,7 +9,7 @@ std::string WrapperName;
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
 
-#define VERBOSE
+//#define VERBOSE
 
 float fFOVAdditional = 0.0f;
 float fFOVScale = 0.1f;
