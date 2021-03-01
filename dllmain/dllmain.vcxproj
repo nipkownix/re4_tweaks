@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C68F48DD-0B73-4C69-9CEB-D8F3E1369D97}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>dllmain</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>dllmain</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>winmm</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>winmm</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>..\includes;..\external\hooking;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <AdditionalIncludeDirectories>..\includes;..\external\hooking;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>dllmain\dllmain.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\external\hooking\Hooking.Patterns.cpp" />
+    <ClCompile Include="..\includes\stdafx.cpp" />
+    <ClCompile Include="..\Wrappers\wrapper.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\external\hooking\Hooking.Patterns.h" />
+    <ClInclude Include="..\external\inireader\IniReader.h" />
+    <ClInclude Include="..\external\inireader\ini_parser.hpp" />
+    <ClInclude Include="..\external\injector\include\injector\assembly.hpp" />
+    <ClInclude Include="..\external\injector\include\injector\calling.hpp" />
+    <ClInclude Include="..\external\injector\include\injector\hooking.hpp" />
+    <ClInclude Include="..\external\injector\include\injector\injector.hpp" />
+    <ClInclude Include="..\external\injector\include\injector\utility.hpp" />
+    <ClInclude Include="..\includes\stdafx.h" />
+    <ClInclude Include="..\Wrappers\bcrypt.h" />
+    <ClInclude Include="..\Wrappers\cryptsp.h" />
+    <ClInclude Include="..\Wrappers\d2d1.h" />
+    <ClInclude Include="..\Wrappers\d3d10.h" />
+    <ClInclude Include="..\Wrappers\d3d11.h" />
+    <ClInclude Include="..\Wrappers\d3d12.h" />
+    <ClInclude Include="..\Wrappers\d3d8.h" />
+    <ClInclude Include="..\Wrappers\d3d9.h" />
+    <ClInclude Include="..\Wrappers\dciman32.h" />
+    <ClInclude Include="..\Wrappers\ddraw.h" />
+    <ClInclude Include="..\Wrappers\dinput.h" />
+    <ClInclude Include="..\Wrappers\dinput8.h" />
+    <ClInclude Include="..\Wrappers\dplayx.h" />
+    <ClInclude Include="..\Wrappers\dsound.h" />
+    <ClInclude Include="..\Wrappers\dwmapi.h" />
+    <ClInclude Include="..\Wrappers\msacm32.h" />
+    <ClInclude Include="..\Wrappers\msvfw32.h" />
+    <ClInclude Include="..\Wrappers\shared.h" />
+    <ClInclude Include="..\Wrappers\version.h" />
+    <ClInclude Include="..\Wrappers\wininet.h" />
+    <ClInclude Include="..\Wrappers\winmm.h" />
+    <ClInclude Include="..\Wrappers\wrapper.h" />
+    <ClInclude Include="..\Wrappers\wsock32.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="dllmain.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\settings\winmm.ini" />
+    <None Include="..\Wrappers\wrapper.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Wrappers\License.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

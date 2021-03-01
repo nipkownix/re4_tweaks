@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\includes\stdafx.cpp">
+      <Filter>includes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\hooking\Hooking.Patterns.cpp">
+      <Filter>external\hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Wrappers\wrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\includes\stdafx.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\hooking\Hooking.Patterns.h">
+      <Filter>external\hooking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\inireader\ini_parser.hpp">
+      <Filter>external\inireader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\inireader\IniReader.h">
+      <Filter>external\inireader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\injector\include\injector\assembly.hpp">
+      <Filter>external\injector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\injector\include\injector\calling.hpp">
+      <Filter>external\injector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\injector\include\injector\hooking.hpp">
+      <Filter>external\injector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\injector\include\injector\injector.hpp">
+      <Filter>external\injector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\injector\include\injector\utility.hpp">
+      <Filter>external\injector</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\bcrypt.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\cryptsp.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d2d1.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d3d8.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d3d9.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d3d10.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d3d11.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d3d12.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dciman32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\ddraw.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dinput.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dinput8.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dplayx.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dsound.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dwmapi.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\msacm32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\msvfw32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\shared.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\version.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\wininet.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\winmm.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\wrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\wsock32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="includes">
+      <UniqueIdentifier>{0b4197c1-e92b-4635-82ba-a9286f6fbc24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{519c6c33-721f-48c7-ae8d-02adbc3058ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\hooking">
+      <UniqueIdentifier>{88d1e229-57d4-46a5-8f87-f1ec6de9bcbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\inireader">
+      <UniqueIdentifier>{4e462c16-30a0-469e-837e-e087a37306f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\injector">
+      <UniqueIdentifier>{aae8b126-aaff-4521-8354-1de4e1c22a11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{ca2daba6-e9de-43f2-a1bb-51be9b1d0d15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dllmain">
+      <UniqueIdentifier>{1bcdb7af-782c-4c74-9568-0406602f0689}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{462d656f-4021-4695-b31c-152e450c072c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="settings">
+      <UniqueIdentifier>{a5f93009-19d5-47c0-8537-020855d842b5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="dllmain.rc">
+      <Filter>resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Wrappers\wrapper.def">
+      <Filter>Wrappers</Filter>
+    </None>
+    <None Include="..\settings\winmm.ini">
+      <Filter>settings</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Wrappers\License.txt">
+      <Filter>Wrappers</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
