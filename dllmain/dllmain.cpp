@@ -38,12 +38,12 @@ void __declspec(naked) ScaleFOV()
 {
 	_asm
 	{
-		fld    dword ptr[ebx + 0x0000011C]
+		fld    dword ptr[ebx + 0x11C]
 		fld    dword ptr ds : [fFOVAdditional]
 		fld    dword ptr ds : [fFOVScale]
 		fmul
 		fadd
-		jmp    jmpAddrFOV
+		ret
 	}
 }
 
@@ -118,8 +118,7 @@ DWORD WINAPI Init(LPVOID)
 	{
 		auto pattern = hook::pattern("DC ? D9 ? DE ? D9 ? D9 ? ? ? ? ? D9 ? ? ? ? ? DE");
 		injector::MakeNOP(pattern.get_first(14), 6, true);
-		injector::MakeJMP(pattern.get_first(14), ScaleFOV, true);
-		jmpAddrFOV = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(20);
+		injector::MakeCALL(pattern.get_first(14), ScaleFOV, true);
 	}
 	
 	//Fix camera after zooming with the sniper
