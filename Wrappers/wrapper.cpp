@@ -80,21 +80,21 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0
 			HMODULE dll = nullptr; \
 			if (ProxyDll && _strcmpi(ProxyDll, DllName) != 0) \
 			{ \
-				std::cout << "Loading '" << ProxyDll << "' as real dll..."; \
+				std::cout << "Loading '" << ProxyDll << "' as real dll..." << std::endl; \
 				dll = LoadLibraryA(ProxyDll); \
 				if (!dll) \
 				{ \
-					std::cout << "Error: Failed to load '" << ProxyDll << "'!"; \
+					std::cout << "Error: Failed to load '" << ProxyDll << "'!" << std::endl; \
 				} \
 			} \
 			if (!dll && _strcmpi(Name, DllName) != 0) \
 			{ \
-				std::cout << "Loading '" << Name << "'..."; \
+				std::cout << "Loading '" << Name << "'..." << std::endl; \
 				dll = LoadLibraryA(Name); \
 			} \
 			if (!dll) \
 			{ \
-				std::cout << "Loading '" << Name << "' from System32..."; \
+				std::cout << "Loading '" << Name << "' from System32..." << std::endl; \
 				GetSystemDirectoryA(path, MAX_PATH); \
 				strcat_s(path, MAX_PATH, "\\"); \
 				strcat_s(path, MAX_PATH, Name); \
@@ -107,7 +107,7 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0
 			} \
 			else \
 			{ \
-				std::cout << "Error: Failed to load wrapper for '" << Name << "'!"; \
+				std::cout << "Error: Failed to load wrapper for '" << Name << "'!" << std::endl; \
 			} \
 			return dll; \
 		} \
