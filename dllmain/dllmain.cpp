@@ -125,6 +125,7 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeNOP(pattern.get_first(14), 5, true);
 	}
 	
+	//Restore missing transparency in the item pickup screen
 	if (RestorePickupTransparency)
 	{
 		auto pattern = hook::pattern("C7 40 58 FF FF FF FF A1 ? ? ? ? 81 60 58 FF FF FE FF A1 ? ? ? ? 81 60 58 FF FF FF FB A1 ? ? ? ? 81 60 58 FF DF FF FF A1 ? ? ? ? 81 60 58 FF F7 FF FF 8B 45 D8");
