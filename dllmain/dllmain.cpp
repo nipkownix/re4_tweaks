@@ -5,6 +5,10 @@
 std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
+std::string flip_item_up;
+std::string flip_item_down;
+std::string flip_item_left;
+std::string flip_item_right;
 
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
@@ -83,10 +87,10 @@ void ReadSettings()
 	fFOVAdditional = iniReader.ReadFloat("CAMERA", "FOVAdditional", 0.0f);
 	FixSniperZoom = iniReader.ReadBoolean("CAMERA", "FixSniperZoom", true);
 	RestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
-	KB_flip_up = iniReader.ReadInteger("KEYBOARD", "KB_flip_up", 0x24);
-	KB_flip_down = iniReader.ReadInteger("KEYBOARD", "KB_flip_down", 0x23);
-	KB_flip_left = iniReader.ReadInteger("KEYBOARD", "KB_flip_left", 0x2D);
-	KB_flip_right = iniReader.ReadInteger("KEYBOARD", "KB_flip_right", 0x21);
+	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
+	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
+	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
+	flip_item_right = iniReader.ReadString("KEYBOARD", "flip_item_right", "PAGEUP");
 }
 
 
@@ -151,7 +155,7 @@ DWORD WINAPI Init(LPVOID)
 	//Inventory bindings
 	while (true)
 	{
-		if (GetAsyncKeyState(KB_flip_left) & 1 || GetAsyncKeyState(KB_flip_right) & 1)
+		if (GetAsyncKeyState(getMapKey(flip_item_left, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_right, "vk")) & 1)
 		{
 			if (isItemUp)
 			{
@@ -160,7 +164,7 @@ DWORD WINAPI Init(LPVOID)
 			}
 		}
 	
-		if (GetAsyncKeyState(KB_flip_up) & 1 || GetAsyncKeyState(KB_flip_down) & 1)
+		if (GetAsyncKeyState(getMapKey(flip_item_up, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_down, "vk")) & 1)
 		{
 			if (isItemUp)
 			{
