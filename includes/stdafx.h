@@ -14,4 +14,8 @@
 #include "injector\utility.hpp"
 #include "Hooking.Patterns.h"
 #include <filesystem>
+#include <string>
 #pragma warning(pop)
+
+
+int getMapKey(std::string key, std::string type);
