@@ -5,6 +5,8 @@
 std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
+std::string QTE_key_1;
+std::string QTE_key_2;
 std::string flip_item_up;
 std::string flip_item_down;
 std::string flip_item_left;
@@ -23,16 +25,13 @@ bool isItemUp;
 bool FixSniperZoom;
 bool RestorePickupTransparency;
 
-uintptr_t jmpAddrFOV;
-uintptr_t jmpAddrFlip;
-uintptr_t jmpAddrItemDown;
-uintptr_t jmpAddrItemUp;
+uintptr_t jmpAddrqte1icon;
+uintptr_t jmpAddrqte1icon2;
+uintptr_t jmpAddrqte2icon;
 
 int flipdirection;
-int KB_flip_up;
-int KB_flip_down;
-int KB_flip_left;
-int KB_flip_right;
+int intQTE_key_1;
+int intQTE_key_2;
 
 void __declspec(naked) ScaleFOV()
 {
@@ -57,7 +56,7 @@ void __declspec(naked) FlipInv()
 	_asm
 	{
 		test eax, 0xC00000
-		jmp jmpAddrFlip
+		ret
 	}
 }
 
@@ -66,8 +65,8 @@ void __declspec(naked) invItemDown()
 	isItemUp = false;
 	_asm
 	{
-		and byte ptr[eax + 0x0000008A], -0x10
-		jmp    jmpAddrItemDown
+		and byte ptr[eax + 0x8A], -0x10
+		ret
 	}
 }
 
@@ -76,8 +75,58 @@ void __declspec(naked) invItemUp()
 	isItemUp = true;
 	_asm
 	{
-		and byte ptr[eax + 0x0000008A], 0x0F
-		jmp    jmpAddrItemUp
+		and byte ptr[eax + 0x8A], 0x0F
+		ret
+	}
+}
+
+void __declspec(naked) qte1Binding()
+{
+	_asm
+	{
+		mov ebx, intQTE_key_1
+		mov eax, [eax + 0x1C]
+		ret
+	}
+}
+
+void __declspec(naked) qte1Icon()
+{
+	_asm
+	{
+		lea ecx, [ebp - 0x280]
+		push intQTE_key_1
+		jmp jmpAddrqte1icon
+	}
+}
+
+void __declspec(naked) qte1Icon2()
+{
+	_asm
+	{
+		lea edx, [ebp - 0x3B4]
+		push intQTE_key_1
+		jmp jmpAddrqte1icon2
+	}
+}
+
+void __declspec(naked) qte2Binding()
+{
+	_asm
+	{
+		mov edx, intQTE_key_2
+		mov eax, [eax + 0x1C]
+		ret
+	}
+}
+
+void __declspec(naked) qte2Icon()
+{
+	_asm
+	{
+		lea ecx, [ebp - 0x37C]
+		push intQTE_key_2
+		jmp jmpAddrqte2icon
 	}
 }
 
@@ -91,6 +140,8 @@ void ReadSettings()
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
 	flip_item_right = iniReader.ReadString("KEYBOARD", "flip_item_right", "PAGEUP");
+	QTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
+	QTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
 }
 
 
@@ -136,20 +187,48 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeNOP(pattern.get_first(94), 8, true);
 	}
 	
-	//Inventory item flip
-	auto pattern = hook::pattern("A9 ? ? ? ? 74 ? 6A 01 8B CE E8 ? ? ? ? BB 02 00 00 00");
+	//QTE bindings and icons
+	//KEY_1 binding hook
+	intQTE_key_1 = getMapKey(QTE_key_1, "dik");
+	auto pattern = hook::pattern("8B 58 ? 8B 40 ? 8D 8D ? ? ? ? 51");
+	injector::MakeNOP(pattern.get_first(0), 6, true);
+	injector::MakeCALL(pattern.get_first(0), qte1Binding, true);
+
+	//KEY_1 icon hook
+	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ?");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte1Icon, true);
+	jmpAddrqte1icon = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+
+	//KEY_1 icon(2) hook
+	pattern = hook::pattern("8D 95 ? ? ? ? 6A 2D 52 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ?");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte1Icon2, true);
+	jmpAddrqte1icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+
+	//KEY_2 binding hook
+	intQTE_key_2 = getMapKey(QTE_key_2, "dik");
+	pattern = hook::pattern("8B 50 ? 8B 40 ? 8B F3 0B F1 74 ?");
+	injector::MakeNOP(pattern.get_first(0), 6, true);
+	injector::MakeCALL(pattern.get_first(0), qte2Binding, true);
+
+	//KEY_2 icon hook
+	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 D9");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte2Icon, true);
+	jmpAddrqte2icon = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
+
+	//Inventory item flip binding
+	pattern = hook::pattern("A9 ? ? ? ? 74 ? 6A 01 8B CE E8 ? ? ? ? BB 02 00 00 00");
 	injector::MakeNOP(pattern.get_first(0), 5, true);
-	injector::MakeJMP(pattern.get_first(0), FlipInv, true);
-	jmpAddrFlip = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
+	injector::MakeCALL(pattern.get_first(0), FlipInv, true);
 	
 	pattern = hook::pattern("80 A0 8A 00 00 00 F0 5D C3 80 88 8A 00 00 00 0F 5D C3");
 	injector::MakeNOP(pattern.get_first(0), 7, true);
-	injector::MakeJMP(pattern.get_first(0), invItemDown, true);
-	jmpAddrItemDown = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(7);
+	injector::MakeCALL(pattern.get_first(0), invItemDown, true);
 	
 	injector::MakeNOP(pattern.get_first(9), 7, true);
-	injector::MakeJMP(pattern.get_first(9), invItemUp, true);
-	jmpAddrItemUp = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(16);
+	injector::MakeCALL(pattern.get_first(9), invItemUp, true);
 	
 	//Inventory bindings
 	while (true)
