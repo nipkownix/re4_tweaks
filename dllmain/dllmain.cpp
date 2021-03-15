@@ -12,7 +12,7 @@ HMODULE proxy_dll = nullptr;
 //#define VERBOSE
 
 float fFOVAdditional = 0.0f;
-float fFOVScale = 0.1f;
+float fFOVScale = 0.2f;
 
 bool shouldflip;
 bool isItemUp;
