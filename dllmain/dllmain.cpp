@@ -90,11 +90,24 @@ void ReadSettings()
 }
 
 
+void HandleAppID()
+{
+	//Create missing steam_appid file
+	const char *filename = "steam_appid.txt";
+	if (std::filesystem::exists(filename) == false) {
+		std::ofstream appid(filename);
+		appid << "254700";
+		appid.close();
+	}
+}
+
 DWORD WINAPI Init(LPVOID)
 {
 	std::cout << "Big ironic thanks to QLOC S.A." << std::endl;
 
 	ReadSettings();
+
+	HandleAppID();
 
 	//FOV
 	if (fFOVAdditional != 0.0f)
