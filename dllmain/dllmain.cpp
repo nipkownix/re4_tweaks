@@ -24,6 +24,7 @@ bool shouldflip;
 bool isItemUp;
 bool FixSniperZoom;
 bool RestorePickupTransparency;
+bool DisablePostProcessing;
 
 uintptr_t jmpAddrqte1icon;
 uintptr_t jmpAddrqte1icon2;
@@ -136,6 +137,7 @@ void ReadSettings()
 	fFOVAdditional = iniReader.ReadFloat("CAMERA", "FOVAdditional", 0.0f);
 	FixSniperZoom = iniReader.ReadBoolean("CAMERA", "FixSniperZoom", true);
 	RestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
+	DisablePostProcessing = iniReader.ReadBoolean("MISC", "DisablePostProcessing", false);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
@@ -187,6 +189,14 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeNOP(pattern.get_first(94), 8, true);
 	}
 	
+	//Disable the game's built in post processing
+	if (DisablePostProcessing) 
+	{
+		auto pattern = hook::pattern("0F 84 ? ? ? ? ? ? ? ? ? 8B 10 51 57 50 8B 82 ? ? ? ?");
+		injector::MakeNOP(pattern.get_first(0), 1, true);
+		injector::WriteMemory<uint8_t>(pattern.count(1).get(0).get<uint32_t>(1), 0xE9, true); // jmp
+	}
+
 	//QTE bindings and icons
 	//KEY_1 binding hook
 	intQTE_key_1 = getMapKey(QTE_key_1, "dik");
