@@ -25,6 +25,7 @@ bool isItemUp;
 bool FixSniperZoom;
 bool RestorePickupTransparency;
 bool DisablePostProcessing;
+bool DisableFilmGrain;
 
 uintptr_t jmpAddrqte1icon;
 uintptr_t jmpAddrqte1icon2;
@@ -33,6 +34,7 @@ uintptr_t jmpAddrqte2icon;
 int flipdirection;
 int intQTE_key_1;
 int intQTE_key_2;
+int igstate;
 
 void __declspec(naked) ScaleFOV()
 {
@@ -131,6 +133,27 @@ void __declspec(naked) qte2Icon()
 	}
 }
 
+void __declspec(naked) gstate()
+{
+	_asm 
+	{
+		mov igstate, edx
+		movzx eax, word ptr[ebp - 02]
+		or eax, 0xC00
+		ret
+	}
+}
+
+void __declspec(naked) DoGrain()
+{
+	_asm {fstp dword ptr[ebp - 04]}
+	if (igstate != 0x0F)
+	{
+		_asm {fld dword ptr[ebp - 04]}
+	}
+	_asm {ret}
+}
+
 void ReadSettings()
 {
 	CIniReader iniReader("");
@@ -138,6 +161,7 @@ void ReadSettings()
 	FixSniperZoom = iniReader.ReadBoolean("CAMERA", "FixSniperZoom", true);
 	RestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
 	DisablePostProcessing = iniReader.ReadBoolean("MISC", "DisablePostProcessing", false);
+	DisableFilmGrain = iniReader.ReadBoolean("MISC", "DisableFilmGrain", false);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
@@ -195,6 +219,18 @@ DWORD WINAPI Init(LPVOID)
 		auto pattern = hook::pattern("0F 84 ? ? ? ? ? ? ? ? ? 8B 10 51 57 50 8B 82 ? ? ? ?");
 		injector::MakeNOP(pattern.get_first(0), 1, true);
 		injector::WriteMemory<uint8_t>(pattern.count(1).get(0).get<uint32_t>(1), 0xE9, true); // jmp
+	}
+
+	//Disable film grain
+	if (DisableFilmGrain)
+	{
+		auto pattern = hook::pattern("0F B7 45 FE 0D 00 0C 00 00 89 45 F8 89 15 ? ? ? ? C7 05 ? ? ? ? ? ? ? ? DC 0D ? ? ? ? D9 6D F8 DF 7D F4 8B 4D F4");
+		injector::MakeNOP(pattern.get_first(0), 9, true);
+		injector::MakeCALL(pattern.get_first(0), gstate, true);
+
+		pattern = hook::pattern("D9 5D FC D9 45 FC D9 C0 8B C1 C1 E0 04 03 C1 0F BF 4D 08 89 4D 08 0F BF 4D 10 DB 45 08 03 C0 03 C0 DE C9 89 55 08");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), DoGrain, true);
 	}
 
 	//QTE bindings and icons
