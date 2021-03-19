@@ -1,3 +1,4 @@
+
 # re4_tweaks
 
 ### Description
@@ -9,8 +10,13 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **Fix sniper zoom** - When playing with keyboard and mouse, this fixes an annoying bug which would cause your camera to be off-center after you zoomed in with a sniper rifle.
 
- * **Restore pickup screen transparency** - Restores a missing effect that was present on the GameCube and Wii versions of RE4, but has been missing since the game was ported to Xbox 360. 
+ * **Restore pickup screen transparency** - Restores a transparency effect that was present on the GameCube and Wii versions of RE4, but has been missing since the game was ported to Xbox 360. 
 	* Comparison: [Before](https://i.imgur.com/AdP9AtK.jpg) | [After](https://i.imgur.com/BSKjq6b.jpg)
+
+* **Disable post processing** - Disables post processing effects such as motion blur and the "color filter" option. Most notably, it disables the game's forced FXAA, making the image much sharper and clearer. 
+The anti-aliasing option found in the settings menu is unaffected.
+
+ * **Disable film grain** - Disables the film grain overlay that is present in most sections of the game.
 
  * **Flip items in your inventory using the keyboard** - Creates key bindings to flip (not just rotate) items when playing with a keyboard and mouse, just like you can do if you play with a controller.
     * Default bindings: 
@@ -19,7 +25,7 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 		 * Flip left: Insert
 		 * Flip right: Page Up
 
-
+ * **Rebind keyboard QTE keys** - The vanilla game doesn't allow the user to change the main QTE keys, being "X" and "C". Changing them via an .ini file is possible, but the on screen prompts don't change to match the new keys, leading to confusion. This mod changes the default QTE keys to be "A" and "D", both customizable and with proper on screen prompt support.
 
 ### Installation
 
