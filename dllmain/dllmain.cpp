@@ -27,9 +27,12 @@ bool RestorePickupTransparency;
 bool DisablePostProcessing;
 bool DisableFilmGrain;
 
-uintptr_t jmpAddrqte1icon;
+uintptr_t jmpAddrqte1icon1;
 uintptr_t jmpAddrqte1icon2;
-uintptr_t jmpAddrqte2icon;
+uintptr_t jmpAddrqte1icon3;
+uintptr_t jmpAddrqte2icon1;
+uintptr_t jmpAddrqte2icon2;
+uintptr_t jmpAddrqte2icon3;
 
 int flipdirection;
 int intQTE_key_1;
@@ -93,26 +96,6 @@ void __declspec(naked) qte1Binding()
 	}
 }
 
-void __declspec(naked) qte1Icon()
-{
-	_asm
-	{
-		lea ecx, [ebp - 0x280]
-		push intQTE_key_1
-		jmp jmpAddrqte1icon
-	}
-}
-
-void __declspec(naked) qte1Icon2()
-{
-	_asm
-	{
-		lea edx, [ebp - 0x3B4]
-		push intQTE_key_1
-		jmp jmpAddrqte1icon2
-	}
-}
-
 void __declspec(naked) qte2Binding()
 {
 	_asm
@@ -123,13 +106,63 @@ void __declspec(naked) qte2Binding()
 	}
 }
 
-void __declspec(naked) qte2Icon()
+void __declspec(naked) qte1Icon1()
+{
+	_asm
+	{
+		lea edx, [ebp - 0x3B4]
+		push intQTE_key_1
+		jmp jmpAddrqte1icon1
+	}
+}
+
+void __declspec(naked) qte1Icon2()
+{
+	_asm
+	{
+		lea ecx, [ebp - 0x4CC]
+		push intQTE_key_1
+		jmp jmpAddrqte1icon2
+	}
+}
+
+void __declspec(naked) qte1Icon3()
+{
+	_asm
+	{
+		lea ecx, [ebp - 0x280]
+		push intQTE_key_1
+		jmp jmpAddrqte1icon3
+	}
+}
+
+void __declspec(naked) qte2Icon1()
 {
 	_asm
 	{
 		lea ecx, [ebp - 0x37C]
 		push intQTE_key_2
-		jmp jmpAddrqte2icon
+		jmp jmpAddrqte2icon1
+	}
+}
+
+void __declspec(naked) qte2Icon2()
+{
+	_asm
+	{
+		lea ecx, [ebp - 0x76C]
+		push intQTE_key_2
+		jmp jmpAddrqte2icon2
+	}
+}
+
+void __declspec(naked) qte2Icon3()
+{
+	_asm
+	{
+		lea ecx, [ebp - 0x2F0]
+		push intQTE_key_2
+		jmp jmpAddrqte2icon3
 	}
 }
 
@@ -240,29 +273,47 @@ DWORD WINAPI Init(LPVOID)
 	injector::MakeNOP(pattern.get_first(0), 6, true);
 	injector::MakeCALL(pattern.get_first(0), qte1Binding, true);
 
-	//KEY_1 icon hook
-	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ?");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte1Icon, true);
-	jmpAddrqte1icon = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
-
-	//KEY_1 icon(2) hook
-	pattern = hook::pattern("8D 95 ? ? ? ? 6A 2D 52 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ?");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte1Icon2, true);
-	jmpAddrqte1icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
-
 	//KEY_2 binding hook
 	intQTE_key_2 = getMapKey(QTE_key_2, "dik");
 	pattern = hook::pattern("8B 50 ? 8B 40 ? 8B F3 0B F1 74 ?");
 	injector::MakeNOP(pattern.get_first(0), 6, true);
 	injector::MakeCALL(pattern.get_first(0), qte2Binding, true);
 
-	//KEY_2 icon hook
+	//KEY_1 icon hook (1)
+	pattern = hook::pattern("8D 95 ? ? ? ? 6A 2D 52 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ?");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte1Icon1, true);
+	jmpAddrqte1icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+
+	//KEY_1 icon hook (2)
+	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? B9 07 00 00 00 8D BD ? ? ? ? 8B F0 F3 A5");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte1Icon2, true);
+	jmpAddrqte1icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+
+	//KEY_1 icon hook (3)
+	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte1Icon3, true);
+	jmpAddrqte1icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+
+	//KEY_2 icon hook (1)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 D9");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte2Icon, true);
-	jmpAddrqte2icon = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
+	injector::MakeJMP(pattern.get_first(0), qte2Icon1, true);
+	jmpAddrqte2icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+
+	//KEY_2 icon hook (2)
+	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 83 C4 0C");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte2Icon2, true);
+	jmpAddrqte2icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+
+	//KEY_2 icon hook (3)
+	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5 D9");
+	injector::MakeNOP(pattern.get_first(0), 8, true);
+	injector::MakeJMP(pattern.get_first(0), qte2Icon3, true);
+	jmpAddrqte2icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
 	//Inventory item flip binding
 	pattern = hook::pattern("A9 ? ? ? ? 74 ? 6A 01 8B CE E8 ? ? ? ? BB 02 00 00 00");
