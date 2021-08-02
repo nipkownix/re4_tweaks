@@ -1,6 +1,7 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by dinput8.rc
+// Used by dllmain.rc
+//
 
 // Next default values for new objects
 // 
