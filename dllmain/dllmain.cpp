@@ -20,9 +20,14 @@ HMODULE proxy_dll = nullptr;
 float fFOVAdditional = 0.0f;
 float fFOVScale = 0.2f;
 
+double fDefaultEngineWidthScale = 1280.0;
+double fDefaultEngineAspectRatio = 1.777777791;
+double fDefaultAspectRatio = 1.333333373;
+
 bool shouldflip;
 bool isItemUp;
 bool FixSniperZoom;
+bool FixUltraWideAspectRatio;
 bool RestorePickupTransparency;
 bool DisablePostProcessing;
 bool DisableFilmGrain;
@@ -33,11 +38,62 @@ uintptr_t jmpAddrqte1icon3;
 uintptr_t jmpAddrqte2icon1;
 uintptr_t jmpAddrqte2icon2;
 uintptr_t jmpAddrqte2icon3;
+uintptr_t jmpAddrChangedRes;
 
 int flipdirection;
 int intQTE_key_1;
 int intQTE_key_2;
 int igstate;
+
+void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
+{
+	double fGameWidth = intGameWidth;
+	double fGameHeight = intGameHeight;
+
+	double fGameDisplayAspectRatio = fGameWidth / fGameHeight;
+
+	double fNewEngineAspectRatio = (fGameDisplayAspectRatio / fDefaultEngineAspectRatio);
+	double fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
+	double fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
+
+	if (fNewAspectRatio > 1.1)
+	{
+		#ifdef VERBOSE
+		std::cout << "fNewEngineWidthScale = " << fNewEngineWidthScale << std::endl;
+		std::cout << "fNewAspectRatio = " << fNewAspectRatio << std::endl;
+		#endif
+
+		auto pattern = hook::pattern("DB 05 ? ? ? ? 85 ? 79 ? D8 05 ? ? ? ? DC 35 ? ? ? ? 8B");
+		static uint32_t* ptrEngineWidthScale = *pattern.count(1).get(0).get<uint32_t*>(18);
+		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
+
+		pattern = hook::pattern("D9 5C ? ? C7 45 ? ? ? ? ? D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C ? ? C7");
+		static uint32_t* ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(13);
+		injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
+	}
+}
+
+uint32_t intGameWidth;
+uint32_t intGameHeight;
+void __declspec(naked) ChangedRes()
+{
+	_asm
+	{
+		mov intGameWidth, eax
+		mov intGameHeight, ecx
+	}
+
+	HandleAspectRatio(intGameWidth, intGameHeight);
+
+	_asm
+	{
+		pop esi
+		pop ebx
+		mov esp, ebp
+		pop ebp
+		jmp jmpAddrChangedRes
+	}
+}
 
 void __declspec(naked) ScaleFOV()
 {
@@ -190,8 +246,9 @@ void __declspec(naked) DoGrain()
 void ReadSettings()
 {
 	CIniReader iniReader("");
-	fFOVAdditional = iniReader.ReadFloat("CAMERA", "FOVAdditional", 0.0f);
-	FixSniperZoom = iniReader.ReadBoolean("CAMERA", "FixSniperZoom", true);
+	fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
+	FixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
+	FixSniperZoom = iniReader.ReadBoolean("DISPLAY", "FixSniperZoom", true);
 	RestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
 	DisablePostProcessing = iniReader.ReadBoolean("MISC", "DisablePostProcessing", false);
 	DisableFilmGrain = iniReader.ReadBoolean("MISC", "DisableFilmGrain", false);
@@ -223,7 +280,7 @@ DWORD WINAPI Init(LPVOID)
 
 	HandleAppID();
 
-	//FOV
+	// FOV
 	if (fFOVAdditional != 0.0f)
 	{
 		auto pattern = hook::pattern("DC ? D9 ? DE ? D9 ? D9 ? ? ? ? ? D9 ? ? ? ? ? DE");
@@ -231,14 +288,23 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeCALL(pattern.get_first(14), ScaleFOV, true);
 	}
 	
-	//Fix camera after zooming with the sniper
+	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
+	if (FixUltraWideAspectRatio)
+	{
+		auto pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? 5E 5B 8B E5 5D C3");
+		injector::MakeNOP(pattern.get_first(11), 5, true);
+		injector::MakeJMP(pattern.get_first(11), ChangedRes, true);
+		jmpAddrChangedRes = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(16);
+	}
+
+	// Fix camera after zooming with the sniper
 	if (FixSniperZoom)
 	{
 		auto pattern = hook::pattern("6A 7F 6A 81 6A 7F E8 ? ? ? ? 83 C4 0C A2");
 		injector::MakeNOP(pattern.get_first(14), 5, true);
 	}
 	
-	//Restore missing transparency in the item pickup screen
+	// Restore missing transparency in the item pickup screen
 	if (RestorePickupTransparency)
 	{
 		auto pattern = hook::pattern("C7 40 58 FF FF FF FF A1 ? ? ? ? 81 60 58 FF FF FE FF A1 ? ? ? ? 81 60 58 FF FF FF FB A1 ? ? ? ? 81 60 58 FF DF FF FF A1 ? ? ? ? 81 60 58 FF F7 FF FF 8B 45 D8");
@@ -246,7 +312,7 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeNOP(pattern.get_first(94), 8, true);
 	}
 	
-	//Disable the game's built in post processing
+	// Disable the game's built in post processing
 	if (DisablePostProcessing) 
 	{
 		auto pattern = hook::pattern("0F 84 ? ? ? ? ? ? ? ? ? 8B 10 51 57 50 8B 82 ? ? ? ?");
@@ -254,7 +320,7 @@ DWORD WINAPI Init(LPVOID)
 		injector::WriteMemory<uint8_t>(pattern.count(1).get(0).get<uint32_t>(1), 0xE9, true); // jmp
 	}
 
-	//Disable film grain
+	// Disable film grain
 	if (DisableFilmGrain)
 	{
 		auto pattern = hook::pattern("0F B7 45 FE 0D 00 0C 00 00 89 45 F8 89 15 ? ? ? ? C7 05 ? ? ? ? ? ? ? ? DC 0D ? ? ? ? D9 6D F8 DF 7D F4 8B 4D F4");
@@ -266,56 +332,56 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeCALL(pattern.get_first(0), DoGrain, true);
 	}
 
-	//QTE bindings and icons
-	//KEY_1 binding hook
+	// QTE bindings and icons
+	// KEY_1 binding hook
 	intQTE_key_1 = getMapKey(QTE_key_1, "dik");
 	auto pattern = hook::pattern("8B 58 ? 8B 40 ? 8D 8D ? ? ? ? 51");
 	injector::MakeNOP(pattern.get_first(0), 6, true);
 	injector::MakeCALL(pattern.get_first(0), qte1Binding, true);
 
-	//KEY_2 binding hook
+	// KEY_2 binding hook
 	intQTE_key_2 = getMapKey(QTE_key_2, "dik");
 	pattern = hook::pattern("8B 50 ? 8B 40 ? 8B F3 0B F1 74 ?");
 	injector::MakeNOP(pattern.get_first(0), 6, true);
 	injector::MakeCALL(pattern.get_first(0), qte2Binding, true);
 
-	//KEY_1 icon hook (1)
+	// KEY_1 icon hook (1)
 	pattern = hook::pattern("8D 95 ? ? ? ? 6A 2D 52 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ?");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
 	injector::MakeJMP(pattern.get_first(0), qte1Icon1, true);
 	jmpAddrqte1icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
-	//KEY_1 icon hook (2)
+	// KEY_1 icon hook (2)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? B9 07 00 00 00 8D BD ? ? ? ? 8B F0 F3 A5");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
 	injector::MakeJMP(pattern.get_first(0), qte1Icon2, true);
 	jmpAddrqte1icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
-	//KEY_1 icon hook (3)
+	// KEY_1 icon hook (3)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
 	injector::MakeJMP(pattern.get_first(0), qte1Icon3, true);
 	jmpAddrqte1icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
-	//KEY_2 icon hook (1)
+	// KEY_2 icon hook (1)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 D9");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
 	injector::MakeJMP(pattern.get_first(0), qte2Icon1, true);
 	jmpAddrqte2icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
-	//KEY_2 icon hook (2)
+	// KEY_2 icon hook (2)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 83 C4 0C");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
 	injector::MakeJMP(pattern.get_first(0), qte2Icon2, true);
 	jmpAddrqte2icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
-	//KEY_2 icon hook (3)
+	// KEY_2 icon hook (3)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5 D9");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
 	injector::MakeJMP(pattern.get_first(0), qte2Icon3, true);
 	jmpAddrqte2icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
-	//Inventory item flip binding
+	// Inventory item flip binding
 	pattern = hook::pattern("A9 ? ? ? ? 74 ? 6A 01 8B CE E8 ? ? ? ? BB 02 00 00 00");
 	injector::MakeNOP(pattern.get_first(0), 5, true);
 	injector::MakeCALL(pattern.get_first(0), FlipInv, true);
@@ -327,7 +393,7 @@ DWORD WINAPI Init(LPVOID)
 	injector::MakeNOP(pattern.get_first(9), 7, true);
 	injector::MakeCALL(pattern.get_first(9), invItemUp, true);
 	
-	//Inventory bindings
+	// Inventory bindings
 	while (true)
 	{
 		if (GetAsyncKeyState(getMapKey(flip_item_left, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_right, "vk")) & 1)
