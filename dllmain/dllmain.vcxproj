@@ -51,7 +51,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\includes;..\external\hooking;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -64,7 +64,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\includes;..\external\hooking;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -73,13 +73,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\external\hooking\Hooking.Patterns.cpp" />
+    <ClCompile Include="..\external\ModUtils\Patterns.cpp" />
     <ClCompile Include="..\includes\stdafx.cpp" />
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\external\hooking\Hooking.Patterns.h" />
     <ClInclude Include="..\external\inireader\IniReader.h" />
     <ClInclude Include="..\external\inireader\ini_parser.hpp" />
     <ClInclude Include="..\external\injector\include\injector\assembly.hpp" />
@@ -87,6 +86,14 @@
     <ClInclude Include="..\external\injector\include\injector\hooking.hpp" />
     <ClInclude Include="..\external\injector\include\injector\injector.hpp" />
     <ClInclude Include="..\external\injector\include\injector\utility.hpp" />
+    <ClInclude Include="..\external\ModUtils\DelimStringReader.h" />
+    <ClInclude Include="..\external\ModUtils\HookInit.hpp" />
+    <ClInclude Include="..\external\ModUtils\LateStaticInit.h" />
+    <ClInclude Include="..\external\ModUtils\MemoryMgr.GTA.h" />
+    <ClInclude Include="..\external\ModUtils\MemoryMgr.h" />
+    <ClInclude Include="..\external\ModUtils\ModuleList.hpp" />
+    <ClInclude Include="..\external\ModUtils\Patterns.h" />
+    <ClInclude Include="..\external\ModUtils\Trampoline.h" />
     <ClInclude Include="..\includes\stdafx.h" />
     <ClInclude Include="..\Wrappers\bcrypt.h" />
     <ClInclude Include="..\Wrappers\cryptsp.h" />

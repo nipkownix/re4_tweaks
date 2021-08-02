@@ -7,3 +7,6 @@
 [submodule "external/injector"]
 	path = external/injector
 	url = https://github.com/thelink2012/injector.git
+[submodule "external/ModUtils"]
+	path = external/ModUtils
+	url = https://github.com/CookiePLMonster/ModUtils.git

@@ -12,7 +12,7 @@
 #include "injector\assembly.hpp"
 #endif
 #include "injector\utility.hpp"
-#include "Hooking.Patterns.h"
+#include "Patterns.h"
 #include <filesystem>
 #include <string>
 #pragma warning(pop)

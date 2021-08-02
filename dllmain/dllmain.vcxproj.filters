@@ -4,22 +4,19 @@
     <ClCompile Include="..\includes\stdafx.cpp">
       <Filter>includes</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\hooking\Hooking.Patterns.cpp">
-      <Filter>external\hooking</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="..\Wrappers\wrapper.cpp">
       <Filter>Wrappers</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\ModUtils\Patterns.cpp">
+      <Filter>external\ModUtils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
       <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\hooking\Hooking.Patterns.h">
-      <Filter>external\hooking</Filter>
     </ClInclude>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
       <Filter>external\inireader</Filter>
@@ -114,6 +111,30 @@
     <ClInclude Include="..\Wrappers\wsock32.h">
       <Filter>Wrappers</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\ModUtils\DelimStringReader.h">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\ModUtils\HookInit.hpp">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\ModUtils\LateStaticInit.h">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\ModUtils\MemoryMgr.GTA.h">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\ModUtils\MemoryMgr.h">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\ModUtils\ModuleList.hpp">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\ModUtils\Patterns.h">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\ModUtils\Trampoline.h">
+      <Filter>external\ModUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -121,9 +142,6 @@
     </Filter>
     <Filter Include="external">
       <UniqueIdentifier>{519c6c33-721f-48c7-ae8d-02adbc3058ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\hooking">
-      <UniqueIdentifier>{88d1e229-57d4-46a5-8f87-f1ec6de9bcbd}</UniqueIdentifier>
     </Filter>
     <Filter Include="external\inireader">
       <UniqueIdentifier>{4e462c16-30a0-469e-837e-e087a37306f3}</UniqueIdentifier>
@@ -142,6 +160,9 @@
     </Filter>
     <Filter Include="settings">
       <UniqueIdentifier>{a5f93009-19d5-47c0-8537-020855d842b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\ModUtils">
+      <UniqueIdentifier>{88d1e229-57d4-46a5-8f87-f1ec6de9bcbd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
