@@ -24,6 +24,7 @@ double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
 double fDefaultAspectRatio = 1.333333373;
 
+bool bShouldDoGrain;
 bool shouldflip;
 bool isItemUp;
 bool FixSniperZoom;
@@ -40,10 +41,16 @@ uintptr_t jmpAddrqte2icon2;
 uintptr_t jmpAddrqte2icon3;
 uintptr_t jmpAddrChangedRes;
 
+static uint32_t* ptrMovState;
+
+uint32_t intGameWidth;
+uint32_t intGameHeight;
+
 int flipdirection;
 int intQTE_key_1;
 int intQTE_key_2;
 int igstate;
+int intMovState;
 
 void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 {
@@ -73,8 +80,6 @@ void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 	}
 }
 
-uint32_t intGameWidth;
-uint32_t intGameHeight;
 void __declspec(naked) ChangedRes()
 {
 	_asm
@@ -236,7 +241,7 @@ void __declspec(naked) gstate()
 void __declspec(naked) DoGrain()
 {
 	_asm {fstp dword ptr[ebp - 04]}
-	if (igstate != 0x0F)
+	if (bShouldDoGrain)
 	{
 		_asm {fld dword ptr[ebp - 04]}
 	}
@@ -270,6 +275,16 @@ void HandleAppID()
 		appid << "254700";
 		appid.close();
 	}
+}
+
+void EvaluateGrain()
+{
+	intMovState = injector::ReadMemory<int>(ptrMovState, true);
+
+	if (intMovState == 1 || igstate != 0x0F)
+		bShouldDoGrain = true;
+	else
+		bShouldDoGrain = false;
 }
 
 DWORD WINAPI Init(LPVOID)
@@ -330,6 +345,9 @@ DWORD WINAPI Init(LPVOID)
 		pattern = hook::pattern("D9 5D FC D9 45 FC D9 C0 8B C1 C1 E0 04 03 C1 0F BF 4D 08 89 4D 08 0F BF 4D 10 DB 45 08 03 C0 03 C0 DE C9 89 55 08");
 		injector::MakeNOP(pattern.get_first(0), 6, true);
 		injector::MakeCALL(pattern.get_first(0), DoGrain, true);
+
+		pattern = hook::pattern("89 3D ? ? ? ? E8 ? ? ? ? 8B ? ? 51 E8 ? ? ? ? A1 ? ? ? ? 83 ? ? 2B C7 89");
+		ptrMovState = *pattern.count(1).get(0).get<uint32_t*>(2);
 	}
 
 	// QTE bindings and icons
@@ -393,9 +411,14 @@ DWORD WINAPI Init(LPVOID)
 	injector::MakeNOP(pattern.get_first(9), 7, true);
 	injector::MakeCALL(pattern.get_first(9), invItemUp, true);
 	
-	// Inventory bindings
+	// Continuous operations
 	while (true)
 	{
+		// Decide if we should grain. Terrible hacky way to achieve this, but this engine is a mess... and I'm not the most briliant person.
+		if (DisableFilmGrain)
+			EvaluateGrain();
+
+		// Inventory bindings
 		if (GetAsyncKeyState(getMapKey(flip_item_left, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_right, "vk")) & 1)
 		{
 			if (isItemUp)
@@ -413,9 +436,14 @@ DWORD WINAPI Init(LPVOID)
 				flipdirection = 0x400000;
 			}
 		}
-		Sleep(5);
+		#ifdef VERBOSE
+		if (GetAsyncKeyState(VK_NUMPAD3) & 1)
+		{
+			std::cout << "Sono me... dare no me?" << std::endl;
 	}
-	
+		#endif
+		Sleep(50);
+	}
 	return S_OK;
 }
 
