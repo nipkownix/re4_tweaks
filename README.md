@@ -8,6 +8,8 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **Increase FOV** - Increases the default FOV. Useful to prevent motion sickness in some people.
 
+ * **Fix ultrawide aspect ratio** - Fixes the incorrect aspect ratio when playing in ultrawide resolutions, preventing the image from being cut off and the HUD appearing off-screen. Only tested in 21:9.
+
  * **Fix sniper zoom** - When playing with keyboard and mouse, this fixes an annoying bug which would cause your camera to be off-center after you zoomed in with a sniper rifle.
 
  * **Restore pickup screen transparency** - Restores a transparency effect that was present on the GameCube and Wii versions of RE4, but has been missing since the game was ported to Xbox 360. 
