@@ -23,6 +23,14 @@ float fFOVScale = 0.2f;
 double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
 double fDefaultAspectRatio = 1.333333373;
+double fNewInvItemNamePos;
+double fNewFilesTitlePos;
+double fNewFilesItemsPos;
+double fNewMapIconsPos;
+double fNewMerchItemListPos;
+double fNewMerchItemDescPos;
+double fNewMerchGreetingPos;
+double fNewTItemNamesPos;
 
 bool bShouldDoGrain;
 bool shouldflip;
@@ -40,8 +48,11 @@ uintptr_t jmpAddrqte2icon1;
 uintptr_t jmpAddrqte2icon2;
 uintptr_t jmpAddrqte2icon3;
 uintptr_t jmpAddrChangedRes;
+uintptr_t jmpAddrLoadWidthOffset;
 
 static uint32_t* ptrMovState;
+static uint32_t* ptrEngineWidthScale;
+static uint32_t* ptrAspectRatio;
 
 uint32_t intGameWidth;
 uint32_t intGameHeight;
@@ -63,23 +74,44 @@ void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 	double fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
 	double fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
 
-	if (fNewAspectRatio > 1.1)
+	// if ultrawide
+	if (fGameDisplayAspectRatio > 2.2)
 	{
 		#ifdef VERBOSE
 		std::cout << "fNewEngineWidthScale = " << fNewEngineWidthScale << std::endl;
 		std::cout << "fNewAspectRatio = " << fNewAspectRatio << std::endl;
 		#endif
 
-		auto pattern = hook::pattern("DB 05 ? ? ? ? 85 ? 79 ? D8 05 ? ? ? ? DC 35 ? ? ? ? 8B");
-		static uint32_t* ptrEngineWidthScale = *pattern.count(1).get(0).get<uint32_t*>(18);
-		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
+		fNewInvItemNamePos = 380;
+		fNewFilesTitlePos = 365;
+		fNewFilesItemsPos = 370;
+		fNewMapIconsPos = 335;
+		fNewMerchItemListPos = 333;
+		fNewMerchItemDescPos = 400;
+		fNewMerchGreetingPos = 380;
+		fNewTItemNamesPos = 380;
 
-		pattern = hook::pattern("D9 5C ? ? C7 45 ? ? ? ? ? D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C ? ? C7");
-		static uint32_t* ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(13);
+		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
 		injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
+	} else {
+		#ifdef VERBOSE
+		std::cout << "Wrote default aspect ratio values" << std::endl;
+		#endif
+		fNewInvItemNamePos = 320;
+		fNewFilesTitlePos = 320;
+		fNewFilesItemsPos = 320;
+		fNewMapIconsPos = 320;
+		fNewMerchItemListPos = 320;
+		fNewMerchItemDescPos = 320;
+		fNewMerchGreetingPos = 320;
+		fNewTItemNamesPos = 320;
+
+		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
+		injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
 	}
 }
 
+// Call function to handle FOV when res is changed
 void __declspec(naked) ChangedRes()
 {
 	_asm
@@ -100,6 +132,7 @@ void __declspec(naked) ChangedRes()
 	}
 }
 
+// Calculate new FOV
 void __declspec(naked) ScaleFOV()
 {
 	_asm
@@ -113,6 +146,7 @@ void __declspec(naked) ScaleFOV()
 	}
 }
 
+// Flip inventory item
 void __declspec(naked) FlipInv()
 {
 	if (shouldflip)
@@ -248,6 +282,79 @@ void __declspec(naked) DoGrain()
 	_asm {ret}
 }
 
+// 21:9 Text positions. Couldn't find a better way to implement this.
+void __declspec(naked) LoadPos_InvItemName()
+{
+	_asm
+	{
+		fadd fNewInvItemNamePos
+		ret
+	}
+}
+
+void __declspec(naked) LoadPos_FilesTitle()
+{
+	_asm
+	{
+		fadd fNewFilesTitlePos
+		ret
+	}
+}
+
+void __declspec(naked) LoadPos_FilesItems()
+{
+	_asm
+	{
+		fadd fNewFilesItemsPos
+		ret
+	}
+}
+
+void __declspec(naked) LoadPos_MapIcons()
+{
+	_asm
+	{
+		fadd fNewMapIconsPos
+		ret
+	}
+}
+
+void __declspec(naked) LoadPos_MerchItemList()
+{
+	_asm
+	{
+		fadd fNewMerchItemListPos
+		ret
+	}
+}
+
+void __declspec(naked) LoadPos_MerchItemDesc()
+{
+	_asm
+	{
+		fadd fNewMerchItemDescPos
+		ret
+	}
+}
+
+void __declspec(naked) LoadPos_MerchGreeting()
+{
+	_asm
+	{
+		fadd fNewMerchGreetingPos
+		ret
+	}
+}
+
+void __declspec(naked) LoadPos_TItemNames()
+{
+	_asm
+	{
+		fadd fNewTItemNamesPos
+		ret
+	}
+}
+
 void ReadSettings()
 {
 	CIniReader iniReader("");
@@ -264,7 +371,6 @@ void ReadSettings()
 	QTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
 	QTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
 }
-
 
 void HandleAppID()
 {
@@ -310,6 +416,62 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeNOP(pattern.get_first(11), 5, true);
 		injector::MakeJMP(pattern.get_first(11), ChangedRes, true);
 		jmpAddrChangedRes = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(16);
+
+		pattern = hook::pattern("DB 05 ? ? ? ? 85 ? 79 ? D8 05 ? ? ? ? DC 35 ? ? ? ? 8B");
+		ptrEngineWidthScale = *pattern.count(1).get(0).get<uint32_t*>(18);
+
+		pattern = hook::pattern("D9 5C ? ? C7 45 ? ? ? ? ? D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C ? ? C7");
+		ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(13);
+
+		// Iventory item name position
+		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05 ? ? ? ? 99");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_InvItemName, true);
+
+		// "Files" title position
+		pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 0F B7 0D ? ? ? ? 0F B7 15 ? ? ? ? 51 52 6A 04 B9");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_FilesTitle, true);
+
+		// "Files" item list position
+		pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 0F B7 0D ? ? ? ? 0F B7 15 ? ? ? ? 89 45 ? 8D 43 ? 51 0F B6 ? 52 56 B9");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_FilesItems, true);
+
+		// Tresure name position
+		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 83 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_TItemNames, true);
+
+		// Map icons position
+		pattern = hook::pattern("DC 05 ? ? ? ? D9 ? ? D9 C0 DE CA D9 C9 D9 98 ? ? ? ? D9 45 ? D9 C3 DE CB DE E2 D9 C9 DC 05 ? ? ? ? D9 45 FC");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_MapIcons, true);
+
+		// Merchant's greeting position
+		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B6 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 0F B6 7D ? 8B 75 ? C7 43 28 ? ? ? ? E8");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchGreeting, true);
+
+		// Merchant's item "buy" list position
+		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B7 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? C1 E6 ? B9 ? ? ? ? 66 89 8E ? ? ? ? 8B 4D ? BA ? ? ? ? 66 89 ? ? ? ? ? 0F B7 ? 8B 89 ? ? ? ? 50 E8");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemList, true);
+
+		// Merchant's item "sell" list position
+		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B7 ? ? 50 B9 ? ? ? ? E8 ? ? ? ? C1 E6 ? B9 ? ? ? ? 66 89 ? ? ? ? ? 8D 83 ? ? ? ? 0F B6 ? 6A ?");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemList, true);
+
+		// Merchant's item "tune up" list position
+		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 0F B7 ? ? 50 52 B9 ? ? ? ? E8 ? ? ? ? C1 E6 ? B8 ? ? ? ? 66 89 86 ? ? ? ? 8B 45 A4 B9 ? ? ? ? 66 89 8E ? ? ? ? 0F B7");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemList, true);
+
+		// Merchant's item description position
+		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B7 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 5E 5D C3");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemDesc, true);
 	}
 
 	// Fix camera after zooming with the sniper
@@ -440,7 +602,7 @@ DWORD WINAPI Init(LPVOID)
 		if (GetAsyncKeyState(VK_NUMPAD3) & 1)
 		{
 			std::cout << "Sono me... dare no me?" << std::endl;
-	}
+		}
 		#endif
 		Sleep(50);
 	}
