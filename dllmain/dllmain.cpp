@@ -31,6 +31,7 @@ double fNewMerchItemListPos;
 double fNewMerchItemDescPos;
 double fNewMerchGreetingPos;
 double fNewTItemNamesPos;
+double fNewRadioNamesPos;
 
 bool bShouldDoGrain;
 bool shouldflip;
@@ -48,7 +49,6 @@ uintptr_t jmpAddrqte2icon1;
 uintptr_t jmpAddrqte2icon2;
 uintptr_t jmpAddrqte2icon3;
 uintptr_t jmpAddrChangedRes;
-uintptr_t jmpAddrLoadWidthOffset;
 
 static uint32_t* ptrMovState;
 static uint32_t* ptrEngineWidthScale;
@@ -82,14 +82,15 @@ void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 		std::cout << "fNewAspectRatio = " << fNewAspectRatio << std::endl;
 		#endif
 
-		fNewInvItemNamePos = 380;
-		fNewFilesTitlePos = 365;
-		fNewFilesItemsPos = 370;
-		fNewMapIconsPos = 335;
+		fNewInvItemNamePos = 385;
+		fNewFilesTitlePos = 370;
+		fNewFilesItemsPos = 375;
+		fNewMapIconsPos = 340;
 		fNewMerchItemListPos = 333;
 		fNewMerchItemDescPos = 400;
 		fNewMerchGreetingPos = 380;
-		fNewTItemNamesPos = 380;
+		fNewTItemNamesPos = 385;
+		fNewRadioNamesPos = 380;
 
 		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
 		injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
@@ -105,13 +106,14 @@ void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 		fNewMerchItemDescPos = 320;
 		fNewMerchGreetingPos = 320;
 		fNewTItemNamesPos = 320;
+		fNewRadioNamesPos = 320;
 
 		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
 		injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
 	}
 }
 
-// Call function to handle FOV when res is changed
+// Call function to handle aspect ratio when res is changed
 void __declspec(naked) ChangedRes()
 {
 	_asm
@@ -355,6 +357,15 @@ void __declspec(naked) LoadPos_TItemNames()
 	}
 }
 
+void __declspec(naked) LoadPos_RadioNames()
+{
+	_asm
+	{
+		fadd fNewRadioNamesPos
+		ret
+	}
+}
+
 void ReadSettings()
 {
 	CIniReader iniReader("");
@@ -438,11 +449,6 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeNOP(pattern.get_first(0), 6, true);
 		injector::MakeCALL(pattern.get_first(0), LoadPos_FilesItems, true);
 
-		// Tresure name position
-		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 83 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_TItemNames, true);
-
 		// Map icons position
 		pattern = hook::pattern("DC 05 ? ? ? ? D9 ? ? D9 C0 DE CA D9 C9 D9 98 ? ? ? ? D9 45 ? D9 C3 DE CB DE E2 D9 C9 DC 05 ? ? ? ? D9 45 FC");
 		injector::MakeNOP(pattern.get_first(0), 6, true);
@@ -472,6 +478,16 @@ DWORD WINAPI Init(LPVOID)
 		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B7 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 5E 5D C3");
 		injector::MakeNOP(pattern.get_first(0), 6, true);
 		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemDesc, true);
+
+		// Tresure name position
+		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 83 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_TItemNames, true);
+
+		// Radio names position
+		pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 8A 1D ? ? ? ?");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), LoadPos_RadioNames, true);
 	}
 
 	// Fix camera after zooming with the sniper
