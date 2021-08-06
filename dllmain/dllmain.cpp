@@ -85,9 +85,9 @@ void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 		fNewInvItemNamePos = 385;
 		fNewFilesTitlePos = 370;
 		fNewFilesItemsPos = 375;
-		fNewMapIconsPos = 340;
+		fNewMapIconsPos = 336;
 		fNewMerchItemListPos = 333;
-		fNewMerchItemDescPos = 400;
+		fNewMerchItemDescPos = 395;
 		fNewMerchGreetingPos = 380;
 		fNewTItemNamesPos = 385;
 		fNewRadioNamesPos = 380;
