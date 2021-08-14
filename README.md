@@ -12,6 +12,8 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **Fix sniper zoom** - When playing with keyboard and mouse, this fixes an annoying bug which would cause your camera to be off-center after you zoomed in with a sniper rifle.
 
+* **Fix QTE** - When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs. This fix makes QTEs that involve rapid button presses much more forgiving.
+
  * **Restore pickup screen transparency** - Restores a transparency effect that was present on the GameCube and Wii versions of RE4, but has been missing since the game was ported to Xbox 360. 
 	* Comparison: [Before](https://i.imgur.com/AdP9AtK.jpg) | [After](https://i.imgur.com/BSKjq6b.jpg)
 
