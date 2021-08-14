@@ -19,6 +19,7 @@ HMODULE proxy_dll = nullptr;
 
 float fFOVAdditional = 0.0f;
 float fFOVScale = 0.2f;
+float fQTESpeedMult = 2.0f;
 
 double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
@@ -34,22 +35,26 @@ double fNewTItemNamesPos;
 double fNewRadioNamesPos;
 
 bool bShouldDoGrain;
-bool shouldflip;
-bool isItemUp;
-bool FixSniperZoom;
-bool FixUltraWideAspectRatio;
-bool RestorePickupTransparency;
-bool DisablePostProcessing;
-bool DisableFilmGrain;
+bool bShouldFlip;
+bool bIsItemUp;
+bool bFixSniperZoom;
+bool bFixUltraWideAspectRatio;
+bool bFixQTE;
+bool bRestorePickupTransparency;
+bool bDisablePostProcessing;
+bool bDisableFilmGrain;
+bool bIgnoreFPSWarning;
 
-uintptr_t jmpAddrqte1icon1;
-uintptr_t jmpAddrqte1icon2;
-uintptr_t jmpAddrqte1icon3;
-uintptr_t jmpAddrqte2icon1;
-uintptr_t jmpAddrqte2icon2;
-uintptr_t jmpAddrqte2icon3;
+uintptr_t jmpAddrQTE1icon1;
+uintptr_t jmpAddrQTE1icon2;
+uintptr_t jmpAddrQTE1icon3;
+uintptr_t jmpAddrQTE2icon1;
+uintptr_t jmpAddrQTE2icon2;
+uintptr_t jmpAddrQTE2icon3;
 uintptr_t jmpAddrChangedRes;
 
+static uint32_t ptrGameState;
+static uint32_t* ptrGameFrameRate;
 static uint32_t* ptrMovState;
 static uint32_t* ptrEngineWidthScale;
 static uint32_t* ptrAspectRatio;
@@ -57,11 +62,11 @@ static uint32_t* ptrAspectRatio;
 uint32_t intGameWidth;
 uint32_t intGameHeight;
 
-int flipdirection;
+int intFlipDirection;
 int intQTE_key_1;
 int intQTE_key_2;
-int igstate;
 int intMovState;
+int intGameState;
 
 void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 {
@@ -113,7 +118,39 @@ void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 	}
 }
 
-// Call function to handle aspect ratio when res is changed
+// Check if variableframerate is good
+void CheckFPS()
+{
+	#ifdef VERBOSE
+	std::cout << "Current frame rate = " << injector::ReadMemory<int>(ptrGameFrameRate, true) << std::endl;
+	#endif
+
+	int intCurFPS = injector::ReadMemory<int>(ptrGameFrameRate, true);
+
+	if (intCurFPS != 30 && intCurFPS != 60) {
+
+		int intNewFPS;
+		
+		// Calculate new fps
+		if (intCurFPS > 45)
+			intNewFPS = 60;
+		else
+			intNewFPS = 30;
+
+		// Show warning
+		std::string Msg = "ERROR: Invalid frame rate detected\n\nYour game appears to be configured to run at " + std::to_string(intCurFPS) + 
+			" FPS, which isn't supported and will break multiple aspects of the game.\nThis could mean you edited the game's \"config.ini\" file" + 
+			" and changed the \"variableframerate\" value to something other than 30 or 60.\n\nTo prevent the problems mentioned, re4_tweaks automatically" +
+			" changed the FPS to " + std::to_string(intNewFPS) + ".\n\nThis warning and the automatic change can be disabled by editing re4_tweaks' \"winmm.ini\" file.";
+
+		MessageBoxA(0, Msg.c_str(), "re4_tweaks", 0);
+
+		// Overwrite bad fps value
+		injector::WriteMemory<int>(ptrGameFrameRate, intNewFPS, true);
+	}
+}
+
+// Called when the resolution is changed
 void __declspec(naked) ChangedRes()
 {
 	_asm
@@ -122,6 +159,12 @@ void __declspec(naked) ChangedRes()
 		mov intGameHeight, ecx
 	}
 
+	// Check frame rate when resolution is changed, since it is easier that way.
+	if (!bIgnoreFPSWarning) {
+		CheckFPS();
+	}
+
+	// Call function to handle aspect ratio when res is changed
 	HandleAspectRatio(intGameWidth, intGameHeight);
 
 	_asm
@@ -148,13 +191,24 @@ void __declspec(naked) ScaleFOV()
 	}
 }
 
+// Do grain
+void __declspec(naked) DoGrain()
+{
+	_asm {fstp dword ptr[ebp - 04]}
+	if (bShouldDoGrain)
+	{
+		_asm {fld dword ptr[ebp - 04]}
+	}
+	_asm {ret}
+}
+
 // Flip inventory item
 void __declspec(naked) FlipInv()
 {
-	if (shouldflip)
+	if (bShouldFlip)
 	{
-		shouldflip = false;
-		_asm {mov eax, flipdirection}
+		bShouldFlip = false;
+		_asm {mov eax, intFlipDirection}
 	}
 	_asm
 	{
@@ -165,7 +219,7 @@ void __declspec(naked) FlipInv()
 
 void __declspec(naked) invItemDown()
 {
-	isItemUp = false;
+	bIsItemUp = false;
 	_asm
 	{
 		and byte ptr[eax + 0x8A], -0x10
@@ -175,7 +229,7 @@ void __declspec(naked) invItemDown()
 
 void __declspec(naked) invItemUp()
 {
-	isItemUp = true;
+	bIsItemUp = true;
 	_asm
 	{
 		and byte ptr[eax + 0x8A], 0x0F
@@ -183,7 +237,8 @@ void __declspec(naked) invItemUp()
 	}
 }
 
-void __declspec(naked) qte1Binding()
+// QTE stuff
+void __declspec(naked) QTE1Binding()
 {
 	_asm
 	{
@@ -193,7 +248,7 @@ void __declspec(naked) qte1Binding()
 	}
 }
 
-void __declspec(naked) qte2Binding()
+void __declspec(naked) QTE2Binding()
 {
 	_asm
 	{
@@ -203,85 +258,107 @@ void __declspec(naked) qte2Binding()
 	}
 }
 
-void __declspec(naked) qte1Icon1()
+void __declspec(naked) QTE1Icon1()
 {
 	_asm
 	{
 		lea edx, [ebp - 0x3B4]
 		push intQTE_key_1
-		jmp jmpAddrqte1icon1
+		jmp jmpAddrQTE1icon1
 	}
 }
 
-void __declspec(naked) qte1Icon2()
+void __declspec(naked) QTE1Icon2()
 {
 	_asm
 	{
 		lea ecx, [ebp - 0x4CC]
 		push intQTE_key_1
-		jmp jmpAddrqte1icon2
+		jmp jmpAddrQTE1icon2
 	}
 }
 
-void __declspec(naked) qte1Icon3()
+void __declspec(naked) QTE1Icon3()
 {
 	_asm
 	{
 		lea ecx, [ebp - 0x280]
 		push intQTE_key_1
-		jmp jmpAddrqte1icon3
+		jmp jmpAddrQTE1icon3
 	}
 }
 
-void __declspec(naked) qte2Icon1()
+void __declspec(naked) QTE2Icon1()
 {
 	_asm
 	{
 		lea ecx, [ebp - 0x37C]
 		push intQTE_key_2
-		jmp jmpAddrqte2icon1
+		jmp jmpAddrQTE2icon1
 	}
 }
 
-void __declspec(naked) qte2Icon2()
+void __declspec(naked) QTE2Icon2()
 {
 	_asm
 	{
 		lea ecx, [ebp - 0x76C]
 		push intQTE_key_2
-		jmp jmpAddrqte2icon2
+		jmp jmpAddrQTE2icon2
 	}
 }
 
-void __declspec(naked) qte2Icon3()
+void __declspec(naked) QTE2Icon3()
 {
 	_asm
 	{
 		lea ecx, [ebp - 0x2F0]
 		push intQTE_key_2
-		jmp jmpAddrqte2icon3
+		jmp jmpAddrQTE2icon3
 	}
 }
 
-void __declspec(naked) gstate()
+void __declspec(naked) QTEspd_Boulders()
 {
-	_asm 
+	_asm
 	{
-		mov igstate, edx
-		movzx eax, word ptr[ebp - 02]
-		or eax, 0xC00
+		fld[edi + 0x418]
+		fld    dword ptr ds : [fQTESpeedMult]
+		fmul
 		ret
 	}
 }
 
-void __declspec(naked) DoGrain()
+void __declspec(naked) QTEspd_MinecartPullUp()
 {
-	_asm {fstp dword ptr[ebp - 04]}
-	if (bShouldDoGrain)
+	_asm
 	{
-		_asm {fld dword ptr[ebp - 04]}
+		fld	   dword ptr[esi + 0x40C]
+		fld    dword ptr ds : [fQTESpeedMult]
+		fdiv
+		ret
 	}
-	_asm {ret}
+}
+
+void __declspec(naked) QTEspd_StatueRun()
+{
+	_asm
+	{
+		mov		edi, [ebp + 0x14]
+		fld		dword ptr[edi]
+		fld    dword ptr ds : [fQTESpeedMult]
+		fmul
+		ret
+	}
+}
+
+void __declspec(naked) QTEspd_StatuePullUp()
+{
+	_asm
+	{
+		add[eax + 0x168], 0x3
+		ret
+	}
 }
 
 // 21:9 Text positions. Couldn't find a better way to implement this.
@@ -370,17 +447,19 @@ void ReadSettings()
 {
 	CIniReader iniReader("");
 	fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
-	FixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
-	FixSniperZoom = iniReader.ReadBoolean("DISPLAY", "FixSniperZoom", true);
-	RestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
-	DisablePostProcessing = iniReader.ReadBoolean("MISC", "DisablePostProcessing", false);
-	DisableFilmGrain = iniReader.ReadBoolean("MISC", "DisableFilmGrain", false);
+	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
+	bFixSniperZoom = iniReader.ReadBoolean("DISPLAY", "FixSniperZoom", true);
+	bRestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
+	bDisablePostProcessing = iniReader.ReadBoolean("MISC", "DisablePostProcessing", false);
+	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
+	bDisableFilmGrain = iniReader.ReadBoolean("MISC", "DisableFilmGrain", false);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
 	flip_item_right = iniReader.ReadString("KEYBOARD", "flip_item_right", "PAGEUP");
 	QTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
 	QTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
+	bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
 }
 
 void HandleAppID()
@@ -397,11 +476,33 @@ void HandleAppID()
 void EvaluateGrain()
 {
 	intMovState = injector::ReadMemory<int>(ptrMovState, true);
+	intGameState = injector::ReadMemory<int>(ptrGameState, true);
 
-	if (intMovState == 1 || igstate != 0x0F)
+	if (intMovState == 1 || intGameState != 3)
 		bShouldDoGrain = true;
 	else
 		bShouldDoGrain = false;
+}
+
+void GetVarPointers()
+{
+	static uint32_t* HealthBase;
+
+	// HealthBase pointer
+	auto pattern = hook::pattern("A1 ? ? ? ?  83 C0 60  6A 10  50  E8");
+	HealthBase = *pattern.count(1).get(0).get<uint32_t*>(1);
+
+	// Current game state
+	ptrGameState = injector::ReadMemory<int>(HealthBase, true) + 0x20;
+	std::cout << "Current game state = " << injector::ReadMemory<int>(ptrGameState, true) << std::endl;
+
+	// SFD player status
+	pattern = hook::pattern("89 3D ? ? ? ? E8 ? ? ? ? 8B ? ? 51 E8 ? ? ? ? A1 ? ? ? ? 83 ? ? 2B C7 89");
+	ptrMovState = *pattern.count(1).get(0).get<uint32_t*>(2);
+
+	// Current frame rate
+	pattern = hook::pattern("A1 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC A0 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 8A 45 08 A2 ? ? ? ? 5D C3");
+	ptrGameFrameRate = *pattern.count(1).get(0).get<uint32_t*>(1), true;
 }
 
 DWORD WINAPI Init(LPVOID)
@@ -412,6 +513,8 @@ DWORD WINAPI Init(LPVOID)
 
 	HandleAppID();
 
+	GetVarPointers();
+
 	// FOV
 	if (fFOVAdditional != 0.0f)
 	{
@@ -420,8 +523,34 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeCALL(pattern.get_first(14), ScaleFOV, true);
 	}
 	
+	if (bFixQTE)
+	{
+		// Running from boulders
+		auto pattern = hook::pattern("D9 87 ? ? ? ? D8 87 ? ? ? ? D9 9F ? ? ? ? D9 EE D9 9F ? ? ? ? D9 05 ? ? ? ? D8 97 ? ? ? ? DF E0 F6 C4 ? 7A 20");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), QTEspd_Boulders, true);
+
+		// Climbing up after the minecart ride
+		pattern = hook::pattern("D9 86 ? ? ? ? 8B 0D ? ? ? ? D8 61 ? D9 9E ? ? ? ? 6A ? 56 E8 ? ? ? ? D9 EE");
+
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), QTEspd_MinecartPullUp, true);
+
+		// Running from Salazar's statue
+		pattern = hook::pattern("8B 7D 14 D9 07 E8 ? ? ? ? 0F AF 5D 24 D9 EE 01 06 8D 43 FF D9 1F 39 06");
+		injector::MakeNOP(pattern.get_first(0), 5, true);
+		injector::MakeCALL(pattern.get_first(0), QTEspd_StatueRun, true);
+
+		// Climbing up after running from Salazar's statue
+		pattern = hook::pattern("FF 80 ? ? ? ? 6A 00 6A 00 6A 02 6A 02 6A 02 6A 00 6A 00 6A 05 6A 19");
+		injector::MakeNOP(pattern.count(2).get(0).get<uint32_t>(0), 6, true); 
+		injector::MakeNOP(pattern.count(2).get(1).get<uint32_t>(0), 6, true); 
+		injector::MakeCALL(pattern.count(2).get(0).get<uint32_t>(0), QTEspd_StatuePullUp, true);
+		injector::MakeCALL(pattern.count(2).get(1).get<uint32_t>(0), QTEspd_StatuePullUp, true);
+	}
+
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
-	if (FixUltraWideAspectRatio)
+	if (bFixUltraWideAspectRatio)
 	{
 		auto pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? 5E 5B 8B E5 5D C3");
 		injector::MakeNOP(pattern.get_first(11), 5, true);
@@ -431,8 +560,8 @@ DWORD WINAPI Init(LPVOID)
 		pattern = hook::pattern("DB 05 ? ? ? ? 85 ? 79 ? D8 05 ? ? ? ? DC 35 ? ? ? ? 8B");
 		ptrEngineWidthScale = *pattern.count(1).get(0).get<uint32_t*>(18);
 
-		pattern = hook::pattern("D9 5C ? ? C7 45 ? ? ? ? ? D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C ? ? C7");
-		ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(13);
+		pattern = hook::pattern("D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C 24 ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? D9 81");
+		ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(2);
 
 		// Iventory item name position
 		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05 ? ? ? ? 99");
@@ -491,14 +620,14 @@ DWORD WINAPI Init(LPVOID)
 	}
 
 	// Fix camera after zooming with the sniper
-	if (FixSniperZoom)
+	if (bFixSniperZoom)
 	{
 		auto pattern = hook::pattern("6A 7F 6A 81 6A 7F E8 ? ? ? ? 83 C4 0C A2");
 		injector::MakeNOP(pattern.get_first(14), 5, true);
 	}
 	
 	// Restore missing transparency in the item pickup screen
-	if (RestorePickupTransparency)
+	if (bRestorePickupTransparency)
 	{
 		auto pattern = hook::pattern("C7 40 58 FF FF FF FF A1 ? ? ? ? 81 60 58 FF FF FE FF A1 ? ? ? ? 81 60 58 FF FF FF FB A1 ? ? ? ? 81 60 58 FF DF FF FF A1 ? ? ? ? 81 60 58 FF F7 FF FF 8B 45 D8");
 		injector::MakeNOP(pattern.get_first(0), 7, true);
@@ -506,7 +635,7 @@ DWORD WINAPI Init(LPVOID)
 	}
 	
 	// Disable the game's built in post processing
-	if (DisablePostProcessing) 
+	if (bDisablePostProcessing) 
 	{
 		auto pattern = hook::pattern("0F 84 ? ? ? ? ? ? ? ? ? 8B 10 51 57 50 8B 82 ? ? ? ?");
 		injector::MakeNOP(pattern.get_first(0), 1, true);
@@ -514,18 +643,11 @@ DWORD WINAPI Init(LPVOID)
 	}
 
 	// Disable film grain
-	if (DisableFilmGrain)
+	if (bDisableFilmGrain)
 	{
-		auto pattern = hook::pattern("0F B7 45 FE 0D 00 0C 00 00 89 45 F8 89 15 ? ? ? ? C7 05 ? ? ? ? ? ? ? ? DC 0D ? ? ? ? D9 6D F8 DF 7D F4 8B 4D F4");
-		injector::MakeNOP(pattern.get_first(0), 9, true);
-		injector::MakeCALL(pattern.get_first(0), gstate, true);
-
-		pattern = hook::pattern("D9 5D FC D9 45 FC D9 C0 8B C1 C1 E0 04 03 C1 0F BF 4D 08 89 4D 08 0F BF 4D 10 DB 45 08 03 C0 03 C0 DE C9 89 55 08");
+		auto pattern = hook::pattern("D9 5D FC D9 45 FC D9 C0 8B C1 C1 E0 04 03 C1 0F BF 4D 08 89 4D 08 0F BF 4D 10 DB 45 08 03 C0 03 C0 DE C9 89 55 08");
 		injector::MakeNOP(pattern.get_first(0), 6, true);
 		injector::MakeCALL(pattern.get_first(0), DoGrain, true);
-
-		pattern = hook::pattern("89 3D ? ? ? ? E8 ? ? ? ? 8B ? ? 51 E8 ? ? ? ? A1 ? ? ? ? 83 ? ? 2B C7 89");
-		ptrMovState = *pattern.count(1).get(0).get<uint32_t*>(2);
 	}
 
 	// QTE bindings and icons
@@ -533,49 +655,49 @@ DWORD WINAPI Init(LPVOID)
 	intQTE_key_1 = getMapKey(QTE_key_1, "dik");
 	auto pattern = hook::pattern("8B 58 ? 8B 40 ? 8D 8D ? ? ? ? 51");
 	injector::MakeNOP(pattern.get_first(0), 6, true);
-	injector::MakeCALL(pattern.get_first(0), qte1Binding, true);
+	injector::MakeCALL(pattern.get_first(0), QTE1Binding, true);
 
 	// KEY_2 binding hook
 	intQTE_key_2 = getMapKey(QTE_key_2, "dik");
 	pattern = hook::pattern("8B 50 ? 8B 40 ? 8B F3 0B F1 74 ?");
 	injector::MakeNOP(pattern.get_first(0), 6, true);
-	injector::MakeCALL(pattern.get_first(0), qte2Binding, true);
+	injector::MakeCALL(pattern.get_first(0), QTE2Binding, true);
 
 	// KEY_1 icon hook (1)
 	pattern = hook::pattern("8D 95 ? ? ? ? 6A 2D 52 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ?");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte1Icon1, true);
-	jmpAddrqte1icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	injector::MakeJMP(pattern.get_first(0), QTE1Icon1, true);
+	jmpAddrQTE1icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
 	// KEY_1 icon hook (2)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? B9 07 00 00 00 8D BD ? ? ? ? 8B F0 F3 A5");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte1Icon2, true);
-	jmpAddrqte1icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	injector::MakeJMP(pattern.get_first(0), QTE1Icon2, true);
+	jmpAddrQTE1icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
 	// KEY_1 icon hook (3)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte1Icon3, true);
-	jmpAddrqte1icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	injector::MakeJMP(pattern.get_first(0), QTE1Icon3, true);
+	jmpAddrQTE1icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
 	// KEY_2 icon hook (1)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 D9");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte2Icon1, true);
-	jmpAddrqte2icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	injector::MakeJMP(pattern.get_first(0), QTE2Icon1, true);
+	jmpAddrQTE2icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
 	// KEY_2 icon hook (2)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 83 C4 0C");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte2Icon2, true);
-	jmpAddrqte2icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	injector::MakeJMP(pattern.get_first(0), QTE2Icon2, true);
+	jmpAddrQTE2icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
 	// KEY_2 icon hook (3)
 	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5 D9");
 	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), qte2Icon3, true);
-	jmpAddrqte2icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	injector::MakeJMP(pattern.get_first(0), QTE2Icon3, true);
+	jmpAddrQTE2icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
 
 	// Inventory item flip binding
 	pattern = hook::pattern("A9 ? ? ? ? 74 ? 6A 01 8B CE E8 ? ? ? ? BB 02 00 00 00");
@@ -593,25 +715,25 @@ DWORD WINAPI Init(LPVOID)
 	while (true)
 	{
 		// Decide if we should grain. Terrible hacky way to achieve this, but this engine is a mess... and I'm not the most briliant person.
-		if (DisableFilmGrain)
+		if (bDisableFilmGrain)
 			EvaluateGrain();
 
 		// Inventory bindings
 		if (GetAsyncKeyState(getMapKey(flip_item_left, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_right, "vk")) & 1)
 		{
-			if (isItemUp)
+			if (bIsItemUp)
 			{
-				shouldflip = true;
-				flipdirection = 0x300000;
+				bShouldFlip = true;
+				intFlipDirection = 0x300000;
 			}
 		}
 	
 		if (GetAsyncKeyState(getMapKey(flip_item_up, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_down, "vk")) & 1)
 		{
-			if (isItemUp)
+			if (bIsItemUp)
 			{
-				shouldflip = true;
-				flipdirection = 0x400000;
+				bShouldFlip = true;
+				intFlipDirection = 0x400000;
 			}
 		}
 		#ifdef VERBOSE
