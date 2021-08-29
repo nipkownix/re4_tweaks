@@ -17,6 +17,10 @@ HMODULE proxy_dll = nullptr;
 
 //#define VERBOSE
 
+DWORD _EAX;
+DWORD _ECX;
+DWORD _EDI;
+
 float fFOVAdditional = 0.0f;
 float fFOVScale = 0.2f;
 float fQTESpeedMult = 2.0f;
@@ -41,7 +45,7 @@ bool bFixSniperZoom;
 bool bFixUltraWideAspectRatio;
 bool bFixQTE;
 bool bRestorePickupTransparency;
-bool bDisablePostProcessing;
+bool bDisableFXAA;
 bool bDisableFilmGrain;
 bool bIgnoreFPSWarning;
 
@@ -52,9 +56,15 @@ uintptr_t jmpAddrQTE2icon1;
 uintptr_t jmpAddrQTE2icon2;
 uintptr_t jmpAddrQTE2icon3;
 uintptr_t jmpAddrChangedRes;
+uintptr_t jmpAddrDoPostProcessing;
 
 static uint32_t ptrGameState;
+static uint32_t ptrIsInventoryOpen;
+static uint32_t ptrAfterPostProcessing;
+static uint32_t ptrFXAAProcedure;
 static uint32_t* ptrGameFrameRate;
+static uint32_t* ptrIsMotionBlur;
+static uint32_t* ptrIsColorFilter;
 static uint32_t* ptrMovState;
 static uint32_t* ptrEngineWidthScale;
 static uint32_t* ptrAspectRatio;
@@ -67,6 +77,9 @@ int intQTE_key_1;
 int intQTE_key_2;
 int intMovState;
 int intGameState;
+int intIsInventoryOpen;
+int intIsMotionBlur;
+int intIsColorFilter;
 
 void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 {
@@ -118,14 +131,36 @@ void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 	}
 }
 
-// Check if variableframerate is good
-void CheckFPS()
+// Called when the resolution is changed
+void __declspec(naked) ChangedRes()
+{
+	_asm
+	{
+		mov intGameWidth, eax
+		mov intGameHeight, ecx
+	}
+
+	// Call function to handle aspect ratio when res is changed
+	HandleAspectRatio(intGameWidth, intGameHeight);
+
+	_asm
+	{
+		pop esi
+		pop ebx
+		mov esp, ebp
+		pop ebp
+		jmp jmpAddrChangedRes
+	}
+}
+
+// Check if variableframerate is valid
+void CheckFPS(DWORD IniFrameRate)
 {
 	#ifdef VERBOSE
-	std::cout << "Current frame rate = " << injector::ReadMemory<int>(ptrGameFrameRate, true) << std::endl;
+	std::cout << "Config.ini frame rate = " << IniFrameRate << std::endl;
 	#endif
 
-	int intCurFPS = injector::ReadMemory<int>(ptrGameFrameRate, true);
+	int intCurFPS = IniFrameRate;
 
 	if (intCurFPS != 30 && intCurFPS != 60) {
 
@@ -147,33 +182,32 @@ void CheckFPS()
 
 		// Overwrite bad fps value
 		injector::WriteMemory<int>(ptrGameFrameRate, intNewFPS, true);
+	} else {
+		// Write original fps value
+		injector::WriteMemory<int>(ptrGameFrameRate, intCurFPS, true);
 	}
 }
 
 // Called when the resolution is changed
-void __declspec(naked) ChangedRes()
+DWORD IniFrameRate;
+void __declspec(naked) ReadFPS()
 {
-	_asm
+	_asm 
 	{
-		mov intGameWidth, eax
-		mov intGameHeight, ecx
+		mov IniFrameRate, ecx
+		mov _EAX, eax
+		mov _ECX, ecx
+		mov _EDI, edi
 	}
 
-	// Check frame rate when resolution is changed, since it is easier that way.
-	if (!bIgnoreFPSWarning) {
-		CheckFPS();
-	}
+	CheckFPS(IniFrameRate);
 
-	// Call function to handle aspect ratio when res is changed
-	HandleAspectRatio(intGameWidth, intGameHeight);
-
-	_asm
+	_asm 
 	{
-		pop esi
-		pop ebx
-		mov esp, ebp
-		pop ebp
-		jmp jmpAddrChangedRes
+		mov eax, _EAX
+		mov ecx, _ECX
+		mov edi, _EDI
+		ret
 	}
 }
 
@@ -200,6 +234,79 @@ void __declspec(naked) DoGrain()
 		_asm {fld dword ptr[ebp - 04]}
 	}
 	_asm {ret}
+}
+
+// Post processing
+void __declspec(naked) DoPostProcessing()
+{
+
+	_asm
+	{
+		mov _EAX, eax
+		mov _ECX, ecx
+		mov _EDI, edi
+	}
+
+	intGameState = injector::ReadMemory<int>(ptrGameState, true);
+	intIsInventoryOpen = injector::ReadMemory<uint16_t>(ptrIsInventoryOpen, true);
+	intIsMotionBlur = injector::ReadMemory<uint8_t>(ptrIsMotionBlur, true);
+	intIsColorFilter = injector::ReadMemory<int>(ptrIsColorFilter, true);
+
+	if ((intIsMotionBlur != 0 || intIsColorFilter != 0) && intGameState == 3 && intIsInventoryOpen != 0xd7ff) {
+		_asm
+		{
+			mov eax, _EAX
+			mov ecx, _ECX
+			mov edi, _EDI
+			cmp ecx, edi
+			je offset done
+			jmp jmpAddrDoPostProcessing
+			done :
+			jmp ptrAfterPostProcessing
+		}
+	}
+	else {
+		_asm
+		{
+			mov eax, _EAX
+			mov ecx, _ECX
+			mov edi, _EDI
+			jmp ptrAfterPostProcessing
+		}
+	}
+}
+
+void __declspec(naked) GXDrawScreenQuadLogic()
+{
+
+	_asm
+	{
+		mov _EAX, eax
+		mov _ECX, ecx
+		mov _EDI, edi
+	}
+
+	intIsMotionBlur = injector::ReadMemory<uint8_t>(ptrIsMotionBlur, true);
+	intIsColorFilter = injector::ReadMemory<int>(ptrIsColorFilter, true);
+
+	if (intIsMotionBlur == 1 && intIsColorFilter == 0) {
+		_asm
+		{
+			mov eax, _EAX
+			mov ecx, _ECX
+			mov edi, _EDI
+			ret
+		}
+	}
+	else {
+		_asm
+		{
+			mov eax, _EAX
+			mov ecx, _ECX
+			mov edi, _EDI
+			jmp ptrFXAAProcedure
+		}
+	}
 }
 
 // Flip inventory item
@@ -450,7 +557,7 @@ void ReadSettings()
 	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
 	bFixSniperZoom = iniReader.ReadBoolean("DISPLAY", "FixSniperZoom", true);
 	bRestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
-	bDisablePostProcessing = iniReader.ReadBoolean("MISC", "DisablePostProcessing", false);
+	bDisableFXAA = iniReader.ReadBoolean("MISC", "DisableFXAA", false);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	bDisableFilmGrain = iniReader.ReadBoolean("MISC", "DisableFilmGrain", false);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
@@ -477,8 +584,9 @@ void EvaluateGrain()
 {
 	intMovState = injector::ReadMemory<int>(ptrMovState, true);
 	intGameState = injector::ReadMemory<int>(ptrGameState, true);
+	intIsInventoryOpen = injector::ReadMemory<uint16_t>(ptrIsInventoryOpen, true);
 
-	if (intMovState == 1 || intGameState != 3)
+	if (intMovState == 1 || intGameState != 3 || intIsInventoryOpen == 0xd7ff)
 		bShouldDoGrain = true;
 	else
 		bShouldDoGrain = false;
@@ -487,6 +595,7 @@ void EvaluateGrain()
 void GetVarPointers()
 {
 	static uint32_t* HealthBase;
+	static uint32_t* StateBase;
 
 	// HealthBase pointer
 	auto pattern = hook::pattern("A1 ? ? ? ?  83 C0 60  6A 10  50  E8");
@@ -494,18 +603,28 @@ void GetVarPointers()
 
 	// Current game state
 	ptrGameState = injector::ReadMemory<int>(HealthBase, true) + 0x20;
-	std::cout << "Current game state = " << injector::ReadMemory<int>(ptrGameState, true) << std::endl;
+
+	// StateBase pointer
+	pattern = hook::pattern("A1 ? ? ? ? F7 40 ? ? ? ? ? 75 ? E8 ? ? ? ? 85 C0 74 ? 80 3D ? ? ? ? ? 75 ? 32 DB EB ? B3 ? E8 ? ? ? ? 85 C0 74 ? 32 DB");
+	StateBase = *pattern.count(1).get(0).get<uint32_t*>(1);
+
+	// Is inventory open
+	ptrIsInventoryOpen = injector::ReadMemory<int>(StateBase, true) + 0x58;
 
 	// SFD player status
 	pattern = hook::pattern("89 3D ? ? ? ? E8 ? ? ? ? 8B ? ? 51 E8 ? ? ? ? A1 ? ? ? ? 83 ? ? 2B C7 89");
 	ptrMovState = *pattern.count(1).get(0).get<uint32_t*>(2);
 
-	// Current frame rate
-	pattern = hook::pattern("A1 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC A0 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 8A 45 08 A2 ? ? ? ? 5D C3");
-	ptrGameFrameRate = *pattern.count(1).get(0).get<uint32_t*>(1), true;
+	// Is motion blur enabled
+	pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? 84 DB 75 ? 8B 0D ? ? ? ? 8B 91 ? ? ? ? C1 EA");
+	ptrIsMotionBlur = *pattern.count(1).get(0).get<uint32_t*>(2), true;
+
+	// Is color filter enabled
+	pattern = hook::pattern("A3 ? ? ? ? 5D C3 CC CC CC A1 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 8A 45");
+	ptrIsColorFilter = *pattern.count(1).get(0).get<uint32_t*>(1), true;
 }
 
-DWORD WINAPI Init(LPVOID)
+void Init()
 {
 	std::cout << "Big ironic thanks to QLOC S.A." << std::endl;
 
@@ -523,6 +642,16 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeCALL(pattern.get_first(14), ScaleFOV, true);
 	}
 	
+	// Check if the game is running at a valid frame rate
+	if (!bIgnoreFPSWarning)
+	{
+		auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
+		ptrGameFrameRate = *pattern.count(1).get(0).get<uint32_t*>(2);
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), ReadFPS, true);
+	}
+
+	// Fix QTE mashing speed issues
 	if (bFixQTE)
 	{
 		// Running from boulders
@@ -532,7 +661,6 @@ DWORD WINAPI Init(LPVOID)
 
 		// Climbing up after the minecart ride
 		pattern = hook::pattern("D9 86 ? ? ? ? 8B 0D ? ? ? ? D8 61 ? D9 9E ? ? ? ? 6A ? 56 E8 ? ? ? ? D9 EE");
-
 		injector::MakeNOP(pattern.get_first(0), 6, true);
 		injector::MakeCALL(pattern.get_first(0), QTEspd_MinecartPullUp, true);
 
@@ -552,16 +680,16 @@ DWORD WINAPI Init(LPVOID)
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
 	if (bFixUltraWideAspectRatio)
 	{
-		auto pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? 5E 5B 8B E5 5D C3");
-		injector::MakeNOP(pattern.get_first(11), 5, true);
-		injector::MakeJMP(pattern.get_first(11), ChangedRes, true);
-		jmpAddrChangedRes = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(16);
-
-		pattern = hook::pattern("DB 05 ? ? ? ? 85 ? 79 ? D8 05 ? ? ? ? DC 35 ? ? ? ? 8B");
+		auto pattern = hook::pattern("DB 05 ? ? ? ? 85 ? 79 ? D8 05 ? ? ? ? DC 35 ? ? ? ? 8B");
 		ptrEngineWidthScale = *pattern.count(1).get(0).get<uint32_t*>(18);
 
 		pattern = hook::pattern("D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C 24 ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? D9 81");
 		ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(2);
+
+		pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? 5E 5B 8B E5 5D C3");
+		injector::MakeNOP(pattern.get_first(11), 5, true);
+		injector::MakeJMP(pattern.get_first(11), ChangedRes, true);
+		jmpAddrChangedRes = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(16);
 
 		// Iventory item name position
 		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05 ? ? ? ? 99");
@@ -634,12 +762,37 @@ DWORD WINAPI Init(LPVOID)
 		injector::MakeNOP(pattern.get_first(94), 8, true);
 	}
 	
-	// Disable the game's built in post processing
-	if (bDisablePostProcessing) 
+	// Disable the game's forced FXAA
+	if (bDisableFXAA) 
 	{
-		auto pattern = hook::pattern("0F 84 ? ? ? ? ? ? ? ? ? 8B 10 51 57 50 8B 82 ? ? ? ?");
-		injector::MakeNOP(pattern.get_first(0), 1, true);
-		injector::WriteMemory<uint8_t>(pattern.count(1).get(0).get<uint32_t>(1), 0xE9, true); // jmp
+		// Decides if post processing should be done
+		auto pattern = hook::pattern("80 3D ? ? ? ? ? 75 ? 39 3D ? ? ? ? 75 ? A1");
+		ptrAfterPostProcessing = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(0);
+
+		pattern = hook::pattern("0F 84 ? ? ? ? ? ? ? ? ? 8B 10 51 57 50 8B 82 ? ? ? ?");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeJMP(pattern.get_first(0), DoPostProcessing, true);
+		jmpAddrDoPostProcessing = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
+
+		// Tweak GXDrawScreenQuad's logic
+		pattern = hook::pattern("55 8B EC 8B 15 ? ? ? ? A1 ? ? ? ? 8B 08 56 57 6A ? 6A ? 52 6A ? 50 8B 81 ? ? ? ? FF D0 A1 ? ? ? ? 8B 0D");
+		ptrFXAAProcedure = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(0);
+
+		pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? E8 ? ? ? ? D9 E8 A1 ? ? ? ? 8B 10 57 51 D9 1C ? 68 ? ? ? ? 6A ? 57 57 50 8B 82");
+		injector::MakeNOP(pattern.get_first(0), 5, true);
+		injector::MakeCALL(pattern.get_first(0), GXDrawScreenQuadLogic, true);
+
+		// Disable motion blur's conditional jump
+		pattern = hook::pattern("74 ? 68 ? ? ? ? 6A ? E8 ? ? ? ? A1 ? ? ? ? 8B 0D ? ? ? ? 50 51 E8 ? ? ? ? 8B 0D");
+		injector::MakeNOP(pattern.get_first(0), 2, true);
+
+		// Disable second IDirect3DDevice9::Clear call
+		pattern = hook::pattern("FF D0 D9 05 ? ? ? ? D9 5D ? 83 EC ? D9 05 ? ? ? ? 8B C4 D9 18 D9 45 ? D9 58 ? D9 E8");
+		injector::MakeNOP(pattern.get_first(0), 2, true);
+
+		// Disable second FXAA procedure call
+		pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 8B 10 83 C4 ? 50 8B 42 ? FF D0 89 3D ? ? ? ? 80 3D ? ? ? ? ? 75 ? 39 3D");
+		injector::MakeNOP(pattern.get_first(0), 5, true);
 	}
 
 	// Disable film grain
@@ -710,7 +863,10 @@ DWORD WINAPI Init(LPVOID)
 	
 	injector::MakeNOP(pattern.get_first(9), 7, true);
 	injector::MakeCALL(pattern.get_first(9), invItemUp, true);
-	
+}
+
+DWORD WINAPI ContinuousThread(LPVOID)
+{
 	// Continuous operations
 	while (true)
 	{
@@ -727,7 +883,7 @@ DWORD WINAPI Init(LPVOID)
 				intFlipDirection = 0x300000;
 			}
 		}
-	
+
 		if (GetAsyncKeyState(getMapKey(flip_item_up, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_down, "vk")) & 1)
 		{
 			if (bIsItemUp)
@@ -776,7 +932,9 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 #endif
 		LoadRealDLL(hModule);
 
-		CloseHandle(CreateThread(nullptr, 0, Init, nullptr, 0, nullptr));
+		Init();
+
+		CloseHandle(CreateThread(nullptr, 0, ContinuousThread, nullptr, 0, nullptr));
 
 		break;
 	case DLL_PROCESS_DETACH:

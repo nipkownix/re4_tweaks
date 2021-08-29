@@ -17,7 +17,7 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
  * **Restore pickup screen transparency** - Restores a transparency effect that was present on the GameCube and Wii versions of RE4, but has been missing since the game was ported to Xbox 360. 
 	* Comparison: [Before](https://i.imgur.com/AdP9AtK.jpg) | [After](https://i.imgur.com/BSKjq6b.jpg)
 
-* **Disable post processing** - Disables post processing effects such as motion blur and the "color filter" option. Most notably, it disables the game's forced FXAA, making the image much sharper and clearer. 
+* **Disable FXAA** - Disables the game's forced FXAA, making the image much sharper and clearer. 
 The anti-aliasing option found in the settings menu is unaffected.
 
  * **Disable film grain** - Disables the film grain overlay that is present in most sections of the game.
