@@ -216,11 +216,9 @@ void __declspec(naked) ScaleFOV()
 {
 	_asm
 	{
-		fld    dword ptr[ebx + 0x11C]
-		fld    dword ptr ds : [fFOVAdditional]
-		fld    dword ptr ds : [fFOVScale]
-		fmul
-		fadd
+		fld dword ptr[ebp - 0x34]
+		fadd fFOVAdditional
+		mov[esi + 0x4], ecx
 		ret
 	}
 }
@@ -637,9 +635,9 @@ void Init()
 	// FOV
 	if (fFOVAdditional != 0.0f)
 	{
-		auto pattern = hook::pattern("DC ? D9 ? DE ? D9 ? D9 ? ? ? ? ? D9 ? ? ? ? ? DE");
-		injector::MakeNOP(pattern.get_first(14), 6, true);
-		injector::MakeCALL(pattern.get_first(14), ScaleFOV, true);
+		auto pattern = hook::pattern("D9 45 ? 89 4E ? D9 5E ? 8B 8D ? ? ? ? 89 46 ? 8B 85 ? ? ? ? 8D 7E");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), ScaleFOV, true);
 	}
 	
 	// Check if the game is running at a valid frame rate
