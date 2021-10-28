@@ -22,7 +22,6 @@ DWORD _ECX;
 DWORD _EDI;
 
 float fFOVAdditional = 0.0f;
-float fFOVScale = 0.2f;
 float fQTESpeedMult = 2.0f;
 
 double fDefaultEngineWidthScale = 1280.0;
@@ -226,10 +225,10 @@ void __declspec(naked) ScaleFOV()
 // Do grain
 void __declspec(naked) DoGrain()
 {
-	_asm {fstp dword ptr[ebp - 04]}
+	_asm {fstp dword ptr[ebp - 0x4]}
 	if (bShouldDoGrain)
 	{
-		_asm {fld dword ptr[ebp - 04]}
+		_asm {fld dword ptr[ebp - 0x4]}
 	}
 	_asm {ret}
 }
@@ -590,7 +589,7 @@ void EvaluateGrain()
 		bShouldDoGrain = false;
 }
 
-void GetVarPointers()
+void GetPointers()
 {
 	static uint32_t* HealthBase;
 	static uint32_t* StateBase;
@@ -630,7 +629,7 @@ void Init()
 
 	HandleAppID();
 
-	GetVarPointers();
+	GetPointers();
 
 	// FOV
 	if (fFOVAdditional != 0.0f)
