@@ -1070,7 +1070,9 @@ bool Init()
 	{
 		auto pattern = hook::pattern("C7 40 58 FF FF FF FF A1 ? ? ? ? 81 60 58 FF FF FE FF A1 ? ? ? ? 81 60 58 FF FF FF FB A1 ? ? ? ? 81 60 58 FF DF FF FF A1 ? ? ? ? 81 60 58 FF F7 FF FF 8B 45 D8");
 		injector::MakeNOP(pattern.get_first(0), 7, true);
-		injector::MakeNOP(pattern.get_first(94), 8, true);
+
+		pattern = hook::pattern("B9 ? ? ? ? 74 ? D9 43 ? 8B 43 ? D9 5D ? D9 43 ? F3 ? D9 5D ? D9 45 ? D9 5B");
+		injector::WriteMemory<int>(pattern.get_first(1), 0x00000000, true);
 	}
 	
 	// Disable the game's forced FXAA
