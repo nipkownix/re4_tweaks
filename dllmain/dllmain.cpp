@@ -1,6 +1,7 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
+#include "..\external\MinHook\MinHook.h"
 
 std::string RealDllPath;
 std::string WrapperMode;
