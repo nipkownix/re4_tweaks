@@ -41,6 +41,7 @@ double fNewTItemNamesPos;
 double fNewRadioNamesPos;
 
 bool bShouldDoGrain;
+bool bDrawingPickupScreen;
 bool bShouldFlip;
 bool bIsItemUp;
 bool bFixSniperZoom;
@@ -302,7 +303,6 @@ void __declspec(naked) DoPostProcessing()
 
 void __declspec(naked) GXDrawScreenQuadLogic()
 {
-
 	_asm
 	{
 		mov _EAX, eax
@@ -330,6 +330,42 @@ void __declspec(naked) GXDrawScreenQuadLogic()
 			mov edi, _EDI
 			jmp ptrFXAAProcedure
 		}
+	}
+}
+
+// Executed when the game is about to draw the pickup screen
+void __declspec(naked) DrawPickupScrnTransparency()
+{
+	bDrawingPickupScreen = true;
+	_asm {ret}
+}
+
+
+// Logic for the pickup screen
+void __declspec(naked) PickupScreenLight()
+{
+	_asm
+	{
+		mov _EAX, eax
+		mov _EDI, edi
+	}
+
+	if (bDrawingPickupScreen)
+	{
+		_asm{mov ecx, 0x0}
+	}
+	else
+	{
+		_asm{mov ecx, 0x41}
+	}
+
+	bDrawingPickupScreen = false;
+
+	_asm
+	{
+		mov eax, _EAX
+		mov edi, _EDI
+		ret
 	}
 }
 
@@ -957,7 +993,6 @@ bool Init()
 	if (bMemOptimi)
 	{
 		//MH_CreateHook((LPVOID)(GameAddress + 0x724D), memcpy, NULL);
-		//std::cout << std::hex << GameAddress + 0x724D << std::endl;
 		auto pattern = hook::pattern("8b 49 14 33 c0 a3 ? ? ? ? 85 c9 74 ? 8b ff f6 81 ? ? ? ? 20 8b 49 ? 74 ? b8 01 00 00 00 a3 ? ? ? ? 85 c9 75 ? c3");
 		injector::MakeJMP(pattern.get_first(0), memcpy, true);
 	}
@@ -1070,9 +1105,11 @@ bool Init()
 	{
 		auto pattern = hook::pattern("C7 40 58 FF FF FF FF A1 ? ? ? ? 81 60 58 FF FF FE FF A1 ? ? ? ? 81 60 58 FF FF FF FB A1 ? ? ? ? 81 60 58 FF DF FF FF A1 ? ? ? ? 81 60 58 FF F7 FF FF 8B 45 D8");
 		injector::MakeNOP(pattern.get_first(0), 7, true);
+		injector::MakeCALL(pattern.get_first(0), DrawPickupScrnTransparency, true);
 
 		pattern = hook::pattern("B9 ? ? ? ? 74 ? D9 43 ? 8B 43 ? D9 5D ? D9 43 ? F3 ? D9 5D ? D9 45 ? D9 5B");
-		injector::WriteMemory<int>(pattern.get_first(1), 0x00000000, true);
+		injector::MakeNOP(pattern.get_first(0), 5, true);
+		injector::MakeCALL(pattern.get_first(0), PickupScreenLight, true);
 	}
 	
 	// Disable the game's forced FXAA
