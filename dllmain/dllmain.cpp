@@ -936,15 +936,9 @@ bool Init()
 
 		// Parse resolution using an array
 		char* ResString[] = {SFD_DisplayResolution.data()};
-		char* ResArray[2], *next_token;
+		char* ResArray[2], * next_token;
 
-		int i = 0;
-		ResArray[i] = strtok_s(*ResString, "x", &next_token);
-
-		while (ResArray[i] != NULL)
-		{
-			ResArray[++i] = strtok_s(NULL, "/", &next_token);
-		}
+		ResArray[0] = strtok_s(*ResString, "x", &ResArray[1]);
 
 		int MovPosX;
 		int MovPosY;
