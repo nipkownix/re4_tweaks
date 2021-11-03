@@ -41,7 +41,6 @@ double fNewTItemNamesPos;
 double fNewRadioNamesPos;
 
 bool bShouldDoGrain;
-bool bDrawingPickupScreen;
 bool bShouldFlip;
 bool bIsItemUp;
 bool bFixSniperZoom;
@@ -330,42 +329,6 @@ void __declspec(naked) GXDrawScreenQuadLogic()
 			mov edi, _EDI
 			jmp ptrFXAAProcedure
 		}
-	}
-}
-
-// Executed when the game is about to draw the pickup screen
-void __declspec(naked) DrawPickupScrnTransparency()
-{
-	bDrawingPickupScreen = true;
-	_asm {ret}
-}
-
-
-// Logic for the pickup screen
-void __declspec(naked) PickupScreenLight()
-{
-	_asm
-	{
-		mov _EAX, eax
-		mov _EDI, edi
-	}
-
-	if (bDrawingPickupScreen)
-	{
-		_asm{mov ecx, 0x0}
-	}
-	else
-	{
-		_asm{mov ecx, 0x41}
-	}
-
-	bDrawingPickupScreen = false;
-
-	_asm
-	{
-		mov eax, _EAX
-		mov edi, _EDI
-		ret
 	}
 }
 
@@ -1097,13 +1060,9 @@ bool Init()
 	// Restore missing transparency in the item pickup screen
 	if (bRestorePickupTransparency)
 	{
-		auto pattern = hook::pattern("C7 40 58 FF FF FF FF A1 ? ? ? ? 81 60 58 FF FF FE FF A1 ? ? ? ? 81 60 58 FF FF FF FB A1 ? ? ? ? 81 60 58 FF DF FF FF A1 ? ? ? ? 81 60 58 FF F7 FF FF 8B 45 D8");
-		injector::MakeNOP(pattern.get_first(0), 7, true);
-		injector::MakeCALL(pattern.get_first(0), DrawPickupScrnTransparency, true);
-
-		pattern = hook::pattern("B9 ? ? ? ? 74 ? D9 43 ? 8B 43 ? D9 5D ? D9 43 ? F3 ? D9 5D ? D9 45 ? D9 5B");
-		injector::MakeNOP(pattern.get_first(0), 5, true);
-		injector::MakeCALL(pattern.get_first(0), PickupScreenLight, true);
+		// Remove call to GXCopyTex inside ItemExamine::gxDraw
+		auto pattern = hook::pattern("56 6A 00 6A 00 50 8B F1 E8");
+		injector::MakeNOP(pattern.get_first(8), 5);
 	}
 	
 	// Disable the game's forced FXAA
