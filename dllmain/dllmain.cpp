@@ -90,10 +90,20 @@ static uint32_t* ptrp_MemPool_SubScreen6;
 static uint32_t* ptrp_MemPool_SubScreen7;
 static uint32_t* ptrp_MemPool_SubScreen8;
 static uint32_t* ptrp_MemPool_SubScreen9;
+static uint32_t* ptrp_MemPool_SubScreen10;
+static uint32_t* ptrp_MemPool_SubScreen11;
+static uint32_t* ptrp_MemPool_SubScreen12;
+static uint32_t* ptrp_MemPool_SubScreen13;
+static uint32_t* ptrp_MemPool_SubScreen14;
+static uint32_t* ptrp_MemPool_SubScreen15;
+static uint32_t* ptrp_MemPool_SubScreen16;
+static uint32_t* ptrp_MemPool_SubScreen17;
 static uint32_t* ptrg_MemPool_SubScreen1;
 static uint32_t* ptrg_MemPool_SubScreen2;
 static uint32_t* ptrg_MemPool_SubScreen3;
 static uint32_t* ptrg_MemPool_SubScreen4;
+static uint32_t* ptrg_MemPool_SubScreen5;
+static uint32_t* ptrg_MemPool_SubScreen6;
 
 uint32_t intGameWidth;
 uint32_t intGameHeight;
@@ -788,6 +798,27 @@ void GetPointers()
 	pattern = hook::pattern("8B 0D ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 53 53 8D 94 08 ? ? ? ? 52 53");
 	ptrp_MemPool_SubScreen9 = pattern.count(1).get(0).get<uint32_t>(2);
 
+	pattern = hook::pattern("05 ? ? ? ? 39 46 ? 72 ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 4E ? 51");
+	ptrp_MemPool_SubScreen11 = pattern.count(1).get(0).get<uint32_t>(1);
+
+	pattern = hook::pattern("81 C1 ? ? ? ? 51 50 A3 ? ? ? ? 88 1D ? ? ? ? E8 ? ? ? ? 0F BE 05");
+	ptrp_MemPool_SubScreen12 = pattern.count(1).get(0).get<uint32_t>(2);
+
+	pattern = hook::pattern("05 ? ? ? ? 50 6A ? 68 ? ? ? ? C7 05 ? ? ? ? ? ? ? ? E8");
+	ptrp_MemPool_SubScreen13 = pattern.count(1).get(0).get<uint32_t>(1);
+
+	pattern = hook::pattern("8D 94 01 ? ? ? ? 52 6A ? 68 ? ? ? ? E8 ? ? ? ? 8B 0D");
+	ptrp_MemPool_SubScreen14 = pattern.count(1).get(0).get<uint32_t>(3);
+
+	pattern = hook::pattern("8D 8C 02 ? ? ? ? 51 6A ? 68 ? ? ? ? E8 ? ? ? ? 8B 15");
+	ptrp_MemPool_SubScreen15 = pattern.count(1).get(0).get<uint32_t>(3);
+
+	pattern = hook::pattern("81 C2 ? ? ? ? 52 50 E8 ? ? ? ? 6A ? E8 ? ? ? ? 6A ? E8");
+	ptrp_MemPool_SubScreen16 = pattern.count(1).get(0).get<uint32_t>(2);
+
+	pattern = hook::pattern("8D 94 08 ? ? ? ? 52 53 68 ? ? ? ? E8 ? ? ? ? 83");
+	ptrp_MemPool_SubScreen17 = pattern.count(1).get(0).get<uint32_t>(3);
+
 	pattern = hook::pattern("68 ? ? ? ? 81 C1 ? ? ? ? 51 50 A3 ? ? ? ? 88 1D ? ? ? ? E8");
 	ptrg_MemPool_SubScreen1 = pattern.count(1).get(0).get<uint32_t>(1);
 
@@ -797,6 +828,13 @@ void GetPointers()
 	pattern = hook::pattern("8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1 50 6A ? E8 ? ? ? ? 83");
 	ptrg_MemPool_SubScreen3 = pattern.count(1).get(0).get<uint32_t>(2);
 	ptrg_MemPool_SubScreen4 = pattern.count(1).get(0).get<uint32_t>(10);
+
+	pattern = hook::pattern("81 C2 ? ? ? ? 89 15 ? ? ? ? 80 B8 ? ? ? ? ? 74 ? 0F B7 0D ? ? ? ? 51");
+	ptrg_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(2);
+
+	pattern = hook::pattern("81 FF ? ? ? ? 73 ? 8B 15 ? ? ? ? 81 C2 ? ? ? ? 89 56 ? 83 0E");
+	ptrg_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(2);
+	ptrp_MemPool_SubScreen10 = pattern.count(1).get(0).get<uint32_t>(16);
 }
 
 void HandleLimits()
@@ -838,12 +876,25 @@ void HandleLimits()
 	injector::WriteMemory<int>(ptrp_MemPool_SubScreen8, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExitCore MemorySwap call
 	injector::WriteMemory<int>(ptrp_MemPool_SubScreen9, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExit
 
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen10, 0x000000, true);
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen11, 0x000000, true);
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen12, 0x000000, true);
+
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen13, 0x000000, true);
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen14, 0x000000, true);
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen15, 0x000000, true);
+
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen16, 0x000000, true);
+	injector::WriteMemory<int>(ptrp_MemPool_SubScreen17, 0x000000, true);
+
 	#define SS_MEM_OFFSET 0x1CB5400 // SubScreenAramRead adds this offset to the memory addr, could probably be patched out, but meh
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExec MemorySwap size
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExitCore MemorySwap size
 
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen3, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x1000000), true); // SubScreenExec, some heap size
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen4, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true); // SubScreenExec, some heap size
+	injector::WriteMemory<int>(ptrg_MemPool_SubScreen5, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
+	injector::WriteMemory<int>(ptrg_MemPool_SubScreen6, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
 }
 
 bool Init()
