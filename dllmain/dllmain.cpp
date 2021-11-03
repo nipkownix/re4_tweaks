@@ -809,11 +809,9 @@ void GetPointers()
 	pattern = hook::pattern("05 ? ? ? ? 50 6A ? 68 ? ? ? ? C7 05 ? ? ? ? ? ? ? ? E8");
 	ptrp_MemPool_SubScreen13 = pattern.count(1).get(0).get<uint32_t>(1);
 
-	pattern = hook::pattern("8D 94 01 ? ? ? ? 52 6A ? 68 ? ? ? ? E8 ? ? ? ? 8B 0D");
-	ptrp_MemPool_SubScreen14 = pattern.count(1).get(0).get<uint32_t>(3);
-
-	pattern = hook::pattern("8D 8C 02 ? ? ? ? 51 6A ? 68 ? ? ? ? E8 ? ? ? ? 8B 15");
-	ptrp_MemPool_SubScreen15 = pattern.count(1).get(0).get<uint32_t>(3);
+	pattern = hook::pattern("6A 09 6A 00 6A 00 ? ? ? ? ? ? ? ? 6A 00 68");
+	ptrp_MemPool_SubScreen14 = pattern.count(2).get(0).get<uint32_t>(9);
+	ptrp_MemPool_SubScreen15 = pattern.count(2).get(1).get<uint32_t>(9);
 
 	pattern = hook::pattern("81 C2 ? ? ? ? 52 50 E8 ? ? ? ? 6A ? E8 ? ? ? ? 6A ? E8");
 	ptrp_MemPool_SubScreen16 = pattern.count(1).get(0).get<uint32_t>(2);
@@ -959,7 +957,7 @@ bool Init()
 
 		// Parse resolution using an array
 		char* ResString[] = {SFD_DisplayResolution.data()};
-		char* ResArray[2], * next_token;
+		char* ResArray[2];
 
 		ResArray[0] = strtok_s(*ResString, "x", &ResArray[1]);
 
@@ -1070,9 +1068,9 @@ bool Init()
 		injector::MakeCALL(pattern.get_first(0), LoadPos_FilesItems, true);
 
 		// Map icons position
-		pattern = hook::pattern("DC 05 ? ? ? ? D9 ? ? D9 C0 DE CA D9 C9 D9 98 ? ? ? ? D9 45 ? D9 C3 DE CB DE E2 D9 C9 DC 05 ? ? ? ? D9 45 FC");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_MapIcons, true);
+		pattern = hook::pattern("DD 05 ? ? ? ? DC C9 D9 C9 D8 6D ? DC 05 ? ? ? ? D9");
+		injector::MakeNOP(pattern.get_first(13), 6, true);
+		injector::MakeCALL(pattern.get_first(13), LoadPos_MapIcons, true);
 
 		// Merchant's greeting position
 		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B6 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 0F B6 7D ? 8B 75 ? C7 43 28 ? ? ? ? E8");
