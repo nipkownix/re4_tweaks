@@ -44,6 +44,7 @@ bool bShouldDoGrain;
 bool bShouldFlip;
 bool bIsItemUp;
 bool bFixSniperZoom;
+bool bFixVsyncToggle;
 bool bFixUltraWideAspectRatio;
 bool bFixQTE;
 bool bRestorePickupTransparency;
@@ -671,6 +672,7 @@ void ReadSettings()
 	fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
 	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
 	bFixSniperZoom = iniReader.ReadBoolean("DISPLAY", "FixSniperZoom", true);
+	bFixVsyncToggle = iniReader.ReadBoolean("DISPLAY", "FixVsyncToggle", true);
 	bRestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
 	bDisableFXAA = iniReader.ReadBoolean("MISC", "DisableFXAA", false);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
@@ -940,6 +942,13 @@ bool Init()
 		injector::MakeCALL(pattern.get_first(0), ScaleFOV, true);
 	}
 	
+	// Fix vsync option
+	if (bFixVsyncToggle)
+	{
+		auto pattern = hook::pattern("50 E8 ? ? ? ? C7 07 01 00 00 00 E9");
+		injector::MakeNOP(pattern.get_first(6), 6);
+	}
+
 	// SFD size
 	if (SFD_DisplayResolution != "512x336")
 	{
