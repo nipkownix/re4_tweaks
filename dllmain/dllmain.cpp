@@ -47,7 +47,7 @@ bool bFixVsyncToggle;
 bool bFixUltraWideAspectRatio;
 bool bFixQTE;
 bool bRestorePickupTransparency;
-bool bDisableFXAA;
+bool bFixBlurryImage;
 bool bDisableFilmGrain;
 bool bIgnoreFPSWarning;
 bool bMemOptimi;
@@ -59,16 +59,9 @@ uintptr_t jmpAddrQTE2icon1;
 uintptr_t jmpAddrQTE2icon2;
 uintptr_t jmpAddrQTE2icon3;
 uintptr_t jmpAddrChangedRes;
-uintptr_t jmpAddrDoPostProcessing;
 
 static uint32_t ptrGameState;
-static uint32_t ptrIsInventoryOpen;
-static uint32_t ptrAfterPostProcessing;
-static uint32_t ptrFXAAProcedure;
 static uint32_t* ptrGameFrameRate;
-static uint32_t* ptrIsMotionBlur;
-static uint32_t* ptrIsColorFilter;
-static uint32_t* ptrMovState;
 static uint32_t* ptrEngineWidthScale;
 static uint32_t* ptrAspectRatio;
 
@@ -111,11 +104,7 @@ uint32_t intGameHeight;
 int intFlipDirection;
 int intQTE_key_1;
 int intQTE_key_2;
-int intMovState;
 int intGameState;
-int intIsInventoryOpen;
-int intIsMotionBlur;
-int intIsColorFilter;
 
 void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
 {
@@ -214,7 +203,7 @@ void CheckFPS(DWORD IniFrameRate)
 			" and changed the \"variableframerate\" value to something other than 30 or 60.\n\nTo prevent the problems mentioned, re4_tweaks automatically" +
 			" changed the FPS to " + std::to_string(intNewFPS) + ".\n\nThis warning and the automatic change can be disabled by editing re4_tweaks' \"winmm.ini\" file.";
 
-		MessageBoxA(0, Msg.c_str(), "re4_tweaks", 0);
+		MessageBoxA(NULL, Msg.c_str(), "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
 
 		// Overwrite bad fps value
 		injector::WriteMemory<int>(ptrGameFrameRate, intNewFPS, true);
@@ -256,78 +245,6 @@ void __declspec(naked) ScaleFOV()
 		fadd fFOVAdditional
 		mov[esi + 0x4], ecx
 		ret
-	}
-}
-
-// Post processing
-void __declspec(naked) DoPostProcessing()
-{
-
-	_asm
-	{
-		mov _EAX, eax
-		mov _ECX, ecx
-		mov _EDI, edi
-	}
-
-	intGameState = injector::ReadMemory<int>(ptrGameState, true);
-	intIsInventoryOpen = injector::ReadMemory<uint16_t>(ptrIsInventoryOpen, true);
-	intIsMotionBlur = injector::ReadMemory<uint8_t>(ptrIsMotionBlur, true);
-	intIsColorFilter = injector::ReadMemory<int>(ptrIsColorFilter, true);
-
-	if ((intIsMotionBlur != 0 || intIsColorFilter != 0) && intGameState == 3 && intIsInventoryOpen != 0xd7ff) {
-		_asm
-		{
-			mov eax, _EAX
-			mov ecx, _ECX
-			mov edi, _EDI
-			cmp ecx, edi
-			je offset done
-			jmp jmpAddrDoPostProcessing
-			done :
-			jmp ptrAfterPostProcessing
-		}
-	}
-	else {
-		_asm
-		{
-			mov eax, _EAX
-			mov ecx, _ECX
-			mov edi, _EDI
-			jmp ptrAfterPostProcessing
-		}
-	}
-}
-
-void __declspec(naked) GXDrawScreenQuadLogic()
-{
-	_asm
-	{
-		mov _EAX, eax
-		mov _ECX, ecx
-		mov _EDI, edi
-	}
-
-	intIsMotionBlur = injector::ReadMemory<uint8_t>(ptrIsMotionBlur, true);
-	intIsColorFilter = injector::ReadMemory<int>(ptrIsColorFilter, true);
-
-	if (intIsMotionBlur == 1 && intIsColorFilter == 0) {
-		_asm
-		{
-			mov eax, _EAX
-			mov ecx, _ECX
-			mov edi, _EDI
-			ret
-		}
-	}
-	else {
-		_asm
-		{
-			mov eax, _EAX
-			mov ecx, _ECX
-			mov edi, _EDI
-			jmp ptrFXAAProcedure
-		}
 	}
 }
 
@@ -661,19 +578,19 @@ void ReadSettings()
 	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
 	bFixSniperZoom = iniReader.ReadBoolean("DISPLAY", "FixSniperZoom", true);
 	bFixVsyncToggle = iniReader.ReadBoolean("DISPLAY", "FixVsyncToggle", true);
-	bRestorePickupTransparency = iniReader.ReadBoolean("MISC", "RestorePickupTransparency", true);
-	bDisableFXAA = iniReader.ReadBoolean("MISC", "DisableFXAA", false);
+	bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", true);
+	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", false);
+	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", false);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
-	bDisableFilmGrain = iniReader.ReadBoolean("MISC", "DisableFilmGrain", false);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
 	flip_item_right = iniReader.ReadString("KEYBOARD", "flip_item_right", "PAGEUP");
 	QTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
 	QTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
-	bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
 	SFD_DisplayResolution = iniReader.ReadString("MOVIE", "SFD_DisplayResolution", "512x336");
 	bMemOptimi = iniReader.ReadBoolean("EXPERIMENTAL", "MemOptimi", false);
+	bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
 }
 
 void HandleAppID()
@@ -703,21 +620,7 @@ void GetPointers()
 	pattern = hook::pattern("A1 ? ? ? ? F7 40 ? ? ? ? ? 75 ? E8 ? ? ? ? 85 C0 74 ? 80 3D ? ? ? ? ? 75 ? 32 DB EB ? B3 ? E8 ? ? ? ? 85 C0 74 ? 32 DB");
 	StateBase = *pattern.count(1).get(0).get<uint32_t*>(1);
 
-	// Is inventory open
-	ptrIsInventoryOpen = injector::ReadMemory<int>(StateBase, true) + 0x58;
-
-	// Is motion blur enabled
-	pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? 84 DB 75 ? 8B 0D ? ? ? ? 8B 91 ? ? ? ? C1 EA");
-	ptrIsMotionBlur = *pattern.count(1).get(0).get<uint32_t*>(2), true;
-
-	// Is color filter enabled
-	pattern = hook::pattern("A3 ? ? ? ? 5D C3 CC CC CC A1 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 8A 45");
-	ptrIsColorFilter = *pattern.count(1).get(0).get<uint32_t*>(1), true;
-
 	// SFD
-	pattern = hook::pattern("89 3D ? ? ? ? E8 ? ? ? ? 8B ? ? 51 E8 ? ? ? ? A1 ? ? ? ? 83 ? ? 2B C7 89");
-	ptrMovState = *pattern.count(1).get(0).get<uint32_t*>(2);
-
 	pattern = hook::pattern("56 57 8B F9 6A ? 8D 77 ? 6A ? 56 E8 ? ? ? ? C7 46 ? ? ? ? ? C7 06");
 	ptrcSofdec__startApp = pattern.count(1).get(0).get<uint32_t>(0);
 
@@ -940,10 +843,6 @@ bool Init()
 	auto pattern = hook::pattern("31 2E ? ? ? 00 00 00 6D 6F 76 69 65 2F 64 65 6D 6F 30 65 6E 67 2E 73 66 64");
 	int ver = injector::ReadMemory<int>(pattern.get_first(2));
 
-	std::cout << std::hex << pattern.get_first(0) << std::endl;
-
-	std::cout << std::hex << ver << std::endl;
-
 	if (ver == 0x362E30) {
 		game_version = "1.0.6";
 	} else if (ver == 0x302E31) {
@@ -1042,7 +941,6 @@ bool Init()
 	// Replace MemorySwap with memcpy
 	if (bMemOptimi)
 	{
-		//MH_CreateHook((LPVOID)(GameAddress + 0x724D), memcpy, NULL);
 		auto pattern = hook::pattern("8b 49 14 33 c0 a3 ? ? ? ? 85 c9 74 ? 8b ff f6 81 ? ? ? ? 20 8b 49 ? 74 ? b8 01 00 00 00 a3 ? ? ? ? 85 c9 75 ? c3");
 		injector::MakeJMP(pattern.get_first(0), memcpy, true);
 	}
@@ -1158,37 +1056,17 @@ bool Init()
 		injector::MakeNOP(pattern.get_first(8), 5);
 	}
 	
-	// Disable the game's forced FXAA
-	if (bDisableFXAA) 
+	// Fix a problem related to a vertex buffer that caused the image to be slightly blurred
+	if (bFixBlurryImage) 
 	{
-		// Decides if post processing should be done
-		auto pattern = hook::pattern("80 3D ? ? ? ? ? 75 ? 39 3D ? ? ? ? 75 ? A1");
-		ptrAfterPostProcessing = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(0);
+		auto pattern = hook::pattern("E8 ? ? ? ? 8B 15 ? ? ? ? A1 ? ? ? ? 8B 08 6A ? 6A ? 52");
+		uint32_t* ptrNewVertex = *pattern.count(1).get(0).get<uint32_t*>(7);
 
-		pattern = hook::pattern("0F 84 ? ? ? ? ? ? ? ? ? 8B 10 51 57 50 8B 82 ? ? ? ?");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeJMP(pattern.get_first(0), DoPostProcessing, true);
-		jmpAddrDoPostProcessing = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
+		pattern = hook::pattern("8B 15 ? ? ? ? A1 ? ? ? ? 8B 08 56 57 6A ? 6A");
+		injector::WriteMemory(pattern.get_first(2), ptrNewVertex, true);
 
-		// Tweak GXDrawScreenQuad's logic
-		pattern = hook::pattern("55 8B EC 8B 15 ? ? ? ? A1 ? ? ? ? 8B 08 56 57 6A ? 6A ? 52 6A ? 50 8B 81 ? ? ? ? FF D0 A1 ? ? ? ? 8B 0D");
-		ptrFXAAProcedure = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(0);
-
-		pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? E8 ? ? ? ? D9 E8 A1 ? ? ? ? 8B 10 57 51 D9 1C ? 68 ? ? ? ? 6A ? 57 57 50 8B 82");
-		injector::MakeNOP(pattern.get_first(0), 5, true);
-		injector::MakeCALL(pattern.get_first(0), GXDrawScreenQuadLogic, true);
-
-		// Disable motion blur's conditional jump
-		pattern = hook::pattern("74 ? 68 ? ? ? ? 6A ? E8 ? ? ? ? A1 ? ? ? ? 8B 0D ? ? ? ? 50 51 E8 ? ? ? ? 8B 0D");
-		injector::MakeNOP(pattern.get_first(0), 2, true);
-
-		// Disable second IDirect3DDevice9::Clear call
-		pattern = hook::pattern("FF D0 D9 05 ? ? ? ? D9 5D ? 83 EC ? D9 05 ? ? ? ? 8B C4 D9 18 D9 45 ? D9 58 ? D9 E8");
-		injector::MakeNOP(pattern.get_first(0), 2, true);
-
-		// Disable second FXAA procedure call
-		pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 8B 10 83 C4 ? 50 8B 42 ? FF D0 89 3D ? ? ? ? 80 3D ? ? ? ? ? 75 ? 39 3D");
-		injector::MakeNOP(pattern.get_first(0), 5, true);
+		pattern = hook::pattern("D9 5D ? FF D0 D9 E8 A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 6A ? 51 D9 1C ? 68");
+		injector::WriteMemory(pattern.get_first(42), ptrNewVertex, true);
 	}
 
 	// Disable film grain
