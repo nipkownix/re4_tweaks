@@ -873,6 +873,65 @@ void HandleLimits()
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen6, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
 }
 
+// New WndProc func
+WNDPROC wndProcOld = NULL;
+LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_KEYDOWN:
+		if (wParam == getMapKey(flip_item_left, "vk") || wParam == getMapKey(flip_item_right, "vk"))
+		{
+			if (bIsItemUp)
+			{
+				bShouldFlip = true;
+				intFlipDirection = 0x300000;
+			}
+		}
+		else if (wParam == getMapKey(flip_item_up, "vk") || wParam == getMapKey(flip_item_down, "vk"))
+		{
+			if (bIsItemUp)
+			{
+				bShouldFlip = true;
+				intFlipDirection = 0x400000;
+			}
+		}
+		#ifdef VERBOSE
+		else if (wParam == VK_NUMPAD3)
+		{
+			std::cout << "Sono me... dare no me?" << std::endl;
+		}
+		#endif
+
+		break;
+	case WM_CLOSE:
+		ExitProcess(0);
+		break;
+	}
+
+	return CallWindowProc(wndProcOld, hwnd, uMsg, wParam, lParam);
+}
+
+// WndProc hook
+DWORD WINAPI WindowCheck()
+{
+	auto pattern = hook::pattern("A1 ? ? ? ? 6A ? 50 E8 ? ? ? ? 8B 36");
+	auto hWnd = injector::ReadMemory<HWND>(*pattern.get_first<HWND*>(1), true);
+
+	while (hWnd == 0) {
+		hWnd = injector::ReadMemory<HWND>(*pattern.get_first<HWND*>(1), true);
+		Sleep(1000);
+	}
+
+	#ifdef VERBOSE
+	std::cout << "hWnd = " << hWnd << std::endl;
+	#endif
+
+	wndProcOld = (WNDPROC)GetWindowLong(hWnd, GWL_WNDPROC);
+	SetWindowLong(hWnd, GWL_WNDPROC, (LONG)WndProc);
+	return 0;
+}
+
 bool Init()
 {
 	std::cout << "Big ironic thanks to QLOC S.A." << std::endl;
@@ -1206,44 +1265,6 @@ bool Init()
 	return true;
 }
 
-DWORD WINAPI ContinuousThread(LPVOID)
-{
-	// Continuous operations
-	while (true)
-	{
-		// Decide if we should grain. Terrible hacky way to achieve this, but this engine is a mess... and I'm not the most briliant person.
-		if (bDisableFilmGrain)
-			EvaluateGrain();
-
-		// Inventory bindings
-		if (GetAsyncKeyState(getMapKey(flip_item_left, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_right, "vk")) & 1)
-		{
-			if (bIsItemUp)
-			{
-				bShouldFlip = true;
-				intFlipDirection = 0x300000;
-			}
-		}
-
-		if (GetAsyncKeyState(getMapKey(flip_item_up, "vk")) & 1 || GetAsyncKeyState(getMapKey(flip_item_down, "vk")) & 1)
-		{
-			if (bIsItemUp)
-			{
-				bShouldFlip = true;
-				intFlipDirection = 0x400000;
-			}
-		}
-		#ifdef VERBOSE
-		if (GetAsyncKeyState(VK_NUMPAD3) & 1)
-		{
-			std::cout << "Sono me... dare no me?" << std::endl;
-		}
-		#endif
-		Sleep(50);
-	}
-	return S_OK;
-}
-
 void LoadRealDLL(HMODULE hModule)
 {
 	char configname[MAX_PATH];
@@ -1275,7 +1296,7 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 
 		if (Init())
 		{
-			CloseHandle(CreateThread(nullptr, 0, ContinuousThread, nullptr, 0, nullptr));
+			CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&WindowCheck, nullptr, 0, nullptr));
 		}
 
 		break;
