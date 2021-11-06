@@ -40,7 +40,6 @@ double fNewMerchGreetingPos;
 double fNewTItemNamesPos;
 double fNewRadioNamesPos;
 
-bool bShouldDoGrain;
 bool bShouldFlip;
 bool bIsItemUp;
 bool bFixSniperZoom;
@@ -258,17 +257,6 @@ void __declspec(naked) ScaleFOV()
 		mov[esi + 0x4], ecx
 		ret
 	}
-}
-
-// Do grain
-void __declspec(naked) DoGrain()
-{
-	_asm {fstp dword ptr[ebp - 0x4]}
-	if (bShouldDoGrain)
-	{
-		_asm {fld dword ptr[ebp - 0x4]}
-	}
-	_asm {ret}
 }
 
 // Post processing
@@ -697,18 +685,6 @@ void HandleAppID()
 		appid << "254700";
 		appid.close();
 	}
-}
-
-void EvaluateGrain()
-{
-	intMovState = injector::ReadMemory<int>(ptrMovState, true);
-	intGameState = injector::ReadMemory<int>(ptrGameState, true);
-	intIsInventoryOpen = injector::ReadMemory<uint16_t>(ptrIsInventoryOpen, true);
-
-	if (intMovState == 1 || intGameState != 3 || intIsInventoryOpen == 0xd7ff)
-		bShouldDoGrain = true;
-	else
-		bShouldDoGrain = false;
 }
 
 void GetPointers()
@@ -1159,9 +1135,8 @@ bool Init()
 	// Disable film grain
 	if (bDisableFilmGrain)
 	{
-		auto pattern = hook::pattern("D9 5D FC D9 45 FC D9 C0 8B C1 C1 E0 04 03 C1 0F BF 4D 08 89 4D 08 0F BF 4D 10 DB 45 08 03 C0 03 C0 DE C9 89 55 08");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), DoGrain, true);
+		auto pattern = hook::pattern("75 ? 0F B6 56 ? 52 68 ? ? ? ? 50 50 E8 ? ? ? ? 83 C4 ? 5E 8B 4D ? 33 CD E8 ? ? ? ? 8B E5 5D C3 53");
+		injector::MakeNOP(pattern.get_first(0), 2, true);
 	}
 
 	// QTE bindings and icons
