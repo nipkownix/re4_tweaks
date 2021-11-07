@@ -155,8 +155,8 @@ void __declspec(naked) ChangedRes()
 {
 	_asm
 	{
-		mov intGameWidth, eax
-		mov intGameHeight, ecx
+		mov   intGameWidth, eax
+		mov   intGameHeight, ecx
 	}
 
 	// Call function to handle aspect ratio when res is changed
@@ -164,11 +164,11 @@ void __declspec(naked) ChangedRes()
 
 	_asm
 	{
-		pop esi
-		pop ebx
-		mov esp, ebp
-		pop ebp
-		jmp jmpAddrChangedRes
+		pop   esi
+		pop   ebx
+		mov   esp, ebp
+		pop   ebp
+		jmp   jmpAddrChangedRes
 	}
 }
 
@@ -213,19 +213,19 @@ void __declspec(naked) ReadFPS()
 {
 	_asm 
 	{
-		mov IniFrameRate, ecx
-		mov _EAX, eax
-		mov _ECX, ecx
-		mov _EDI, edi
+		mov   IniFrameRate, ecx
+		mov   _EAX, eax
+		mov   _ECX, ecx
+		mov   _EDI, edi
 	}
 
 	CheckFPS(IniFrameRate);
 
 	_asm 
 	{
-		mov eax, _EAX
-		mov ecx, _ECX
-		mov edi, _EDI
+		mov   eax, _EAX
+		mov   ecx, _ECX
+		mov   edi, _EDI
 		ret
 	}
 }
@@ -235,9 +235,9 @@ void __declspec(naked) ScaleFOV()
 {
 	_asm
 	{
-		fld dword ptr[ebp - 0x34]
-		fadd fFOVAdditional
-		mov[esi + 0x4], ecx
+		fld   dword ptr[ebp - 0x34]
+		fadd  fFOVAdditional
+		mov   [esi + 0x4], ecx
 		ret
 	}
 }
@@ -262,7 +262,7 @@ void __declspec(naked) invItemDown()
 	bIsItemUp = false;
 	_asm
 	{
-		and byte ptr[eax + 0x8A], -0x10
+		and   byte ptr[eax + 0x8A], -0x10
 		ret
 	}
 }
@@ -272,7 +272,7 @@ void __declspec(naked) invItemUp()
 	bIsItemUp = true;
 	_asm
 	{
-		and byte ptr[eax + 0x8A], 0x0F
+		and   byte ptr[eax + 0x8A], 0x0F
 		ret
 	}
 }
@@ -282,8 +282,8 @@ void __declspec(naked) QTE1Binding()
 {
 	_asm
 	{
-		mov ebx, intQTE_key_1
-		mov eax, [eax + 0x1C]
+		mov   ebx, intQTE_key_1
+		mov   eax, [eax + 0x1C]
 		ret
 	}
 }
@@ -292,8 +292,8 @@ void __declspec(naked) QTE2Binding()
 {
 	_asm
 	{
-		mov edx, intQTE_key_2
-		mov eax, [eax + 0x1C]
+		mov   edx, intQTE_key_2
+		mov   eax, [eax + 0x1C]
 		ret
 	}
 }
@@ -302,7 +302,7 @@ void __declspec(naked) QTEspd_Boulders()
 {
 	_asm
 	{
-		fld[edi + 0x418]
+		fld    [edi + 0x418]
 		fld    dword ptr ds : [fQTESpeedMult]
 		fmul
 		ret
@@ -324,8 +324,8 @@ void __declspec(naked) QTEspd_StatueRun()
 {
 	_asm
 	{
-		mov		edi, [ebp + 0x14]
-		fld		dword ptr[edi]
+		mov	   edi, [ebp + 0x14]
+		fld    dword ptr[edi]
 		fld    dword ptr ds : [fQTESpeedMult]
 		fmul
 		ret
