@@ -52,12 +52,6 @@ bool bDisableFilmGrain;
 bool bIgnoreFPSWarning;
 bool bMemOptimi;
 
-uintptr_t jmpAddrQTE1icon1;
-uintptr_t jmpAddrQTE1icon2;
-uintptr_t jmpAddrQTE1icon3;
-uintptr_t jmpAddrQTE2icon1;
-uintptr_t jmpAddrQTE2icon2;
-uintptr_t jmpAddrQTE2icon3;
 uintptr_t jmpAddrChangedRes;
 
 static uint32_t ptrGameState;
@@ -301,66 +295,6 @@ void __declspec(naked) QTE2Binding()
 		mov edx, intQTE_key_2
 		mov eax, [eax + 0x1C]
 		ret
-	}
-}
-
-void __declspec(naked) QTE1Icon1()
-{
-	_asm
-	{
-		lea edx, [ebp - 0x3B4]
-		push intQTE_key_1
-		jmp jmpAddrQTE1icon1
-	}
-}
-
-void __declspec(naked) QTE1Icon2()
-{
-	_asm
-	{
-		lea ecx, [ebp - 0x4CC]
-		push intQTE_key_1
-		jmp jmpAddrQTE1icon2
-	}
-}
-
-void __declspec(naked) QTE1Icon3()
-{
-	_asm
-	{
-		lea ecx, [ebp - 0x280]
-		push intQTE_key_1
-		jmp jmpAddrQTE1icon3
-	}
-}
-
-void __declspec(naked) QTE2Icon1()
-{
-	_asm
-	{
-		lea ecx, [ebp - 0x37C]
-		push intQTE_key_2
-		jmp jmpAddrQTE2icon1
-	}
-}
-
-void __declspec(naked) QTE2Icon2()
-{
-	_asm
-	{
-		lea ecx, [ebp - 0x76C]
-		push intQTE_key_2
-		jmp jmpAddrQTE2icon2
-	}
-}
-
-void __declspec(naked) QTE2Icon3()
-{
-	_asm
-	{
-		lea ecx, [ebp - 0x2F0]
-		push intQTE_key_2
-		jmp jmpAddrQTE2icon3
 	}
 }
 
@@ -1089,41 +1023,17 @@ bool Init()
 	injector::MakeNOP(pattern.get_first(0), 6, true);
 	injector::MakeCALL(pattern.get_first(0), QTE2Binding, true);
 
-	// KEY_1 icon hook (1)
-	pattern = hook::pattern("8D 95 ? ? ? ? 6A 2D 52 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ?");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), QTE1Icon1, true);
-	jmpAddrQTE1icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	// KEY_1 icon prompts
+	pattern = hook::pattern("8D ? ? ? ? ? 6A 2D ? E8");
+	injector::WriteMemory<uint8_t>(pattern.count(3).get(0).get<uint32_t>(7), intQTE_key_1, true);
+	injector::WriteMemory<uint8_t>(pattern.count(3).get(1).get<uint32_t>(7), intQTE_key_1, true);
+	injector::WriteMemory<uint8_t>(pattern.count(3).get(2).get<uint32_t>(7), intQTE_key_1, true);
 
-	// KEY_1 icon hook (2)
-	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? B9 07 00 00 00 8D BD ? ? ? ? 8B F0 F3 A5");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), QTE1Icon2, true);
-	jmpAddrQTE1icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
-
-	// KEY_1 icon hook (3)
-	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2D 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), QTE1Icon3, true);
-	jmpAddrQTE1icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
-
-	// KEY_2 icon hook (1)
-	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 D9");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), QTE2Icon1, true);
-	jmpAddrQTE2icon1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
-
-	// KEY_2 icon hook (2)
-	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? B9 07 00 00 00 BF ? ? ? ? 8B F0 F3 A5 83 C4 0C");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), QTE2Icon2, true);
-	jmpAddrQTE2icon2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
-
-	// KEY_2 icon hook (3)
-	pattern = hook::pattern("8D 8D ? ? ? ? 6A 2E 51 E8 ? ? ? ? 8B F0 B9 07 00 00 00 8D BD ? ? ? ? F3 A5 D9");
-	injector::MakeNOP(pattern.get_first(0), 8, true);
-	injector::MakeJMP(pattern.get_first(0), QTE2Icon3, true);
-	jmpAddrQTE2icon3 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(8);
+	// KEY_2 icon prompts
+	pattern = hook::pattern("8D ? ? ? ? ? 6A 2E ? E8");
+	injector::WriteMemory<uint8_t>(pattern.count(4).get(0).get<uint32_t>(7), intQTE_key_2, true);
+	injector::WriteMemory<uint8_t>(pattern.count(4).get(1).get<uint32_t>(7), intQTE_key_2, true);
+	injector::WriteMemory<uint8_t>(pattern.count(4).get(2).get<uint32_t>(7), intQTE_key_2, true);
 
 	// Inventory item flip binding
 	pattern = hook::pattern("A9 ? ? ? ? 74 ? 6A 01 8B CE E8 ? ? ? ? BB 02 00 00 00");
