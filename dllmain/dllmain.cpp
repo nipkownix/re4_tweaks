@@ -341,88 +341,6 @@ void __declspec(naked) QTEspd_StatuePullUp()
 	}
 }
 
-// 21:9 Text positions. Couldn't find a better way to implement this.
-void __declspec(naked) LoadPos_InvItemName()
-{
-	_asm
-	{
-		fadd fNewInvItemNamePos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_FilesTitle()
-{
-	_asm
-	{
-		fadd fNewFilesTitlePos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_FilesItems()
-{
-	_asm
-	{
-		fadd fNewFilesItemsPos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_MapIcons()
-{
-	_asm
-	{
-		fadd fNewMapIconsPos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_MerchItemList()
-{
-	_asm
-	{
-		fadd fNewMerchItemListPos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_MerchItemDesc()
-{
-	_asm
-	{
-		fadd fNewMerchItemDescPos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_MerchGreeting()
-{
-	_asm
-	{
-		fadd fNewMerchGreetingPos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_TItemNames()
-{
-	_asm
-	{
-		fadd fNewTItemNamesPos
-		ret
-	}
-}
-
-void __declspec(naked) LoadPos_RadioNames()
-{
-	_asm
-	{
-		fadd fNewRadioNamesPos
-		ret
-	}
-}
-
 // SFD functions
 typedef int(__cdecl* mwPlyCalcWorkCprmSfd_Fn)(/* MwsfdCrePrm * */ void* cprm);
 mwPlyCalcWorkCprmSfd_Fn mwPlyCalcWorkCprmSfd_Orig;
@@ -919,60 +837,50 @@ bool Init()
 		injector::MakeJMP(pattern.get_first(11), ChangedRes, true);
 		jmpAddrChangedRes = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(16);
 
-		// Iventory item name position
+		// Text offset fixes
+		// Iventory item name
 		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05 ? ? ? ? 99");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_InvItemName, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewInvItemNamePos, true);
 
-		// "Files" title position
+		// "Files" title
 		pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 0F B7 0D ? ? ? ? 0F B7 15 ? ? ? ? 51 52 6A 04 B9");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_FilesTitle, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewFilesTitlePos, true);
 
-		// "Files" item list position
+		// "Files" item list
 		pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 0F B7 0D ? ? ? ? 0F B7 15 ? ? ? ? 89 45 ? 8D 43 ? 51 0F B6 ? 52 56 B9");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_FilesItems, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewFilesItemsPos, true);
 
-		// Map icons position
-		pattern = hook::pattern("DD 05 ? ? ? ? DC C9 D9 C9 D8 6D ? DC 05 ? ? ? ? D9");
-		injector::MakeNOP(pattern.get_first(13), 6, true);
-		injector::MakeCALL(pattern.get_first(13), LoadPos_MapIcons, true);
+		// Map icons
+		pattern = hook::pattern("DC 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C9 D9 98 ? ? ? ? D9 45");
+		injector::WriteMemory(pattern.get_first(2), &fNewMapIconsPos, true);
 
-		// Merchant's greeting position
+		// Merchant's greeting
 		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B6 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 0F B6 7D ? 8B 75 ? C7 43 28 ? ? ? ? E8");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchGreeting, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewMerchGreetingPos, true);
 
-		// Merchant's item "buy" list position
+		// Merchant's item "buy" list
 		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B7 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? C1 E6 ? B9 ? ? ? ? 66 89 8E ? ? ? ? 8B 4D ? BA ? ? ? ? 66 89 ? ? ? ? ? 0F B7 ? 8B 89 ? ? ? ? 50 E8");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemList, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewMerchItemListPos, true);
 
-		// Merchant's item "sell" list position
+		// Merchant's item "sell" list
 		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B7 ? ? 50 B9 ? ? ? ? E8 ? ? ? ? C1 E6 ? B9 ? ? ? ? 66 89 ? ? ? ? ? 8D 83 ? ? ? ? 0F B6 ? 6A ?");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemList, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewMerchItemListPos, true);
 
-		// Merchant's item "tune up" list position
+		// Merchant's item "tune up" list
 		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 0F B7 ? ? 50 52 B9 ? ? ? ? E8 ? ? ? ? C1 E6 ? B8 ? ? ? ? 66 89 86 ? ? ? ? 8B 45 A4 B9 ? ? ? ? 66 89 8E ? ? ? ? 0F B7");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemList, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewMerchItemListPos, true);
 
-		// Merchant's item description position
+		// Merchant's item description
 		pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B7 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 5E 5D C3");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_MerchItemDesc, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewMerchItemDescPos, true);
 
-		// Tresure name position
+		// Tresure name
 		pattern = hook::pattern("DC 05 ? ? ? ? DC 0D ? ? ? ? E8 ? ? ? ? D9 83 ? ? ? ? DC 2D ? ? ? ? 89 45 ? DC 0D ? ? ? ? E8 ? ? ? ? 8B C8 0F BE 05");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_TItemNames, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewTItemNamesPos, true);
 
-		// Radio names position
+		// Radio names
 		pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 8A 1D ? ? ? ?");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), LoadPos_RadioNames, true);
+		injector::WriteMemory(pattern.get_first(2), &fNewRadioNamesPos, true);
 	}
 
 	// Fix camera after zooming with the sniper
