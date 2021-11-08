@@ -51,6 +51,10 @@ bool bFixBlurryImage;
 bool bDisableFilmGrain;
 bool bIgnoreFPSWarning;
 bool bMemOptimi;
+bool bWindowBorderless;
+
+int iWindowPositionX;
+int iWindowPositionY;
 
 uintptr_t jmpAddrChangedRes;
 
@@ -423,6 +427,21 @@ int SubScreenAramRead_Hook()
 	return pzzl_size;
 }
 
+HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
+{
+	int windowX = iWindowPositionX < 0 ? CW_USEDEFAULT : iWindowPositionX;
+	int windowY = iWindowPositionY < 0 ? CW_USEDEFAULT : iWindowPositionY;
+	return CreateWindowExA(dwExStyle, lpClassName, lpWindowName, bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+}
+
+BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
+{
+	int windowX = iWindowPositionX < 0 ? 0 : iWindowPositionX;
+	int windowY = iWindowPositionY < 0 ? 0 : iWindowPositionY;
+	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
+}
+
+
 void ReadSettings()
 {
 	CIniReader iniReader("");
@@ -433,6 +452,9 @@ void ReadSettings()
 	bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", true);
 	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", false);
 	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", false);
+	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
+	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
+	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
@@ -731,6 +753,31 @@ bool Init()
 	{
 		auto pattern = hook::pattern("50 E8 ? ? ? ? C7 07 01 00 00 00 E9");
 		injector::MakeNOP(pattern.get_first(6), 6);
+	}
+
+	// Apply window changes
+	if (bWindowBorderless || iWindowPositionX > -1 || iWindowPositionY > -1)
+	{
+		auto pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
+		injector::MakeNOP(pattern.get_first(0x12), 6);
+		injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
+
+		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
+		pattern = hook::pattern("BE 00 01 04 00 BF 00 00 C8 00");
+		injector::MakeNOP(pattern.get_first(0xA), 6);
+		injector::MakeCALL(pattern.get_first(0xA), SetWindowPos_Hook, true);
+
+		// nop MoveWindow
+		pattern = hook::pattern("53 51 52 53 53 50");
+		injector::MakeNOP(pattern.get_first(6), 6);
+
+		if (bWindowBorderless)
+		{
+			// if borderless, update the style set by SetWindowLongA
+			pattern = hook::pattern("25 00 00 38 7F 05 00 00 C8 00");
+			injector::WriteMemory(pattern.get_first(5), uint8_t(0xb8), true); // mov eax, XXXXXXXX
+			injector::WriteMemory(pattern.get_first(6), uint32_t(WS_POPUP), true);
+		}
 	}
 
 	// SFD size
