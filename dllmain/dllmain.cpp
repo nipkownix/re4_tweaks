@@ -434,6 +434,14 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	return CreateWindowExA(dwExStyle, lpClassName, lpWindowName, bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 }
 
+BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
+{
+	int windowX = iWindowPositionX < 0 ? 0 : iWindowPositionX;
+	int windowY = iWindowPositionY < 0 ? 0 : iWindowPositionY;
+	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
+}
+
+
 void ReadSettings()
 {
 	CIniReader iniReader("");
@@ -754,21 +762,22 @@ bool Init()
 		injector::MakeNOP(pattern.get_first(0x12), 6);
 		injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
 
-		// nop AdjustWindowRect
-		pattern = hook::pattern("00 00 C8 00 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? FF");
-		injector::MakeNOP(pattern.get_first(0x16), 6);
-
-		// nop SetWindowPos
+		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
 		pattern = hook::pattern("BE 00 01 04 00 BF 00 00 C8 00");
 		injector::MakeNOP(pattern.get_first(0xA), 6);
-
-		// nop AdjustWindowRectEx
-		pattern = hook::pattern("56 53 57 8D 45 EC 50");
-		injector::MakeNOP(pattern.get_first(7), 6);
+		injector::MakeCALL(pattern.get_first(0xA), SetWindowPos_Hook, true);
 
 		// nop MoveWindow
 		pattern = hook::pattern("53 51 52 53 53 50");
 		injector::MakeNOP(pattern.get_first(6), 6);
+
+		if (bWindowBorderless)
+		{
+			// if borderless, update the style set by SetWindowLongA
+			pattern = hook::pattern("25 00 00 38 7F 05 00 00 C8 00");
+			injector::WriteMemory(pattern.get_first(5), uint8_t(0xb8), true); // mov eax, XXXXXXXX
+			injector::WriteMemory(pattern.get_first(6), uint32_t(WS_POPUP), true);
+		}
 	}
 
 	// SFD size
