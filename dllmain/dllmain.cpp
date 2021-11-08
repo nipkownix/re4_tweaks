@@ -51,6 +51,10 @@ bool bFixBlurryImage;
 bool bDisableFilmGrain;
 bool bIgnoreFPSWarning;
 bool bMemOptimi;
+bool bWindowBorderless;
+
+int iWindowPositionX;
+int iWindowPositionY;
 
 uintptr_t jmpAddrChangedRes;
 
@@ -423,6 +427,13 @@ int SubScreenAramRead_Hook()
 	return pzzl_size;
 }
 
+HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
+{
+	int windowX = iWindowPositionX < 0 ? CW_USEDEFAULT : iWindowPositionX;
+	int windowY = iWindowPositionY < 0 ? CW_USEDEFAULT : iWindowPositionY;
+	return CreateWindowExA(dwExStyle, lpClassName, lpWindowName, bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+}
+
 void ReadSettings()
 {
 	CIniReader iniReader("");
@@ -433,6 +444,9 @@ void ReadSettings()
 	bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", true);
 	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", false);
 	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", false);
+	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
+	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
+	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
@@ -730,6 +744,30 @@ bool Init()
 	if (bFixVsyncToggle)
 	{
 		auto pattern = hook::pattern("50 E8 ? ? ? ? C7 07 01 00 00 00 E9");
+		injector::MakeNOP(pattern.get_first(6), 6);
+	}
+
+	// Apply window changes
+	if (bWindowBorderless || iWindowPositionX > -1 || iWindowPositionY > -1)
+	{
+		auto pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
+		injector::MakeNOP(pattern.get_first(0x12), 6);
+		injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
+
+		// nop AdjustWindowRect
+		pattern = hook::pattern("00 00 C8 00 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? FF");
+		injector::MakeNOP(pattern.get_first(0x16), 6);
+
+		// nop SetWindowPos
+		pattern = hook::pattern("BE 00 01 04 00 BF 00 00 C8 00");
+		injector::MakeNOP(pattern.get_first(0xA), 6);
+
+		// nop AdjustWindowRectEx
+		pattern = hook::pattern("56 53 57 8D 45 EC 50");
+		injector::MakeNOP(pattern.get_first(7), 6);
+
+		// nop MoveWindow
+		pattern = hook::pattern("53 51 52 53 53 50");
 		injector::MakeNOP(pattern.get_first(6), 6);
 	}
 
