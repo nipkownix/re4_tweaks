@@ -9,7 +9,6 @@ std::string WrapperName;
 std::string game_version;
 std::string QTE_key_1;
 std::string QTE_key_2;
-std::string SFD_DisplayResolution;
 std::string flip_item_up;
 std::string flip_item_down;
 std::string flip_item_left;
@@ -26,6 +25,10 @@ DWORD _EDI;
 
 float fFOVAdditional = 0.0f;
 float fQTESpeedMult = 2.0f;
+float newMovPosX;
+float newMovNegX;
+float newMovPosY;
+float newMovNegY;
 
 double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
@@ -48,15 +51,18 @@ bool bFixUltraWideAspectRatio;
 bool bFixQTE;
 bool bRestorePickupTransparency;
 bool bFixBlurryImage;
+bool bAllowHighResolutionSFD;
 bool bDisableFilmGrain;
+bool bRaiseVertexAlloc;
+bool bRaiseInventoryAlloc;
+bool bUseMemcpy;
 bool bIgnoreFPSWarning;
 bool bMemOptimi;
 bool bWindowBorderless;
 
-int iWindowPositionX;
-int iWindowPositionY;
-
 uintptr_t jmpAddrChangedRes;
+uintptr_t* ptrYMovieResFromFile;
+uintptr_t* ptrXMovieResFromFile;
 
 static uint32_t ptrGameState;
 static uint32_t* ptrGameFrameRate;
@@ -99,6 +105,9 @@ static uint32_t* ptrg_MemPool_SubScreen6;
 uint32_t intGameWidth;
 uint32_t intGameHeight;
 
+
+int iWindowPositionX;
+int iWindowPositionY;
 int intFlipDirection;
 int intQTE_key_1;
 int intQTE_key_2;
@@ -173,6 +182,51 @@ void __declspec(naked) ChangedRes()
 		mov   esp, ebp
 		pop   ebp
 		jmp   jmpAddrChangedRes
+	}
+}
+
+// Get video resolution and calculate new position
+int MovResX;
+int MovResY;
+void __declspec(naked) GetSFDResFromFile()
+{
+	_asm
+	{
+		mov  ecx, [ebp + 0x8]
+		mov  [ebp + 0xC], edx
+		mov   _EAX, eax
+		mov   _ECX, ecx
+		mov   _EDI, edi
+		mov  [MovResX], ecx
+		mov  [MovResY], eax
+	}
+
+	#ifdef VERBOSE
+	std::cout << "MovResX = " << MovResX << std::endl;
+	std::cout << "MovResY = " << MovResY << std::endl;
+	#endif
+
+	// Calculate new position
+	newMovPosX = MovResX / 2;
+	newMovNegX = -newMovPosX;
+
+	newMovPosY = MovResY / 1.54;
+	newMovNegY = -newMovPosY;
+
+	#ifdef VERBOSE
+	std::cout << "newMovPosX = " << newMovPosX << std::endl;
+	std::cout << "newMovNegX = " << newMovNegX << std::endl;
+
+	std::cout << "newMovPosY = " << newMovPosY << std::endl;
+	std::cout << "newMovNegY = " << newMovNegY << std::endl;
+	#endif
+
+	_asm 
+	{
+		mov  eax, _EAX
+		mov  ecx, _ECX
+		mov  edi, _EDI
+		ret
 	}
 }
 
@@ -462,8 +516,10 @@ void ReadSettings()
 	flip_item_right = iniReader.ReadString("KEYBOARD", "flip_item_right", "PAGEUP");
 	QTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
 	QTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
-	SFD_DisplayResolution = iniReader.ReadString("MOVIE", "SFD_DisplayResolution", "512x336");
-	bMemOptimi = iniReader.ReadBoolean("EXPERIMENTAL", "MemOptimi", false);
+	bAllowHighResolutionSFD = iniReader.ReadBoolean("MOVIE", "AllowHighResolutionSFD", true);
+	bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", true);
+	bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", true);
+	bUseMemcpy = iniReader.ReadBoolean("MEMORY", "UseMemcpy", true);
 	bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
 }
 
@@ -593,6 +649,8 @@ void GetPointers()
 void HandleLimits()
 {
 	// vertex buffers
+	if (bRaiseVertexAlloc)
+	{
 	auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
 	injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68000C3500, true);  // 400000 -> 800000
 	injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68000C3500, true);
@@ -610,8 +668,11 @@ void HandleLimits()
 	injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 0x6800B71B00, true);
 	injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 0x6800B71B00, true);
 	injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 0x6800B71B00, true);
+	}
 
 	// Inventory screen mem
+	if (bRaiseInventoryAlloc)
+	{
 	MH_CreateHook(ptrstageInit, MessageControl__stageInit_Hook, (LPVOID*)&MessageControl__stageInit_Orig);
 	MH_CreateHook(ptrSubScreenAramRead, SubScreenAramRead_Hook, (LPVOID*)&SubScreenAramRead_Orig);
 
@@ -648,6 +709,7 @@ void HandleLimits()
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen4, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true); // SubScreenExec, some heap size
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen5, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen6, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
+	}
 }
 
 // New WndProc func
@@ -781,51 +843,24 @@ bool Init()
 	}
 
 	// SFD size
-	if (SFD_DisplayResolution != "512x336")
+	if (bAllowHighResolutionSFD)
 	{
 		// Create mem hooks
 		MH_CreateHook(ptrcSofdec__startApp, cSofdec__startApp_Hook, (LPVOID*)&cSofdec__startApp_Orig);
 		MH_CreateHook(ptrmwPlyCalcWorkCprmSfd, mwPlyCalcWorkCprmSfd_Hook, (LPVOID*)&mwPlyCalcWorkCprmSfd_Orig);
 		MH_CreateHook(ptrcSofdec__finishMovie, cSofdec__finishMovie_Hook, (LPVOID*)&cSofdec__finishMovie_Orig);
 
-		// Parse resolution using an array
-		char* ResString[] = {SFD_DisplayResolution.data()};
-		char* ResArray[2];
+		// Get resolution and calculate new position
+		pattern = hook::pattern("8B 4D ? 89 55 ? A3 ? ? ? ? 89 0D ? ? ? ? DB 45");
+		injector::MakeNOP(pattern.get_first(0), 6, true);
+		injector::MakeCALL(pattern.get_first(0), GetSFDResFromFile, true);
 
-		ResArray[0] = strtok_s(*ResString, "x", &ResArray[1]);
-
-		int MovPosX;
-		int MovPosY;
-		assert(sscanf_s(ResArray[0], "%d", &MovPosX) > 0);
-		assert(sscanf_s(ResArray[1], "%d", &MovPosY) > 0);
-
-		// Calculate new resolution
-		int newMovPosX = MovPosX / 2;
-		int newMovNegX = -newMovPosX;
-
-		int newMovPosY = MovPosY / 1.5;
-		int newMovNegY = -newMovPosY;
-
-		#ifdef VERBOSE
-		std::cout << "newMovPosX = " << newMovPosX << std::endl;
-		std::cout << "newMovNegX = " << newMovNegX << std::endl;
-
-		std::cout << "newMovPosY = " << newMovPosY << std::endl;
-		std::cout << "newMovNegY = " << newMovNegY << std::endl;
-		#endif
-
+		// Write new pointers
 		auto pattern = hook::pattern("D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 1C ? 50 E8 ? ? ? ? 8D 4D ? 6A ? 51 E8 ? ? ? ? 8D 55 ? 52 8D 45 ? 50 8D 4D ? 51 56 E8 ? ? ? ? 8B 4D ? 33 CD");
-		static uint32_t* ptrMovPosX = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(2), true);
-		static uint32_t* ptrMovNegX = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(12), true);
-
-		static uint32_t* ptrMovPosY = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(32), true);
-		static uint32_t* ptrMovNegY = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(22), true);
-
-		// Write new values
-		injector::WriteMemory<float>(ptrMovPosX, newMovPosX, true);
-		injector::WriteMemory<float>(ptrMovNegX, newMovNegX, true);
-		injector::WriteMemory<float>(ptrMovPosY, newMovPosY, true);
-		injector::WriteMemory<float>(ptrMovNegY, newMovNegY, true);
+		injector::WriteMemory(pattern.get_first(2), &newMovPosX, true);
+		injector::WriteMemory(pattern.get_first(12), &newMovNegX, true);
+		injector::WriteMemory(pattern.get_first(32), &newMovPosY, true);
+		injector::WriteMemory(pattern.get_first(22), &newMovNegY, true);
 	}
 
 	// Check if the game is running at a valid frame rate
@@ -838,7 +873,7 @@ bool Init()
 	}
 
 	// Replace MemorySwap with memcpy
-	if (bMemOptimi)
+	if (bUseMemcpy)
 	{
 		auto pattern = hook::pattern("8b 49 14 33 c0 a3 ? ? ? ? 85 c9 74 ? 8b ff f6 81 ? ? ? ? 20 8b 49 ? 74 ? b8 01 00 00 00 a3 ? ? ? ? 85 c9 75 ? c3");
 		injector::MakeJMP(pattern.get_first(0), memcpy, true);
