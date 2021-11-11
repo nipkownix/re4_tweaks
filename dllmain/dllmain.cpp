@@ -50,6 +50,7 @@ bool bFixVsyncToggle;
 bool bFixUltraWideAspectRatio;
 bool bFixQTE;
 bool bSkipIntroLogos;
+bool bFixRetryLoadMouseSelector;
 bool bRestorePickupTransparency;
 bool bFixBlurryImage;
 bool bAllowHighResolutionSFD;
@@ -65,6 +66,7 @@ bool bEnableGCBlur;
 uintptr_t jmpAddrChangedRes;
 uintptr_t* ptrYMovieResFromFile;
 uintptr_t* ptrXMovieResFromFile;
+uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t ptrGameState;
 static uint32_t* ptrGameFrameRate;
@@ -734,17 +736,18 @@ void ReadSettings()
 	CIniReader iniReader("");
 	fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
 	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
-	bFixSniperZoom = iniReader.ReadBoolean("DISPLAY", "FixSniperZoom", true);
 	bFixVsyncToggle = iniReader.ReadBoolean("DISPLAY", "FixVsyncToggle", true);
 	bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", true);
-	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", false);
-	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", false);
-	bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", false);
+	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", true);
+	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", true);
+	bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", true);
 	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
 	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
+	bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
+	bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
@@ -1132,6 +1135,34 @@ bool Init()
 			injector::WriteMemory(pattern.get_first(5), uint8_t(0xb8), true); // mov eax, XXXXXXXX
 			injector::WriteMemory(pattern.get_first(6), uint32_t(WS_POPUP), true);
 		}
+	}
+
+	// Prevents the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
+	if (bFixRetryLoadMouseSelector)
+	{
+		// Get pointer for the state. Only reliable way I found to achieve this.
+		pattern = hook::pattern("C7 06 ? ? ? ? A1 ? ? ? ? F7 80 ? ? ? ? ? ? ? ? 74"); //0x48C1C0
+		struct RLDLGState
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				*(int*)(regs.esi) = 0;
+				ptrRetryLoadDLGstate = regs.esi + 0x3;
+			}
+		}; injector::MakeInline<RLDLGState>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Check if the "yes/no" prompt is open before sending any index updates
+		pattern = hook::pattern("89 8F ? ? ? ? FF 85 ? ? ? ? 83 C6 ? 3B 77");
+		struct MouseMenuSelector
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (*(int32_t*)ptrRetryLoadDLGstate != 1)
+				{
+					*(int32_t*)(regs.edi + 0x160) = regs.ecx;
+				}
+			}
+		}; injector::MakeInline<MouseMenuSelector>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// SFD size
