@@ -500,6 +500,7 @@ CardSave_Fn CardSave = nullptr;
 
 uintptr_t pG_ptr;
 uintptr_t pSys_ptr;
+uintptr_t pPL_ptr; // cPlayer*
 
 uint32_t* DbgFontColorArray = nullptr;
 uint32_t* PadButtonStates = nullptr;
@@ -721,7 +722,7 @@ void GetPointers()
 	cDvd = (void*)*varPtr;
 
 	pattern = hook::pattern("FF BF FF FF 6A 04 E8 ? ? ? ? 83 C4 ? 85 C0 74 ? 8B 15 ? ? ? ?");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(0x14);
+	varPtr = pattern.count(1).get(0).get<uint32_t>(20);
 	roomInfoAddr = (uint32_t*)*varPtr;
 
 	pattern = hook::pattern("00 80 00 00 83 C4 ? E8 ? ? ? ? A1 ? ? ? ?");
@@ -729,8 +730,11 @@ void GetPointers()
 	pSys_ptr = (uintptr_t)*varPtr;
 
 	pattern = hook::pattern("53 56 33 C0 BE ? ? ? ? 8D A4 24 00 00 00 00");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(0x5);
+	varPtr = pattern.count(1).get(0).get<uint32_t>(5);
 	ToolMenuEntries = (ToolMenuEntry*)*varPtr;
+
+	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");
+	pPL_ptr = *pattern.count(1).get(0).get<uintptr_t>(1);
 }
 
 // Button definitions used by tool menus
@@ -761,64 +765,6 @@ enum class GamePadButton
 	RS_Down = 0x400000,
 	RS_Up = 0x800000,
 };
-
-// recreate gameDebug function from debug EXE, opens tool menu when button combo is pressed
-// 0x63C610 into debug EXE
-uint32_t PrevKeyboardState = 0;
-void __cdecl gameDebug_recreation(void* a1)
-{
-	// Check pressed keys & emulate controller presses for tool-menu
-	uint32_t keyboardState = 0;
-	if (GetAsyncKeyState(VK_HOME))
-		keyboardState |= uint32_t(GamePadButton::LT);
-	if (GetAsyncKeyState(VK_END))
-		keyboardState |= uint32_t(GamePadButton::LS);
-
-	// Only emulate main keys if tool-menu is actually open
-	uint8_t* pG = *(uint8_t**)pG_ptr;
-	bool inDebugMenu = (*(uint32_t*)(pG + 0x60) & 0x80000000) != 0;
-	if (inDebugMenu)
-	{
-		if (GetAsyncKeyState(VK_UP) || GetAsyncKeyState('W'))
-			keyboardState |= uint32_t(GamePadButton::DPad_Up);
-		if (GetAsyncKeyState(VK_DOWN) || GetAsyncKeyState('S'))
-			keyboardState |= uint32_t(GamePadButton::DPad_Down);
-		if (GetAsyncKeyState(VK_LEFT) || GetAsyncKeyState('A'))
-			keyboardState |= uint32_t(GamePadButton::DPad_Left);
-		if (GetAsyncKeyState(VK_RIGHT) || GetAsyncKeyState('D'))
-			keyboardState |= uint32_t(GamePadButton::DPad_Right);
-		if (GetAsyncKeyState(VK_RETURN) || GetAsyncKeyState('F'))
-			keyboardState |= uint32_t(GamePadButton::A);
-		if (GetAsyncKeyState(VK_ESCAPE) || GetAsyncKeyState(VK_BACK))
-			keyboardState |= uint32_t(GamePadButton::B);
-		if (GetAsyncKeyState(VK_DELETE) || GetAsyncKeyState('Q'))
-			keyboardState |= uint32_t(GamePadButton::LB);
-		if (GetAsyncKeyState(VK_NEXT) || GetAsyncKeyState('E')) // pagedown
-			keyboardState |= uint32_t(GamePadButton::RB);
-	}
-
-	if (keyboardState != PrevKeyboardState)
-	{
-		PadButtonStates[0] |= keyboardState;
-
-		// toolmenu funcs check [4], [3] & [1] for some reason
-		PadButtonStates[4] = PadButtonStates[3] = PadButtonStates[1] = PadButtonStates[0];
-
-		PrevKeyboardState = keyboardState;
-	}
-
-	// Check for LT + LS buttons
-	// (make sure they're the only ones pressed - if player opens a UI at same time it'll likely cause a hang...)
-	bool isOnlyDebugComboPressed = PadButtonStates[0] == (uint32_t(GamePadButton::LT) | uint32_t(GamePadButton::LS));
-	if (isOnlyDebugComboPressed)
-	{
-		// Only run DbMenuExec if debug menu isn't open already, otherwise game can hang
-		if (!inDebugMenu)
-			DbMenuExec();
-	}
-
-	GameTask_callee_Orig(a1);
-}
 
 // Funcs hooked for debug menu stuff
 typedef void(*MenuTask_Fn)();
@@ -877,6 +823,85 @@ void eprintf_Hook(int a1, int a2, int a3, int a4, char* Format, ...)
 	vsprintf_s(eprintf_buffer, Format, va);
 
 	eprintf_ScreenDisp(eprintf_buffer, float(a1), float(a2 + 64), DbgFontColorArray[a3]);
+}
+
+#pragma pack(push, 1)
+struct cPlayer // unsure if correct name!
+{
+	/* 0x000 */ uint8_t unk0[0x94];
+	/* 0x094 */ float X;
+	/* 0x098 */ float Y;
+	/* 0x09C */ float Z;
+	/* 0x0A0 */ float unkA0;
+	/* 0x0A4 */ float Angle;
+	/* goes to 7F0+ */
+};
+#pragma pack(pop)
+
+// recreate gameDebug function from debug EXE, opens tool menu when button combo is pressed
+// 0x63C610 into debug EXE
+uint32_t PrevKeyboardState = 0;
+bool ShowInfoDisplay = false;
+void __cdecl gameDebug_recreation(void* a1)
+{
+	// Check pressed keys & emulate controller presses for tool-menu
+	uint32_t keyboardState = 0;
+	if (GetAsyncKeyState(VK_HOME))
+		keyboardState |= uint32_t(GamePadButton::LT);
+	if (GetAsyncKeyState(VK_END))
+		keyboardState |= uint32_t(GamePadButton::LS);
+
+	// Only emulate main keys if tool-menu is actually open
+	uint8_t* pG = *(uint8_t**)pG_ptr;
+	bool inDebugMenu = (*(uint32_t*)(pG + 0x60) & 0x80000000) != 0;
+	if (inDebugMenu)
+	{
+		if (GetAsyncKeyState(VK_UP) || GetAsyncKeyState('W'))
+			keyboardState |= uint32_t(GamePadButton::DPad_Up);
+		if (GetAsyncKeyState(VK_DOWN) || GetAsyncKeyState('S'))
+			keyboardState |= uint32_t(GamePadButton::DPad_Down);
+		if (GetAsyncKeyState(VK_LEFT) || GetAsyncKeyState('A'))
+			keyboardState |= uint32_t(GamePadButton::DPad_Left);
+		if (GetAsyncKeyState(VK_RIGHT) || GetAsyncKeyState('D'))
+			keyboardState |= uint32_t(GamePadButton::DPad_Right);
+		if (GetAsyncKeyState(VK_RETURN) || GetAsyncKeyState('F'))
+			keyboardState |= uint32_t(GamePadButton::A);
+		if (GetAsyncKeyState(VK_ESCAPE) || GetAsyncKeyState(VK_BACK))
+			keyboardState |= uint32_t(GamePadButton::B);
+		if (GetAsyncKeyState(VK_DELETE) || GetAsyncKeyState('Q'))
+			keyboardState |= uint32_t(GamePadButton::LB);
+		if (GetAsyncKeyState(VK_NEXT) || GetAsyncKeyState('E')) // pagedown
+			keyboardState |= uint32_t(GamePadButton::RB);
+	}
+
+	if (keyboardState != PrevKeyboardState)
+	{
+		PadButtonStates[0] |= keyboardState;
+
+		// toolmenu funcs check [4], [3] & [1] for some reason
+		PadButtonStates[4] = PadButtonStates[3] = PadButtonStates[1] = PadButtonStates[0];
+
+		PrevKeyboardState = keyboardState;
+	}
+
+	// Check for LT + LS buttons
+	// (make sure they're the only ones pressed - if player opens a UI at same time it'll likely cause a hang...)
+	bool isOnlyDebugComboPressed = PadButtonStates[0] == (uint32_t(GamePadButton::LT) | uint32_t(GamePadButton::LS));
+	if (isOnlyDebugComboPressed)
+	{
+		// Only run DbMenuExec if debug menu isn't open already, otherwise game can hang
+		if (!inDebugMenu)
+			DbMenuExec();
+	}
+
+	if (ShowInfoDisplay)
+	{
+		cPlayer* pPL = *(cPlayer**)pPL_ptr;
+		if (pPL)
+			eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->X, pPL->Y, pPL->Z, pPL->Angle);
+	}
+
+	GameTask_callee_Orig(a1);
 }
 
 MenuTask_Fn MenuTask_Orig = nullptr;
@@ -980,6 +1005,15 @@ void ToolMenu_MercenariesAllOpen()
 	flag |= 0x2000000;
 	*(uint32_t*)(pSys + 4) = flag;
 
+	ToolMenu_Exit();
+}
+
+const char* ToolMenu_UnusedName = "";
+
+const char* ToolMenu_ToggleInfoDispName = "TOGGLE INFO Disp";
+void ToolMenu_ToggleInfoDisp()
+{
+	ShowInfoDisplay = !ShowInfoDisplay;
 	ToolMenu_Exit();
 }
 
@@ -1108,14 +1142,31 @@ void DoDebugMenuHooks()
 		ToolMenuEntries[15].FuncPtr = &ToolMenu_SecretOpen;
 		ToolMenuEntries[29].FuncPtr = &ToolMenu_MercenariesAllOpen;
 
+		// MUTEKI ON -> TOGGLE HUD
 		ToolMenuEntries[2].Name = ToolMenu_ToggleHUDName;
 		ToolMenuEntries[2].FuncPtr = &ToolMenu_ToggleHUD;
+
 		//TODO: ToolMenuEntries[3].Name = ToolMenu_LightToolName;
+
+		// MUGEN ON -> SAVE GAME
 		ToolMenuEntries[4].Name = ToolMenu_SaveGameName;
 		ToolMenuEntries[4].FuncPtr = &ToolMenu_SaveGame;
 
-		// "DEBUG OPTION" entry points to nullsub which hangs game, null it out to prevent that
-		ToolMenuEntries[17].FuncPtr = nullptr;
+		// INFO Disp ON -> Toggle INFO Disp
+		ToolMenuEntries[12].Name = ToolMenu_ToggleInfoDispName;
+		ToolMenuEntries[12].FuncPtr = &ToolMenu_ToggleInfoDisp;
+
+		// Clear non-functional options on non-debug builds
+		if (game_version == "1.1.0" || game_version == "1.0.6")
+		{
+			for (int i = 0; i < 32; i++)
+			{
+				if (i == 0 || i == 1 || i == 2 || i == 4 || i == 12 || i == 15 || i == 16 || i == 29)
+					continue;
+				ToolMenuEntries[i].Name = ToolMenu_UnusedName;
+				ToolMenuEntries[i].FuncPtr = nullptr; // some unused ones like "DEBUG OPTION" pointed to nullsub that'd hang game, null it out to prevent it
+			}
+		}
 	}
 }
 
