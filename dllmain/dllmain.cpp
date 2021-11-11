@@ -486,6 +486,7 @@ typedef void* (__cdecl* GXLoadImage_Fn)(const char* path);
 typedef void(__cdecl* GX_ScreenDisp_Fn)(void* a1, float a2, float a3, float a4, float a5, float a6, float a7, float a8, float a9, int a10);
 typedef uint32_t(__cdecl* DvdReadN_Fn)(const char* a1, int a2, int a3, int a4, int a5, __int16 a6);
 typedef int(__fastcall* cDvd__ReadCheck_Fn)(void* thisptr, void* unused, uint32_t a2, void* a3, void* a4, void* a5);
+typedef void(__cdecl* CardSave_Fn)(uint8_t a1, char a2);
 typedef void(*FlagEdit_die_Fn)();
 
 DbMenuExec_Fn DbMenuExec = nullptr;
@@ -495,6 +496,7 @@ GX_ScreenDisp_Fn GX_ScreenDisp = nullptr;
 DvdReadN_Fn DvdReadN = nullptr;
 cDvd__ReadCheck_Fn cDvd__ReadCheck = nullptr;
 FlagEdit_die_Fn FlagEdit_die = nullptr;
+CardSave_Fn CardSave = nullptr;
 
 uintptr_t pG_ptr;
 uintptr_t pSys_ptr;
@@ -504,6 +506,15 @@ uint32_t* PadButtonStates = nullptr;
 uint32_t* FlagEdit_Backup_pG = nullptr;
 void* cDvd = nullptr;
 uint32_t* roomInfoAddr = nullptr;
+
+struct ToolMenuEntry
+{
+	const char* Name;
+	uint32_t Unk4;
+	void* FuncPtr;
+	uint32_t UnkC;
+};
+ToolMenuEntry* ToolMenuEntries;
 
 void GetPointers()
 {
@@ -690,6 +701,9 @@ void GetPointers()
 	pattern = hook::pattern("55 8B EC 8B 55 ? 81 EC ? ? ? ? 8D 85 ? ? ? ? 50 52 E8 ? ? ? ? 83 F8 01 75");
 	cDvd__ReadCheck = (cDvd__ReadCheck_Fn)pattern.count(1).get(0).get<uint8_t>(0);
 
+	pattern = hook::pattern("55 8B EC 8A 45 0C A8 02 74 ?");
+	CardSave = (CardSave_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
 	FlagEdit_die = (FlagEdit_die_Fn)pattern.count(1).get(0).get<uint8_t>(0);
 	pG_ptr = *(uintptr_t*)pattern.count(1).get(0).get<uint8_t>(1);
@@ -714,8 +728,9 @@ void GetPointers()
 	varPtr = pattern.count(1).get(0).get<uint32_t>(13);
 	pSys_ptr = (uintptr_t)*varPtr;
 
-	// TODO (kinda hard tho)
-	//pFlags_DISP = (uint32_t*)(GameAddress + 0x85A7B8);
+	pattern = hook::pattern("53 56 33 C0 BE ? ? ? ? 8D A4 24 00 00 00 00");
+	varPtr = pattern.count(1).get(0).get<uint32_t>(0x5);
+	ToolMenuEntries = (ToolMenuEntry*)*varPtr;
 }
 
 // Button definitions used by tool menus
@@ -909,6 +924,82 @@ void systemRestartInit_Hook()
 	if (cDvd__ReadCheck(cDvd, 0, handle, 0, 0, roomInfoAddr) < 0)
 		*roomInfoAddr = 0;
 }
+void ToolMenu_Exit()
+{
+	uint8_t* pG = *(uint8_t**)pG_ptr;
+
+	// Exit tool-menu state via FlagEdit_die
+	// FlagEdit_die overwrites pG+0x170 with contents of 0xC6D008, so we need to write that first...
+	*FlagEdit_Backup_pG = *(uint32_t*)(pG + 0x170);
+	FlagEdit_die();
+
+	// alternatively "TaskChain(MenuTask, 0);" should return us to tool-menu
+	// but that requires another funcptr to track...
+}
+
+void ToolMenu_GoldMax()
+{
+	uint8_t* pG = *(uint8_t**)pG_ptr;
+	*(uint32_t*)(pG + 0x4FA8) = 99999999;
+
+	ToolMenu_Exit();
+}
+
+void ToolMenu_SecretOpen()
+{
+	uint8_t* pSys = *(uint8_t**)pSys_ptr;
+	uint32_t flag = *(uint32_t*)(pSys + 4);
+	flag |= 0x80000000; // debug exe ORs these seperately, probably part of an enum or something
+	flag |= 0x40000000;
+	flag |= 0x20000000;
+	flag |= 0x10000000;
+	flag |= 0x8000000;
+	flag |= 0x4000000;
+	flag |= 0x2000000;
+	flag |= 0x1000000;
+	flag |= 0x800000;
+	flag |= 0x400000;
+	flag |= 0x200000;
+	flag |= 0x100000;
+	flag |= 0x80000;
+	flag |= 0x40000;
+	flag |= 0x20000;
+	flag |= 0x10000;
+	*(uint32_t*)(pSys + 4) = flag;
+
+	ToolMenu_Exit();
+}
+
+void ToolMenu_MercenariesAllOpen()
+{
+	uint8_t* pSys = *(uint8_t**)pSys_ptr;
+	uint32_t flag = *(uint32_t*)(pSys + 4);
+	flag |= 0x80000000;
+	flag |= 0x8000000;
+	flag |= 0x4000000;
+	flag |= 0x2000000;
+	*(uint32_t*)(pSys + 4) = flag;
+
+	ToolMenu_Exit();
+}
+
+const char* ToolMenu_ToggleHUDName = "TOGGLE HUD";
+void ToolMenu_ToggleHUD()
+{
+	uint8_t* pG = *(uint8_t**)pG_ptr;
+	uint32_t* flags_DISP = (uint32_t*)(pG + 0x58);
+	*flags_DISP ^= 0x10000; // DPF_COCKPIT
+
+	ToolMenu_Exit();
+}
+
+const char* ToolMenu_SaveGameName = "SAVE GAME";
+void ToolMenu_SaveGame()
+{
+	CardSave(0, 1);
+
+	ToolMenu_Exit();
+}
 
 void DoDebugMenuHooks()
 {
@@ -1009,6 +1100,22 @@ void DoDebugMenuHooks()
 	{
 		pattern = hook::pattern("80 FB 05 7F ? 84 DB 7E ?");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(7), uint8_t(0x7C), true);
+	}
+
+	// Overwrite non-functional tool menu entries with replacements
+	{
+		ToolMenuEntries[1].FuncPtr = &ToolMenu_GoldMax;
+		ToolMenuEntries[15].FuncPtr = &ToolMenu_SecretOpen;
+		ToolMenuEntries[29].FuncPtr = &ToolMenu_MercenariesAllOpen;
+
+		ToolMenuEntries[2].Name = ToolMenu_ToggleHUDName;
+		ToolMenuEntries[2].FuncPtr = &ToolMenu_ToggleHUD;
+		//TODO: ToolMenuEntries[3].Name = ToolMenu_LightToolName;
+		ToolMenuEntries[4].Name = ToolMenu_SaveGameName;
+		ToolMenuEntries[4].FuncPtr = &ToolMenu_SaveGame;
+
+		// "DEBUG OPTION" entry points to nullsub which hangs game, null it out to prevent that
+		ToolMenuEntries[17].FuncPtr = nullptr;
 	}
 }
 
