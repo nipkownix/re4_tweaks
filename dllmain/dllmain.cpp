@@ -49,6 +49,7 @@ bool bFixSniperZoom;
 bool bFixVsyncToggle;
 bool bFixUltraWideAspectRatio;
 bool bFixQTE;
+bool bSkipIntroLogos;
 bool bRestorePickupTransparency;
 bool bFixBlurryImage;
 bool bAllowHighResolutionSFD;
@@ -743,6 +744,7 @@ void ReadSettings()
 	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
+	bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
@@ -1193,6 +1195,15 @@ bool Init()
 		injector::MakeNOP(pattern.count(2).get(1).get<uint32_t>(0), 6, true); 
 		injector::MakeCALL(pattern.count(2).get(0).get<uint32_t>(0), QTEspd_StatuePullUp, true);
 		injector::MakeCALL(pattern.count(2).get(1).get<uint32_t>(0), QTEspd_StatuePullUp, true);
+	}
+
+	if (bSkipIntroLogos)
+	{
+		pattern = hook::pattern("81 7E 24 E6 00 00 00");
+		// Overwrite some kind of timer check to check for 0 seconds instead
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(3), uint32_t(0), true);
+		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
 	}
 
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
