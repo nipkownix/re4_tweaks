@@ -114,76 +114,6 @@ int intQTE_key_1;
 int intQTE_key_2;
 int intGameState;
 
-// Check if variableframerate is valid
-void CheckFPS(DWORD IniFrameRate)
-{
-	#ifdef VERBOSE
-	std::cout << "Config.ini frame rate = " << IniFrameRate << std::endl;
-	#endif
-
-	int intCurFPS = IniFrameRate;
-
-	if (intCurFPS != 30 && intCurFPS != 60) {
-
-		int intNewFPS;
-		
-		// Calculate new fps
-		if (intCurFPS > 45)
-			intNewFPS = 60;
-		else
-			intNewFPS = 30;
-
-		// Show warning
-		std::string Msg = "ERROR: Invalid frame rate detected\n\nYour game appears to be configured to run at " + std::to_string(intCurFPS) + 
-			" FPS, which isn't supported and will break multiple aspects of the game.\nThis could mean you edited the game's \"config.ini\" file" + 
-			" and changed the \"variableframerate\" value to something other than 30 or 60.\n\nTo prevent the problems mentioned, re4_tweaks automatically" +
-			" changed the FPS to " + std::to_string(intNewFPS) + ".\n\nThis warning and the automatic change can be disabled by editing re4_tweaks' \"winmm.ini\" file.";
-
-		MessageBoxA(NULL, Msg.c_str(), "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
-
-		// Overwrite bad fps value
-		injector::WriteMemory<int>(ptrGameFrameRate, intNewFPS, true);
-	} else {
-		// Write original fps value
-		injector::WriteMemory<int>(ptrGameFrameRate, intCurFPS, true);
-	}
-}
-
-// Called when the resolution is changed
-DWORD IniFrameRate;
-void __declspec(naked) ReadFPS()
-{
-	_asm 
-	{
-		mov   IniFrameRate, ecx
-		mov   _EAX, eax
-		mov   _ECX, ecx
-		mov   _EDI, edi
-	}
-
-	CheckFPS(IniFrameRate);
-
-	_asm 
-	{
-		mov   eax, _EAX
-		mov   ecx, _ECX
-		mov   edi, _EDI
-		ret
-	}
-}
-
-// Calculate new FOV
-void __declspec(naked) ScaleFOV()
-{
-	_asm
-	{
-		fld   dword ptr[ebp - 0x34]
-		fadd  fFOVAdditional
-		mov   [esi + 0x4], ecx
-		ret
-	}
-}
-
 // Flip inventory item
 void __declspec(naked) FlipInv()
 {
@@ -980,9 +910,21 @@ bool Init()
 	// FOV
 	if (fFOVAdditional != 0.0f)
 	{
+		// Hook function that loads the FOV
 		auto pattern = hook::pattern("D9 45 ? 89 4E ? D9 5E ? 8B 8D ? ? ? ? 89 46 ? 8B 85 ? ? ? ? 8D 7E");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), ScaleFOV, true);
+		struct ScaleFOV
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float vanillaFov = *(float*)(regs.ebp - 0x34);
+				_asm
+				{
+					fld   vanillaFov
+					fadd  fFOVAdditional
+				}
+				*(int32_t*)(regs.esi + 0x4) = regs.ecx;
+			}
+		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 	
 	// Fix vsync option
@@ -1098,10 +1040,44 @@ bool Init()
 	// Check if the game is running at a valid frame rate
 	if (!bIgnoreFPSWarning)
 	{
+		// Hook function to read the FPS value from config.ini
 		auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
 		ptrGameFrameRate = *pattern.count(1).get(0).get<uint32_t*>(2);
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), ReadFPS, true);
+		struct ReadFPS
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int intIniFPS = regs.ecx;
+				int intNewFPS;
+
+				#ifdef VERBOSE
+				std::cout << "Config.ini frame rate = " << intIniFPS << std::endl;
+				#endif
+
+				if (intIniFPS != 30 && intIniFPS != 60) {
+
+					// Calculate new fps
+					if (intIniFPS > 45)
+						intNewFPS = 60;
+					else
+						intNewFPS = 30;
+
+					// Show warning
+					std::string Msg = "ERROR: Invalid frame rate detected\n\nYour game appears to be configured to run at " + std::to_string(intIniFPS) +
+						" FPS, which isn't supported and will break multiple aspects of the game.\nThis could mean you edited the game's \"config.ini\" file" +
+						" and changed the \"variableframerate\" value to something other than 30 or 60.\n\nTo prevent the problems mentioned, re4_tweaks automatically" +
+						" changed the FPS to " + std::to_string(intNewFPS) + ".\n\nThis warning and the automatic change can be disabled by editing re4_tweaks' \"winmm.ini\" file.";
+
+					MessageBoxA(NULL, Msg.c_str(), "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
+
+					// Use new FPS value
+					*(int32_t*)(ptrGameFrameRate) = intNewFPS;
+				} else {
+					// Use .ini FPS value.
+					*(int32_t*)(ptrGameFrameRate) = intIniFPS;
+				}
+			}
+		}; injector::MakeInline<ReadFPS>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// Replace MemorySwap with memcpy
