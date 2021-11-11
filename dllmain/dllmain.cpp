@@ -942,6 +942,74 @@ void DoDebugMenuHooks()
 	// Hook FlagEdit so we can slow it down by only exposing buttons to it when button state has changed at all
 	pattern = hook::pattern("55 8B EC 56 8B 75 ? 57 33 FF F6 05");
 	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), FlagEdit_main_Hook, (LPVOID*)&FlagEdit_main_Orig);
+
+	// Patches to change debug menu button bindings
+	{
+		// Allow tool-menu selection with X / A
+		pattern = hook::pattern("E8 ? ? ? ? F7 05 ? ? ? ? 00 04 00 00");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(11), uint32_t(GamePadButton::X) | uint32_t(GamePadButton::A), true);
+		// Change tool-menu return button to B / Back
+		pattern = hook::pattern("F7 05 ? ? ? ? 00 12 00 00 BE FF FF FF 7F");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), uint32_t(GamePadButton::B) | uint32_t(GamePadButton::Back), true);
+		// Allow flag toggle with X/A
+		pattern = hook::pattern("83 C4 ? F7 05 ? ? ? ? 00 04 00 00 74 ? 8B");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(9), uint32_t(GamePadButton::X) | uint32_t(GamePadButton::A), true);
+		// Change flag-menu return button to B/Back
+		pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? F7 05 ? ? ? ? 00 01 00 00 5B");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(14), uint32_t(GamePadButton::B) | uint32_t(GamePadButton::Back), true);
+		// Allow area jump with X/A/Start
+		pattern = hook::pattern("83 C4 ? F7 05 ? ? ? ? 00 04 00 00 74 ? C6");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(9), uint32_t(GamePadButton::X) | uint32_t(GamePadButton::A) | uint32_t(GamePadButton::Start), true);
+		// Change area jump return button to B/Back
+		pattern = hook::pattern("C6 06 02 F7 05 ? ? ? ? 00 01 00 00 74");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(9), uint32_t(GamePadButton::B) | uint32_t(GamePadButton::Back), true);
+	}
+
+	// FlagEdit displays flags in wrong order, each 16-bits is displayed on the wrong line
+	// (to be expected from a port from a big-endian machine like GC/Wii)
+	// it reads flags in as 16-bit words, and then seems to have code to handle swapping the bits inside
+	// since the flags are actually 32-bits, it reads the wrong part of that 32-bit dword
+	// we can fix that by a simple xor though :)
+
+	// very fortunately for us there's a useless instruction just before flag-reading code
+	// patch it to "mov eax, edi; xor edi, 1; nop", to swap which part of 32-bit dword to read from
+	{
+		pattern = hook::pattern("33 FF 85 C0 0F 8E ? ? ? ? 8D 9B 00 00 00 00");
+
+		uint8_t patchBytes[] = { 0x89, 0xf8, 0x83, 0xf0, 0x01, 0x90 };
+		injector::WriteMemoryRaw(pattern.count(1).get(0).get<uint32_t>(10), patchBytes, 6, true);
+		// patch read code to use eax register instead of edi
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(0x19), uint8_t(0x41), true);
+		// patch loop to jump to start of our patched code
+		pattern = hook::pattern("47 C1 F8 04 83 C4 24 3B F8 0F 8C");
+		int32_t* jmpDest = pattern.count(1).get(0).get<int32_t>(11);
+		injector::WriteMemory(jmpDest, *jmpDest - 6, true);
+	}
+
+	// Fixes for off-screen FlagEdit text
+	{
+		pattern = hook::pattern("6A 00 6A 06 6A F3");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(5), uint8_t(13), true);
+
+		pattern = hook::pattern("6A 00 6A 00 6A 00 68 B8 00 00 00");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(5), uint8_t(13 + 13), true);
+
+		pattern = hook::pattern("6A 00 6A 04 6A 00 68 08 01 00 00");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(5), uint8_t(13 + 13), true);
+
+		pattern = hook::pattern("C1 F8 02 8D 44 38 01");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(6), uint8_t(3), true);
+
+		pattern = hook::pattern("C1 EA 06 8D 54 0A 01");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(6), uint8_t(3), true);
+	}
+
+	// Allow RoomJump 1.1.0 to access stage 0 (test stages)
+	if (game_version == "1.1.0")
+	{
+		pattern = hook::pattern("80 FB 05 7F ? 84 DB 7E ?");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(7), uint8_t(0x7C), true);
+	}
 }
 
 void HandleLimits()
