@@ -63,7 +63,8 @@ bool bMemOptimi;
 bool bWindowBorderless;
 bool bEnableGCBlur;
 
-uintptr_t jmpAddrChangedRes;
+uintptr_t* ptrResMovAddr;
+uintptr_t* ptrSFDMovAddr;
 uintptr_t* ptrYMovieResFromFile;
 uintptr_t* ptrXMovieResFromFile;
 uintptr_t ptrRetryLoadDLGstate;
@@ -106,133 +107,12 @@ static uint32_t* ptrg_MemPool_SubScreen4;
 static uint32_t* ptrg_MemPool_SubScreen5;
 static uint32_t* ptrg_MemPool_SubScreen6;
 
-uint32_t intGameWidth;
-uint32_t intGameHeight;
-
-
 int iWindowPositionX;
 int iWindowPositionY;
 int intFlipDirection;
 int intQTE_key_1;
 int intQTE_key_2;
 int intGameState;
-
-void HandleAspectRatio(uint32_t intGameWidth, uint32_t intGameHeight)
-{
-	double fGameWidth = intGameWidth;
-	double fGameHeight = intGameHeight;
-
-	double fGameDisplayAspectRatio = fGameWidth / fGameHeight;
-
-	double fNewEngineAspectRatio = (fGameDisplayAspectRatio / fDefaultEngineAspectRatio);
-	double fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
-	double fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
-
-	// if ultrawide
-	if (fGameDisplayAspectRatio > 2.2)
-	{
-		#ifdef VERBOSE
-		std::cout << "fNewEngineWidthScale = " << fNewEngineWidthScale << std::endl;
-		std::cout << "fNewAspectRatio = " << fNewAspectRatio << std::endl;
-		#endif
-
-		fNewInvItemNamePos = 385;
-		fNewFilesTitlePos = 370;
-		fNewFilesItemsPos = 375;
-		fNewMapIconsPos = 336;
-		fNewMerchItemListPos = 333;
-		fNewMerchItemDescPos = 395;
-		fNewMerchGreetingPos = 380;
-		fNewTItemNamesPos = 385;
-		fNewRadioNamesPos = 380;
-
-		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
-		injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
-	} else {
-		#ifdef VERBOSE
-		std::cout << "Wrote default aspect ratio values" << std::endl;
-		#endif
-		fNewInvItemNamePos = 320;
-		fNewFilesTitlePos = 320;
-		fNewFilesItemsPos = 320;
-		fNewMapIconsPos = 320;
-		fNewMerchItemListPos = 320;
-		fNewMerchItemDescPos = 320;
-		fNewMerchGreetingPos = 320;
-		fNewTItemNamesPos = 320;
-		fNewRadioNamesPos = 320;
-
-		injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
-		injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
-	}
-}
-
-// Called when the resolution is changed
-void __declspec(naked) ChangedRes()
-{
-	_asm
-	{
-		mov   intGameWidth, eax
-		mov   intGameHeight, ecx
-	}
-
-	// Call function to handle aspect ratio when res is changed
-	HandleAspectRatio(intGameWidth, intGameHeight);
-
-	_asm
-	{
-		pop   esi
-		pop   ebx
-		mov   esp, ebp
-		pop   ebp
-		jmp   jmpAddrChangedRes
-	}
-}
-
-// Get video resolution and calculate new position
-int MovResX;
-int MovResY;
-void __declspec(naked) GetSFDResFromFile()
-{
-	_asm
-	{
-		mov  ecx, [ebp + 0x8]
-		mov  [ebp + 0xC], edx
-		mov   _EAX, eax
-		mov   _ECX, ecx
-		mov   _EDI, edi
-		mov  [MovResX], ecx
-		mov  [MovResY], eax
-	}
-
-	#ifdef VERBOSE
-	std::cout << "MovResX = " << MovResX << std::endl;
-	std::cout << "MovResY = " << MovResY << std::endl;
-	#endif
-
-	// Calculate new position
-	newMovPosX = MovResX / 2;
-	newMovNegX = -newMovPosX;
-
-	newMovPosY = MovResY / 1.54;
-	newMovNegY = -newMovPosY;
-
-	#ifdef VERBOSE
-	std::cout << "newMovPosX = " << newMovPosX << std::endl;
-	std::cout << "newMovNegX = " << newMovNegX << std::endl;
-
-	std::cout << "newMovPosY = " << newMovPosY << std::endl;
-	std::cout << "newMovNegY = " << newMovNegY << std::endl;
-	#endif
-
-	_asm 
-	{
-		mov  eax, _EAX
-		mov  ecx, _ECX
-		mov  edi, _EDI
-		ret
-	}
-}
 
 // Check if variableframerate is valid
 void CheckFPS(DWORD IniFrameRate)
@@ -1174,9 +1054,38 @@ bool Init()
 		MH_CreateHook(ptrcSofdec__finishMovie, cSofdec__finishMovie_Hook, (LPVOID*)&cSofdec__finishMovie_Orig);
 
 		// Get resolution and calculate new position
-		pattern = hook::pattern("8B 4D ? 89 55 ? A3 ? ? ? ? 89 0D ? ? ? ? DB 45");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), GetSFDResFromFile, true);
+		pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? DB 45 ? 0F B7 0D");
+		ptrSFDMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
+		struct SFDRes
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int MovResX = regs.ecx;
+				int MovResY = regs.eax;
+
+				#ifdef VERBOSE
+				std::cout << "MovResX = " << MovResX << std::endl;
+				std::cout << "MovResY = " << MovResY << std::endl;
+				#endif
+
+				// Calculate new position
+				newMovPosX = MovResX / 2;
+				newMovNegX = -newMovPosX;
+
+				newMovPosY = MovResY / 1.54;
+				newMovNegY = -newMovPosY;
+
+				#ifdef VERBOSE
+				std::cout << "newMovPosX = " << newMovPosX << std::endl;
+				std::cout << "newMovNegX = " << newMovNegX << std::endl;
+
+				std::cout << "newMovPosY = " << newMovPosY << std::endl;
+				std::cout << "newMovNegY = " << newMovNegY << std::endl;
+				#endif
+
+				*(int32_t*)(ptrSFDMovAddr) = regs.eax;
+			}
+		}; injector::MakeInline<SFDRes>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 		// Write new pointers
 		auto pattern = hook::pattern("D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 1C ? 50 E8 ? ? ? ? 8D 4D ? 6A ? 51 E8 ? ? ? ? 8D 55 ? 52 8D 45 ? 50 8D 4D ? 51 56 E8 ? ? ? ? 8B 4D ? 33 CD");
@@ -1246,10 +1155,68 @@ bool Init()
 		pattern = hook::pattern("D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C 24 ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? D9 81");
 		ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(2);
 
+		// Hook function that changes the resolution
 		pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? 5E 5B 8B E5 5D C3");
-		injector::MakeNOP(pattern.get_first(11), 5, true);
-		injector::MakeJMP(pattern.get_first(11), ChangedRes, true);
-		jmpAddrChangedRes = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(16);
+		ptrResMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
+		struct ResChange
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				#ifdef VERBOSE
+				std::cout << "ResX = " << regs.eax << std::endl;
+				std::cout << "ResY = " << regs.ecx << std::endl;
+				#endif
+
+				double fGameWidth = regs.eax;
+				double fGameHeight = regs.ecx;
+
+				double fGameDisplayAspectRatio = fGameWidth / fGameHeight;
+
+				double fNewEngineAspectRatio = (fGameDisplayAspectRatio / fDefaultEngineAspectRatio);
+				double fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
+				double fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
+
+				// if ultrawide
+				if (fGameDisplayAspectRatio > 2.2)
+				{
+					#ifdef VERBOSE
+					std::cout << "fNewEngineWidthScale = " << fNewEngineWidthScale << std::endl;
+					std::cout << "fNewAspectRatio = " << fNewAspectRatio << std::endl;
+					#endif
+
+					fNewInvItemNamePos = 385;
+					fNewFilesTitlePos = 370;
+					fNewFilesItemsPos = 375;
+					fNewMapIconsPos = 336;
+					fNewMerchItemListPos = 333;
+					fNewMerchItemDescPos = 395;
+					fNewMerchGreetingPos = 380;
+					fNewTItemNamesPos = 385;
+					fNewRadioNamesPos = 380;
+
+					injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
+					injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
+				}
+				else {
+					#ifdef VERBOSE
+					std::cout << "Wrote default aspect ratio values" << std::endl;
+					#endif
+					fNewInvItemNamePos = 320;
+					fNewFilesTitlePos = 320;
+					fNewFilesItemsPos = 320;
+					fNewMapIconsPos = 320;
+					fNewMerchItemListPos = 320;
+					fNewMerchItemDescPos = 320;
+					fNewMerchGreetingPos = 320;
+					fNewTItemNamesPos = 320;
+					fNewRadioNamesPos = 320;
+
+					injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
+					injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
+				}
+				*(int32_t*)(ptrResMovAddr) = regs.eax;
+			}
+		}; injector::MakeInline<ResChange>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(4));
 
 		// Text offset fixes
 		// Iventory item name
