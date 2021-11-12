@@ -82,6 +82,8 @@
     <ClCompile Include="..\includes\stdafx.cpp" />
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="roomInfo.cpp" />
+    <ClCompile Include="tool_menu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\IniReader.h" />
@@ -131,6 +133,7 @@
     <ClInclude Include="..\Wrappers\winmm.h" />
     <ClInclude Include="..\Wrappers\wrapper.h" />
     <ClInclude Include="..\Wrappers\wsock32.h" />
+    <ClInclude Include="game_flags.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
