@@ -579,7 +579,7 @@ void GetPointers()
 	pattern = hook::pattern("05 ? ? ? ? F6 C1 ? 8B 0D ? ? ? ? A3 ? ? ? ? 8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1");
 	ptrpzzl_size = pattern.count(1).get(0).get<uint32_t>(1);
 
-	pattern = hook::pattern("55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? A1 ? ? ? ? 8A 80");
+	pattern = hook::pattern("55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? A1 ? ? ? ? 8A 80 ? ? ? ? 56 8B F1 84 C0 0F 84 ? ? ? ? 0F B6 C8 51");
 	ptrstageInit = pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 56 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 05");
@@ -598,13 +598,13 @@ void GetPointers()
 	ptrp_MemPool_SubScreen4 = pattern.count(1).get(0).get<uint32_t>(2);
 
 	pattern = hook::pattern("8B 0D ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 8D 94 ? ? ? ? ? 52 6A");
-	if (game_version == "1.0.6")
+	if (game_version == "1.0.6") // only in 1.0.6 non-debug build
 		ptrp_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(2);
 	else
 		ptrp_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(-4);
 
 	pattern = hook::pattern("8B 15 ? ? ? ? A1 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 8D 8C");
-	if (game_version == "1.0.6")
+	if (game_version == "1.0.6") // only in 1.0.6 non-debug build
 		ptrp_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(2);
 	else
 		ptrp_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(7);
@@ -855,6 +855,11 @@ bool Init()
 		MessageBoxA(NULL, "This version of RE4 is not supported.\nre4_tweaks will be disabled.", "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
 		return false;
 	}
+
+	// Check for part of gameDebug function, if exists this must be a debug-enabled build
+	pattern = hook::pattern("6A 00 6A 00 6A 08 68 AE 01 00 00 6A 10 6A 0A");
+	if (pattern.size() > 0)
+		game_version += "d";
 
 	#ifdef VERBOSE
 	std::cout << "Game version = " << game_version << std::endl;
