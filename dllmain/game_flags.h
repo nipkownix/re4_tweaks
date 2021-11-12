@@ -1,5 +1,34 @@
 #pragma once
 
+// Button definitions used by tool menus
+enum class GamePadButton
+{
+	DPad_Left = 1,
+	DPad_Right = 2,
+	DPad_Down = 4,
+	DPad_Up = 8,
+	RT = 0x10,
+	RB = 0x20,
+	LB = 0x40,
+	LT = 0x80,
+	A = 0x100,
+	B = 0x200,
+	X = 0x400,
+	Y = 0x800,
+	Start = 0x1000,
+	Back = 0x2000,
+	RS = 0x4000,
+	LS = 0x8000,
+	LS_Left = 0x10000,
+	LS_Right = 0x20000,
+	LS_Down = 0x40000,
+	LS_Up = 0x80000,
+	RS_Left = 0x100000,
+	RS_Right = 0x200000,
+	RS_Down = 0x400000,
+	RS_Up = 0x800000,
+};
+
 enum class Flags_DEBUG
 {
 	DBG_TEST_MODE = 0, // 0x80000000 (@ 0x0)

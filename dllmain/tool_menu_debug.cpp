@@ -58,6 +58,24 @@ void __cdecl roomJumpMove_Hook(void* a1)
     PadButtonStates[4] = curButtons;
 }
 
+uint32_t RebindButtons(uint32_t buttons)
+{
+    // DEBUG OPTION menu uses a bunch of different funcs, all with their own code to check the buttons
+    // It's easier to change the value it checks than to patch all those
+    // We'll change A to X, and B to A
+    if (buttons & uint32_t(GamePadButton::A))
+    {
+        buttons &= ~uint32_t(GamePadButton::A);
+        buttons |= uint32_t(GamePadButton::X);
+    }
+    if (buttons & uint32_t(GamePadButton::B))
+    {
+        buttons &= ~uint32_t(GamePadButton::B);
+        buttons |= uint32_t(GamePadButton::A);
+    }
+    return buttons;
+}
+
 Fn_0args_cdecl tp_menu_Orig;
 void tp_menu_Hook()
 {
@@ -67,7 +85,7 @@ void tp_menu_Hook()
     *ToolOption_Buttons = 0;
 
     if (PrevButtons != curButtons)
-        *ToolOption_Buttons = curButtons;
+        *ToolOption_Buttons = RebindButtons(curButtons);
 
     tp_menu_Orig();
 
@@ -84,7 +102,7 @@ void tp_pl_Hook()
     *ToolOption_Buttons = 0;
 
     if (PrevButtons != curButtons)
-        *ToolOption_Buttons = curButtons;
+        *ToolOption_Buttons = RebindButtons(curButtons);
 
     tp_pl_Orig();
 
@@ -101,7 +119,7 @@ void tp_scr_Hook()
     *ToolOption_Buttons = 0;
 
     if (PrevButtons != curButtons)
-        *ToolOption_Buttons = curButtons;
+        *ToolOption_Buttons = RebindButtons(curButtons);
 
     tp_scr_Orig();
 
