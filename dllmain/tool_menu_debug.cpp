@@ -11,6 +11,7 @@ typedef void(__cdecl* Fn_0args_cdecl)();
 typedef void(__cdecl* move_Fn)(void* a1);
 
 extern uint32_t* PadButtonStates; // tool_menu.cpp
+uint32_t Keyboard2Gamepad(); // tool_menu.cpp
 
 uint32_t* ToolOptionClass_ptr = nullptr;
 
@@ -18,7 +19,7 @@ extern uint32_t PrevButtons;
 move_Fn move_Orig = nullptr;
 void __cdecl move_Hook(void* a1)
 {
-    uint32_t curButtons = PadButtonStates[3];
+    uint32_t curButtons = PadButtonStates[3] | Keyboard2Gamepad();
     PadButtonStates[1] = 0;
     PadButtonStates[3] = 0;
 
@@ -38,7 +39,7 @@ void __cdecl move_Hook(void* a1)
 move_Fn roomJumpMove_Orig = nullptr;
 void __cdecl roomJumpMove_Hook(void* a1)
 {
-    uint32_t curButtons = PadButtonStates[3];
+    uint32_t curButtons = PadButtonStates[3] | Keyboard2Gamepad();
     PadButtonStates[1] = 0;
     PadButtonStates[3] = 0;
     PadButtonStates[4] = 0;
@@ -81,7 +82,7 @@ void tp_menu_Hook()
 {
     uint32_t* ToolOption_Buttons = (uint32_t*)(*ToolOptionClass_ptr + 0x20);
 
-    uint32_t curButtons = *ToolOption_Buttons;
+    uint32_t curButtons = *ToolOption_Buttons | Keyboard2Gamepad();
     *ToolOption_Buttons = 0;
 
     if (PrevButtons != curButtons)
@@ -98,7 +99,7 @@ void tp_pl_Hook()
 {
     uint32_t* ToolOption_Buttons = (uint32_t*)(*ToolOptionClass_ptr + 0x20);
 
-    uint32_t curButtons = *ToolOption_Buttons;
+    uint32_t curButtons = *ToolOption_Buttons | Keyboard2Gamepad();
     *ToolOption_Buttons = 0;
 
     if (PrevButtons != curButtons)
@@ -115,7 +116,7 @@ void tp_scr_Hook()
 {
     uint32_t* ToolOption_Buttons = (uint32_t*)(*ToolOptionClass_ptr + 0x20);
 
-    uint32_t curButtons = *ToolOption_Buttons;
+    uint32_t curButtons = *ToolOption_Buttons | Keyboard2Gamepad();
     *ToolOption_Buttons = 0;
 
     if (PrevButtons != curButtons)

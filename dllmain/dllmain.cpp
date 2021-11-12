@@ -7,6 +7,7 @@ std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
 std::string game_version;
+bool is_debug_build = false;
 std::string QTE_key_1;
 std::string QTE_key_2;
 std::string flip_item_up;
@@ -650,7 +651,7 @@ void GetPointers()
 	ptr_RenderHeight = (int*)*varPtr;
 
 	ToolMenu_GetPointers();
-	if(game_version.back() == 'd')
+	if (is_debug_build)
 		ToolMenuDebug_GetPointers();
 }
 
@@ -800,7 +801,10 @@ bool Init()
 	// Check for part of gameDebug function, if exists this must be a debug-enabled build
 	pattern = hook::pattern("6A 00 6A 00 6A 08 68 AE 01 00 00 6A 10 6A 0A");
 	if (pattern.size() > 0)
+	{
 		game_version += "d";
+		is_debug_build = true;
+	}
 
 	#ifdef VERBOSE
 	std::cout << "Game version = " << game_version << std::endl;
@@ -1246,7 +1250,7 @@ bool Init()
 	if (bEnableDebugMenu)
 	{
 		ToolMenu_ApplyHooks();
-		if (game_version.back() == 'd')
+		if (is_debug_build)
 			ToolMenuDebug_ApplyHooks();
 	}
 

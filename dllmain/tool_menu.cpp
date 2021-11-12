@@ -5,6 +5,7 @@
 #include "game_flags.h"
 
 extern std::string game_version;
+extern bool is_debug_build;
 
 // Funcs called by debug menu stuff
 typedef void(__cdecl* DbMenuExec_Fn)();
@@ -118,11 +119,13 @@ struct cPlayer // unsure if correct name!
 };
 #pragma pack(pop)
 
-// recreate gameDebug function from debug EXE, opens tool menu when button combo is pressed
-// 0x63C610 into debug EXE
-uint32_t PrevKeyboardState = 0;
-bool ShowInfoDisplay = false;
-void __cdecl gameDebug_recreation(void* a1)
+bool IsInDebugMenu()
+{
+	uint8_t* pG = *(uint8_t**)pG_ptr;
+	return (*(uint32_t*)(pG + 0x60) & GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE))) != 0;
+}
+
+uint32_t Keyboard2Gamepad()
 {
 	// Check pressed keys & emulate controller presses for tool-menu
 	uint32_t keyboardState = 0;
@@ -132,9 +135,7 @@ void __cdecl gameDebug_recreation(void* a1)
 		keyboardState |= uint32_t(GamePadButton::LS);
 
 	// Only emulate main keys if tool-menu is actually open
-	uint8_t* pG = *(uint8_t**)pG_ptr;
-	bool inDebugMenu = (*(uint32_t*)(pG + 0x60) & 0x80000000) != 0;
-	if (inDebugMenu)
+	if (IsInDebugMenu())
 	{
 		if (GetAsyncKeyState(VK_UP) || GetAsyncKeyState('W'))
 			keyboardState |= uint32_t(GamePadButton::DPad_Up);
@@ -154,6 +155,16 @@ void __cdecl gameDebug_recreation(void* a1)
 			keyboardState |= uint32_t(GamePadButton::RB);
 	}
 
+	return keyboardState;
+}
+
+// recreate gameDebug function from debug EXE, opens tool menu when button combo is pressed
+// 0x63C610 into debug EXE
+uint32_t PrevKeyboardState = 0;
+bool ShowInfoDisplay = false;
+void __cdecl gameDebug_recreation(void* a1)
+{
+	uint32_t keyboardState = Keyboard2Gamepad();
 	if (keyboardState != PrevKeyboardState)
 	{
 		PadButtonStates[0] |= keyboardState;
@@ -163,22 +174,30 @@ void __cdecl gameDebug_recreation(void* a1)
 
 		PrevKeyboardState = keyboardState;
 	}
-
-	// Check for LT + LS buttons
-	// (make sure they're the only ones pressed - if player opens a UI at same time it'll likely cause a hang...)
-	bool isOnlyDebugComboPressed = PadButtonStates[0] == (uint32_t(GamePadButton::LT) | uint32_t(GamePadButton::LS));
-	if (isOnlyDebugComboPressed)
+	else
 	{
-		// Only run DbMenuExec if debug menu isn't open already, otherwise game can hang
-		if (!inDebugMenu)
-			DbMenuExec();
+		if (keyboardState)
+			PadButtonStates[4] = PadButtonStates[3] = PadButtonStates[1] = PadButtonStates[0] = 0;
 	}
 
-	if (ShowInfoDisplay)
+	if (!is_debug_build)
 	{
-		cPlayer* pPL = *(cPlayer**)pPL_ptr;
-		if (pPL)
-			eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->X, pPL->Y, pPL->Z, pPL->Angle);
+		// Check for LT + LS buttons
+		// (make sure they're the only ones pressed - if player opens a UI at same time it'll likely cause a hang...)
+		bool isOnlyDebugComboPressed = PadButtonStates[0] == (uint32_t(GamePadButton::LT) | uint32_t(GamePadButton::LS));
+		if (isOnlyDebugComboPressed)
+		{
+			// Only run DbMenuExec if debug menu isn't open already, otherwise game can hang
+			if (!IsInDebugMenu())
+				DbMenuExec();
+		}
+
+		if (ShowInfoDisplay)
+		{
+			cPlayer* pPL = *(cPlayer**)pPL_ptr;
+			if (pPL)
+				eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->X, pPL->Y, pPL->Z, pPL->Angle);
+		}
 	}
 
 	GameTask_callee_Orig(a1);
@@ -414,8 +433,18 @@ void ToolMenu_ApplyHooks()
 	pattern = hook::pattern("55 8B EC 56 8B 75 ? 57 33 FF F6 05");
 	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), FlagEdit_main_Hook, (LPVOID*)&FlagEdit_main_Orig);
 
-	// If this isn't a debug build, add hooks to allow debug menu to be activated
-	if (game_version.back() != 'd')
+	if (is_debug_build)
+	{
+		// hook gameDebug so we can use the gamepad emulation stuff to add keyboard support
+		pattern = hook::pattern("EB 03 8D 49 00 E8 ? ? ? ? 53 E8 ? ? ? ?");
+		auto fnCallPtr = pattern.count(1).get(0).get<uint8_t>(6);
+		fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
+
+		GameTask_callee_Orig = (GameTask_callee_Fn)fnCallPtr;
+
+		injector::MakeCALL(pattern.count(1).get(0).get<uint8_t>(5), gameDebug_recreation, true);
+	}
+	else // If this isn't a debug build, add hooks to allow debug menu to be activated
 	{
 		// hook GameTask_callee call to run our gameDebug recreation
 		pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
@@ -510,7 +539,7 @@ void ToolMenu_ApplyHooks()
 	}
 
 	// Overwrite non-functional tool menu entries with replacements
-	if (game_version.back() != 'd')
+	if (!is_debug_build)
 	{
 		ToolMenuEntries[1].FuncPtr = &ToolMenu_GoldMax;
 		ToolMenuEntries[15].FuncPtr = &ToolMenu_SecretOpen;
@@ -531,7 +560,7 @@ void ToolMenu_ApplyHooks()
 		ToolMenuEntries[12].FuncPtr = &ToolMenu_ToggleInfoDisp;
 
 		// Clear non-functional options on non-debug builds
-		if (game_version == "1.1.0" || game_version == "1.0.6")
+		if (!is_debug_build)
 		{
 			for (int i = 0; i < 32; i++)
 			{
