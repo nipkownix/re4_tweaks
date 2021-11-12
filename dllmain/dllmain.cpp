@@ -767,9 +767,8 @@ void HandleLimits()
 	injector::WriteMemory<int>(ptrp_MemPool_SubScreen16, 0x000000, true);
 	injector::WriteMemory<int>(ptrp_MemPool_SubScreen17, 0x000000, true);
 
-	#define SS_MEM_OFFSET 0x1CB5400 // SubScreenAramRead adds this offset to the memory addr, could probably be patched out, but meh
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExec MemorySwap size
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExitCore MemorySwap size
+	injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)sizeof(g_MemPool_SubScreen), true); // SubScreenExec MemorySwap size
+	injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)sizeof(g_MemPool_SubScreen), true); // SubScreenExitCore MemorySwap size
 
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen3, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x1000000), true); // SubScreenExec, some heap size
 	injector::WriteMemory<int>(ptrg_MemPool_SubScreen4, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true); // SubScreenExec, some heap size
