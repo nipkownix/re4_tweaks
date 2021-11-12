@@ -549,15 +549,14 @@ void HandleAppID()
 
 void GetPointers()
 {
-	static uint32_t* HealthBase;
 	static uint32_t* StateBase;
 
-	// HealthBase pointer
-	auto pattern = hook::pattern("A1 ? ? ? ?  83 C0 60  6A 10  50  E8");
-	HealthBase = *pattern.count(1).get(0).get<uint32_t*>(1);
+	// pG (globals?) pointer
+	auto pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
+	ptrpG = *pattern.count(1).get(0).get<uint32_t*>(1);
 
 	// Current game state
-	ptrGameState = injector::ReadMemory<int>(HealthBase, true) + 0x20;
+	ptrGameState = injector::ReadMemory<int>(ptrpG, true) + 0x20;
 
 	// StateBase pointer
 	pattern = hook::pattern("A1 ? ? ? ? F7 40 ? ? ? ? ? 75 ? E8 ? ? ? ? 85 C0 74 ? 80 3D ? ? ? ? ? 75 ? 32 DB EB ? B3 ? E8 ? ? ? ? 85 C0 74 ? 32 DB");
@@ -577,9 +576,6 @@ void GetPointers()
 	ptrMemPoolMovie = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(2), true);
 
 	// Inventory screen mem
-	pattern = hook::pattern("A1 ? ? ? ? 56 D9 58 ? FF 15 ? ? ? ? 50 FF D7 8B 8D ? ? ? ? 8B 95 ? ? ? ? 89 0D");
-	ptrpG = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(1), true);
-
 	pattern = hook::pattern("05 ? ? ? ? F6 C1 ? 8B 0D ? ? ? ? A3 ? ? ? ? 8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1");
 	ptrpzzl_size = pattern.count(1).get(0).get<uint32_t>(1);
 
