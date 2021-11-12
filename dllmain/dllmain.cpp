@@ -43,7 +43,8 @@ double fNewMerchGreetingPos;
 double fNewTItemNamesPos;
 double fNewRadioNamesPos;
 
-bool bShouldFlip;
+bool bShouldFlipX;
+bool bShouldFlipY;
 bool bIsItemUp;
 bool bFixSniperZoom;
 bool bFixVsyncToggle;
@@ -59,12 +60,12 @@ bool bRaiseVertexAlloc;
 bool bRaiseInventoryAlloc;
 bool bUseMemcpy;
 bool bIgnoreFPSWarning;
-bool bMemOptimi;
 bool bWindowBorderless;
 bool bEnableGCBlur;
 
 uintptr_t* ptrResMovAddr;
 uintptr_t* ptrSFDMovAddr;
+uintptr_t* ptrInvMovAddr;
 uintptr_t* ptrYMovieResFromFile;
 uintptr_t* ptrXMovieResFromFile;
 uintptr_t ptrRetryLoadDLGstate;
@@ -109,45 +110,9 @@ static uint32_t* ptrg_MemPool_SubScreen6;
 
 int iWindowPositionX;
 int iWindowPositionY;
-int intFlipDirection;
 int intQTE_key_1;
 int intQTE_key_2;
 int intGameState;
-
-// Flip inventory item
-void __declspec(naked) FlipInv()
-{
-	if (bShouldFlip)
-	{
-		bShouldFlip = false;
-		_asm {mov eax, intFlipDirection}
-	}
-	_asm
-	{
-		test eax, 0xC00000
-		ret
-	}
-}
-
-void __declspec(naked) invItemDown()
-{
-	bIsItemUp = false;
-	_asm
-	{
-		and   byte ptr[eax + 0x8A], -0x10
-		ret
-	}
-}
-
-void __declspec(naked) invItemUp()
-{
-	bIsItemUp = true;
-	_asm
-	{
-		and   byte ptr[eax + 0x8A], 0x0F
-		ret
-	}
-}
 
 // QTE stuff
 void __declspec(naked) QTE1Binding()
@@ -826,19 +791,11 @@ LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		if (wParam == getMapKey(flip_item_left, "vk") || wParam == getMapKey(flip_item_right, "vk"))
 		{
-			if (bIsItemUp)
-			{
-				bShouldFlip = true;
-				intFlipDirection = 0x300000;
-			}
+			bShouldFlipX = true;
 		}
 		else if (wParam == getMapKey(flip_item_up, "vk") || wParam == getMapKey(flip_item_down, "vk"))
 		{
-			if (bIsItemUp)
-			{
-				bShouldFlip = true;
-				intFlipDirection = 0x400000;
-			}
+			bShouldFlipY = true;
 		}
 		#ifdef VERBOSE
 		else if (wParam == VK_NUMPAD3)
@@ -847,6 +804,16 @@ LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		#endif
 
+		break;
+	case WM_KEYUP:
+		if (wParam == getMapKey(flip_item_left, "vk") || wParam == getMapKey(flip_item_right, "vk"))
+		{
+			bShouldFlipX = false;
+		}
+		else if (wParam == getMapKey(flip_item_up, "vk") || wParam == getMapKey(flip_item_down, "vk"))
+		{
+			bShouldFlipY = false;
+		}
 		break;
 	case WM_CLOSE:
 		ExitProcess(0);
@@ -1322,16 +1289,27 @@ bool Init()
 	injector::WriteMemory<uint8_t>(pattern.count(4).get(2).get<uint32_t>(7), intQTE_key_2, true);
 
 	// Inventory item flip binding
-	pattern = hook::pattern("A9 ? ? ? ? 74 ? 6A 01 8B CE E8 ? ? ? ? BB 02 00 00 00");
-	injector::MakeNOP(pattern.get_first(0), 5, true);
-	injector::MakeCALL(pattern.get_first(0), FlipInv, true);
+	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
+	ptrInvMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct InvFlip
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.eax = *(int32_t*)ptrInvMovAddr;
 	
-	pattern = hook::pattern("80 A0 8A 00 00 00 F0 5D C3 80 88 8A 00 00 00 0F 5D C3");
-	injector::MakeNOP(pattern.get_first(0), 7, true);
-	injector::MakeCALL(pattern.get_first(0), invItemDown, true);
+			if (bShouldFlipX)
+			{
+				regs.eax = 0x00300000;
+				bShouldFlipX = false;
+			}
 	
-	injector::MakeNOP(pattern.get_first(9), 7, true);
-	injector::MakeCALL(pattern.get_first(9), invItemUp, true);
+			if (bShouldFlipY)
+			{
+				regs.eax = 0x00C00000;
+				bShouldFlipY = false;
+			}
+		}
+	}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Enable MH hooks
 	MH_EnableHook(MH_ALL_HOOKS);
