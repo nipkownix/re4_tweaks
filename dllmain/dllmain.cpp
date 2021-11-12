@@ -479,15 +479,14 @@ void HandleAppID()
 
 void GetPointers()
 {
-	static uint32_t* HealthBase;
 	static uint32_t* StateBase;
 
-	// HealthBase pointer
-	auto pattern = hook::pattern("A1 ? ? ? ?  83 C0 60  6A 10  50  E8");
-	HealthBase = *pattern.count(1).get(0).get<uint32_t*>(1);
+	// pG (globals?) pointer
+	auto pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
+	ptrpG = *pattern.count(1).get(0).get<uint32_t*>(1);
 
 	// Current game state
-	ptrGameState = injector::ReadMemory<int>(HealthBase, true) + 0x20;
+	ptrGameState = injector::ReadMemory<int>(ptrpG, true) + 0x20;
 
 	// StateBase pointer
 	pattern = hook::pattern("A1 ? ? ? ? F7 40 ? ? ? ? ? 75 ? E8 ? ? ? ? 85 C0 74 ? 80 3D ? ? ? ? ? 75 ? 32 DB EB ? B3 ? E8 ? ? ? ? 85 C0 74 ? 32 DB");
@@ -507,13 +506,10 @@ void GetPointers()
 	ptrMemPoolMovie = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(2), true);
 
 	// Inventory screen mem
-	pattern = hook::pattern("A1 ? ? ? ? 56 D9 58 ? FF 15 ? ? ? ? 50 FF D7 8B 8D ? ? ? ? 8B 95 ? ? ? ? 89 0D");
-	ptrpG = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(1), true);
-
 	pattern = hook::pattern("05 ? ? ? ? F6 C1 ? 8B 0D ? ? ? ? A3 ? ? ? ? 8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1");
 	ptrpzzl_size = pattern.count(1).get(0).get<uint32_t>(1);
 
-	pattern = hook::pattern("55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? A1 ? ? ? ? 8A 80");
+	pattern = hook::pattern("55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? A1 ? ? ? ? 8A 80 ? ? ? ? 56 8B F1 84 C0 0F 84 ? ? ? ? 0F B6 C8 51");
 	ptrstageInit = pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 56 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 05");
@@ -532,13 +528,13 @@ void GetPointers()
 	ptrp_MemPool_SubScreen4 = pattern.count(1).get(0).get<uint32_t>(2);
 
 	pattern = hook::pattern("8B 0D ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 8D 94 ? ? ? ? ? 52 6A");
-	if (game_version == "1.0.6")
+	if (game_version == "1.0.6") // only in 1.0.6 non-debug build
 		ptrp_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(2);
 	else
 		ptrp_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(-4);
 
 	pattern = hook::pattern("8B 15 ? ? ? ? A1 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 8D 8C");
-	if (game_version == "1.0.6")
+	if (game_version == "1.0.6") // only in 1.0.6 non-debug build
 		ptrp_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(2);
 	else
 		ptrp_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(7);
@@ -701,9 +697,8 @@ void HandleLimits()
 		injector::WriteMemory<int>(ptrp_MemPool_SubScreen16, 0x000000, true);
 		injector::WriteMemory<int>(ptrp_MemPool_SubScreen17, 0x000000, true);
 
-		#define SS_MEM_OFFSET 0x1CB5400 // SubScreenAramRead adds this offset to the memory addr, could probably be patched out, but meh
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExec MemorySwap size
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExitCore MemorySwap size
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)sizeof(g_MemPool_SubScreen), true); // SubScreenExec MemorySwap size
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)sizeof(g_MemPool_SubScreen), true); // SubScreenExitCore MemorySwap size
 
 		injector::WriteMemory<int>(ptrg_MemPool_SubScreen3, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x1000000), true); // SubScreenExec, some heap size
 		injector::WriteMemory<int>(ptrg_MemPool_SubScreen4, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true); // SubScreenExec, some heap size
@@ -789,6 +784,11 @@ bool Init()
 		MessageBoxA(NULL, "This version of RE4 is not supported.\nre4_tweaks will be disabled.", "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
 		return false;
 	}
+
+	// Check for part of gameDebug function, if exists this must be a debug-enabled build
+	pattern = hook::pattern("6A 00 6A 00 6A 08 68 AE 01 00 00 6A 10 6A 0A");
+	if (pattern.size() > 0)
+		game_version += "d";
 
 	#ifdef VERBOSE
 	std::cout << "Game version = " << game_version << std::endl;
