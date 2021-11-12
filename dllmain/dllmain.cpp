@@ -19,12 +19,8 @@ HMODULE proxy_dll = nullptr;
 
 //#define VERBOSE
 
-DWORD _EAX;
-DWORD _ECX;
-DWORD _EDI;
-
 float fFOVAdditional = 0.0f;
-float fQTESpeedMult = 2.0f;
+float fQTESpeedMult = 1.5f;
 float newMovPosX;
 float newMovNegX;
 float newMovPosY;
@@ -66,8 +62,6 @@ bool bEnableGCBlur;
 uintptr_t* ptrResMovAddr;
 uintptr_t* ptrSFDMovAddr;
 uintptr_t* ptrInvMovAddr;
-uintptr_t* ptrYMovieResFromFile;
-uintptr_t* ptrXMovieResFromFile;
 uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t ptrGameState;
@@ -113,70 +107,6 @@ int iWindowPositionY;
 int intQTE_key_1;
 int intQTE_key_2;
 int intGameState;
-
-// QTE stuff
-void __declspec(naked) QTE1Binding()
-{
-	_asm
-	{
-		mov   ebx, intQTE_key_1
-		mov   eax, [eax + 0x1C]
-		ret
-	}
-}
-
-void __declspec(naked) QTE2Binding()
-{
-	_asm
-	{
-		mov   edx, intQTE_key_2
-		mov   eax, [eax + 0x1C]
-		ret
-	}
-}
-
-void __declspec(naked) QTEspd_Boulders()
-{
-	_asm
-	{
-		fld    [edi + 0x418]
-		fld    dword ptr ds : [fQTESpeedMult]
-		fmul
-		ret
-	}
-}
-
-void __declspec(naked) QTEspd_MinecartPullUp()
-{
-	_asm
-	{
-		fld	   dword ptr[esi + 0x40C]
-		fld    dword ptr ds : [fQTESpeedMult]
-		fdiv
-		ret
-	}
-}
-
-void __declspec(naked) QTEspd_StatueRun()
-{
-	_asm
-	{
-		mov	   edi, [ebp + 0x14]
-		fld    dword ptr[edi]
-		fld    dword ptr ds : [fQTESpeedMult]
-		fmul
-		ret
-	}
-}
-
-void __declspec(naked) QTEspd_StatuePullUp()
-{
-	_asm
-	{
-		add[eax + 0x168], 0x3
-		ret
-	}
-}
 
 // SFD functions
 typedef int(__cdecl* mwPlyCalcWorkCprmSfd_Fn)(/* MwsfdCrePrm * */ void* cprm);
@@ -721,64 +651,64 @@ void HandleLimits()
 	// vertex buffers
 	if (bRaiseVertexAlloc)
 	{
-	auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
-	injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68000C3500, true);  // 400000 -> 800000
-	injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68000C3500, true);
+		auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68000C3500, true);  // 400000 -> 800000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68000C3500, true);
 
-	pattern = hook::pattern("68 00 09 3D 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1 ? ? ? ? 8B 08");
-	injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68007A1200, true);  // 4000000 -> 8000000
-	injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68007A1200, true);
+		pattern = hook::pattern("68 00 09 3D 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1 ? ? ? ? 8B 08");
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68007A1200, true);  // 4000000 -> 8000000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68007A1200, true);
 
-	pattern = hook::pattern("68 80 84 1E 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1");
-	injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68003D0900, true);  // 2000000 -> 4000000
-	injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68003D0900, true);
+		pattern = hook::pattern("68 80 84 1E 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1");
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68003D0900, true);  // 2000000 -> 4000000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68003D0900, true);
 
-	pattern = hook::pattern("68 80 8D 5B 00 50 8B 41 ? FF D0 85 C0 0F 85");
-	injector::WriteMemory<int>(pattern.count(4).get(0).get<uint32_t>(1), 0x6800B71B00, true);  // 6000000 -> 12000000
-	injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 0x6800B71B00, true);
-	injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 0x6800B71B00, true);
-	injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 0x6800B71B00, true);
+		pattern = hook::pattern("68 80 8D 5B 00 50 8B 41 ? FF D0 85 C0 0F 85");
+		injector::WriteMemory<int>(pattern.count(4).get(0).get<uint32_t>(1), 0x6800B71B00, true);  // 6000000 -> 12000000
+		injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 0x6800B71B00, true);
+		injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 0x6800B71B00, true);
+		injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 0x6800B71B00, true);
 	}
 
 	// Inventory screen mem
 	if (bRaiseInventoryAlloc)
 	{
-	MH_CreateHook(ptrstageInit, MessageControl__stageInit_Hook, (LPVOID*)&MessageControl__stageInit_Orig);
-	MH_CreateHook(ptrSubScreenAramRead, SubScreenAramRead_Hook, (LPVOID*)&SubScreenAramRead_Orig);
+		MH_CreateHook(ptrstageInit, MessageControl__stageInit_Hook, (LPVOID*)&MessageControl__stageInit_Orig);
+		MH_CreateHook(ptrSubScreenAramRead, SubScreenAramRead_Hook, (LPVOID*)&SubScreenAramRead_Orig);
 
-	p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
+		p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
 
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen1, (uintptr_t)&p_MemPool_SubScreen, true);
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen2, (uintptr_t)&p_MemPool_SubScreen, true);
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen3, (uintptr_t)&p_MemPool_SubScreen, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen1, (uintptr_t)&p_MemPool_SubScreen, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen2, (uintptr_t)&p_MemPool_SubScreen, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen3, (uintptr_t)&p_MemPool_SubScreen, true);
 
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen4, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads rel/Sscrn.rel
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen5, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads  ss_cmmn.dat read
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen6, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads  omk_pzzl.dat / ss_pzzl.dat
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen4, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads rel/Sscrn.rel
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen5, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads  ss_cmmn.dat read
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen6, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads  omk_pzzl.dat / ss_pzzl.dat
 
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen7, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExec MemorySwap call
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen8, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExitCore MemorySwap call
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen9, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExit
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen7, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExec MemorySwap call
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen8, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExitCore MemorySwap call
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen9, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExit
 
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen10, 0x000000, true);
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen11, 0x000000, true);
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen12, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen10, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen11, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen12, 0x000000, true);
 
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen13, 0x000000, true);
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen14, 0x000000, true);
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen15, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen13, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen14, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen15, 0x000000, true);
 
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen16, 0x000000, true);
-	injector::WriteMemory<int>(ptrp_MemPool_SubScreen17, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen16, 0x000000, true);
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen17, 0x000000, true);
 
-	#define SS_MEM_OFFSET 0x1CB5400 // SubScreenAramRead adds this offset to the memory addr, could probably be patched out, but meh
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExec MemorySwap size
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExitCore MemorySwap size
+		#define SS_MEM_OFFSET 0x1CB5400 // SubScreenAramRead adds this offset to the memory addr, could probably be patched out, but meh
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExec MemorySwap size
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)(sizeof(g_MemPool_SubScreen) - SS_MEM_OFFSET), true); // SubScreenExitCore MemorySwap size
 
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen3, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x1000000), true); // SubScreenExec, some heap size
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen4, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true); // SubScreenExec, some heap size
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen5, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
-	injector::WriteMemory<int>(ptrg_MemPool_SubScreen6, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen3, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x1000000), true); // SubScreenExec, some heap size
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen4, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true); // SubScreenExec, some heap size
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen5, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
+		injector::WriteMemory<int>(ptrg_MemPool_SubScreen6, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
 	}
 }
 
@@ -1057,27 +987,65 @@ bool Init()
 	// Fix QTE mashing speed issues
 	if (bFixQTE)
 	{
+		// Each one of these uses a different way to calculate how fast you're pressing the QTE key.
+
 		// Running from boulders
 		auto pattern = hook::pattern("D9 87 ? ? ? ? D8 87 ? ? ? ? D9 9F ? ? ? ? D9 EE D9 9F ? ? ? ? D9 05 ? ? ? ? D8 97 ? ? ? ? DF E0 F6 C4 ? 7A 20");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), QTEspd_Boulders, true);
+		struct BouldersQTE
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float vanillaSpeed = *(float*)(regs.edi + 0x418);
+				_asm
+				{
+					fld  vanillaSpeed
+					fmul fQTESpeedMult
+				}
+			}
+		}; injector::MakeInline<BouldersQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 		// Climbing up after the minecart ride
 		pattern = hook::pattern("D9 86 ? ? ? ? 8B 0D ? ? ? ? D8 61 ? D9 9E ? ? ? ? 6A ? 56 E8 ? ? ? ? D9 EE");
-		injector::MakeNOP(pattern.get_first(0), 6, true);
-		injector::MakeCALL(pattern.get_first(0), QTEspd_MinecartPullUp, true);
+		struct MinecartQTE
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float vanillaSpeed = *(float*)(regs.esi + 0x40C);
+				_asm
+				{
+					fld  vanillaSpeed
+					fdiv fQTESpeedMult
+				}
+			}
+		}; injector::MakeInline<MinecartQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 		// Running from Salazar's statue
 		pattern = hook::pattern("8B 7D 14 D9 07 E8 ? ? ? ? 0F AF 5D 24 D9 EE 01 06 8D 43 FF D9 1F 39 06");
-		injector::MakeNOP(pattern.get_first(0), 5, true);
-		injector::MakeCALL(pattern.get_first(0), QTEspd_StatueRun, true);
+		struct StatueRunQTE
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.edi = *(int32_t*)(regs.ebp + 0x14);
+				float vanillaSpeed = *(float*)(regs.edi);
+				_asm
+				{
+					fld  vanillaSpeed
+					fmul fQTESpeedMult
+				}
+			}
+		}; injector::MakeInline<StatueRunQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 		// Climbing up after running from Salazar's statue
 		pattern = hook::pattern("FF 80 ? ? ? ? 6A 00 6A 00 6A 02 6A 02 6A 02 6A 00 6A 00 6A 05 6A 19");
-		injector::MakeNOP(pattern.count(2).get(0).get<uint32_t>(0), 6, true); 
-		injector::MakeNOP(pattern.count(2).get(1).get<uint32_t>(0), 6, true); 
-		injector::MakeCALL(pattern.count(2).get(0).get<uint32_t>(0), QTEspd_StatuePullUp, true);
-		injector::MakeCALL(pattern.count(2).get(1).get<uint32_t>(0), QTEspd_StatuePullUp, true);
+		struct StatueClimbQTE
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				*(int32_t*)(regs.eax + 0x168) += 3;
+			}
+		};
+		injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(6));
+		injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
 	}
 
 	if (bSkipIntroLogos)
@@ -1267,14 +1235,26 @@ bool Init()
 	// KEY_1 binding hook
 	intQTE_key_1 = getMapKey(QTE_key_1, "dik");
 	pattern = hook::pattern("8B 58 ? 8B 40 ? 8D 8D ? ? ? ? 51");
-	injector::MakeNOP(pattern.get_first(0), 6, true);
-	injector::MakeCALL(pattern.get_first(0), QTE1Binding, true);
+	struct QTEkey1
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.ebx = intQTE_key_1;
+			regs.eax = *(int32_t*)(regs.eax + 0x1C);
+		}
+	}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 	// KEY_2 binding hook
 	intQTE_key_2 = getMapKey(QTE_key_2, "dik");
 	pattern = hook::pattern("8B 50 ? 8B 40 ? 8B F3 0B F1 74 ?");
-	injector::MakeNOP(pattern.get_first(0), 6, true);
-	injector::MakeCALL(pattern.get_first(0), QTE2Binding, true);
+	struct QTEkey2
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.edx = intQTE_key_2;
+			regs.eax = *(int32_t*)(regs.eax + 0x1C);
+		}
+	}; injector::MakeInline<QTEkey2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 	// KEY_1 icon prompts
 	pattern = hook::pattern("8D ? ? ? ? ? 6A 2D ? E8");
@@ -1296,13 +1276,13 @@ bool Init()
 		void operator()(injector::reg_pack& regs)
 		{
 			regs.eax = *(int32_t*)ptrInvMovAddr;
-	
+
 			if (bShouldFlipX)
 			{
 				regs.eax = 0x00300000;
 				bShouldFlipX = false;
 			}
-	
+
 			if (bShouldFlipY)
 			{
 				regs.eax = 0x00C00000;
