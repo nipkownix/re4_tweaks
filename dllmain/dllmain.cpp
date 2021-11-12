@@ -20,6 +20,8 @@ HMODULE proxy_dll = nullptr;
 // tool_menu.cpp
 void ToolMenu_GetPointers();
 void ToolMenu_ApplyHooks();
+void ToolMenuDebug_GetPointers();
+void ToolMenuDebug_ApplyHooks();
 
 //#define VERBOSE
 
@@ -648,6 +650,8 @@ void GetPointers()
 	ptr_RenderHeight = (int*)*varPtr;
 
 	ToolMenu_GetPointers();
+	if(game_version.back() == 'd')
+		ToolMenuDebug_GetPointers();
 }
 
 void HandleLimits()
@@ -1242,6 +1246,8 @@ bool Init()
 	if (bEnableDebugMenu)
 	{
 		ToolMenu_ApplyHooks();
+		if (game_version.back() == 'd')
+			ToolMenuDebug_ApplyHooks();
 	}
 
 	// QTE bindings and icons

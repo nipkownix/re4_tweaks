@@ -84,6 +84,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="roomInfo.cpp" />
     <ClCompile Include="tool_menu.cpp" />
+    <ClCompile Include="tool_menu_debug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\IniReader.h" />

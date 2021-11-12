@@ -46,66 +46,6 @@ struct ToolMenuEntry
 };
 ToolMenuEntry* ToolMenuEntries = nullptr;
 
-void ToolMenu_GetPointers()
-{
-	auto pattern = hook::pattern("A1 ? ? ? ? 81 48 ? 00 00 00 80 A1 ? ? ? ? 8B 88 ? ? ? ?");
-	DbMenuExec = (DbMenuExec_Fn)pattern.count(1).get(0).get<uint8_t>(0);
-
-	pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
-	auto fnCallPtr = pattern.count(1).get(0).get<uint8_t>(2);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GameTask_callee_Orig = (GameTask_callee_Fn)fnCallPtr;
-
-	pattern = hook::pattern("55 8B EC 83 EC ? 56 8B 75 ? 56 E8 ? ? ? ? 50 68 ? ? ? ? 68 00 01 00 00 68 ? ? ? ?");
-	GXLoadImage = (GXLoadImage_Fn)pattern.count(1).get(0).get<uint8_t>(0);
-
-	pattern = hook::pattern("D9 45 ? 03 C1 BA 30 00 00 00");
-	GX_ScreenDisp = (GX_ScreenDisp_Fn)pattern.count(1).get(0).get<uint8_t>(-0x2A);
-
-	pattern = hook::pattern("55 8B EC 56 6A 58 68 ? ? ? ? E8 ? ? ? ? 8B 45 ? 50 68 ? ? ? ?");
-	DvdReadN = (DvdReadN_Fn)pattern.count(1).get(0).get<uint8_t>(0);
-
-	pattern = hook::pattern("55 8B EC 8B 55 ? 81 EC ? ? ? ? 8D 85 ? ? ? ? 50 52 E8 ? ? ? ? 83 F8 01 75");
-	cDvd__ReadCheck = (cDvd__ReadCheck_Fn)pattern.count(1).get(0).get<uint8_t>(0);
-
-	pattern = hook::pattern("55 8B EC A1 ? ? ? ? 83 EC ? F7 40 54 00 00 02 00 74");
-	cDvd__FileExistCheck = (cDvd__FileExistCheck_Fn)pattern.count(1).get(0).get<uint8_t>(0);
-
-	pattern = hook::pattern("55 8B EC 8A 45 0C A8 02 74 ?");
-	CardSave = (CardSave_Fn)pattern.count(1).get(0).get<uint8_t>(0);
-
-	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
-	FlagEdit_die = (FlagEdit_die_Fn)pattern.count(1).get(0).get<uint8_t>(0);
-	pG_ptr = *(uintptr_t*)pattern.count(1).get(0).get<uint8_t>(1);
-	FlagEdit_Backup_pG = *(uint32_t**)pattern.count(1).get(0).get<uint8_t>(0x14);
-
-	pattern = hook::pattern("FF FF FF FF FF FF 00 00 FF 00");
-	DbgFontColorArray = pattern.count(1).get(0).get<uint32_t>(0);
-
-	pattern = hook::pattern("99 56 8B 35 ? ? ? ? 89 55");
-	auto varPtr = pattern.count(1).get(0).get<uint32_t>(4);
-	PadButtonStates = (uint32_t*)*varPtr;
-
-	pattern = hook::pattern("6A 40 52 B9 ? ? ? ? E8");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(4);
-	cDvd = (void*)*varPtr;
-
-	pattern = hook::pattern("FF BF FF FF 6A 04 E8 ? ? ? ? 83 C4 ? 85 C0 74 ? 8B 15 ? ? ? ?");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(20);
-	roomInfoAddr = (uint32_t*)*varPtr;
-
-	pattern = hook::pattern("00 80 00 00 83 C4 ? E8 ? ? ? ? A1 ? ? ? ?");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(13);
-	pSys_ptr = (uintptr_t)*varPtr;
-
-	pattern = hook::pattern("53 56 33 C0 BE ? ? ? ? 8D A4 24 00 00 00 00");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(5);
-	ToolMenuEntries = (ToolMenuEntry*)*varPtr;
-
-	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");
-	pPL_ptr = *pattern.count(1).get(0).get<uintptr_t>(1);
-}
-
 // Button definitions used by tool menus
 enum class GamePadButton
 {
@@ -434,38 +374,102 @@ void ToolMenu_SaveGame()
 	ToolMenu_Exit();
 }
 
+void ToolMenu_GetPointers()
+{
+	auto pattern = hook::pattern("A1 ? ? ? ? 81 48 ? 00 00 00 80 A1 ? ? ? ? 8B 88 ? ? ? ?");
+	DbMenuExec = (DbMenuExec_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+	pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
+	auto fnCallPtr = pattern.count(1).get(0).get<uint8_t>(2);
+	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
+	GameTask_callee_Orig = (GameTask_callee_Fn)fnCallPtr;
+
+	pattern = hook::pattern("55 8B EC 83 EC ? 56 8B 75 ? 56 E8 ? ? ? ? 50 68 ? ? ? ? 68 00 01 00 00 68 ? ? ? ?");
+	GXLoadImage = (GXLoadImage_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+	pattern = hook::pattern("D9 45 ? 03 C1 BA 30 00 00 00");
+	GX_ScreenDisp = (GX_ScreenDisp_Fn)pattern.count(1).get(0).get<uint8_t>(-0x2A);
+
+	pattern = hook::pattern("55 8B EC 56 6A 58 68 ? ? ? ? E8 ? ? ? ? 8B 45 ? 50 68 ? ? ? ?");
+	DvdReadN = (DvdReadN_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+	pattern = hook::pattern("55 8B EC 8B 55 ? 81 EC ? ? ? ? 8D 85 ? ? ? ? 50 52 E8 ? ? ? ? 83 F8 01 75");
+	cDvd__ReadCheck = (cDvd__ReadCheck_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+	pattern = hook::pattern("55 8B EC A1 ? ? ? ? 83 EC ? F7 40 54 00 00 02 00 74");
+	cDvd__FileExistCheck = (cDvd__FileExistCheck_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+	pattern = hook::pattern("55 8B EC 8A 45 0C A8 02 74 ?");
+	CardSave = (CardSave_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
+	FlagEdit_die = (FlagEdit_die_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	pG_ptr = *(uintptr_t*)pattern.count(1).get(0).get<uint8_t>(1);
+	FlagEdit_Backup_pG = *(uint32_t**)pattern.count(1).get(0).get<uint8_t>(0x14);
+
+	pattern = hook::pattern("FF FF FF FF FF FF 00 00 FF 00");
+	DbgFontColorArray = pattern.count(1).get(0).get<uint32_t>(0);
+
+	pattern = hook::pattern("99 56 8B 35 ? ? ? ? 89 55");
+	auto varPtr = pattern.count(1).get(0).get<uint32_t>(4);
+	PadButtonStates = (uint32_t*)*varPtr;
+
+	pattern = hook::pattern("6A 40 52 B9 ? ? ? ? E8");
+	varPtr = pattern.count(1).get(0).get<uint32_t>(4);
+	cDvd = (void*)*varPtr;
+
+	pattern = hook::pattern("FF BF FF FF 6A 04 E8 ? ? ? ? 83 C4 ? 85 C0 74 ? 8B 15 ? ? ? ?");
+	varPtr = pattern.count(1).get(0).get<uint32_t>(20);
+	roomInfoAddr = (uint32_t*)*varPtr;
+
+	pattern = hook::pattern("00 80 00 00 83 C4 ? E8 ? ? ? ? A1 ? ? ? ?");
+	varPtr = pattern.count(1).get(0).get<uint32_t>(13);
+	pSys_ptr = (uintptr_t)*varPtr;
+
+	pattern = hook::pattern("53 56 33 C0 BE ? ? ? ? 8D A4 24 00 00 00 00");
+	varPtr = pattern.count(1).get(0).get<uint32_t>(5);
+	ToolMenuEntries = (ToolMenuEntry*)*varPtr;
+
+	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");
+	pPL_ptr = *pattern.count(1).get(0).get<uintptr_t>(1);
+}
+
 void ToolMenu_ApplyHooks()
 {
-	// hook GameTask_callee call to run our gameDebug recreation
-	auto pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
-	injector::MakeCALL(pattern.count(1).get(0).get<uint32_t>(1), gameDebug_recreation, true);
-
-	// Remove bzero call that clears flags every frame for some reason
-	pattern = hook::pattern("83 C0 60 6A 10 50 E8");
-	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 5, true);
-
-	// Hook MenuTask (task for tool-menu), since it seems the menu can sometimes be shown without the pG+0x60 flag being set
-	// eg. when backing out of area-jump menu
-	// (which could make game hang if this causes us to try opening tool-menu when it's already open...)
-	pattern = hook::pattern("53 57 33 DB 53 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4");
-	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), MenuTask_Hook, (LPVOID*)&MenuTask_Orig);
-
 	// Hook systemRestartInit so we can make it load in roomInfo.dat
-	pattern = hook::pattern("53 56 E8 ? ? ? ? E8 ? ? ? ? 6A 01 E8 ? ? ? ? A1 ? ? ? ? 83 C0 ? 68");
+	auto pattern = hook::pattern("53 56 E8 ? ? ? ? E8 ? ? ? ? 6A 01 E8 ? ? ? ? A1 ? ? ? ? 83 C0 ? 68");
 	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), systemRestartInit_Hook, (LPVOID*)&systemRestartInit_Orig);
-
-	// Hook eprintf to add screen-drawing to it, like the GC debug has
-	// (required for debug-menu to be able to draw itself)
-	pattern = hook::pattern("55 8B EC 8B 4D ? 8D 45 ? 50 51 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D C3");
-	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), eprintf_Hook, NULL);
-
-	// Hook titleInit to make it load dbgFont for us
-	pattern = hook::pattern("55 8B EC 53 68 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 33 DB 53 53 53 53 68 ? ? ? ? C6");
-	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), titleInit_Hook, (LPVOID*)&titleInit_Orig);
 
 	// Hook FlagEdit so we can slow it down by only exposing buttons to it when button state has changed at all
 	pattern = hook::pattern("55 8B EC 56 8B 75 ? 57 33 FF F6 05");
 	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), FlagEdit_main_Hook, (LPVOID*)&FlagEdit_main_Orig);
+
+	// If this isn't a debug build, add hooks to allow debug menu to be activated
+	if (game_version.back() != 'd')
+	{
+		// hook GameTask_callee call to run our gameDebug recreation
+		pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
+		injector::MakeCALL(pattern.count(1).get(0).get<uint32_t>(1), gameDebug_recreation, true);
+
+		// Remove bzero call that clears flags every frame for some reason
+		pattern = hook::pattern("83 C0 60 6A 10 50 E8");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 5, true);
+
+		// Hook MenuTask (task for tool-menu), since it seems the menu can sometimes be shown without the pG+0x60 flag being set
+		// eg. when backing out of area-jump menu
+		// (which could make game hang if this causes us to try opening tool-menu when it's already open...)
+		pattern = hook::pattern("53 57 33 DB 53 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4");
+		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), MenuTask_Hook, (LPVOID*)&MenuTask_Orig);
+
+		// Hook eprintf to add screen-drawing to it, like the GC debug has
+		// (required for debug-menu to be able to draw itself)
+		pattern = hook::pattern("55 8B EC 8B 4D ? 8D 45 ? 50 51 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D C3");
+		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), eprintf_Hook, NULL);
+
+		// Hook titleInit to make it load dbgFont for us
+		pattern = hook::pattern("55 8B EC 53 68 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 33 DB 53 53 53 53 68 ? ? ? ? C6");
+		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), titleInit_Hook, (LPVOID*)&titleInit_Orig);
+	}
 
 	// Patches to change debug menu button bindings
 	{
@@ -536,6 +540,7 @@ void ToolMenu_ApplyHooks()
 	}
 
 	// Overwrite non-functional tool menu entries with replacements
+	if (game_version.back() != 'd')
 	{
 		ToolMenuEntries[1].FuncPtr = &ToolMenu_GoldMax;
 		ToolMenuEntries[15].FuncPtr = &ToolMenu_SecretOpen;
