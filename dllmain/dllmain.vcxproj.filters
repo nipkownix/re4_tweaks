@@ -37,6 +37,9 @@
     <ClCompile Include="tool_menu_debug.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="tool_menu_lights.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">

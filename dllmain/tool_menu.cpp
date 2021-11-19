@@ -7,6 +7,11 @@
 extern std::string game_version;
 extern bool is_debug_build;
 
+// Light tool externs
+void LightTool_GetPointers();
+void ToolMenu_LightToolMenu();
+extern const char* ToolMenu_LightToolMenuName;
+
 // Funcs called by debug menu stuff
 typedef void(__cdecl* DbMenuExec_Fn)();
 typedef void(__cdecl* GameTask_callee_Fn)(void* a1);
@@ -95,6 +100,7 @@ void __cdecl eprintf_ScreenDisp(const char* str, float x, float y, int color)
 		GX_ScreenDisp(DbgFont, x + (i * 8), y, 12.0, 18.0, v18, v17, v16, v20, color);
 	}
 }
+
 char eprintf_buffer[0x80];
 void eprintf_Hook(int a1, int a2, int a3, int a4, char* Format, ...)
 {
@@ -421,6 +427,8 @@ void ToolMenu_GetPointers()
 
 	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");
 	pPL_ptr = *pattern.count(1).get(0).get<uintptr_t>(1);
+
+	LightTool_GetPointers();
 }
 
 void ToolMenu_ApplyHooks()
@@ -549,7 +557,9 @@ void ToolMenu_ApplyHooks()
 		ToolMenuEntries[2].Name = ToolMenu_ToggleHUDName;
 		ToolMenuEntries[2].FuncPtr = &ToolMenu_ToggleHUD;
 
-		//TODO: ToolMenuEntries[3].Name = ToolMenu_LightToolName;
+		// MUTEKI OFF -> DOF/BLUR MENU
+		ToolMenuEntries[3].Name = ToolMenu_LightToolMenuName;
+		ToolMenuEntries[3].FuncPtr = &ToolMenu_LightToolMenu;
 
 		// MUGEN ON -> SAVE GAME
 		ToolMenuEntries[4].Name = ToolMenu_SaveGameName;
@@ -564,7 +574,7 @@ void ToolMenu_ApplyHooks()
 		{
 			for (int i = 0; i < 32; i++)
 			{
-				if (i == 0 || i == 1 || i == 2 || i == 4 || i == 12 || i == 15 || i == 16 || i == 29)
+				if (i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 12 || i == 15 || i == 16 || i == 29)
 					continue;
 				ToolMenuEntries[i].Name = ToolMenu_UnusedName;
 				ToolMenuEntries[i].FuncPtr = nullptr; // some unused ones like "DEBUG OPTION" pointed to nullsub that'd hang game, null it out to prevent it
