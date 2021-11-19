@@ -130,7 +130,7 @@ void ToolMenu_LightToolMenu()
         if (buttonStates & (uint32_t(GamePadButton::DPad_Up) | uint32_t(GamePadButton::LS_Up)))
             SelectedIdx--;
         if (SelectedIdx < 0)
-            SelectedIdx = 3;
+            SelectedIdx = NumMenuItems;
         if (SelectedIdx > NumMenuItems)
             SelectedIdx = 0;
 
@@ -270,18 +270,22 @@ void ToolMenu_LightToolMenu()
         int curLine = 2;
         eprintf_Hook(32, LineHeight * curLine++, 0, 0, "LIGHT TOOL");
         eprintf_Hook(32, LineHeight * curLine++, 0, 0, "(tap A/ENTER to change values faster)");
+
         curLine++;
+        eprintf_Hook(32, LineHeight* curLine++, 0, 0, "DoF / Filter01");
         int startLineHeight = LineHeight * curLine;
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "Distance %7d", LightMgr->EnvInfo.BlurDistance);
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "AlphaLvl %7d", int32_t(LightMgr->EnvInfo.BlurAlphaLevel));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "BlurMode %7d (%s)", int32_t(LightMgr->EnvInfo.BlurMode), BlurModeNames[LightMgr->EnvInfo.BlurMode % 4]);
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " Distance %7d", LightMgr->EnvInfo.BlurDistance);
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " AlphaLvl %7d", int32_t(LightMgr->EnvInfo.BlurAlphaLevel));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " BlurMode %7d (%s)", int32_t(LightMgr->EnvInfo.BlurMode), BlurModeNames[LightMgr->EnvInfo.BlurMode % 4]);
+        
         curLine++;
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "Filter00");
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "blur_rate %6d", int32_t(Filter00Params->blur_rate));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "blur_type %6d", int32_t(Filter00Params2->blur_type));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "blur_power %6d", int32_t(Filter00Params2->blur_power));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "eff_blur_rate %2d", int32_t(Filter00Params->eff_blur_rate));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "eff_spread_num %f", Filter00Params->eff_spread_num);
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "Blur / Filter00");
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_rate      %3d", int32_t(Filter00Params->blur_rate));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_type      %3d", int32_t(Filter00Params2->blur_type));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_power     %3d", int32_t(Filter00Params2->blur_power));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " eff_blur_rate  %3d", int32_t(Filter00Params->eff_blur_rate));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " eff_spread_num %f", Filter00Params->eff_spread_num);
+
         curLine++;
         eprintf_Hook(32, LineHeight * curLine++, 0, 0, "Exit");
 
