@@ -17,6 +17,8 @@ std::string flip_item_right;
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
 
+CIniReader iniReader("");
+
 //#define VERBOSE
 
 float fFOVAdditional = 0.0f;
@@ -438,7 +440,6 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 
 void ReadSettings()
 {
-	CIniReader iniReader("");
 	fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
 	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
 	bFixVsyncToggle = iniReader.ReadBoolean("DISPLAY", "FixVsyncToggle", true);
@@ -707,6 +708,9 @@ void HandleLimits()
 	}
 }
 
+int curPosX;
+int curPosY;
+
 // New WndProc func
 WNDPROC wndProcOld = NULL;
 LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -740,11 +744,26 @@ LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			bShouldFlipY = false;
 		}
 		break;
+	case WM_MOVE:
+		 // Get current window position
+		 curPosX = (int)(short)LOWORD(lParam);   // horizontal position 
+		 curPosY = (int)(short)HIWORD(lParam);   // vertical position 
+		break;
+	case WM_EXITSIZEMOVE:
+		// Write new windows position
+		#ifdef VERBOSE
+		std::cout << "curPosX = " << curPosX << std::endl;
+		std::cout << "curPosY = " << curPosY << std::endl;
+		#endif
+
+		iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
+		iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
+
+		break;
 	case WM_CLOSE:
 		ExitProcess(0);
 		break;
 	}
-
 	return CallWindowProc(wndProcOld, hwnd, uMsg, wParam, lParam);
 }
 
