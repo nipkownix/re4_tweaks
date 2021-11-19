@@ -59,6 +59,7 @@ bool bRaiseInventoryAlloc;
 bool bUseMemcpy;
 bool bIgnoreFPSWarning;
 bool bWindowBorderless;
+bool bRememberWindowPos;
 bool bEnableGCBlur;
 
 uintptr_t* ptrResMovAddr;
@@ -450,6 +451,7 @@ void ReadSettings()
 	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
 	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
+	bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
@@ -708,10 +710,9 @@ void HandleLimits()
 	}
 }
 
+// New WndProc func
 int curPosX;
 int curPosY;
-
-// New WndProc func
 WNDPROC wndProcOld = NULL;
 LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -750,7 +751,9 @@ LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		 curPosY = (int)(short)HIWORD(lParam);   // vertical position 
 		break;
 	case WM_EXITSIZEMOVE:
-		// Write new windows position
+		if (bRememberWindowPos)
+		{
+			// Write new window position
 		#ifdef VERBOSE
 		std::cout << "curPosX = " << curPosX << std::endl;
 		std::cout << "curPosY = " << curPosY << std::endl;
@@ -758,7 +761,7 @@ LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
 		iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
-
+		}
 		break;
 	case WM_CLOSE:
 		ExitProcess(0);
