@@ -82,7 +82,7 @@ static uint32_t* ptrmwPlyCalcWorkCprmSfd;
 static uint32_t* ptrcSofdec__finishMovie;
 static uint32_t* ptrMemPoolMovie;
 
-static uint32_t* ptrpG;
+uint32_t* ptrpG;
 static uint32_t* ptrpzzl_size;
 static uint32_t* ptrstageInit;
 static uint32_t* ptrSubScreenAramRead;

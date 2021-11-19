@@ -213,11 +213,9 @@ MenuTask_Fn MenuTask_Orig = nullptr;
 void MenuTask_Hook()
 {
 	uint8_t* pG = *(uint8_t**)pG_ptr;
-	uint32_t* flags_DEBUG = (uint32_t*)(pG + 0x60);
+	uint32_t* pFlags_DEBUG = (uint32_t*)(pG + 0x60);
 
-	uint32_t offset = 0;
-	uint32_t value = GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE), offset);
-	flags_DEBUG[offset / 4] |= value;
+	*pFlags_DEBUG |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
 
 	MenuTask_Orig();
 }
