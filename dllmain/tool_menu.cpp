@@ -155,6 +155,8 @@ uint32_t Keyboard2Gamepad()
 			keyboardState |= uint32_t(GamePadButton::A);
 		if (GetAsyncKeyState(VK_ESCAPE) || GetAsyncKeyState(VK_BACK))
 			keyboardState |= uint32_t(GamePadButton::B);
+		if (GetAsyncKeyState('Y'))
+			keyboardState |= uint32_t(GamePadButton::Y);
 		if (GetAsyncKeyState(VK_DELETE) || GetAsyncKeyState('Q'))
 			keyboardState |= uint32_t(GamePadButton::LB);
 		if (GetAsyncKeyState(VK_NEXT) || GetAsyncKeyState('E')) // pagedown

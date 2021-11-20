@@ -20,6 +20,10 @@ TaskSleep_Fn TaskSleep = nullptr;
 typedef void(__cdecl* TaskChain_Fn)(void* a1, int a2);
 TaskChain_Fn TaskChain = nullptr;
 
+class cLightMgr;
+typedef void(__fastcall* cLightMgr__setEnv_Fn)(cLightMgr* thisptr, void* unused, struct cLightMgr_EnvInfo* a2, int8_t a3);
+cLightMgr__setEnv_Fn cLightMgr__setEnv = nullptr;
+
 void ToolMenu_Return()
 {
     TaskChain(&MenuTask_Hook, 0);
@@ -33,31 +37,97 @@ struct cFilter00Params
     float eff_spread_num;
 };
 
-#pragma pack(push, 1)
+struct cPenWind
+{
+    uint8_t direction;
+    uint8_t power;
+    uint8_t frequency;
+    uint8_t unk3;
+};
+static_assert(sizeof(cPenWind) == 4);
+
+enum class GXAnisotropy : uint8_t
+{
+    GX_ANISO_1,
+    GX_ANISO_2,
+    GX_ANISO_4
+};
 
 struct cLightMgr_EnvInfo // cLightMgr::GetEnvPtr returns ptr to this, mostly affects Filter01 "LeLit" params
 {
-    uint8_t unk[0x28];
-    int32_t BlurDistance;
+    uint32_t amb_color_scroll;
+    uint8_t unk4[4];
+    uint32_t fog_type;
+    float fog_start;
+    float fog_end;
+    float fog_color;
+    uint32_t mirror_fog_type;
+    float mirror_fog_start;
+    float mirror_fog_end;
+    float mirror_fog_color;
+    int32_t dof_distance;
     uint8_t unk2C;
-    int8_t BlurAlphaLevel;
-    int8_t BlurMode;
+    int8_t dof_alpha_level;
+    int8_t dof_mode;
+    uint8_t blur_rate;
+    uint32_t tune[4];
+    uint8_t model_tev_scale;
+    uint8_t player_tev_scale;
+    float fog_far_play; // named FAR_PLAY by GC debug, wtf does FAR_PLAY mean? (color related?)
+    uint8_t unk48[148];
+    uint8_t unkDC[16];
+    cPenWind wind;
+    int8_t blur_type;
+    uint8_t blur_power;
+    uint8_t min_lod;
+    uint8_t max_lod;
+    GXAnisotropy aniso;
+    uint8_t g_cont_level;
+    uint8_t g_cont_pow;
+    uint8_t g_cont_bias;
+    float lod_bias;
+    uint32_t amb_color_emobj;
+    uint32_t amb_color_effect;
 };
+static_assert(sizeof(cLightMgr_EnvInfo) == 0x104); // size based on bzero call
 
-struct cLightMgr
+class cLightMgr
 {
+public:
     void* vftable;
     uint32_t unk4;
     uint32_t unk8;
     uint32_t unkC;
     uint8_t unk10;
-    uint8_t pad11[3];
-    uint32_t unk14;
+    struct cLight* lights;
     uint32_t unk18;
-    uint32_t unk1C;
-    cLightMgr_EnvInfo EnvInfo;
-};
+    void* room_lit_pointer;
+    cLightMgr_EnvInfo env_info;
+    uint32_t unkFlagsBuffer124[8];
+    uint8_t unk144[32];
+    uint32_t path;
+    void* core_pointer;  // pointer to int16?
+    void* room_pointer1; // pointer to int16?
+    void* room_pointer2; // pointer to int16?
+    uint32_t unk174;
+    int8_t unk178;
+    float unk17C;
+    uint32_t unk180;
+    uint32_t unk184;
+    uint32_t unk188;
+    uint32_t unk18C;
+    float unk190;
+    uint8_t unk194[64];
 
+    void setEnv(cLightMgr_EnvInfo* env, int8_t a3)
+    {
+        cLightMgr__setEnv(this, nullptr, env, a3);
+    }
+};
+// size based on ctor code (same size as GC, but offsets changed some reason?)
+static_assert(sizeof(cLightMgr) == 0x1D4); 
+
+#pragma pack(push, 1)
 enum class GXTevScale : uint32_t
 {
     GX_CS_SCALE_1,
@@ -102,8 +172,11 @@ cFilter00Params2* Filter00Params2;
 const char* ToolMenu_LightToolMenuName = "DOF/BLUR MENU";
 void ToolMenu_LightToolMenu()
 {
-    const int NumMenuItems = 8;
+    const int NumMenuItems = 11;
     const int LineHeight = 14;
+
+    int sizetest = sizeof(cLightMgr);
+    int sizetest2 = sizeof(cLightMgr_EnvInfo);
 
     // Make sure game knows we're in a tool menu
     uint8_t* Global = *(uint8_t**)ptrpG;
@@ -149,27 +222,36 @@ void ToolMenu_LightToolMenu()
             switch (SelectedIdx)
             {
             case 0:
-                LightMgr->EnvInfo.BlurDistance = 0;
+                LightMgr->env_info.dof_distance = 0;
                 break;
             case 1:
-                LightMgr->EnvInfo.BlurAlphaLevel = 0;
+                LightMgr->env_info.dof_alpha_level = 0;
                 break;
             case 2:
-                LightMgr->EnvInfo.BlurMode = 0;
+                LightMgr->env_info.dof_mode = 0;
                 break;
             case 3:
-                Filter00Params->blur_rate = 0;
+                LightMgr->env_info.blur_type = 0;
                 break;
             case 4:
-                Filter00Params2->blur_type = 0;
+                LightMgr->env_info.blur_rate = 0;
                 break;
             case 5:
-                Filter00Params2->blur_power = 0;
+                LightMgr->env_info.blur_power = 0;
                 break;
             case 6:
-                Filter00Params->eff_blur_rate = 0;
+                LightMgr->env_info.g_cont_level = 0;
                 break;
             case 7:
+                LightMgr->env_info.g_cont_pow = 0;
+                break;
+            case 8:
+                LightMgr->env_info.g_cont_bias = 0;
+                break;
+            case 9:
+                Filter00Params->eff_blur_rate = 0;
+                break;
+            case 10:
                 Filter00Params->eff_spread_num = 0;
                 break;
             default:
@@ -183,27 +265,36 @@ void ToolMenu_LightToolMenu()
             switch (SelectedIdx)
             {
             case 0:
-                LightMgr->EnvInfo.BlurDistance++;
+                LightMgr->env_info.dof_distance++;
                 break;
             case 1:
-                LightMgr->EnvInfo.BlurAlphaLevel++;
+                LightMgr->env_info.dof_alpha_level++;
                 break;
             case 2:
-                LightMgr->EnvInfo.BlurMode++;
+                LightMgr->env_info.dof_mode++;
                 break;
             case 3:
-                Filter00Params->blur_rate++;
+                LightMgr->env_info.blur_type++;
                 break;
             case 4:
-                Filter00Params2->blur_type++;
+                LightMgr->env_info.blur_rate++;
                 break;
             case 5:
-                Filter00Params2->blur_power++;
+                LightMgr->env_info.blur_power++;
                 break;
             case 6:
-                Filter00Params->eff_blur_rate++;
+                LightMgr->env_info.g_cont_level++;
                 break;
             case 7:
+                LightMgr->env_info.g_cont_pow++;
+                break;
+            case 8:
+                LightMgr->env_info.g_cont_bias++;
+                break;
+            case 9:
+                Filter00Params->eff_blur_rate++;
+                break;
+            case 10:
                 Filter00Params->eff_spread_num++;
                 break;
             default:
@@ -218,27 +309,36 @@ void ToolMenu_LightToolMenu()
             switch (SelectedIdx)
             {
             case 0:
-                LightMgr->EnvInfo.BlurDistance--;
+                LightMgr->env_info.dof_distance--;
                 break;
             case 1:
-                LightMgr->EnvInfo.BlurAlphaLevel--;
+                LightMgr->env_info.dof_alpha_level--;
                 break;
             case 2:
-                LightMgr->EnvInfo.BlurMode--;
+                LightMgr->env_info.dof_mode--;
                 break;
             case 3:
-                Filter00Params->blur_rate--;
+                LightMgr->env_info.blur_type--;
                 break;
             case 4:
-                Filter00Params2->blur_type--;
+                LightMgr->env_info.blur_rate--;
                 break;
             case 5:
-                Filter00Params2->blur_power--;
+                LightMgr->env_info.blur_power--;
                 break;
             case 6:
-                Filter00Params->eff_blur_rate--;
+                LightMgr->env_info.g_cont_level--;
                 break;
             case 7:
+                LightMgr->env_info.g_cont_pow--;
+                break;
+            case 8:
+                LightMgr->env_info.g_cont_bias--;
+                break;
+            case 9:
+                Filter00Params->eff_blur_rate--;
+                break;
+            case 10:
                 Filter00Params->eff_spread_num--;
                 break;
             default:
@@ -249,42 +349,56 @@ void ToolMenu_LightToolMenu()
 
         if (changed)
         {
-            if (LightMgr->EnvInfo.BlurDistance > 65535)
-                LightMgr->EnvInfo.BlurDistance = 0;
-            if (LightMgr->EnvInfo.BlurDistance < 0)
-                LightMgr->EnvInfo.BlurDistance = 65535;
+            if (LightMgr->env_info.dof_distance > 65535)
+                LightMgr->env_info.dof_distance = 0;
+            if (LightMgr->env_info.dof_distance < 0)
+                LightMgr->env_info.dof_distance = 65535;
 
-            if (LightMgr->EnvInfo.BlurAlphaLevel > 10)
-                LightMgr->EnvInfo.BlurAlphaLevel = 0;
-            if (LightMgr->EnvInfo.BlurAlphaLevel < 0)
-                LightMgr->EnvInfo.BlurAlphaLevel = 10;
+            if (LightMgr->env_info.dof_alpha_level > 10)
+                LightMgr->env_info.dof_alpha_level = 0;
+            if (LightMgr->env_info.dof_alpha_level < 0)
+                LightMgr->env_info.dof_alpha_level = 10;
 
-            if (LightMgr->EnvInfo.BlurMode > 3)
-                LightMgr->EnvInfo.BlurMode = 0;
-            if (LightMgr->EnvInfo.BlurMode < 0)
-                LightMgr->EnvInfo.BlurMode = 3;
+            if (LightMgr->env_info.dof_mode > 3)
+                LightMgr->env_info.dof_mode = 0;
+            if (LightMgr->env_info.dof_mode < 0)
+                LightMgr->env_info.dof_mode = 3;
+
+            if (LightMgr->env_info.blur_type > 3)
+                LightMgr->env_info.blur_type = 0;
+            if (LightMgr->env_info.blur_type < 0)
+                LightMgr->env_info.blur_type = 3;
+
+            // Get lightMgr to update itself
+            LightMgr->setEnv(&LightMgr->env_info, LightMgr->unk178);
         }
 
-        const char* BlurModeNames[] = { "NEAR", "FAR", "FollowPL NEAR", "FollowPL FAR" };
+        const char* DoFModeNames[] = { "NEAR", "FAR", "FollowPL NEAR", "FollowPL FAR" };
+        const char* BlurTypeNames[] = { "NORMAL", "SPREAD", "ADD", "SUBTRACT" };
+        const char* FogTypeNames[] = { "NONE", "????", "LINEAR", "????", "EXP", "EXP2", "REVEXP", "REVEXP2" };
 
         int curLine = 2;
         eprintf_Hook(32, LineHeight * curLine++, 0, 0, "LIGHT TOOL");
         eprintf_Hook(32, LineHeight * curLine++, 0, 0, "(tap A/ENTER to change values faster)");
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, "(press Y to reset value to 0)");
 
         curLine++;
         eprintf_Hook(32, LineHeight* curLine++, 0, 0, "DoF / Filter01");
         int startLineHeight = LineHeight * curLine;
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " Distance %7d", LightMgr->EnvInfo.BlurDistance);
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " AlphaLvl %7d", int32_t(LightMgr->EnvInfo.BlurAlphaLevel));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " BlurMode %7d (%s)", int32_t(LightMgr->EnvInfo.BlurMode), BlurModeNames[LightMgr->EnvInfo.BlurMode % 4]);
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " Distance    %7d", LightMgr->env_info.dof_distance);
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " AlphaLvl    %7d", int32_t(LightMgr->env_info.dof_alpha_level));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " BlurMode    %7d (%s)", int32_t(LightMgr->env_info.dof_mode), DoFModeNames[LightMgr->env_info.dof_mode % 4]);
         
         curLine++;
         eprintf_Hook(32, LineHeight * curLine++, 0, 0, "Blur / Filter00");
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_rate      %3d", int32_t(Filter00Params->blur_rate));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_type      %3d", int32_t(Filter00Params2->blur_type));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_power     %3d", int32_t(Filter00Params2->blur_power));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " eff_blur_rate  %3d", int32_t(Filter00Params->eff_blur_rate));
-        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " eff_spread_num %f", Filter00Params->eff_spread_num);
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_type       %3d (%d) (%s)", int32_t(LightMgr->env_info.blur_type), int32_t(Filter00Params2->blur_type), BlurTypeNames[Filter00Params2->blur_type % 4]);
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_rate       %3d (%d)", int32_t(LightMgr->env_info.blur_rate), int32_t(Filter00Params->blur_rate));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " blur_power      %3d (%d)", int32_t(LightMgr->env_info.blur_power), int32_t(Filter00Params2->blur_power));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " contrast_level  %3d (%d)", int32_t(LightMgr->env_info.g_cont_level), int32_t(Filter00Params2->g_cont_level));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " contrast_pow    %3d (%d)", int32_t(LightMgr->env_info.g_cont_pow), int32_t(Filter00Params2->g_cont_pow));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " contrast_bias   %3d (%d)", int32_t(LightMgr->env_info.g_cont_bias), int32_t(Filter00Params2->g_cont_bias));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " eff_blur_rate   %3d", int32_t(Filter00Params->eff_blur_rate));
+        eprintf_Hook(32, LineHeight * curLine++, 0, 0, " eff_spread_num  %f", Filter00Params->eff_spread_num);
 
         curLine++;
         eprintf_Hook(32, LineHeight * curLine++, 0, 0, "Exit");
@@ -320,4 +434,7 @@ void LightTool_GetPointers()
 
     pattern = hook::pattern("55 8B EC 8B 45 08 8B 4D 0C 56 8B 35 ? ? ? ?");
     TaskChain = (TaskChain_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+    pattern = hook::pattern("55 8B EC 51 53 56 8B 75 ? 8B 46 ? A3 ? ? ? ? 8B D9 8B 4E ?");
+    cLightMgr__setEnv = (cLightMgr__setEnv_Fn)pattern.count(1).get(0).get<uint8_t>(0);
 }
