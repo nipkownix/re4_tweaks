@@ -24,6 +24,8 @@ void ToolMenu_ApplyHooks();
 void ToolMenuDebug_GetPointers();
 void ToolMenuDebug_ApplyHooks();
 
+CIniReader iniReader("");
+
 //#define VERBOSE
 
 float fFOVAdditional = 0.0f;
@@ -64,6 +66,7 @@ bool bRaiseInventoryAlloc;
 bool bUseMemcpy;
 bool bIgnoreFPSWarning;
 bool bWindowBorderless;
+bool bRememberWindowPos;
 bool bEnableGCBlur;
 bool bEnableDebugMenu;
 
@@ -446,7 +449,6 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 
 void ReadSettings()
 {
-	CIniReader iniReader("");
 	fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
 	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
 	bFixVsyncToggle = iniReader.ReadBoolean("DISPLAY", "FixVsyncToggle", true);
@@ -457,6 +459,7 @@ void ReadSettings()
 	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
 	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
+	bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
@@ -721,6 +724,8 @@ void HandleLimits()
 }
 
 // New WndProc func
+int curPosX;
+int curPosY;
 WNDPROC wndProcOld = NULL;
 LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -753,11 +758,28 @@ LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			bShouldFlipY = false;
 		}
 		break;
+	case WM_MOVE:
+		 // Get current window position
+		 curPosX = (int)(short)LOWORD(lParam);   // horizontal position 
+		 curPosY = (int)(short)HIWORD(lParam);   // vertical position 
+		break;
+	case WM_EXITSIZEMOVE:
+		if (bRememberWindowPos)
+		{
+			// Write new window position
+		#ifdef VERBOSE
+		std::cout << "curPosX = " << curPosX << std::endl;
+		std::cout << "curPosY = " << curPosY << std::endl;
+		#endif
+
+		iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
+		iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
+		}
+		break;
 	case WM_CLOSE:
 		ExitProcess(0);
 		break;
 	}
-
 	return CallWindowProc(wndProcOld, hwnd, uMsg, wParam, lParam);
 }
 
