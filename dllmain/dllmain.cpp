@@ -61,6 +61,7 @@ bool bIgnoreFPSWarning;
 bool bWindowBorderless;
 bool bRememberWindowPos;
 bool bEnableGCBlur;
+bool bEnableGCScopeBlur;
 
 uintptr_t* ptrResMovAddr;
 uintptr_t* ptrSFDMovAddr;
@@ -274,11 +275,14 @@ void __cdecl Filter0aGXDraw_Hook(
 	float ColorA,
 	float ScreenSizeDivisor, int IsMaskTex)
 {
-	// Run original Filter0aGXDraw for it to handle the GXInitTexObj etc things
-	// (needs to be patched to make it skip over the things we reimpl. here first though!)
+	// We lost the ECX parameter since VC doesn't have any caller-saved calling conventions that use it, game probably had LTO or something to create a custom one
+	// Luckily the game only uses a couple different values for it, so we can work out what it was pretty easily
 	filter0a_ecx_value = ScreenSizeDivisor;
 	if (ColorA == 255 && ScreenSizeDivisor == 4 && IsMaskTex == 0)
 		filter0a_ecx_value = 1; // special case for first GXDraw call inside Filter0aDrawBuffer
+
+	// Run original Filter0aGXDraw for it to handle the GXInitTexObj etc things
+	// (needs to be patched to make it skip over the things we reimpl. here first though!)
 	Filter0aGXDraw_Orig_Tramp(PositionX, PositionY, PositionZ, TexOffsetX, TexOffsetY, ColorA, ScreenSizeDivisor, IsMaskTex);
 
 	float GameWidth = *ptr_InternalWidth;
@@ -287,7 +291,7 @@ void __cdecl Filter0aGXDraw_Hook(
 	// Internally the game is scaled at a seperate aspect ratio, causing some invisible black-bars around the image, which GX drawing code has to skip over
 	// With this code we first work out the difference between that internal height & the actual render height, which gives us the size of both black bars
 	// Then work out the proportion of 1 black bar by dividing by "heightInternalScaled + heightInternalScaled" (which is just a more optimized way of dividing by heightInternalScaled and then again dividing result by 2)
-	// Finally multiply that proportion by the games origina GC height to get the size of black-bar in 'GC-space'
+	// Finally multiply that proportion by the games original GC height to get the size of black-bar in 'GC-space'
 	float heightInternalScaled = *ptr_InternalHeightScale * 448.0f;
 	float blackBarSize = 448.0f * (heightInternalScaled - *ptr_RenderHeight) / (heightInternalScaled + heightInternalScaled);
 
@@ -540,6 +544,7 @@ void ReadSettings()
 	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", true);
 	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", true);
 	bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", true);
+	bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", true);
 	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
 	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
@@ -1353,7 +1358,10 @@ bool Init()
 		injector::MakeCALL(pattern.get_first(1), Filter01Render_Hook2, true);
 		injector::WriteMemory(pattern.get_first(6), uint8_t(0x58), true); // POP EAX (fixes esp)
 		injector::MakeJMP(pattern.get_first(7), filter01_end, true); // JMP over code that was reimplemented
+	}
 
+	if (bEnableGCScopeBlur)
+	{
 		// Short-circuit Filter0aGXDraw to skip over the GXPosition etc things that we reimplement ourselves
 		pattern = hook::pattern("D9 45 A4 DC 15 ? ? ? ? DF E0 F6 C4 41 75 ? DC 1D ? ? ? ? DF E0 F6 C4 05 0F 8B ? ? ? ? EB");
 		injector::WriteMemory(pattern.get_first(27), uint16_t(0xE990), true);
