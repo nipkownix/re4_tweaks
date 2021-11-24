@@ -58,6 +58,7 @@ bool bFixQTE;
 bool bSkipIntroLogos;
 bool bFixRetryLoadMouseSelector;
 bool bRestorePickupTransparency;
+bool bDisableBrokenFilter03;
 bool bFixBlurryImage;
 bool bAllowHighResolutionSFD;
 bool bDisableFilmGrain;
@@ -549,6 +550,7 @@ void ReadSettings()
 	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
 	bFixVsyncToggle = iniReader.ReadBoolean("DISPLAY", "FixVsyncToggle", true);
 	bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", true);
+	bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", true);
 	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", true);
 	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", true);
 	bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", true);
@@ -1335,6 +1337,13 @@ bool Init()
 		injector::MakeNOP(pattern.get_first(8), 5);
 	}
 	
+	// Disable Filter03 for now, as we have yet to find a way to actually fix it
+	if (bDisableBrokenFilter03)
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 39 1D");
+		injector::MakeNOP(pattern.get_first(0), 5);
+	}
+
 	// Fix a problem related to a vertex buffer that caused the image to be slightly blurred
 	if (bFixBlurryImage) 
 	{
