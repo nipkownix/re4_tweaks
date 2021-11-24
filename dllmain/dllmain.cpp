@@ -68,6 +68,7 @@ bool bIgnoreFPSWarning;
 bool bWindowBorderless;
 bool bRememberWindowPos;
 bool bEnableGCBlur;
+bool bEnableGCScopeBlur;
 bool bEnableDebugMenu;
 
 uintptr_t* ptrResMovAddr;
@@ -248,6 +249,101 @@ GXShaderCall_Maybe_Fn GXShaderCall_Maybe = nullptr;
 GXSetTexCopySrc_Fn GXSetTexCopySrc = nullptr;
 GXSetTexCopyDst_Fn GXSetTexCopyDst = nullptr;
 GXCopyTex_Fn GXCopyTex = nullptr;
+
+typedef void(__cdecl* Filter0aGXDraw_Fn)(
+	float PositionX, float PositionY, float PositionZ,
+	float TexOffsetX, float TexOffsetY,
+	float ColorA,
+	float ScreenSizeDivisor, int IsMaskTex);
+
+Filter0aGXDraw_Fn Filter0aGXDraw_Orig;
+
+uint32_t* ptr_Filter0aGXDraw;
+uint8_t* ptr_Filter0aDrawBuffer_GetEFBCall;
+int32_t* ptr_filter0a_shader_num;
+
+int filter0a_ecx_value = 0;
+// Filter0aGXDraw_Orig makes use of ECX for part of screen-size division code
+// So we need a trampoline to set that first before calling it...
+void __declspec(naked) Filter0aGXDraw_Orig_Tramp(float PositionX, float PositionY, float PositionZ,
+	float TexOffsetX, float TexOffsetY,
+	float ColorA,
+	float ScreenSizeDivisor, int IsMaskTex)
+{
+	__asm
+	{
+		mov ecx, [filter0a_ecx_value]
+		jmp Filter0aGXDraw_Orig
+	}
+}
+
+void __cdecl Filter0aGXDraw_Hook(
+	float PositionX, float PositionY, float PositionZ,
+	float TexOffsetX, float TexOffsetY,
+	float ColorA,
+	float ScreenSizeDivisor, int IsMaskTex)
+{
+	// We lost the ECX parameter since VC doesn't have any caller-saved calling conventions that use it, game probably had LTO or something to create a custom one
+	// Luckily the game only uses a couple different values for it, so we can work out what it was pretty easily
+	filter0a_ecx_value = ScreenSizeDivisor;
+	if (ColorA == 255 && ScreenSizeDivisor == 4 && IsMaskTex == 0)
+		filter0a_ecx_value = 1; // special case for first GXDraw call inside Filter0aDrawBuffer
+
+	// Run original Filter0aGXDraw for it to handle the GXInitTexObj etc things
+	// (needs to be patched to make it skip over the things we reimpl. here first though!)
+	Filter0aGXDraw_Orig_Tramp(PositionX, PositionY, PositionZ, TexOffsetX, TexOffsetY, ColorA, ScreenSizeDivisor, IsMaskTex);
+
+	float GameWidth = *ptr_InternalWidth;
+	float GameHeight = *ptr_InternalHeight;
+
+	// Internally the game is scaled at a seperate aspect ratio, causing some invisible black-bars around the image, which GX drawing code has to skip over
+	// With this code we first work out the difference between that internal height & the actual render height, which gives us the size of both black bars
+	// Then work out the proportion of 1 black bar by dividing by "heightInternalScaled + heightInternalScaled" (which is just a more optimized way of dividing by heightInternalScaled and then again dividing result by 2)
+	// Finally multiply that proportion by the games original GC height to get the size of black-bar in 'GC-space'
+	float heightInternalScaled = *ptr_InternalHeightScale * 448.0f;
+	float blackBarSize = 448.0f * (heightInternalScaled - *ptr_RenderHeight) / (heightInternalScaled + heightInternalScaled);
+
+	// GameHeight seems to contain both black bars inside it already
+	// So to scale that properly we first need to remove both black bars, scale it by ScreenSizeDivisor, then add 1 black-bar back to skip over the top black-bar area
+	float pos_bottom = PositionY + ((GameHeight - (blackBarSize * 2)) / ScreenSizeDivisor) + blackBarSize;
+	float pos_top = PositionY + blackBarSize;
+	float pos_left = PositionX;
+	float pos_right = PositionX + GameWidth / ScreenSizeDivisor;
+
+	// Prevent bleed-thru of certain effects into the transparency-drawing area
+	pos_left += -0.25;
+
+	// Roughly center the blur-mask-effect inside the scope
+	// TODO: GC version seems to have no blur in the inner-scope at all, any way we can fix this to make it the same here?
+	if (IsMaskTex)
+	{
+		pos_top += -1;
+		pos_bottom += 4;
+		pos_left += -4;
+		pos_right += 4;
+	}
+
+	GXBegin(0x80, 0, 4);
+
+	GXPosition3f32(pos_left, pos_top, PositionZ);
+	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
+	GXTexCoord2f32(0.0 + TexOffsetX, 0.0 + TexOffsetY);
+
+	GXPosition3f32(pos_right, pos_top, PositionZ);
+	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
+	GXTexCoord2f32(1.0 + TexOffsetX, 0.0 + TexOffsetY);
+
+	GXPosition3f32(pos_right, pos_bottom, PositionZ);
+	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
+	GXTexCoord2f32(1.0 + TexOffsetX, 1.0 + TexOffsetY);
+
+	GXPosition3f32(pos_left, pos_bottom, PositionZ);
+	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
+	GXTexCoord2f32(0.0 + TexOffsetX, 1.0 + TexOffsetY);
+
+	int filter0a_shader_num = *ptr_filter0a_shader_num;
+	GXShaderCall_Maybe(filter0a_shader_num);
+}
 
 void __cdecl Filter01Render_Hook1(Filter01Params* params)
 {
@@ -456,6 +552,7 @@ void ReadSettings()
 	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", true);
 	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", true);
 	bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", true);
+	bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", true);
 	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
 	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
@@ -652,6 +749,16 @@ void GetPointers()
 
 	varPtr = pattern.count(1).get(0).get<uint32_t>(17);
 	ptr_RenderHeight = (int*)*varPtr;
+
+	pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? D9 05 ? ? ? ? 33 D2 D9 7D ? 0F B7 45 ? 0D 00 0C 00 00");
+	ptr_Filter0aGXDraw = pattern.count(1).get(0).get<uint32_t>(0);
+
+	pattern = hook::pattern("5F 5E 6A 01 6A 01 E8 ? ? ? ? 83 C4 ? E8");
+	ptr_Filter0aDrawBuffer_GetEFBCall = pattern.count(1).get(0).get<uint8_t>(3);
+
+	pattern = hook::pattern("56 6A 00 50 C7 05 ? ? ? ? 1F 00 00 00");
+	varPtr = pattern.count(1).get(0).get<uint32_t>(6);
+	ptr_filter0a_shader_num = (int32_t*)*varPtr;
 
 	ToolMenu_GetPointers();
 	if (is_debug_build)
@@ -1269,6 +1376,20 @@ bool Init()
 		injector::MakeJMP(pattern.get_first(7), filter01_end, true); // JMP over code that was reimplemented
 	}
 
+
+	if (bEnableGCScopeBlur)
+	{
+		// Short-circuit Filter0aGXDraw to skip over the GXPosition etc things that we reimplement ourselves
+		pattern = hook::pattern("D9 45 A4 DC 15 ? ? ? ? DF E0 F6 C4 41 75 ? DC 1D ? ? ? ? DF E0 F6 C4 05 0F 8B ? ? ? ? EB");
+		injector::WriteMemory(pattern.get_first(27), uint16_t(0xE990), true);
+
+		// Change GetEFB(1,1) to GetEFB(4,4)
+		injector::WriteMemory(ptr_Filter0aDrawBuffer_GetEFBCall, uint8_t(0x4), true);
+		injector::WriteMemory(ptr_Filter0aDrawBuffer_GetEFBCall + 2, uint8_t(0x4), true);
+
+		MH_CreateHook(ptr_Filter0aGXDraw, Filter0aGXDraw_Hook, (LPVOID*)&Filter0aGXDraw_Orig);
+  }
+  
 	if (bEnableDebugMenu)
 	{
 		ToolMenu_ApplyHooks();
