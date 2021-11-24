@@ -28,6 +28,18 @@
     <ClCompile Include="..\external\MinHook\trampoline.c">
       <Filter>external\MinHook</Filter>
     </ClCompile>
+    <ClCompile Include="tool_menu.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="roomInfo.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="tool_menu_debug.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="tool_menu_lights.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -173,6 +185,9 @@
     </ClInclude>
     <ClInclude Include="..\external\MinHook\trampoline.h">
       <Filter>external\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="game_flags.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
