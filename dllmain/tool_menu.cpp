@@ -232,9 +232,10 @@ void FlagEdit_main_Hook(void* a1)
 	if (PrevButtons != curButtons)
 		PadButtonStates[3] = curButtons;
 
+	PrevButtons = curButtons;
+
 	FlagEdit_main_Orig(a1);
 
-	PrevButtons = curButtons;
 	PadButtonStates[3] = curButtons;
 }
 
@@ -441,6 +442,12 @@ void ToolMenu_ApplyHooks()
 	pattern = hook::pattern("55 8B EC 56 8B 75 ? 57 33 FF F6 05");
 	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), FlagEdit_main_Hook, (LPVOID*)&FlagEdit_main_Orig);
 
+	// Hook MenuTask (task for tool-menu), since it seems the menu can sometimes be shown without the pG+0x60 flag being set
+	// eg. when backing out of area-jump menu
+	// (which could make game hang if this causes us to try opening tool-menu when it's already open...)
+	pattern = hook::pattern("53 57 33 DB 53 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4");
+	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), MenuTask_Hook, (LPVOID*)&MenuTask_Orig);
+
 	if (is_debug_build)
 	{
 		// hook gameDebug so we can use the gamepad emulation stuff to add keyboard support
@@ -461,12 +468,6 @@ void ToolMenu_ApplyHooks()
 		// Remove bzero call that clears flags every frame for some reason
 		pattern = hook::pattern("83 C0 60 6A 10 50 E8");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 5, true);
-
-		// Hook MenuTask (task for tool-menu), since it seems the menu can sometimes be shown without the pG+0x60 flag being set
-		// eg. when backing out of area-jump menu
-		// (which could make game hang if this causes us to try opening tool-menu when it's already open...)
-		pattern = hook::pattern("53 57 33 DB 53 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4");
-		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), MenuTask_Hook, (LPVOID*)&MenuTask_Orig);
 
 		// Hook eprintf to add screen-drawing to it, like the GC debug has
 		// (required for debug-menu to be able to draw itself)

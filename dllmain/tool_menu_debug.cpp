@@ -29,9 +29,10 @@ void __cdecl move_Hook(void* a1)
         PadButtonStates[3] = curButtons;
     }
 
+    PrevButtons = curButtons;
+
     move_Orig(a1);
 
-    PrevButtons = curButtons;
     PadButtonStates[1] = curButtons;
     PadButtonStates[3] = curButtons;
 }
@@ -51,9 +52,10 @@ void __cdecl roomJumpMove_Hook(void* a1)
         PadButtonStates[4] = curButtons;
     }
 
+    PrevButtons = curButtons;
+
     roomJumpMove_Orig(a1);
 
-    PrevButtons = curButtons;
     PadButtonStates[1] = curButtons;
     PadButtonStates[3] = curButtons;
     PadButtonStates[4] = curButtons;
@@ -88,9 +90,10 @@ void tp_menu_Hook()
     if (PrevButtons != curButtons)
         *ToolOption_Buttons = RebindButtons(curButtons);
 
+    PrevButtons = curButtons;
+
     tp_menu_Orig();
 
-    PrevButtons = curButtons;
     *ToolOption_Buttons = curButtons;
 }
 
@@ -105,9 +108,10 @@ void tp_pl_Hook()
     if (PrevButtons != curButtons)
         *ToolOption_Buttons = RebindButtons(curButtons);
 
+    PrevButtons = curButtons;
+
     tp_pl_Orig();
 
-    PrevButtons = curButtons;
     *ToolOption_Buttons = curButtons;
 }
 
@@ -122,9 +126,10 @@ void tp_scr_Hook()
     if (PrevButtons != curButtons)
         *ToolOption_Buttons = RebindButtons(curButtons);
 
+    PrevButtons = curButtons;
+
     tp_scr_Orig();
 
-    PrevButtons = curButtons;
     *ToolOption_Buttons = curButtons;
 }
 
