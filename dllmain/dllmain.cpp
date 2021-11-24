@@ -7,6 +7,7 @@ std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
 std::string game_version;
+bool is_debug_build = false;
 std::string QTE_key_1;
 std::string QTE_key_2;
 std::string flip_item_up;
@@ -16,6 +17,12 @@ std::string flip_item_right;
 
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
+
+// tool_menu.cpp
+void ToolMenu_GetPointers();
+void ToolMenu_ApplyHooks();
+void ToolMenuDebug_GetPointers();
+void ToolMenuDebug_ApplyHooks();
 
 CIniReader iniReader("");
 
@@ -61,6 +68,7 @@ bool bIgnoreFPSWarning;
 bool bWindowBorderless;
 bool bRememberWindowPos;
 bool bEnableGCBlur;
+bool bEnableDebugMenu;
 
 uintptr_t* ptrResMovAddr;
 uintptr_t* ptrSFDMovAddr;
@@ -77,7 +85,7 @@ static uint32_t* ptrmwPlyCalcWorkCprmSfd;
 static uint32_t* ptrcSofdec__finishMovie;
 static uint32_t* ptrMemPoolMovie;
 
-static uint32_t* ptrpG;
+uint32_t* ptrpG;
 static uint32_t* ptrpzzl_size;
 static uint32_t* ptrstageInit;
 static uint32_t* ptrSubScreenAramRead;
@@ -454,6 +462,7 @@ void ReadSettings()
 	bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
 	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
+	bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
 	bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
 	bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
 	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
@@ -643,6 +652,10 @@ void GetPointers()
 
 	varPtr = pattern.count(1).get(0).get<uint32_t>(17);
 	ptr_RenderHeight = (int*)*varPtr;
+
+	ToolMenu_GetPointers();
+	if (is_debug_build)
+		ToolMenuDebug_GetPointers();
 }
 
 void HandleLimits()
@@ -810,7 +823,10 @@ bool Init()
 	// Check for part of gameDebug function, if exists this must be a debug-enabled build
 	pattern = hook::pattern("6A 00 6A 00 6A 08 68 AE 01 00 00 6A 10 6A 0A");
 	if (pattern.size() > 0)
+	{
 		game_version += "d";
+		is_debug_build = true;
+	}
 
 	#ifdef VERBOSE
 	std::cout << "Game version = " << game_version << std::endl;
@@ -1251,6 +1267,13 @@ bool Init()
 		injector::MakeCALL(pattern.get_first(1), Filter01Render_Hook2, true);
 		injector::WriteMemory(pattern.get_first(6), uint8_t(0x58), true); // POP EAX (fixes esp)
 		injector::MakeJMP(pattern.get_first(7), filter01_end, true); // JMP over code that was reimplemented
+	}
+
+	if (bEnableDebugMenu)
+	{
+		ToolMenu_ApplyHooks();
+		if (is_debug_build)
+			ToolMenuDebug_ApplyHooks();
 	}
 
 	// QTE bindings and icons
