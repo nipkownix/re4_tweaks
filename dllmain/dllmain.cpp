@@ -1,7 +1,12 @@
 #include <iostream>
+#include <d3d9.h>
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
+#include "..\external\ModUtils\MemoryMgr.h"
 #include "..\external\MinHook\MinHook.h"
+#include "WndProcHook.h"
+#include "dllmain.h"
+#include "cfgMenu.h"
 
 std::string RealDllPath;
 std::string WrapperMode;
@@ -26,7 +31,16 @@ void ToolMenuDebug_ApplyHooks();
 
 CIniReader iniReader("");
 
-//#define VERBOSE
+#define VERBOSE
+
+DWORD				 pDevicePointer;
+DWORD				 dwEndSceneAddress;
+DWORD				 dwCreateWindowAddress;
+DWORD				 dwProcessFunctionJMPAddress;
+DWORD				 dwProcessFunctionAddress;
+bool				 set = false;
+
+
 
 float fFOVAdditional = 0.0f;
 float fQTESpeedMult = 1.5f;
@@ -48,6 +62,7 @@ double fNewMerchGreetingPos;
 double fNewTItemNamesPos;
 double fNewRadioNamesPos;
 
+bool bCfgMenuOpen;
 bool bShouldFlipX;
 bool bShouldFlipY;
 bool bIsItemUp;
@@ -88,6 +103,7 @@ static uint32_t* ptrcSofdec__finishMovie;
 static uint32_t* ptrMemPoolMovie;
 
 uint32_t* ptrpG;
+uint32_t* ptrpPL;
 static uint32_t* ptrpzzl_size;
 static uint32_t* ptrstageInit;
 static uint32_t* ptrSubScreenAramRead;
@@ -120,6 +136,13 @@ int iWindowPositionY;
 int intQTE_key_1;
 int intQTE_key_2;
 int intGameState;
+
+BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
+{
+	int windowX = iWindowPositionX < 0 ? 0 : iWindowPositionX;
+	int windowY = iWindowPositionY < 0 ? 0 : iWindowPositionY;
+	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
+}
 
 // SFD functions
 typedef int(__cdecl* mwPlyCalcWorkCprmSfd_Fn)(/* MwsfdCrePrm * */ void* cprm);
@@ -201,20 +224,6 @@ int SubScreenAramRead_Hook()
 	injector::WriteMemory<int>(ptrpzzl_size, pzzl_size, true);
 
 	return pzzl_size;
-}
-
-HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
-{
-	int windowX = iWindowPositionX < 0 ? CW_USEDEFAULT : iWindowPositionX;
-	int windowY = iWindowPositionY < 0 ? CW_USEDEFAULT : iWindowPositionY;
-	return CreateWindowExA(dwExStyle, lpClassName, lpWindowName, bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-}
-
-BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
-{
-	int windowX = iWindowPositionX < 0 ? 0 : iWindowPositionX;
-	int windowY = iWindowPositionY < 0 ? 0 : iWindowPositionY;
-	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
 }
 
 struct Filter01Params
@@ -592,8 +601,12 @@ void GetPointers()
 {
 	static uint32_t* StateBase;
 
+	// pPL pointer
+	auto pattern = hook::pattern("8B 0D ? ? ? ? 8B 41 ? A8 ? 74 ? 85 96");
+	ptrpPL = *pattern.count(1).get(0).get<uint32_t*>(2);
+
 	// pG (globals?) pointer
-	auto pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
+	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
 	ptrpG = *pattern.count(1).get(0).get<uint32_t*>(1);
 
 	// Current game state
@@ -832,86 +845,6 @@ void HandleLimits()
 	}
 }
 
-// New WndProc func
-int curPosX;
-int curPosY;
-WNDPROC wndProcOld = NULL;
-LRESULT APIENTRY WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg)
-	{
-	case WM_KEYDOWN:
-		if (wParam == getMapKey(flip_item_left, "vk") || wParam == getMapKey(flip_item_right, "vk"))
-		{
-			bShouldFlipX = true;
-		}
-		else if (wParam == getMapKey(flip_item_up, "vk") || wParam == getMapKey(flip_item_down, "vk"))
-		{
-			bShouldFlipY = true;
-		}
-		#ifdef VERBOSE
-		else if (wParam == VK_NUMPAD3)
-		{
-			std::cout << "Sono me... dare no me?" << std::endl;
-		}
-		#endif
-
-		break;
-	case WM_KEYUP:
-		if (wParam == getMapKey(flip_item_left, "vk") || wParam == getMapKey(flip_item_right, "vk"))
-		{
-			bShouldFlipX = false;
-		}
-		else if (wParam == getMapKey(flip_item_up, "vk") || wParam == getMapKey(flip_item_down, "vk"))
-		{
-			bShouldFlipY = false;
-		}
-		break;
-	case WM_MOVE:
-		 // Get current window position
-		 curPosX = (int)(short)LOWORD(lParam);   // horizontal position 
-		 curPosY = (int)(short)HIWORD(lParam);   // vertical position 
-		break;
-	case WM_EXITSIZEMOVE:
-		if (bRememberWindowPos)
-		{
-			// Write new window position
-		#ifdef VERBOSE
-		std::cout << "curPosX = " << curPosX << std::endl;
-		std::cout << "curPosY = " << curPosY << std::endl;
-		#endif
-
-		iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
-		iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
-		}
-		break;
-	case WM_CLOSE:
-		ExitProcess(0);
-		break;
-	}
-	return CallWindowProc(wndProcOld, hwnd, uMsg, wParam, lParam);
-}
-
-// WndProc hook
-DWORD WINAPI WindowCheck()
-{
-	auto pattern = hook::pattern("A1 ? ? ? ? 6A ? 50 E8 ? ? ? ? 8B 36");
-	auto hWnd = injector::ReadMemory<HWND>(*pattern.get_first<HWND*>(1), true);
-
-	while (hWnd == 0) {
-		hWnd = injector::ReadMemory<HWND>(*pattern.get_first<HWND*>(1), true);
-		Sleep(1000);
-	}
-
-	#ifdef VERBOSE
-	std::cout << "hWnd = " << hWnd << std::endl;
-	#endif
-
-	wndProcOld = (WNDPROC)GetWindowLong(hWnd, GWL_WNDPROC);
-	SetWindowLong(hWnd, GWL_WNDPROC, (LONG)WndProc);
-	return 0;
-}
-
 bool Init()
 {
 	std::cout << "Big ironic thanks to QLOC S.A." << std::endl;
@@ -949,6 +882,10 @@ bool Init()
 
 	GetPointers();
 
+	Init_WndProcHook();
+
+	Init_cfgMenu();
+
 	HandleLimits();
 
 	// FOV
@@ -981,12 +918,9 @@ bool Init()
 	// Apply window changes
 	if (bWindowBorderless || iWindowPositionX > -1 || iWindowPositionY > -1)
 	{
-		auto pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
-		injector::MakeNOP(pattern.get_first(0x12), 6);
-		injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
 
 		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
-		pattern = hook::pattern("BE 00 01 04 00 BF 00 00 C8 00");
+		auto pattern = hook::pattern("BE 00 01 04 00 BF 00 00 C8 00");
 		injector::MakeNOP(pattern.get_first(0xA), 6);
 		injector::MakeCALL(pattern.get_first(0xA), SetWindowPos_Hook, true);
 
@@ -1452,6 +1386,8 @@ bool Init()
 		{
 			regs.eax = *(int32_t*)ptrInvMovAddr;
 
+			std::cout << bShouldFlipX << std::endl;
+
 			if (bShouldFlipX)
 			{
 				regs.eax = 0x00300000;
@@ -1503,7 +1439,7 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 
 		if (Init())
 		{
-			CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&WindowCheck, nullptr, 0, nullptr));
+			//CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&WindowCheck, nullptr, 0, nullptr));
 		}
 
 		break;

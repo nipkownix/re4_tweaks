@@ -40,6 +40,30 @@
     <ClCompile Include="tool_menu_lights.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_impl_dx9.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_impl_win32.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="WndProcHook.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="cfgMenu.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -189,6 +213,39 @@
     <ClInclude Include="game_flags.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\imgui\imconfig.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_impl_dx9.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_impl_win32.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_internal.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_textedit.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_truetype.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="dllmain.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="WndProcHook.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="cfgMenu.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -220,6 +277,9 @@
     </Filter>
     <Filter Include="external\MinHook">
       <UniqueIdentifier>{ea5a25a6-3b47-4bdd-bf02-4b10b4070dbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\ImGui">
+      <UniqueIdentifier>{8009d333-9eac-43b4-a9eb-014433e845ab}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

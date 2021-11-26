@@ -58,6 +58,9 @@
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(TargetDir)winmm.dll" "D:\SteamLibrary\steamapps\common\Resident Evil 4\Bin32\winmm.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -70,9 +73,20 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(TargetDir)winmm.dll" "D:\SteamLibrary\steamapps\common\Resident Evil 4\Bin32\winmm.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\external\imgui\imgui.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_impl_dx9.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\external\MinHook\buffer.c" />
     <ClCompile Include="..\external\MinHook\hde\hde32.c" />
     <ClCompile Include="..\external\MinHook\hde\hde64.c" />
@@ -83,11 +97,21 @@
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="roomInfo.cpp" />
+    <ClCompile Include="cfgMenu.cpp" />
+    <ClCompile Include="WndProcHook.cpp" />
     <ClCompile Include="tool_menu.cpp" />
     <ClCompile Include="tool_menu_debug.cpp" />
     <ClCompile Include="tool_menu_lights.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\external\imgui\imconfig.h" />
+    <ClInclude Include="..\external\imgui\imgui.h" />
+    <ClInclude Include="..\external\imgui\imgui_impl_dx9.h" />
+    <ClInclude Include="..\external\imgui\imgui_impl_win32.h" />
+    <ClInclude Include="..\external\imgui\imgui_internal.h" />
+    <ClInclude Include="..\external\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\external\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\external\imgui\imstb_truetype.h" />
     <ClInclude Include="..\external\inireader\IniReader.h" />
     <ClInclude Include="..\external\inireader\ini_parser.hpp" />
     <ClInclude Include="..\external\injector\include\injector\assembly.hpp" />
@@ -136,6 +160,9 @@
     <ClInclude Include="..\Wrappers\wrapper.h" />
     <ClInclude Include="..\Wrappers\wsock32.h" />
     <ClInclude Include="game_flags.h" />
+    <ClInclude Include="dllmain.h" />
+    <ClInclude Include="cfgMenu.h" />
+    <ClInclude Include="WndProcHook.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
