@@ -4,8 +4,6 @@
 #include "cfgMenu.h"
 #include "WndProcHook.h"
 
-#define VERBOSE
-
 WNDPROC oWndProc;
 HWND hWindow;
 
@@ -20,7 +18,6 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		if (wParam == getMapKey(flip_item_left, "vk") || wParam == getMapKey(flip_item_right, "vk"))
 		{
 			bShouldFlipX = true;
-			std::cout << bShouldFlipX << std::endl;
 			Sleep(1);
 		}
 		else if (wParam == getMapKey(flip_item_up, "vk") || wParam == getMapKey(flip_item_down, "vk"))
@@ -38,7 +35,6 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			std::cout << "Sono me... dare no me?" << std::endl;
 		}
 		#endif
-
 		break;
 	case WM_MOVE:
 		// Get current window position
@@ -49,13 +45,15 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		if (bRememberWindowPos)
 		{
 			// Write new window position
-#ifdef VERBOSE
+			#ifdef VERBOSE
 			std::cout << "curPosX = " << curPosX << std::endl;
 			std::cout << "curPosY = " << curPosY << std::endl;
-#endif
+			#endif
 
-			//iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
-			//iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
+			CIniReader iniReader("");
+
+			iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
+			iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
 		}
 		break;
 	case WM_CLOSE:

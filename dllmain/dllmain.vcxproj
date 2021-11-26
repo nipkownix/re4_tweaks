@@ -98,6 +98,10 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="roomInfo.cpp" />
     <ClCompile Include="cfgMenu.cpp" />
+    <ClCompile Include="HandleLimits.cpp" />
+    <ClCompile Include="Sofdec.cpp" />
+    <ClCompile Include="FilterXXFixes.cpp" />
+    <ClCompile Include="UltrawideFix.cpp" />
     <ClCompile Include="WndProcHook.cpp" />
     <ClCompile Include="tool_menu.cpp" />
     <ClCompile Include="tool_menu_debug.cpp" />
@@ -159,9 +163,14 @@
     <ClInclude Include="..\Wrappers\winmm.h" />
     <ClInclude Include="..\Wrappers\wrapper.h" />
     <ClInclude Include="..\Wrappers\wsock32.h" />
+    <ClInclude Include="FilterXXFixes.h" />
     <ClInclude Include="game_flags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
+    <ClInclude Include="HandleLimits.h" />
+    <ClInclude Include="Sofdec.h" />
+    <ClInclude Include="tool_menu.h" />
+    <ClInclude Include="UltrawideFix.h" />
     <ClInclude Include="WndProcHook.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

@@ -64,6 +64,18 @@
     <ClCompile Include="cfgMenu.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="HandleLimits.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="Sofdec.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterXXFixes.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="UltrawideFix.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -244,6 +256,21 @@
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="cfgMenu.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="HandleLimits.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="Sofdec.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterXXFixes.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="UltrawideFix.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="tool_menu.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>

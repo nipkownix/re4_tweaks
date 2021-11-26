@@ -2,10 +2,9 @@
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
 #include "..\external\MinHook\MinHook.h"
+#include "tool_menu.h"
 #include "game_flags.h"
-
-extern std::string game_version;
-extern bool is_debug_build;
+#include "dllmain.h"
 
 // Light tool externs
 void LightTool_GetPointers();
@@ -188,7 +187,7 @@ void __cdecl gameDebug_recreation(void* a1)
 			PadButtonStates[4] = PadButtonStates[3] = PadButtonStates[1] = PadButtonStates[0] = 0;
 	}
 
-	if (!is_debug_build)
+	if (!bisDebugBuild)
 	{
 		// Check for LT + LS buttons
 		// (make sure they're the only ones pressed - if player opens a UI at same time it'll likely cause a hang...)
@@ -370,7 +369,7 @@ void ToolMenu_SaveGame()
 	ToolMenu_Exit();
 }
 
-void ToolMenu_GetPointers()
+void GetToolMenuPointers()
 {
 	auto pattern = hook::pattern("A1 ? ? ? ? 81 48 ? 00 00 00 80 A1 ? ? ? ? 8B 88 ? ? ? ?");
 	DbMenuExec = (DbMenuExec_Fn)pattern.count(1).get(0).get<uint8_t>(0);
@@ -432,8 +431,10 @@ void ToolMenu_GetPointers()
 	LightTool_GetPointers();
 }
 
-void ToolMenu_ApplyHooks()
+void Init_ToolMenu()
 {
+	GetToolMenuPointers();
+
 	// Hook systemRestartInit so we can make it load in roomInfo.dat
 	auto pattern = hook::pattern("53 56 E8 ? ? ? ? E8 ? ? ? ? 6A 01 E8 ? ? ? ? A1 ? ? ? ? 83 C0 ? 68");
 	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), systemRestartInit_Hook, (LPVOID*)&systemRestartInit_Orig);
@@ -448,7 +449,7 @@ void ToolMenu_ApplyHooks()
 	pattern = hook::pattern("53 57 33 DB 53 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4");
 	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), MenuTask_Hook, (LPVOID*)&MenuTask_Orig);
 
-	if (is_debug_build)
+	if (bisDebugBuild)
 	{
 		// hook gameDebug so we can use the gamepad emulation stuff to add keyboard support
 		pattern = hook::pattern("EB 03 8D 49 00 E8 ? ? ? ? 53 E8 ? ? ? ?");
@@ -548,7 +549,7 @@ void ToolMenu_ApplyHooks()
 	}
 
 	// Overwrite non-functional tool menu entries with replacements
-	if (!is_debug_build)
+	if (!bisDebugBuild)
 	{
 		ToolMenuEntries[1].FuncPtr = &ToolMenu_GoldMax;
 		ToolMenuEntries[15].FuncPtr = &ToolMenu_SecretOpen;
@@ -571,7 +572,7 @@ void ToolMenu_ApplyHooks()
 		ToolMenuEntries[12].FuncPtr = &ToolMenu_ToggleInfoDisp;
 
 		// Clear non-functional options on non-debug builds
-		if (!is_debug_build)
+		if (!bisDebugBuild)
 		{
 			for (int i = 0; i < 32; i++)
 			{

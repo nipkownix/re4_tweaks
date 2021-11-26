@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
 #include "..\external\MinHook\MinHook.h"
+#include "tool_menu.h"
 #include "game_flags.h"
 
 // Fixes for debug-builds tool menu
@@ -133,14 +134,16 @@ void tp_scr_Hook()
     *ToolOption_Buttons = curButtons;
 }
 
-void ToolMenuDebug_GetPointers()
+void GetToolMenuDebugPointers()
 {
     auto pattern = hook::pattern("A1 ? ? ? ? C6 80 EA 04 00 00 00 C3");
     ToolOptionClass_ptr = *pattern.count(1).get(0).get<uint32_t*>(1);
 }
 
-void ToolMenuDebug_ApplyHooks()
+void Init_ToolMenuDebug()
 {
+    GetToolMenuDebugPointers();
+
     auto pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? 0F BE 05 ? ? ? ? 99 83 E2 0F 03 C2 C1 F8 04");
     MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), move_Hook, (LPVOID*)&move_Orig);
 
