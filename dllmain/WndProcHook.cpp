@@ -3,6 +3,7 @@
 #include "dllmain.h"
 #include "cfgMenu.h"
 #include "WndProcHook.h"
+#include "Settings.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -15,12 +16,12 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	switch (uMsg)
 	{
 	case WM_KEYDOWN:
-		if (wParam == getMapKey(flip_item_left, "vk") || wParam == getMapKey(flip_item_right, "vk"))
+		if (wParam == getMapKey(cfg.flip_item_left, "vk") || wParam == getMapKey(cfg.flip_item_right, "vk"))
 		{
 			bShouldFlipX = true;
 			Sleep(1);
 		}
-		else if (wParam == getMapKey(flip_item_up, "vk") || wParam == getMapKey(flip_item_down, "vk"))
+		else if (wParam == getMapKey(cfg.flip_item_up, "vk") || wParam == getMapKey(cfg.flip_item_down, "vk"))
 		{
 			bShouldFlipY = true;
 			Sleep(1);
@@ -42,7 +43,7 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		curPosY = (int)(short)HIWORD(lParam);   // vertical position 
 		break;
 	case WM_EXITSIZEMOVE:
-		if (bRememberWindowPos)
+		if (cfg.bRememberWindowPos)
 		{
 			// Write new window position
 			#ifdef VERBOSE
@@ -51,6 +52,9 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			#endif
 
 			CIniReader iniReader("");
+
+			cfg.iWindowPositionX = curPosX;
+			cfg.iWindowPositionY = curPosY;
 
 			iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
 			iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
@@ -69,10 +73,10 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 // CreateWindowExA hook to get the hWindow and set up the WndProc hook
 HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 {
-	int windowX = iWindowPositionX < 0 ? CW_USEDEFAULT : iWindowPositionX;
-	int windowY = iWindowPositionY < 0 ? CW_USEDEFAULT : iWindowPositionY;
+	int windowX = cfg.iWindowPositionX < 0 ? CW_USEDEFAULT : cfg.iWindowPositionX;
+	int windowY = cfg.iWindowPositionY < 0 ? CW_USEDEFAULT : cfg.iWindowPositionY;
 
-	HWND result = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+	HWND result = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, cfg.bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 	hWindow = result;
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);

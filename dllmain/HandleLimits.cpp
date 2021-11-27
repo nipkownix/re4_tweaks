@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
+#include "Settings.h"
 
 uint32_t* ptrpG;
 
@@ -157,7 +158,7 @@ void Init_HandleLimits()
 	GetLimitPointers();
 
 	// vertex buffers
-	if (bRaiseVertexAlloc)
+	if (cfg.bRaiseVertexAlloc)
 	{
 		auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
 		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68000C3500, true);  // 400000 -> 800000
@@ -179,7 +180,7 @@ void Init_HandleLimits()
 	}
 
 	// Inventory screen mem
-	if (bRaiseInventoryAlloc)
+	if (cfg.bRaiseInventoryAlloc)
 	{
 		MH_CreateHook(ptrstageInit, MessageControl__stageInit_Hook, (LPVOID*)&MessageControl__stageInit_Orig);
 		MH_CreateHook(ptrSubScreenAramRead, SubScreenAramRead_Hook, (LPVOID*)&SubScreenAramRead_Orig);

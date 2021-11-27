@@ -51,7 +51,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -67,7 +67,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -86,6 +86,7 @@
     <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\external\imgui\imgui_impl_dx9.cpp" />
     <ClCompile Include="..\external\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\external\MinHook\buffer.c" />
     <ClCompile Include="..\external\MinHook\hde\hde32.c" />
@@ -99,6 +100,7 @@
     <ClCompile Include="roomInfo.cpp" />
     <ClCompile Include="cfgMenu.cpp" />
     <ClCompile Include="HandleLimits.cpp" />
+    <ClCompile Include="Settings.cpp" />
     <ClCompile Include="Sofdec.cpp" />
     <ClCompile Include="FilterXXFixes.cpp" />
     <ClCompile Include="UltrawideFix.cpp" />
@@ -139,6 +141,9 @@
     <ClInclude Include="..\external\ModUtils\ModuleList.hpp" />
     <ClInclude Include="..\external\ModUtils\Patterns.h" />
     <ClInclude Include="..\external\ModUtils\Trampoline.h" />
+    <ClInclude Include="..\icons\font\font.h" />
+    <ClInclude Include="..\icons\iconcpp.h" />
+    <ClInclude Include="..\icons\icons.h" />
     <ClInclude Include="..\includes\stdafx.h" />
     <ClInclude Include="..\Wrappers\bcrypt.h" />
     <ClInclude Include="..\Wrappers\cryptsp.h" />
@@ -168,6 +173,7 @@
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="HandleLimits.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="Sofdec.h" />
     <ClInclude Include="tool_menu.h" />
     <ClInclude Include="UltrawideFix.h" />

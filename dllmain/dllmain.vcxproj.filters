@@ -40,24 +40,6 @@
     <ClCompile Include="tool_menu_lights.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui.cpp">
-      <Filter>external\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
-      <Filter>external\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
-      <Filter>external\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_impl_dx9.cpp">
-      <Filter>external\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_impl_win32.cpp">
-      <Filter>external\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
-      <Filter>external\ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="WndProcHook.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
@@ -74,6 +56,30 @@
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="UltrawideFix.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_impl_dx9.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_impl_win32.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
+      <Filter>external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Settings.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
   </ItemGroup>
@@ -225,30 +231,6 @@
     <ClInclude Include="game_flags.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\imgui\imconfig.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_impl_dx9.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_impl_win32.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_internal.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_textedit.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_truetype.h">
-      <Filter>external\ImGui</Filter>
-    </ClInclude>
     <ClInclude Include="dllmain.h">
       <Filter>dllmain</Filter>
     </ClInclude>
@@ -272,6 +254,42 @@
     </ClInclude>
     <ClInclude Include="tool_menu.h">
       <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="Settings.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\icons\iconcpp.h">
+      <Filter>icons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\icons\icons.h">
+      <Filter>icons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\icons\font\font.h">
+      <Filter>icons\font</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imconfig.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_impl_dx9.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_impl_win32.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_internal.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_textedit.h">
+      <Filter>external\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_truetype.h">
+      <Filter>external\ImGui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -307,6 +325,12 @@
     </Filter>
     <Filter Include="external\ImGui">
       <UniqueIdentifier>{8009d333-9eac-43b4-a9eb-014433e845ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="icons">
+      <UniqueIdentifier>{e854338c-31ce-42c5-8981-d8020f3ad8f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="icons\font">
+      <UniqueIdentifier>{74c220ed-a2a8-414d-9ec4-1e2dc8614579}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

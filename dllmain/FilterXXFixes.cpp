@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
+#include "Settings.h"
 
 struct Filter01Params
 {
@@ -404,7 +405,7 @@ void Init_FilterXXFixes()
 {
 	GetFilterPointers();
 
-	if (bEnableGCBlur)
+	if (cfg.bEnableGCBlur)
 	{
 		// Hook Filter01Render, first block (loop that's ran 4 times + 0.25 pass)
 		auto pattern = hook::pattern("3C 01 0F 85 ? ? ? ? D9 85");
@@ -425,7 +426,7 @@ void Init_FilterXXFixes()
 		injector::MakeJMP(pattern.get_first(7), filter01_end, true); // JMP over code that was reimplemented
 	}
 
-	if (bEnableGCScopeBlur)
+	if (cfg.bEnableGCScopeBlur)
 	{
 		// Short-circuit Filter0aGXDraw to skip over the GXPosition etc things that we reimplement ourselves
 		auto pattern = hook::pattern("D9 45 A4 DC 15 ? ? ? ? DF E0 F6 C4 41 75 ? DC 1D ? ? ? ? DF E0 F6 C4 05 0F 8B ? ? ? ? EB");

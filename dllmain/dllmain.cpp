@@ -11,101 +11,69 @@
 #include "FilterXXFixes.h"
 #include "UltraWideFix.h"
 #include "tool_menu.h"
+#include "Settings.h"
 
 std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
 std::string game_version;
-std::string QTE_key_1;
-std::string QTE_key_2;
-std::string flip_item_up;
-std::string flip_item_down;
-std::string flip_item_left;
-std::string flip_item_right;
 
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
 
-CIniReader iniReader("");
-
-float fFOVAdditional = 0.0f;
 float fQTESpeedMult = 1.5f;
 
 bool bCfgMenuOpen;
 bool bShouldFlipX;
 bool bShouldFlipY;
-bool bIsItemUp;
-bool bFixSniperZoom;
-bool bFixVsyncToggle;
-bool bFixUltraWideAspectRatio;
-bool bFixQTE;
-bool bSkipIntroLogos;
-bool bFixRetryLoadMouseSelector;
-bool bRestorePickupTransparency;
-bool bDisableBrokenFilter03;
-bool bFixBlurryImage;
-bool bAllowHighResolutionSFD;
-bool bDisableFilmGrain;
-bool bRaiseVertexAlloc;
-bool bRaiseInventoryAlloc;
-bool bUseMemcpy;
-bool bIgnoreFPSWarning;
-bool bWindowBorderless;
-bool bRememberWindowPos;
-bool bEnableGCBlur;
-bool bEnableGCScopeBlur;
-bool bEnableDebugMenu;
 bool bisDebugBuild;
 
 uintptr_t* ptrInvMovAddr;
+uintptr_t* ptrNonBlurryVertex;
+uintptr_t* ptrBlurryVertex;
+uintptr_t* ptrRifleMovAddr;
+uintptr_t ptrGXCopyTex;
+uintptr_t ptrFilter03;
+uintptr_t ptrAfterItemExamineHook;
+uintptr_t ptrAfterEsp04TransHook;
 uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t* ptrGameFrameRate;
 
-int iWindowPositionX;
-int iWindowPositionY;
 int intQTE_key_1;
 int intQTE_key_2;
-int intGameState;
 
 BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
 {
-	int windowX = iWindowPositionX < 0 ? 0 : iWindowPositionX;
-	int windowY = iWindowPositionY < 0 ? 0 : iWindowPositionY;
+	int windowX = cfg.iWindowPositionX < 0 ? 0 : cfg.iWindowPositionX;
+	int windowY = cfg.iWindowPositionY < 0 ? 0 : cfg.iWindowPositionY;
 	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
 }
 
-void ReadSettings()
+void __declspec(naked) ItemExamineHook()
 {
-	fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
-	bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
-	bFixVsyncToggle = iniReader.ReadBoolean("DISPLAY", "FixVsyncToggle", true);
-	bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", true);
-	bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", true);
-	bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", true);
-	bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", true);
-	bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", true);
-	bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", true);
-	bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
-	iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
-	iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
-	bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
-	bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
-	bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
-	bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
-	bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
-	bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
-	flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
-	flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
-	flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
-	flip_item_right = iniReader.ReadString("KEYBOARD", "flip_item_right", "PAGEUP");
-	QTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
-	QTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
-	bAllowHighResolutionSFD = iniReader.ReadBoolean("MOVIE", "AllowHighResolutionSFD", true);
-	bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", true);
-	bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", true);
-	bUseMemcpy = iniReader.ReadBoolean("MEMORY", "UseMemcpy", true);
-	bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
+	if (!cfg.bRestorePickupTransparency)
+		_asm 
+		{
+			call ptrGXCopyTex
+			jmp ptrAfterItemExamineHook
+		}
+	else
+		_asm {jmp ptrAfterItemExamineHook}
+}
+
+void __declspec(naked) Esp04TransHook()
+{
+	if (!cfg.bDisableFilmGrain)
+		_asm
+		{
+			push ebp
+			mov  ebp, esp
+			sub  esp, 0x68
+			jmp ptrAfterEsp04TransHook
+		}
+	else
+		_asm {ret}
 }
 
 void HandleAppID()
@@ -150,7 +118,7 @@ void Init_Main()
 
 	MH_Initialize();
 
-	ReadSettings();
+	cfg.ReadSettings();
 
 	HandleAppID();
 
@@ -163,11 +131,11 @@ void Init_Main()
 	Init_FilterXXFixes();
 
 	// SFD size
-	if (bAllowHighResolutionSFD)
+	if (cfg.bAllowHighResolutionSFD)
 		Init_sofdec();
 
 	// FOV
-	if (fFOVAdditional != 0.0f)
+	if (cfg.fFOVAdditional > 0.0f)
 	{
 		// Hook function that loads the FOV
 		auto pattern = hook::pattern("D9 45 ? 89 4E ? D9 5E ? 8B 8D ? ? ? ? 89 46 ? 8B 85 ? ? ? ? 8D 7E");
@@ -179,7 +147,7 @@ void Init_Main()
 				_asm
 				{
 					fld   vanillaFov
-					fadd  fFOVAdditional
+					fadd  cfg.fFOVAdditional
 				}
 				*(int32_t*)(regs.esi + 0x4) = regs.ecx;
 			}
@@ -187,14 +155,14 @@ void Init_Main()
 	}
 	
 	// Fix vsync option
-	if (bFixVsyncToggle)
+	if (cfg.bFixVsyncToggle)
 	{
 		auto pattern = hook::pattern("50 E8 ? ? ? ? C7 07 01 00 00 00 E9");
 		injector::MakeNOP(pattern.get_first(6), 6);
 	}
 
 	// Apply window changes
-	if (bWindowBorderless || iWindowPositionX > -1 || iWindowPositionY > -1)
+	if (cfg.bWindowBorderless || cfg.iWindowPositionX > -1 || cfg.iWindowPositionY > -1)
 	{
 		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
 		auto pattern = hook::pattern("BE 00 01 04 00 BF 00 00 C8 00");
@@ -205,7 +173,7 @@ void Init_Main()
 		pattern = hook::pattern("53 51 52 53 53 50");
 		injector::MakeNOP(pattern.get_first(6), 6);
 
-		if (bWindowBorderless)
+		if (cfg.bWindowBorderless)
 		{
 			// if borderless, update the style set by SetWindowLongA
 			pattern = hook::pattern("25 00 00 38 7F 05 00 00 C8 00");
@@ -215,7 +183,6 @@ void Init_Main()
 	}
 
 	// Prevents the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
-	if (bFixRetryLoadMouseSelector)
 	{
 		// Get pointer for the state. Only reliable way I found to achieve this.
 		pattern = hook::pattern("C7 06 ? ? ? ? A1 ? ? ? ? F7 80 ? ? ? ? ? ? ? ? 74"); //0x48C1C0
@@ -234,7 +201,14 @@ void Init_Main()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (*(int32_t*)ptrRetryLoadDLGstate != 1)
+				if (cfg.bFixRetryLoadMouseSelector)
+				{
+					if (*(int32_t*)ptrRetryLoadDLGstate != 1)
+					{
+						*(int32_t*)(regs.edi + 0x160) = regs.ecx;
+					}
+				}
+				else
 				{
 					*(int32_t*)(regs.edi + 0x160) = regs.ecx;
 				}
@@ -243,7 +217,7 @@ void Init_Main()
 	}
 
 	// Check if the game is running at a valid frame rate
-	if (!bIgnoreFPSWarning)
+	if (!cfg.bIgnoreFPSWarning)
 	{
 		// Hook function to read the FPS value from config.ini
 		auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -286,14 +260,13 @@ void Init_Main()
 	}
 
 	// Replace MemorySwap with memcpy
-	if (bUseMemcpy)
+	if (cfg.bUseMemcpy)
 	{
 		auto pattern = hook::pattern("8b 49 14 33 c0 a3 ? ? ? ? 85 c9 74 ? 8b ff f6 81 ? ? ? ? 20 8b 49 ? 74 ? b8 01 00 00 00 a3 ? ? ? ? 85 c9 75 ? c3");
 		injector::MakeJMP(pattern.get_first(0), memcpy, true);
 	}
 
 	// Fix QTE mashing speed issues
-	if (bFixQTE)
 	{
 		// Each one of these uses a different way to calculate how fast you're pressing the QTE key.
 
@@ -304,11 +277,9 @@ void Init_Main()
 			void operator()(injector::reg_pack& regs)
 			{
 				float vanillaSpeed = *(float*)(regs.edi + 0x418);
-				_asm
-				{
-					fld  vanillaSpeed
-					fmul fQTESpeedMult
-				}
+				_asm {fld  vanillaSpeed}
+				if (cfg.bFixQTE)
+					_asm {fmul fQTESpeedMult}
 			}
 		}; injector::MakeInline<BouldersQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
@@ -319,11 +290,9 @@ void Init_Main()
 			void operator()(injector::reg_pack& regs)
 			{
 				float vanillaSpeed = *(float*)(regs.esi + 0x40C);
-				_asm
-				{
-					fld  vanillaSpeed
-					fdiv fQTESpeedMult
-				}
+				_asm {fld  vanillaSpeed}
+				if (cfg.bFixQTE)
+					_asm {fdiv fQTESpeedMult}
 			}
 		}; injector::MakeInline<MinecartQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
@@ -335,11 +304,9 @@ void Init_Main()
 			{
 				regs.edi = *(int32_t*)(regs.ebp + 0x14);
 				float vanillaSpeed = *(float*)(regs.edi);
-				_asm
-				{
-					fld  vanillaSpeed
-					fmul fQTESpeedMult
-				}
+				_asm {fld  vanillaSpeed}
+				if (cfg.bFixQTE)
+					_asm {fmul fQTESpeedMult}
 			}
 		}; injector::MakeInline<StatueRunQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
@@ -349,14 +316,18 @@ void Init_Main()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				*(int32_t*)(regs.eax + 0x168) += 3;
+				if (cfg.bFixQTE)
+					*(int32_t*)(regs.eax + 0x168) += 3;
+				else
+					*(int32_t*)(regs.eax + 0x168) += 1;
 			}
 		};
 		injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(6));
 		injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
 	}
 
-	if (bSkipIntroLogos)
+	// Option to skip the intro logos when starting up the game
+	if (cfg.bSkipIntroLogos)
 	{
 		pattern = hook::pattern("81 7E 24 E6 00 00 00");
 		// Overwrite some kind of timer check to check for 0 seconds instead
@@ -366,52 +337,83 @@ void Init_Main()
 	}
 
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
-	if (bFixUltraWideAspectRatio)
+	if (cfg.bFixUltraWideAspectRatio)
 		Init_UltraWideFix();
 
 	// Fix camera after zooming with the sniper
-	if (bFixSniperZoom)
 	{
-		auto pattern = hook::pattern("6A 7F 6A 81 6A 7F E8 ? ? ? ? 83 C4 0C A2");
-		injector::MakeNOP(pattern.get_first(14), 5, true);
+		auto pattern = hook::pattern("A2 ? ? ? ? A2 ? ? ? ? EB ? 81 FB ? ? ? ? 75 ? 83");
+		ptrRifleMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
+		struct FixSniperZoom
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!cfg.bFixSniperZoom)
+					*(int32_t*)ptrRifleMovAddr = regs.eax;
+			}
+		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		// Restore missing transparency in the item pickup screen by
+		// removing a call to GXCopyTex inside ItemExamine::gxDraw
+		pattern = hook::pattern("E8 ? ? ? ? D9 05 ? ? ? ? D9 7D ? 6A ? 0F B7 45");
+		ptrGXCopyTex = injector::GetBranchDestination(pattern.get_first(0)).as_int();
+		ptrAfterItemExamineHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
+		injector::MakeNOP(pattern.get_first(0), 5);
+		injector::MakeCALL(pattern.get_first(0), ItemExamineHook, true);
 	}
-	
-	// Restore missing transparency in the item pickup screen
-	if (bRestorePickupTransparency)
-	{
-		// Remove call to GXCopyTex inside ItemExamine::gxDraw
-		auto pattern = hook::pattern("56 6A 00 6A 00 50 8B F1 E8");
-		injector::MakeNOP(pattern.get_first(8), 5);
-	}
-	
+
 	// Disable Filter03 for now, as we have yet to find a way to actually fix it
-	if (bDisableBrokenFilter03)
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 39 1D");
-		injector::MakeNOP(pattern.get_first(0), 5);
+		ptrFilter03 = injector::GetBranchDestination(pattern.get_first(0)).as_int();
+		struct DisableBrokenFilter03
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!cfg.bDisableBrokenFilter03)
+					_asm {call ptrFilter03}
+			}
+		}; injector::MakeInline<DisableBrokenFilter03>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
 
 	// Fix a problem related to a vertex buffer that caused the image to be slightly blurred
-	if (bFixBlurryImage) 
 	{
+		// Replacement buffer
 		auto pattern = hook::pattern("E8 ? ? ? ? 8B 15 ? ? ? ? A1 ? ? ? ? 8B 08 6A ? 6A ? 52");
-		uint32_t* ptrNewVertex = *pattern.count(1).get(0).get<uint32_t*>(7);
+		ptrNonBlurryVertex = *pattern.count(1).get(0).get<uint32_t*>(7);
 
+		// Hook struct
+		struct FirstBlurryBuffer
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!cfg.bFixBlurryImage)
+					regs.edx = *(int32_t*)ptrBlurryVertex;
+				else
+					regs.edx = *(int32_t*)ptrNonBlurryVertex;
+			}
+		};
+
+		// First buffer
 		pattern = hook::pattern("8B 15 ? ? ? ? A1 ? ? ? ? 8B 08 56 57 6A ? 6A");
-		injector::WriteMemory(pattern.get_first(2), ptrNewVertex, true);
+		ptrBlurryVertex = *pattern.count(1).get(0).get<uint32_t*>(2);
+		injector::MakeInline<FirstBlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
+		// Second buffer
 		pattern = hook::pattern("D9 5D ? FF D0 D9 E8 A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 6A ? 51 D9 1C ? 68");
-		injector::WriteMemory(pattern.get_first(42), ptrNewVertex, true);
+		injector::MakeInline<FirstBlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
 	}
 
-	// Disable film grain
-	if (bDisableFilmGrain)
+	// Disable film grain (Esp04)
 	{
-		auto pattern = hook::pattern("75 ? 0F B6 56 ? 52 68 ? ? ? ? 50 50 E8 ? ? ? ? 83 C4 ? 5E 8B 4D ? 33 CD E8 ? ? ? ? 8B E5 5D C3 53");
-		injector::MakeNOP(pattern.get_first(0), 2, true);
+		auto pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? 56 8B 75 ? 0F B6 4E");
+		ptrAfterEsp04TransHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
+		injector::MakeNOP(pattern.get_first(0), 6);
+		injector::MakeJMP(pattern.get_first(0), Esp04TransHook, true);
 	}
   
-	if (bEnableDebugMenu)
+	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
+	if (cfg.bEnableDebugMenu)
 	{
 		Init_ToolMenu();
 		if (bisDebugBuild)
@@ -420,7 +422,7 @@ void Init_Main()
 
 	// QTE bindings and icons
 	// KEY_1 binding hook
-	intQTE_key_1 = getMapKey(QTE_key_1, "dik");
+	intQTE_key_1 = getMapKey(cfg.QTE_key_1, "dik");
 	pattern = hook::pattern("8B 58 ? 8B 40 ? 8D 8D ? ? ? ? 51");
 	struct QTEkey1
 	{
@@ -432,7 +434,7 @@ void Init_Main()
 	}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 	// KEY_2 binding hook
-	intQTE_key_2 = getMapKey(QTE_key_2, "dik");
+	intQTE_key_2 = getMapKey(cfg.QTE_key_2, "dik");
 	pattern = hook::pattern("8B 50 ? 8B 40 ? 8B F3 0B F1 74 ?");
 	struct QTEkey2
 	{
