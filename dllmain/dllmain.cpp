@@ -16,6 +16,7 @@
 std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
+std::string iniPath;
 std::string game_version;
 
 HMODULE wrapper_dll = nullptr;
@@ -80,7 +81,7 @@ void HandleAppID()
 {
 	//Create missing steam_appid file
 	const char *filename = "steam_appid.txt";
-	if (std::filesystem::exists(filename) == false) {
+	if (!std::filesystem::exists(filename)) {
 		std::ofstream appid(filename);
 		appid << "254700";
 		appid.close();
@@ -383,7 +384,7 @@ void Init_Main()
 		ptrNonBlurryVertex = *pattern.count(1).get(0).get<uint32_t*>(7);
 
 		// Hook struct
-		struct FirstBlurryBuffer
+		struct BlurryBuffer
 		{
 			void operator()(injector::reg_pack& regs)
 			{
@@ -397,11 +398,11 @@ void Init_Main()
 		// First buffer
 		pattern = hook::pattern("8B 15 ? ? ? ? A1 ? ? ? ? 8B 08 56 57 6A ? 6A");
 		ptrBlurryVertex = *pattern.count(1).get(0).get<uint32_t*>(2);
-		injector::MakeInline<FirstBlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		injector::MakeInline<BlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 		// Second buffer
 		pattern = hook::pattern("D9 5D ? FF D0 D9 E8 A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 6A ? 51 D9 1C ? 68");
-		injector::MakeInline<FirstBlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
+		injector::MakeInline<BlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
 	}
 
 	// Disable film grain (Esp04)
@@ -489,6 +490,11 @@ void LoadRealDLL(HMODULE hModule)
 	char configname[MAX_PATH];
 	GetModuleFileNameA(hModule, configname, MAX_PATH);
 	WrapperName.assign(strrchr(configname, '\\') + 1);
+	std::transform(WrapperName.begin(), WrapperName.end(), WrapperName.begin(), ::tolower);
+
+	// Store ini path
+	std::string modulePath = configname;
+	iniPath = modulePath.substr(0, modulePath.rfind('\\') + 1) + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
 
 	// Get wrapper mode
 	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());

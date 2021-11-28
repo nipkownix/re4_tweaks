@@ -13,6 +13,8 @@
 
 uintptr_t ptrInputProcess;
 
+bool NeedsToRestart;
+
 // Watch for input to be used in the cfgMenu
 void ImGuiInputThread()
 {
@@ -80,6 +82,19 @@ void MenuRender()
 
 			ImGui::PopStyleColor(6);
 
+			ImGui::Dummy(ImVec2(0.0f, 12.0f));
+
+			if (cfg.HasUnsavedChanges)
+				ImGui::BulletText("You have unsaved changes!");
+
+			ImGui::Dummy(ImVec2(0.0f, 12.0f));
+
+			if (NeedsToRestart)
+			{
+				ImGui::Bullet();
+				ImGui::TextWrapped("Changes that have been made require the game to be restarted!");
+			}
+
 			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 30);
 
 			if (ImGui::Button(ICON_FA_ERASER" Discard", ImVec2(104, 25)))
@@ -110,7 +125,10 @@ void MenuRender()
 					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
 
 					ImGui::TableNextColumn();
-					ImGui::Checkbox("FOVAdditional", &cfg.bEnableFOV);
+					if (ImGui::Checkbox("FOVAdditional", &cfg.bEnableFOV))
+					{
+						cfg.HasUnsavedChanges = true;
+					}
 					ImGui::TextWrapped("Additional FOV value. 20 seems good for most cases.");
 
 					ImGui::TableNextColumn();
@@ -129,7 +147,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// FixUltraWideAspectRatio
-				ImGui::Checkbox("FixUltraWideAspectRatio", &cfg.bFixUltraWideAspectRatio);
+				if (ImGui::Checkbox("FixUltraWideAspectRatio", &cfg.bFixUltraWideAspectRatio))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Fixes the incorrect aspect ratio when playing in ultrawide resolutions, preventing the image from being cut off and the HUD appearing off-screen. Only tested in 21:9.");
 
 				ImGui::Spacing();
@@ -137,7 +159,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// FixVsyncToggle
-				ImGui::Checkbox("FixVsyncToggle", &cfg.bFixVsyncToggle);
+				if (ImGui::Checkbox("FixVsyncToggle", &cfg.bFixVsyncToggle))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Makes it so that the vsync option found in the game's config.ini actually works.");
 
 				ImGui::Spacing();
@@ -145,7 +171,7 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// RestorePickupTransparency
-				ImGui::Checkbox("RestorePickupTransparency", &cfg.bRestorePickupTransparency);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("RestorePickupTransparency", &cfg.bRestorePickupTransparency);
 				ImGui::TextWrapped("Restores transparency on the item pickup screeen.");
 
 				ImGui::Spacing();
@@ -153,7 +179,7 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// DisableBrokenFilter03
-				ImGui::Checkbox("DisableBrokenFilter03", &cfg.bDisableBrokenFilter03);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("DisableBrokenFilter03", &cfg.bDisableBrokenFilter03);
 				ImGui::TextWrapped("This filter was originally meant to add an extra glow effect on certain fire sources, but it was broken when the game was ported to the Xbox 360, making the entire image have an orange tint overlay applied to it.");
 
 				ImGui::Spacing();
@@ -161,7 +187,7 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// FixBlurryImage
-				ImGui::Checkbox("FixBlurryImage", &cfg.bFixBlurryImage);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixBlurryImage", &cfg.bFixBlurryImage);
 				ImGui::TextWrapped("Fixes a problem related to a vertex buffer that caused the image to be slightly blurred, making the image much sharper and clearer.");
 
 				ImGui::Spacing();
@@ -169,7 +195,7 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// DisableFilmGrain
-				ImGui::Checkbox("DisableFilmGrain", &cfg.bDisableFilmGrain);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("DisableFilmGrain", &cfg.bDisableFilmGrain);
 				ImGui::TextWrapped("Disables the film grain overlay that is present in most sections of the game.");
 
 				ImGui::Spacing();
@@ -177,7 +203,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// EnableGCBlur
-				ImGui::Checkbox("EnableGCBlur", &cfg.bEnableGCBlur);
+				if (ImGui::Checkbox("EnableGCBlur", &cfg.bEnableGCBlur))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Restores DoF blurring from the GC version, which was removed/unimplemented in later ports.");
 
 				ImGui::Spacing();
@@ -185,7 +215,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// EnableGCScopeBlur
-				ImGui::Checkbox("EnableGCScopeBlur", &cfg.bEnableGCScopeBlur);
+				if (ImGui::Checkbox("EnableGCScopeBlur", &cfg.bEnableGCScopeBlur))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Restores outer-scope blurring when using a scope, which was removed/unimplemented in later ports.");
 
 				ImGui::Spacing();
@@ -193,7 +227,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// WindowBorderless
-				ImGui::Checkbox("WindowBorderless", &cfg.bWindowBorderless);
+				if (ImGui::Checkbox("WindowBorderless", &cfg.bWindowBorderless))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Whether to use a borderless-window when using windowed-mode.");
 
 				ImGui::Spacing();
@@ -213,14 +251,14 @@ void MenuRender()
 				ImGui::Spacing();
 
 				ImGui::TextWrapped("Remember the last window position. This automatically updates the \"X Pos\" and \"Y Pos\" values above.");
-				ImGui::Checkbox("RememberWindowPos", &cfg.bRememberWindowPos);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &cfg.bRememberWindowPos);
 			}
 
 			// Misc tab
 			if (Tab == 2)
 			{
 				// FixQTE
-				ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
 				ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");
 				ImGui::TextWrapped("This fix makes QTEs that involve rapid button presses much more forgiving.");
 
@@ -229,7 +267,7 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// SkipIntroLogos
-				ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
 				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");
 
 				ImGui::Spacing();
@@ -237,7 +275,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// EnableDebugMenu
-				ImGui::Checkbox("EnableDebugMenu", &cfg.bEnableDebugMenu);
+				if (ImGui::Checkbox("EnableDebugMenu", &cfg.bEnableDebugMenu))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Enables the \"tool menu\" debug menu, present inside the game but unused, and adds a few custom menu entries (\"SAVE GAME\", \"DOF / BLUR MENU\", etc).");
 				ImGui::TextWrapped("Can be opened with the LT+LS button combination (or HOME+END on keyboard).");
 				ImGui::TextWrapped("If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.");
@@ -248,7 +290,7 @@ void MenuRender()
 			if (Tab == 3)
 			{
 				// FixSniperZoom
-				ImGui::Checkbox("FixSniperZoom", &cfg.bFixSniperZoom);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixSniperZoom", &cfg.bFixSniperZoom);
 				ImGui::TextWrapped("Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.");
 
 				ImGui::Spacing();
@@ -256,7 +298,7 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// FixRetryLoadMouseSelector
-				ImGui::Checkbox("FixRetryLoadMouseSelector", &cfg.bFixRetryLoadMouseSelector);
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixRetryLoadMouseSelector", &cfg.bFixRetryLoadMouseSelector);
 				ImGui::TextWrapped("Prevents the game from overriding your selection in the \"Retry / Load\" screen when moving the mouse before confirming an action.");
 				ImGui::TextWrapped("This bug usually causes people to return to the main menu by mistake, when they actually wanted to just restart from the last checkpoint.");
 			}
@@ -297,7 +339,11 @@ void MenuRender()
 			if (Tab == 5)
 			{
 				// AllowHighResolutionSFD
-				ImGui::Checkbox("AllowHighResolutionSFD", &cfg.bAllowHighResolutionSFD);
+				if (ImGui::Checkbox("AllowHighResolutionSFD", &cfg.bAllowHighResolutionSFD))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.");
 				ImGui::TextWrapped("Not tested beyond 1920x1080.");
 			}
@@ -306,7 +352,11 @@ void MenuRender()
 			if (Tab == 6)
 			{
 				// RaiseVertexAlloc
-				ImGui::Checkbox("RaiseVertexAlloc", &cfg.bRaiseVertexAlloc);
+				if (ImGui::Checkbox("RaiseVertexAlloc", &cfg.bRaiseVertexAlloc))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Allocate more memory for some vertex buffers.");
 				ImGui::TextWrapped("This prevents a crash that can happen when playing with a high FOV.");
 
@@ -315,7 +365,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// RaiseInventoryAlloc
-				ImGui::Checkbox("RaiseInventoryAlloc", &cfg.bRaiseInventoryAlloc);
+				if (ImGui::Checkbox("RaiseInventoryAlloc", &cfg.bRaiseInventoryAlloc))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.");
 
 				ImGui::Spacing();
@@ -323,7 +377,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// UseMemcpy
-				ImGui::Checkbox("UseMemcpy", &cfg.bUseMemcpy);
+				if (ImGui::Checkbox("UseMemcpy", &cfg.bUseMemcpy))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Makes the game use the memcpy function instead of MemorySwap, possibly resulting in some slight performance improvement.");
 			}
 

@@ -7,5 +7,5 @@ extern bool bShouldFlipX;
 extern bool bShouldFlipY;
 extern bool bisDebugBuild;
 
+extern std::string iniPath;
 extern std::string game_version;
-

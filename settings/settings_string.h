@@ -1,4 +1,5 @@
-[DISPLAY]
+#pragma once
+const char* defaultSettings = R""""([DISPLAY]
 ; Additional FOV value. 20 seems good for most cases.
 FOVAdditional = 0.0
 
@@ -102,4 +103,4 @@ UseMemcpy = true
 ; the FPS to either 30 or 60.
 ; If you have modified the game's config.ini file and changed the "variableframerate" option to something other than 30 or 60,
 ; please be aware of the potential issues before turning off this warning.
-IgnoreFPSWarning = false
+IgnoreFPSWarning = false)"""";

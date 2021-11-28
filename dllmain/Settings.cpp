@@ -3,6 +3,7 @@
 #include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
 #include "Settings.h"
+#include "settings_string.h"
 
 Settings cfg;
 
@@ -55,8 +56,19 @@ void Settings::WriteSettings()
 	CIniReader iniReader("");
 
 	#ifdef VERBOSE
-	std::cout << "Writing settings" << std::endl;
+	std::cout << "Writing settings to \"" << iniPath << "\"" << std::endl;
 	#endif
+
+	// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
+	const char* filename = iniPath.c_str();
+	if (!std::filesystem::exists(filename)) {
+		#ifdef VERBOSE
+		std::cout << "ini file doesn't exist in folder. Creating new one." << std::endl;
+		#endif
+		std::ofstream iniFile(iniPath);
+		iniFile << defaultSettings;
+		iniFile.close();
+	}
 
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
 	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
@@ -86,4 +98,6 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc);
 	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc);
 	iniReader.WriteBoolean("MEMORY", "UseMemcpy", cfg.bUseMemcpy);
+
+	cfg.HasUnsavedChanges = false;
 }

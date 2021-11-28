@@ -40,6 +40,8 @@ struct Settings
 	bool bUseMemcpy;
 	bool bIgnoreFPSWarning;
 
+	bool HasUnsavedChanges;
+
 	void ReadSettings();
 	void WriteSettings();
 };

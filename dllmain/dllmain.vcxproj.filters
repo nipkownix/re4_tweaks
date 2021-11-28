@@ -291,6 +291,9 @@
     <ClInclude Include="..\external\imgui\imstb_truetype.h">
       <Filter>external\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="..\settings\settings_string.h">
+      <Filter>settings</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -341,9 +344,6 @@
   <ItemGroup>
     <None Include="..\Wrappers\wrapper.def">
       <Filter>Wrappers</Filter>
-    </None>
-    <None Include="..\settings\winmm.ini">
-      <Filter>settings</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
