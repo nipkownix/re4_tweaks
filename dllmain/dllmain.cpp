@@ -1,4 +1,5 @@
 #include <iostream>
+#include <charconv>
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
 #include "..\external\ModUtils\MemoryMgr.h"
@@ -12,6 +13,8 @@
 #include "UltraWideFix.h"
 #include "tool_menu.h"
 #include "Settings.h"
+#include "ConsoleWnd.h"
+#include "qtefixes.h"
 
 std::string RealDllPath;
 std::string WrapperMode;
@@ -22,9 +25,8 @@ std::string game_version;
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
 
-float fQTESpeedMult = 1.5f;
-
 bool bCfgMenuOpen;
+bool bConsoleOpen;
 bool bShouldFlipX;
 bool bShouldFlipY;
 bool bisDebugBuild;
@@ -40,9 +42,6 @@ uintptr_t ptrAfterEsp04TransHook;
 uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t* ptrGameFrameRate;
-
-int intQTE_key_1;
-int intQTE_key_2;
 
 BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
 {
@@ -90,7 +89,7 @@ void HandleAppID()
 
 void Init_Main()
 {
-	std::cout << "Big ironic thanks to QLOC S.A." << std::endl;
+	con.AddLogChar("Big ironic thanks to QLOC S.A.");
 
 	// Detect game version
 	auto pattern = hook::pattern("31 2E ? ? ? 00 00 00 6D 6F 76 69 65 2F 64 65 6D 6F 30 65 6E 67 2E 73 66 64");
@@ -114,7 +113,7 @@ void Init_Main()
 	}
 
 	#ifdef VERBOSE
-	std::cout << "Game version = " << game_version << std::endl;
+	con.AddConcatLog("Game version = ", game_version.data());
 	#endif
 
 	MH_Initialize();
@@ -130,6 +129,12 @@ void Init_Main()
 	Init_HandleLimits();
 
 	Init_FilterXXFixes();
+
+	Init_QTEfixes();
+
+	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
+	if (cfg.bFixUltraWideAspectRatio)
+		Init_UltraWideFix();
 
 	// SFD size
 	if (cfg.bAllowHighResolutionSFD)
@@ -231,7 +236,7 @@ void Init_Main()
 				int intNewFPS;
 
 				#ifdef VERBOSE
-				std::cout << "Config.ini frame rate = " << intIniFPS << std::endl;
+				con.AddConcatLog("Config.ini frame rate = ", intIniFPS);
 				#endif
 
 				if (intIniFPS != 30 && intIniFPS != 60) {
@@ -267,66 +272,6 @@ void Init_Main()
 		injector::MakeJMP(pattern.get_first(0), memcpy, true);
 	}
 
-	// Fix QTE mashing speed issues
-	{
-		// Each one of these uses a different way to calculate how fast you're pressing the QTE key.
-
-		// Running from boulders
-		auto pattern = hook::pattern("D9 87 ? ? ? ? D8 87 ? ? ? ? D9 9F ? ? ? ? D9 EE D9 9F ? ? ? ? D9 05 ? ? ? ? D8 97 ? ? ? ? DF E0 F6 C4 ? 7A 20");
-		struct BouldersQTE
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				float vanillaSpeed = *(float*)(regs.edi + 0x418);
-				_asm {fld  vanillaSpeed}
-				if (cfg.bFixQTE)
-					_asm {fmul fQTESpeedMult}
-			}
-		}; injector::MakeInline<BouldersQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		// Climbing up after the minecart ride
-		pattern = hook::pattern("D9 86 ? ? ? ? 8B 0D ? ? ? ? D8 61 ? D9 9E ? ? ? ? 6A ? 56 E8 ? ? ? ? D9 EE");
-		struct MinecartQTE
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				float vanillaSpeed = *(float*)(regs.esi + 0x40C);
-				_asm {fld  vanillaSpeed}
-				if (cfg.bFixQTE)
-					_asm {fdiv fQTESpeedMult}
-			}
-		}; injector::MakeInline<MinecartQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		// Running from Salazar's statue
-		pattern = hook::pattern("8B 7D 14 D9 07 E8 ? ? ? ? 0F AF 5D 24 D9 EE 01 06 8D 43 FF D9 1F 39 06");
-		struct StatueRunQTE
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				regs.edi = *(int32_t*)(regs.ebp + 0x14);
-				float vanillaSpeed = *(float*)(regs.edi);
-				_asm {fld  vanillaSpeed}
-				if (cfg.bFixQTE)
-					_asm {fmul fQTESpeedMult}
-			}
-		}; injector::MakeInline<StatueRunQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-		// Climbing up after running from Salazar's statue
-		pattern = hook::pattern("FF 80 ? ? ? ? 6A 00 6A 00 6A 02 6A 02 6A 02 6A 00 6A 00 6A 05 6A 19");
-		struct StatueClimbQTE
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				if (cfg.bFixQTE)
-					*(int32_t*)(regs.eax + 0x168) += 3;
-				else
-					*(int32_t*)(regs.eax + 0x168) += 1;
-			}
-		};
-		injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(6));
-		injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
-	}
-
 	// Option to skip the intro logos when starting up the game
 	if (cfg.bSkipIntroLogos)
 	{
@@ -336,10 +281,6 @@ void Init_Main()
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
 	}
-
-	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
-	if (cfg.bFixUltraWideAspectRatio)
-		Init_UltraWideFix();
 
 	// Fix camera after zooming with the sniper
 	{
@@ -353,15 +294,16 @@ void Init_Main()
 					*(int32_t*)ptrRifleMovAddr = regs.eax;
 			}
 		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-		// Restore missing transparency in the item pickup screen by
-		// removing a call to GXCopyTex inside ItemExamine::gxDraw
-		pattern = hook::pattern("E8 ? ? ? ? D9 05 ? ? ? ? D9 7D ? 6A ? 0F B7 45");
-		ptrGXCopyTex = injector::GetBranchDestination(pattern.get_first(0)).as_int();
-		ptrAfterItemExamineHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
-		injector::MakeNOP(pattern.get_first(0), 5);
-		injector::MakeCALL(pattern.get_first(0), ItemExamineHook, true);
 	}
+
+	// Restore missing transparency in the item pickup screen by
+	// removing a call to GXCopyTex inside ItemExamine::gxDraw
+	pattern = hook::pattern("E8 ? ? ? ? D9 05 ? ? ? ? D9 7D ? 6A ? 0F B7 45");
+	ptrGXCopyTex = injector::GetBranchDestination(pattern.get_first(0)).as_int();
+	ptrAfterItemExamineHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
+	injector::MakeNOP(pattern.get_first(0), 5);
+	injector::MakeJMP(pattern.get_first(0), ItemExamineHook, true);
+
 
 	// Disable Filter03 for now, as we have yet to find a way to actually fix it
 	{
@@ -421,43 +363,6 @@ void Init_Main()
 			Init_ToolMenuDebug();
 	}
 
-	// QTE bindings and icons
-	// KEY_1 binding hook
-	intQTE_key_1 = getMapKey(cfg.QTE_key_1, "dik");
-	pattern = hook::pattern("8B 58 ? 8B 40 ? 8D 8D ? ? ? ? 51");
-	struct QTEkey1
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			regs.ebx = intQTE_key_1;
-			regs.eax = *(int32_t*)(regs.eax + 0x1C);
-		}
-	}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-	// KEY_2 binding hook
-	intQTE_key_2 = getMapKey(cfg.QTE_key_2, "dik");
-	pattern = hook::pattern("8B 50 ? 8B 40 ? 8B F3 0B F1 74 ?");
-	struct QTEkey2
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			regs.edx = intQTE_key_2;
-			regs.eax = *(int32_t*)(regs.eax + 0x1C);
-		}
-	}; injector::MakeInline<QTEkey2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-	// KEY_1 icon prompts
-	pattern = hook::pattern("8D ? ? ? ? ? 6A 2D ? E8");
-	injector::WriteMemory<uint8_t>(pattern.count(3).get(0).get<uint32_t>(7), intQTE_key_1, true);
-	injector::WriteMemory<uint8_t>(pattern.count(3).get(1).get<uint32_t>(7), intQTE_key_1, true);
-	injector::WriteMemory<uint8_t>(pattern.count(3).get(2).get<uint32_t>(7), intQTE_key_1, true);
-
-	// KEY_2 icon prompts
-	pattern = hook::pattern("8D ? ? ? ? ? 6A 2E ? E8");
-	injector::WriteMemory<uint8_t>(pattern.count(4).get(0).get<uint32_t>(7), intQTE_key_2, true);
-	injector::WriteMemory<uint8_t>(pattern.count(4).get(1).get<uint32_t>(7), intQTE_key_2, true);
-	injector::WriteMemory<uint8_t>(pattern.count(4).get(2).get<uint32_t>(7), intQTE_key_2, true);
-
 	// Inventory item flip binding
 	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
 	ptrInvMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
@@ -511,13 +416,11 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 
-		#ifdef VERBOSE
-		AllocConsole();
-		freopen("CONIN$", "r", stdin);
-		freopen("CONOUT$", "w", stdout);
-		freopen("CONOUT$", "w", stderr);
-		#endif
 		LoadRealDLL(hModule);
+
+		#ifdef VERBOSE
+		con.AddLogChar("\n");
+		#endif
 
 		Init_Main();
 

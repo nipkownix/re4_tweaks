@@ -16,6 +16,3 @@
 #include <filesystem>
 #include <string>
 #pragma warning(pop)
-
-
-int getMapKey(std::string key, std::string type);

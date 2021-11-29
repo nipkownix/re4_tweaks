@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
+#include "ConsoleWnd.h"
 
 uintptr_t* ptrSFDMovAddr;
 
@@ -99,8 +100,8 @@ void Init_sofdec()
 			int MovResY = regs.eax;
 
 			#ifdef VERBOSE
-			std::cout << "MovResX = " << MovResX << std::endl;
-			std::cout << "MovResY = " << MovResY << std::endl;
+			con.AddConcatLog("MovResX = ", MovResX);
+			con.AddConcatLog("MovResY = ", MovResY);
 			#endif
 
 			// Calculate new position
@@ -111,11 +112,11 @@ void Init_sofdec()
 			newMovNegY = -newMovPosY;
 
 			#ifdef VERBOSE
-			std::cout << "newMovPosX = " << newMovPosX << std::endl;
-			std::cout << "newMovNegX = " << newMovNegX << std::endl;
+			con.AddConcatLog("newMovPosX = ", newMovPosX);
+			con.AddConcatLog("newMovNegX = ", newMovNegX);
 
-			std::cout << "newMovPosY = " << newMovPosY << std::endl;
-			std::cout << "newMovNegY = " << newMovNegY << std::endl;
+			con.AddConcatLog("newMovPosY = ", newMovPosY);
+			con.AddConcatLog("newMovNegY = ", newMovNegY);
 			#endif
 
 			* (int32_t*)(ptrSFDMovAddr) = regs.eax;

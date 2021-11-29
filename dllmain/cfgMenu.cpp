@@ -4,6 +4,7 @@
 #include "WndProcHook.h"
 #include "dllmain.h"
 #include "Settings.h"
+#include "ConsoleWnd.h"
 #include "icons.h"
 #include "font/font.h"
 #include "iconcpp.h"
@@ -12,29 +13,9 @@
 #include "..\external\imgui\imgui_impl_dx9.h"
 
 uintptr_t ptrInputProcess;
+uintptr_t* ptrResetMovAddr;
 
 bool NeedsToRestart;
-
-// Watch for input to be used in the cfgMenu
-void ImGuiInputThread()
-{
-	while (true)
-	{
-		if (bCfgMenuOpen)
-		{
-			ImGuiIO& io = ImGui::GetIO();
-			POINT mPos;
-			GetCursorPos(&mPos);
-			ScreenToClient(hWindow, &mPos);
-			io.MousePos.x = mPos.x;
-			io.MousePos.y = mPos.y;
-			io.MouseDown[0] = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-			io.MouseDown[1] = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
-			io.MouseDown[2] = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
-		}
-		Sleep(1);
-	}
-}
 
 int Tab = 1;
 void MenuRender()
@@ -488,8 +469,6 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 		ApplyMenuTheme();
 
-		CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(ImGuiInputThread), nullptr, 0, nullptr);
-
 		ImGui_ImplWin32_Init(hWindow);
 		ImGui_ImplDX9_Init(pDevice);
 	}
@@ -498,10 +477,27 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
+	#ifdef VERBOSE
+	con.ShowConsoleOutput();
+	#endif 
+
 	// Calls the actual menu function
 	if (bCfgMenuOpen)
 	{
+		// Use raw mouse input because this game is weird and won't let me use window messages properly.
+		RAWINPUTDEVICE rid[1];
+
+		rid[0].usUsagePage = 0x01;
+		rid[0].usUsage = 0x02;
+		rid[0].dwFlags = 0;
+		rid[0].hwndTarget = hWindow;
+
+		if (!RegisterRawInputDevices(rid, 1, sizeof(*rid)))
+			con.AddLogChar("Failed to register for raw input!");
+
+		// Make cursor visible
 		ImGui::GetIO().MouseDrawCursor = true;
+
 		//ImGui::ShowDemoWindow();
 		MenuRender();
 	}
@@ -529,6 +525,32 @@ void Init_cfgMenu()
 			EndScene_hook(pDevice);
 		}
 	}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(11));
+	
+	// Reset hook 1 (before reset call)
+	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? 5E");
+	struct Reset_HookStruct1
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.ecx = *(int32_t*)(regs.eax);
+			regs.edx = *(int32_t*)(regs.ecx + 0x40);
+
+			ImGui_ImplDX9_InvalidateDeviceObjects();
+		}
+	}; injector::MakeInline<Reset_HookStruct1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	// Reset hook 2 (after reset call)
+	pattern = hook::pattern("8B 0D ? ? ? ? F7 D8 1B C0 57 25 ? ? ? ? 05");
+	ptrResetMovAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
+	struct Reset_HookStruct2
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.ecx = *(int32_t*)ptrResetMovAddr;
+
+			ImGui_ImplDX9_CreateDeviceObjects();
+		}
+	}; injector::MakeInline<Reset_HookStruct2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 	// Input process hook
 	pattern = hook::pattern("E8 ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? E8");

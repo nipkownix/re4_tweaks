@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
+#include "ConsoleWnd.h"
 
 double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
@@ -38,8 +39,8 @@ void Init_UltraWideFix()
 		void operator()(injector::reg_pack& regs)
 		{
 			#ifdef VERBOSE
-			std::cout << "ResX = " << regs.eax << std::endl;
-			std::cout << "ResY = " << regs.ecx << std::endl;
+			con.AddConcatLog("ResX = ", regs.eax);
+			con.AddConcatLog("ResY = ", regs.ecx);
 			#endif
 
 			double fGameWidth = regs.eax;
@@ -55,8 +56,8 @@ void Init_UltraWideFix()
 			if (fGameDisplayAspectRatio > 2.2)
 			{
 				#ifdef VERBOSE
-				std::cout << "fNewEngineWidthScale = " << fNewEngineWidthScale << std::endl;
-				std::cout << "fNewAspectRatio = " << fNewAspectRatio << std::endl;
+				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
+				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
 				#endif
 
 				fNewInvItemNamePos = 385;
@@ -74,7 +75,7 @@ void Init_UltraWideFix()
 			}
 			else {
 				#ifdef VERBOSE
-				std::cout << "Wrote default aspect ratio values" << std::endl;
+				con.AddLogChar("Wrote default aspect ratio values");
 				#endif
 				fNewInvItemNamePos = 320;
 				fNewFilesTitlePos = 320;

@@ -1,8 +1,9 @@
 #pragma once
 
-//#define VERBOSE
+#define VERBOSE
 
 extern bool bCfgMenuOpen;
+extern bool bConsoleOpen;
 extern bool bShouldFlipX;
 extern bool bShouldFlipY;
 extern bool bisDebugBuild;

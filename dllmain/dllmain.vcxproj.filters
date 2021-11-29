@@ -82,6 +82,12 @@
     <ClCompile Include="Settings.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="ConsoleWnd.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="qtefixes.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -293,6 +299,12 @@
     </ClInclude>
     <ClInclude Include="..\settings\settings_string.h">
       <Filter>settings</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleWnd.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="qtefixes.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

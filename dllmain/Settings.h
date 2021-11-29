@@ -8,6 +8,8 @@ struct Settings
 {
 	int Tab = 0;
 
+	int KeyMap(char* key, const char* type);
+
 	// Those save
 	float fFOVAdditional;
 	bool bEnableFOV;
