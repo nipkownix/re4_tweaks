@@ -312,9 +312,13 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("Flip UP", cfg.flip_item_up.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::InputText("Flip DOWN", cfg.flip_item_down.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::InputText("Flip LEFT", cfg.flip_item_left.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::InputText("Flip RIGHT", cfg.flip_item_right.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
 
 				ImGui::Spacing();
@@ -327,7 +331,9 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("QTE key 1", cfg.QTE_key_1.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::InputText("QTE key 2", cfg.QTE_key_2.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
 
 				ImGui::Spacing();
