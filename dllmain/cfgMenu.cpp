@@ -238,6 +238,14 @@ void MenuRender()
 			// Misc tab
 			if (Tab == 2)
 			{
+				// 60FPSfixes
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("60fpsFixes", &cfg.b60fpsFixes);
+				ImGui::TextWrapped("Fixes animation inconsistencies between 30 and 60 FPS that were not addressed by the developers.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FixQTE
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
 				ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");

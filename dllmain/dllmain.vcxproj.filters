@@ -88,6 +88,9 @@
     <ClCompile Include="qtefixes.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="60fpsFixes.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -304,6 +307,9 @@
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="qtefixes.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="60fpsFixes.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>

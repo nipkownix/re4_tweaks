@@ -25,6 +25,7 @@ struct Settings
 	int iWindowPositionX;
 	int iWindowPositionY;
 	bool bRememberWindowPos;
+	bool b60fpsFixes;
 	bool bFixQTE;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;

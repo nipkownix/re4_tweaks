@@ -163,9 +163,10 @@ void Draw(const char* title, bool* p_open = NULL)
 // Simple log window.
 void ConsoleOutput::ShowConsoleOutput()
 {
-    ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->WorkPos.x + 750, ImGui::GetMainViewport()->WorkPos.y + 20), ImGuiCond_FirstUseEver);
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 550, viewport->Pos.y + 20));
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowCollapsed(bConsoleOpen);
+    ImGui::SetNextWindowCollapsed(!bConsoleOpen);
     ImGui::Begin("Console Output - F2 to Show/Hide");
 
     ImGui::End();

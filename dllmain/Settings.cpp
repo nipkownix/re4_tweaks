@@ -156,6 +156,7 @@ void Settings::ReadSettings()
 	cfg.iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
+	cfg.b60fpsFixes = iniReader.ReadBoolean("MISC", "60fpsFixes", true);
 	cfg.bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);

@@ -15,6 +15,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "qtefixes.h"
+#include "60fpsFixes.h"
 
 std::string RealDllPath;
 std::string WrapperMode;
@@ -131,6 +132,8 @@ void Init_Main()
 	Init_FilterXXFixes();
 
 	Init_QTEfixes();
+
+	Init_60fpsFixes();
 
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
 	if (cfg.bFixUltraWideAspectRatio)

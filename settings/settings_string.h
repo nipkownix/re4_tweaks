@@ -43,6 +43,9 @@ WindowPositionY = -1
 RememberWindowPos = false
 
 [MISC]
+; Fixes animation inconsistencies between 30 and 60 FPS that were not addressed by the developers.
+60fpsFixes = true
+
 ; When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty,
 ; making it seem almost impossible to survive the minecart and the statue bridge QTEs.
 ; This fix makes QTEs that involve rapid button presses much more forgiving.

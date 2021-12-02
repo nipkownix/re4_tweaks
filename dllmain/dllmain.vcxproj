@@ -96,6 +96,7 @@
     <ClCompile Include="..\external\ModUtils\Patterns.cpp" />
     <ClCompile Include="..\includes\stdafx.cpp" />
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
+    <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="qtefixes.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="..\Wrappers\winmm.h" />
     <ClInclude Include="..\Wrappers\wrapper.h" />
     <ClInclude Include="..\Wrappers\wsock32.h" />
+    <ClInclude Include="60fpsFixes.h" />
     <ClInclude Include="ConsoleWnd.h" />
     <ClInclude Include="FilterXXFixes.h" />
     <ClInclude Include="game_flags.h" />
