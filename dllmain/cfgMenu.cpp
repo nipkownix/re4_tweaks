@@ -569,8 +569,6 @@ void Init_cfgMenu()
 		{
 			if (!bCfgMenuOpen)
 				_asm {call ptrInputProcess}
-			else
-				_asm {ret}
 		}
 	}; injector::MakeInline<InputProcess>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 }
