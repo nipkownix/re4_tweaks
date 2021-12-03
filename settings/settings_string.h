@@ -101,6 +101,10 @@ RaiseInventoryAlloc = true
 UseMemcpy = true
 
 [FRAME RATE]
+; Experimental: allows game to use non-60Hz refresh rates in fullscreen
+; Make sure to edit the "resolution" line of config.ini with your desired refresh rate
+FixDisplayMode = false
+
 ; Experimental: fixes up games DeltaTime related code so that FPS changes should no longer affect game speed
 ; also fixes the "new game" option so that setting config.ini's variableframerate above 60 should now work fine - hasn't been tested extensively yet though!
 ; (make sure to set IgnoreFPSWarning below to true to allow changing FPS inside config.ini)

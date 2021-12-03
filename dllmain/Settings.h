@@ -42,6 +42,7 @@ struct Settings
 	bool bRaiseInventoryAlloc;
 	bool bUseMemcpy;
 	bool bFixFPSSlowdown;
+	bool bFixDisplayMode;
 	bool bIgnoreFPSWarning;
 
 	bool HasUnsavedChanges;

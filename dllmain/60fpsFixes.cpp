@@ -1,5 +1,6 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
+#include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
@@ -73,6 +74,42 @@ void __cdecl WinMain_DeltaTime_Hook()
 	*g_PrevFrameTime = perfCount.QuadPart;
 }
 
+struct INIConfig
+{
+	int resolutionWidth;
+	int resolutionHeight;
+	int resolutionRefreshRate;
+	int vsync;
+	int fullscreen;
+	int adapter;
+	int shadowQuality;
+	int motionblurEnabled;
+	int ppEnabled;
+	int useHDTexture;
+	int antialiasing;
+	int anisotropy;
+	int variableframerate;
+	int subtitle;
+	int laserR;
+	int laserG;
+	int laserB;
+	int laserA;
+};
+
+typedef void(__cdecl* ConfigReadINI_Fn)(INIConfig*);
+ConfigReadINI_Fn ConfigReadINI_Orig;
+
+int g_UserRefreshRate = 0;
+
+void ConfigReadINI_Hook(INIConfig* a1)
+{
+	ConfigReadINI_Orig(a1);
+
+	// Game is hardcoded to only allow 60Hz display modes for some reason..
+	// Save the refresh rate from the INI so we can check against it later
+	g_UserRefreshRate = a1->resolutionRefreshRate;
+}
+
 void FPSSlowdownFix_GetPointers()
 {
 	auto pattern = hook::pattern("A3 ? ? ? ? 8B 46 ? D9 1D ? ? ? ? DB 46 3C 89 0D ? ? ? ?");
@@ -124,6 +161,23 @@ void Init_60fpsFixes()
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
 
+	if (cfg.bFixDisplayMode)
+	{
+		// Hook ConfigReadINI so we can store the users refresh-rate choice
+		pattern = hook::pattern("55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? 53 56 8B ? ? 68 FF 03 00 00 8D 85 ? ? ? ?");
+		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), ConfigReadINI_Hook, (LPVOID*)&ConfigReadINI_Orig);
+
+		// Hook func that runs EnumAdapterModes & checks for 60Hz modes, make it use the refresh rate from INI instead
+		pattern = hook::pattern("8B 45 ? 83 F8 3C 75");
+		struct DisplayModeFix
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.eax = g_UserRefreshRate;
+				regs.ef |= (1 << injector::reg_pack::ef_flag::zero_flag);
+			}
+		}; injector::MakeInline<DisplayModeFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
 
 	// Fix for slowdown when FPS drops, and allow using framerates above 60
 	// (reimplemented part of WinMain)
