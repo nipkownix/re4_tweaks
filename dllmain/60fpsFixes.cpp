@@ -6,6 +6,85 @@
 
 static uint32_t* ptrGameFrameRate;
 
+extern uint32_t* ptrpG; // HandleLimits.cpp
+
+int* g_ConfigVariableFramerate;
+LONGLONG* g_PrevFrameTime;
+LARGE_INTEGER* g_PerformanceFrequency;
+
+void __cdecl WinMain_DeltaTime_Hook()
+{
+	uint8_t* pG = *(uint8_t**)(ptrpG);
+
+	//void* EvtMgr = (void*)0xC03C48;
+	//uint8_t byte_C03C64 = *(uint8_t*)0xC03C64;
+
+	DWORD threadPrevAffinity = SetThreadAffinityMask(GetCurrentThread(), 0);
+
+	LARGE_INTEGER perfCount;
+	QueryPerformanceCounter(&perfCount);
+
+	int variableFramerate = *g_ConfigVariableFramerate;
+
+	double configFramerateTime = 0;
+	if (variableFramerate)
+		configFramerateTime = double(1.0) / double(variableFramerate);
+
+	// Limit game FPS to variableFramerate
+	double deltaTime;
+	do
+	{
+		QueryPerformanceCounter(&perfCount);
+		deltaTime = (double(perfCount.QuadPart) - double(*g_PrevFrameTime)) / double(g_PerformanceFrequency->QuadPart);
+		if (configFramerateTime > deltaTime)
+		{
+			Sleep(0);
+		}
+	} while (configFramerateTime > deltaTime);
+
+	// RE4 has a bug with the new-game option, when deltaTime is set too high (which happens when files are loading)
+	// seems it aborts the load for some reason, so here we'll check if deltaTime is above the lowest working FPS (seems to be variableFramerate / 2?)
+	// and if so then tell game it was variableFramerate / 2 instead
+	// (this means framerate dips below that will cause slowdown though, but those should be rare... TODO: find out what's causing the load to abort & adjust that instead)
+	// The cause of this seems to be related to R120Event, which uses cSofdec::Initialize - likely something movie related is breaking
+	// TODO: think this should be using displayFramerate / 2 instead of variableFramerate / 2, as in the actual display framerate, not sure how we could get that though
+
+	double maxFrameTime = double(1) / double((variableFramerate / 2) + 1); // seems to cancel load if it was at variableFramerate/2, but adding 1 lets it work
+
+	if (variableFramerate != 30 && deltaTime > maxFrameTime
+		// TODO: seems this is trying to check for a problematic event, maybe trying to check for the new-game load screen?
+		// doesn't seem to work for new-game bug though sadly, so commented out for now so this can be applied anywhere
+		// (would be great to find a way to limit this so it's event-only, so that going under (variableFramerate / 2) would also have slowdown fixed)
+		// && EventMgr__IsAliveEvt(EvtMgr, 0, byte_C03C64, 0, 0)
+		)
+	{
+		deltaTime = maxFrameTime;
+	}
+	// We want to limit update-FPS to variableFramerate, so change deltaTime to configFramerateTime if deltaTime is lower
+	else if (deltaTime < configFramerateTime)
+	{
+		deltaTime = configFramerateTime;
+	}
+
+	*(float*)(pG + 0x70) = float(deltaTime * 30);
+
+	SetThreadAffinityMask(GetCurrentThread(), threadPrevAffinity);
+
+	*g_PrevFrameTime = perfCount.QuadPart;
+}
+
+void FPSSlowdownFix_GetPointers()
+{
+	auto pattern = hook::pattern("A3 ? ? ? ? 8B 46 ? D9 1D ? ? ? ? DB 46 3C 89 0D ? ? ? ?");
+	g_ConfigVariableFramerate = (int*)*pattern.count(1).get(0).get<uint32_t>(0x13);
+
+	pattern = hook::pattern("8B 8D ? ? ? ? 8B 95 ? ? ? ? 89 0D ? ? ? ? 89 15 ? ? ? ? E8 ? ? ? ? 8D 85");
+	g_PrevFrameTime = (LONGLONG*)*pattern.count(1).get(0).get<uint32_t>(0xE);
+
+	pattern = hook::pattern("FF 15 ? ? ? ? 50 FF 15 ? ? ? ? 68 ? ? ? ? 8B F0 FF D7 68 ? ? ? ? FF D3");
+	g_PerformanceFrequency = (LARGE_INTEGER*)*pattern.count(1).get(0).get<uint32_t>(0xE);
+}
+
 void Init_60fpsFixes()
 {
 	auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -44,4 +123,26 @@ void Init_60fpsFixes()
 				_asm {fmul vanillaMulti}
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+
+
+	// Fix for slowdown when FPS drops, and allow using framerates above 60
+	// (reimplemented part of WinMain)
+	FPSSlowdownFix_GetPointers();
+
+	if (cfg.bFixFPSSlowdown)
+	{
+		pattern = hook::pattern("89 15 ? ? ? ? A3 ? ? ? ? 6A 00 FF 15 ? ? ? ? 50");
+		uint8_t* WinMain_DeltaTime_start = pattern.count(1).get(0).get<uint8_t>(0xB);
+		injector::MakeCALL(WinMain_DeltaTime_start, WinMain_DeltaTime_Hook, true);
+
+		// fix ESP, not sure why this is needed...
+		uint8_t dec_esp_4[] = { 0x83, 0xC4, 0xFC };
+
+		injector::WriteMemoryRaw(WinMain_DeltaTime_start + 5, dec_esp_4, 3, true);
+
+		// JMP over stuff that we reimplemented...
+		pattern = hook::pattern("E8 ? ? ? ? 8D 85 ? ? ? ? 50 FF D3 DF AD ? ? ? ? 8D 8D ? ? ? ? 51 DC 35 ? ? ? ? DC 25 ? ? ? ? DD 1D ? ? ? ?");
+		uint8_t* WinMain_DeltaTime_end = pattern.count(1).get(0).get<uint8_t>(0);
+		injector::MakeJMP(WinMain_DeltaTime_start + 5 + 3, WinMain_DeltaTime_end, true);
+	}
 }

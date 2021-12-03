@@ -41,6 +41,7 @@ struct Settings
 	bool bRaiseVertexAlloc;
 	bool bRaiseInventoryAlloc;
 	bool bUseMemcpy;
+	bool bFixFPSSlowdown;
 	bool bIgnoreFPSWarning;
 
 	bool HasUnsavedChanges;

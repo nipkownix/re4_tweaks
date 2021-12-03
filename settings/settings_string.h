@@ -101,6 +101,11 @@ RaiseInventoryAlloc = true
 UseMemcpy = true
 
 [FRAME RATE]
+; Experimental: fixes up games DeltaTime related code so that FPS changes should no longer affect game speed
+; also fixes the "new game" option so that setting config.ini's variableframerate above 60 should now work fine - hasn't been tested extensively yet though!
+; (make sure to set IgnoreFPSWarning below to true to allow changing FPS inside config.ini)
+FixSlowdown = false
+
 ; This version of RE4 only works properly if played at 30 or 60 FPS. Anything else can and will cause numerous amounts of
 ; different bugs, most of which aren't even documented. By default, re4_tweaks will warn you about these issues and change
 ; the FPS to either 30 or 60.

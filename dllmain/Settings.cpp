@@ -172,6 +172,7 @@ void Settings::ReadSettings()
 	cfg.bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", true);
 	cfg.bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", true);
 	cfg.bUseMemcpy = iniReader.ReadBoolean("MEMORY", "UseMemcpy", true);
+    cfg.bFixFPSSlowdown = iniReader.ReadBoolean("FRAME RATE", "FixSlowdown", false);
 	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
 }
 
