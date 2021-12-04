@@ -7,7 +7,7 @@
 uint32_t* ptrpG;
 
 static uint32_t* ptrpzzl_size;
-static uint32_t* ptrstageInit;
+static uint32_t* ptrstageInit_mem_alloc_call;
 static uint32_t* ptrSubScreenAramRead;
 static uint32_t* ptrp_MemPool_SubScreen1;
 static uint32_t* ptrp_MemPool_SubScreen2;
@@ -43,8 +43,8 @@ void GetLimitPointers()
 	pattern = hook::pattern("05 ? ? ? ? F6 C1 ? 8B 0D ? ? ? ? A3 ? ? ? ? 8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1");
 	ptrpzzl_size = pattern.count(1).get(0).get<uint32_t>(1);
 
-	pattern = hook::pattern("55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? A1 ? ? ? ? 8A 80 ? ? ? ? 56 8B F1 84 C0 0F 84 ? ? ? ? 0F B6 C8 51");
-	ptrstageInit = pattern.count(1).get(0).get<uint32_t>(0);
+	pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 00 AC 34 00 E8");
+	ptrstageInit_mem_alloc_call = pattern.count(1).get(0).get<uint32_t>(0xD);
 
 	pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 56 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 05");
 	ptrSubScreenAramRead = pattern.count(1).get(0).get<uint32_t>(0);
@@ -120,25 +120,20 @@ void GetLimitPointers()
 }
 
 // Inventory screen mem functions
-uint8_t g_MemPool_SubScreen[0x4000000];
+__declspec(align(4096)) uint8_t g_MemPool_SubScreen[0x4000000];
+
+#ifdef _DEBUG
+// guard buffer in debug builds between SubScreen & SubScreen2, will be protected with PAGE_READONLY so writes will cause an exception
+uint8_t g_MemPool_SubScreen_SafetyBuf[0x4000000];
+#endif
+
 uint8_t g_MemPool_SubScreen2[0x4000000];
 
 uint8_t* p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
 
-typedef bool(__fastcall* MessageControl__stageInit_Fn)(void* thisptr);
-MessageControl__stageInit_Fn MessageControl__stageInit_Orig;
-
-bool __fastcall MessageControl__stageInit_Hook(void* thisptr)
+void* __cdecl MessageControl__stageInit_mem_alloc_Hook(int a1, char* Str, int a3, int a4, int a5)
 {
-	bool ret = MessageControl__stageInit_Orig(thisptr);
-
-	// Set pG+0x3C to point to an extended buffer we control
-	// The game uses this for some MemorySwap operation later on - not really sure why that swap is needed though, but oh well
-	uint8_t* pG = *(uint8_t**)(ptrpG);
-
-	*(void**)(pG + 0x3C) = &g_MemPool_SubScreen2;
-
-	return ret;
+	return g_MemPool_SubScreen2;
 }
 
 typedef int(*SubScreenAramRead_Fn)();
@@ -182,7 +177,16 @@ void Init_HandleLimits()
 	// Inventory screen mem
 	if (cfg.bRaiseInventoryAlloc)
 	{
-		MH_CreateHook(ptrstageInit, MessageControl__stageInit_Hook, (LPVOID*)&MessageControl__stageInit_Orig);
+		memset(g_MemPool_SubScreen, 0, sizeof(g_MemPool_SubScreen));
+		memset(g_MemPool_SubScreen2, 0, sizeof(g_MemPool_SubScreen2));
+
+#ifdef _DEBUG
+		memset(g_MemPool_SubScreen_SafetyBuf, 0x69, sizeof(g_MemPool_SubScreen_SafetyBuf));
+		DWORD prev = 0;
+		BOOL ret = VirtualProtect(g_MemPool_SubScreen_SafetyBuf, sizeof(g_MemPool_SubScreen_SafetyBuf), PAGE_READONLY, &prev);
+#endif
+
+		injector::MakeCALL(ptrstageInit_mem_alloc_call, MessageControl__stageInit_mem_alloc_Hook, true);
 		MH_CreateHook(ptrSubScreenAramRead, SubScreenAramRead_Hook, (LPVOID*)&SubScreenAramRead_Orig);
 
 		p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
