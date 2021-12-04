@@ -122,6 +122,24 @@ void FPSSlowdownFix_GetPointers()
 	g_PerformanceFrequency = (LARGE_INTEGER*)*pattern.count(1).get(0).get<uint32_t>(0xE);
 }
 
+typedef void(__fastcall* cSubWep__moveNormal_Fn)(uint8_t* thisptr, void* unused);
+cSubWep__moveNormal_Fn cSubWep__moveNormal_Orig;
+
+void __fastcall cSubWep__moveNormal_Hook(uint8_t* thisptr, void* unused)
+{
+	// cSubWep::moveNormal fix: that func only calls the cSubWep::explode func if thisptr+0x360 is exactly 0
+	// when using FixSlowdown the deltaTime can vary between frames though, causing it to overshoot 0, usually ending up as some negative number
+	// this hook just checks for negative numbers and corrects it to 0, seems to fix it fine
+	// TODO: original moveNormal func seems to check for less-than-0 already, what is that for?
+	// maybe there's a case where its less than 0 on purpose, which this code might break... should probably add more checks here
+
+	float* framesRemaining = (float*)(thisptr + 0x360);
+	if (*framesRemaining < 0)
+		*framesRemaining = 0;
+
+	cSubWep__moveNormal_Orig(thisptr, unused);
+}
+
 void Init_60fpsFixes()
 {
 	auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -203,5 +221,9 @@ void Init_60fpsFixes()
 		// (with bFixSlowdown enabled deltatime varies a lot every frame, breaking their workaround of subtracting deltaTime if anim overshot frame count)
 		pattern = hook::pattern("8B 15 ? ? ? ? D8 62 70 B8 04 00 00");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(6), 3, true);
+
+		// cSubWep::moveNormal frame counter fix
+		pattern = hook::pattern("D9 EE 53 8B D9 D8 93 60 03 00 00");
+		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), cSubWep__moveNormal_Hook, (LPVOID*)&cSubWep__moveNormal_Orig);
 	}
 }
