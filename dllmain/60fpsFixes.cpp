@@ -198,5 +198,10 @@ void Init_60fpsFixes()
 		pattern = hook::pattern("E8 ? ? ? ? 8D 85 ? ? ? ? 50 FF D3 DF AD ? ? ? ? 8D 8D ? ? ? ? 51 DC 35 ? ? ? ? DC 25 ? ? ? ? DD 1D ? ? ? ?");
 		uint8_t* WinMain_DeltaTime_end = pattern.count(1).get(0).get<uint8_t>(0);
 		injector::MakeJMP(WinMain_DeltaTime_start + 5 + 3, WinMain_DeltaTime_end, true);
+
+		// MotionSequenceCtrl fix: stop it from subtracting deltaTime from the anim frame number
+		// (with bFixSlowdown enabled deltatime varies a lot every frame, breaking their workaround of subtracting deltaTime if anim overshot frame count)
+		pattern = hook::pattern("8B 15 ? ? ? ? D8 62 70 B8 04 00 00");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(6), 3, true);
 	}
 }
