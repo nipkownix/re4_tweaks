@@ -534,9 +534,9 @@ void Init_cfgMenu()
 		}
 	}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(11));
 	
-	// Reset hook 1 (before reset call)
+	// Reset hook 1
 	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? 5E");
-	struct Reset_HookStruct1
+	struct Reset_HookStruct
 	{
 		void operator()(injector::reg_pack& regs)
 		{
@@ -545,20 +545,11 @@ void Init_cfgMenu()
 
 			ImGui_ImplDX9_InvalidateDeviceObjects();
 		}
-	}; injector::MakeInline<Reset_HookStruct1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}; injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-	// Reset hook 2 (after reset call)
-	pattern = hook::pattern("8B 0D ? ? ? ? F7 D8 1B C0 57 25 ? ? ? ? 05");
-	ptrResetMovAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
-	struct Reset_HookStruct2
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			regs.ecx = *(int32_t*)ptrResetMovAddr;
-
-			ImGui_ImplDX9_CreateDeviceObjects();
-		}
-	}; injector::MakeInline<Reset_HookStruct2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	// Reset hook 2
+	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? EB");
+	injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Input process hook
 	pattern = hook::pattern("E8 ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? E8");
