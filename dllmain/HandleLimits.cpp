@@ -172,6 +172,10 @@ void Init_HandleLimits()
 		injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 0x6800B71B00, true);
 		injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 0x6800B71B00, true);
 		injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 0x6800B71B00, true);
+
+		// Make it so models don't disappear when a certain polygon limit is reached
+		pattern = hook::pattern("81 80 ? ? ? ? ? ? ? ? A1 ? ? ? ? 8B 90 ? ? ? ? 03 D2");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(6), 0x00340000, true);
 	}
 
 	// Inventory screen mem
