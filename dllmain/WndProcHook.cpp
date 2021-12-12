@@ -10,6 +10,8 @@
 WNDPROC oWndProc;
 HWND hWindow;
 
+static uint32_t* ptrMouseDeltaX;
+
 void processRawMouse(RAWMOUSE rawMouse)
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -105,6 +107,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
+		case WM_KILLFOCUS:
+			// Clear the mouse delta value if we lose focus
+			*(int32_t*)(ptrMouseDeltaX) = 0;
+			break;
+
 		case WM_CLOSE:
 			ExitProcess(0);
 			break;
@@ -150,6 +157,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (!RegisterRawInputDevices(rid, 1, sizeof(*rid)))
 			con.AddLogChar("Failed to register for raw input!");
 
+		// Clear the mouse delta value if the cfg menu is open
+		*(int32_t*)(ptrMouseDeltaX) = 0;
+
 		return ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 	}
 	else {
@@ -173,8 +183,11 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 
 void Init_WndProcHook()
 {
+	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
+	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
+
 	//CreateWindowEx hook
-	auto pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
+	pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
 	injector::MakeNOP(pattern.get_first(0x12), 6);
 	injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
 }
