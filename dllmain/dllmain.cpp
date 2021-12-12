@@ -144,7 +144,6 @@ void Init_Main()
 		Init_sofdec();
 
 	// FOV
-	if (cfg.fFOVAdditional > 0.0f)
 	{
 		// Hook function that loads the FOV
 		auto pattern = hook::pattern("D9 45 ? 89 4E ? D9 5E ? 8B 8D ? ? ? ? 89 46 ? 8B 85 ? ? ? ? 8D 7E");
@@ -153,11 +152,11 @@ void Init_Main()
 			void operator()(injector::reg_pack& regs)
 			{
 				float vanillaFov = *(float*)(regs.ebp - 0x34);
-				_asm
-				{
-					fld   vanillaFov
-					fadd  cfg.fFOVAdditional
-				}
+				_asm {fld vanillaFov}
+
+				if (cfg.fFOVAdditional > 0.0f)
+					_asm {fadd cfg.fFOVAdditional}
+
 				*(int32_t*)(regs.esi + 0x4) = regs.ecx;
 			}
 		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
