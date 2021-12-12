@@ -160,6 +160,7 @@ void Settings::ReadSettings()
 	cfg.bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
+    cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
 	cfg.flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");

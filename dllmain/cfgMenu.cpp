@@ -278,6 +278,15 @@ void MenuRender()
 			// Mouse tab
 			if (Tab == 3)
 			{
+				// UseMouseTurning
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseMouseTurning", &cfg.bUseMouseTurning);
+				ImGui::TextWrapped("Makes it so the mouse turns the character instead of controlling the camera.");
+				ImGui::TextWrapped("\"Modern\" aiming mode in the game's settings is recomended.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FixSniperZoom
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixSniperZoom", &cfg.bFixSniperZoom);
 				ImGui::TextWrapped("Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.");

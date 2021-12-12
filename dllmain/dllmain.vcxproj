@@ -99,6 +99,7 @@
     <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="qtefixes.cpp" />
     <ClCompile Include="roomInfo.cpp" />
     <ClCompile Include="cfgMenu.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="HandleLimits.h" />
+    <ClInclude Include="KeyboardMouseTweaks.h" />
     <ClInclude Include="qtefixes.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Sofdec.h" />

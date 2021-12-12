@@ -29,6 +29,7 @@ struct Settings
 	bool bFixQTE;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
+	bool bUseMouseTurning;
 	bool bFixSniperZoom;
 	bool bFixRetryLoadMouseSelector;
 	std::string flip_item_up;

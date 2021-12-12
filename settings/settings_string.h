@@ -61,6 +61,10 @@ SkipIntroLogos = false
 EnableDebugMenu = false
 
 [MOUSE]
+; Makes it so the mouse turns the character instead of controlling the camera.
+; "Modern" aiming mode in the game's settings is recomended.
+UseMouseTurning = true
+
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.
 FixSniperZoom = true
 
