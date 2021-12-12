@@ -17,6 +17,7 @@ uintptr_t ptrAfterTurnLeftAnimHook;
 uintptr_t ptrRetryLoadDLGstate;
 
 uintptr_t* ptrInvMovAddr;
+uintptr_t* ptrKnife_r3_downMovAddr;
 
 DWORD _EAX;
 DWORD _ECX;
@@ -227,6 +228,22 @@ void Init_KeyboardMouseTweaks()
 		}
 	}; injector::MakeInline<TurnHookWalkingBack>(pattern.count(3).get(1).get<uint32_t>(0), pattern.count(3).get(1).get<uint32_t>(7));
 	injector::WriteMemory(pattern.count(3).get(1).get<uint32_t>(7), uint8_t(0xEB), true);
+
+	// Cancel the Knife_r3_down animation if we move the mouse (indicating we want to turn ASAP)
+	pattern = hook::pattern("A1 ? ? ? ? 25 ? ? ? ? 33 C9 0B C1 74 ? 8B 86 ? ? ? ? 39 48");
+	ptrKnife_r3_downMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct Knife_r3_downHook
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.eax = *(int32_t*)ptrKnife_r3_downMovAddr;
+
+			mousedelta = *(int32_t*)(ptrMouseDeltaX);
+
+			if ((cfg.bUseMouseTurning) && (mousedelta != 0))
+				regs.eax = 0x8;
+		}
+	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	///
 	// bUseMouseTurning end
