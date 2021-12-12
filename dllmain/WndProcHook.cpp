@@ -139,6 +139,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 
 	if (bCfgMenuOpen) {
+		// Use raw mouse input because this game is weird and won't let me use window messages properly.
+		RAWINPUTDEVICE rid[1];
+
+		rid[0].usUsagePage = 0x01;
+		rid[0].usUsage = 0x02;
+		rid[0].dwFlags = RIDEV_INPUTSINK;
+		rid[0].hwndTarget = hWindow;
+
+		if (!RegisterRawInputDevices(rid, 1, sizeof(*rid)))
+			con.AddLogChar("Failed to register for raw input!");
+
 		return ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 	}
 	else {
