@@ -14,7 +14,7 @@ ImGuiTextBuffer     Buf;
 ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
 bool                AutoScroll = true;  // Keep scrolling if already at the bottom.
 
-void Clear()
+void ConsoleOutput::Clear()
 {
     Buf.clear();
     LineOffsets.clear();
@@ -130,7 +130,7 @@ void Draw(const char* title, bool* p_open = NULL)
     ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     if (clear)
-        Clear();
+        con.Clear();
     if (copy)
         ImGui::LogToClipboard();
 
