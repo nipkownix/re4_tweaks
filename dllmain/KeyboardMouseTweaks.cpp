@@ -114,7 +114,7 @@ void MouseTurn()
 	if (*(int8_t*)(ptrMouseAimMode) == 0x00)
 		SpeedMulti = 1100;
 
-	*(float*)(*ptrCharRotationBase + 0xA4) += -mousedelta / SpeedMulti;
+	*(float*)(*ptrCharRotationBase + 0xA4) += (- mousedelta / SpeedMulti) * cfg.fTurnSensitivity;
 }
 
 void Init_KeyboardMouseTweaks()

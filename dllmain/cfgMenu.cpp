@@ -94,13 +94,13 @@ void MenuRender()
 
 			ImGui::Spacing();
 
+			static ImGuiTableFlags TableFlags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ContextMenuInBody;
+
 			// Display tab
 			if (Tab == 1)
 			{
-				static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ContextMenuInBody;
-
 				// FOVAdditional
-				if (ImGui::BeginTable("FOVTable", 2, flags))
+				if (ImGui::BeginTable("FOVTable", 2, TableFlags))
 				{
 					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 300.0f);
 					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
@@ -278,10 +278,28 @@ void MenuRender()
 			// Mouse tab
 			if (Tab == 3)
 			{
-				// UseMouseTurning
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseMouseTurning", &cfg.bUseMouseTurning);
-				ImGui::TextWrapped("Makes it so the mouse turns the character instead of controlling the camera.");
-				ImGui::TextWrapped("\"Modern\" aiming mode in the game's settings is recomended.");
+				if (ImGui::BeginTable("FOVTable", 2, TableFlags))
+				{
+					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 320.0f);
+					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
+
+					ImGui::TableNextColumn();
+					if (ImGui::Checkbox("UseMouseTurning", &cfg.bUseMouseTurning))
+					{
+						cfg.HasUnsavedChanges = true;
+					}
+					ImGui::TextWrapped("Makes it so the mouse turns the character instead of controlling the camera.");
+					ImGui::TextWrapped("\"Modern\" aiming mode in the game's settings is recommended.");
+
+					ImGui::TableNextColumn();
+					ImGui::Dummy(ImVec2(0.0f, 15.0f));
+					ImGui::PushItemWidth(170);
+
+					ImGui::SliderFloat("Sensitivity Slider", &cfg.fTurnSensitivity, 0.10f, 2.0f, "%.2f");
+					ImGui::PopItemWidth();
+
+					ImGui::EndTable();
+				}
 
 				ImGui::Spacing();
 				ImGui::Separator();
