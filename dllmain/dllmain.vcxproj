@@ -100,6 +100,7 @@
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
+    <ClCompile Include="MouseTurning.cpp" />
     <ClCompile Include="qtefixes.cpp" />
     <ClCompile Include="roomInfo.cpp" />
     <ClCompile Include="cfgMenu.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="HandleLimits.h" />
     <ClInclude Include="KeyboardMouseTweaks.h" />
+    <ClInclude Include="MouseTurning.h" />
     <ClInclude Include="qtefixes.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Sofdec.h" />

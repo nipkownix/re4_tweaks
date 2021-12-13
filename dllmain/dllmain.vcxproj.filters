@@ -94,6 +94,9 @@
     <ClCompile Include="KeyboardMouseTweaks.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="MouseTurning.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -316,6 +319,9 @@
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="KeyboardMouseTweaks.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseTurning.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
