@@ -14,7 +14,10 @@ uint32_t* ptrCharRotationBase;
 
 uintptr_t ptrAfterTurnRightAnimHook;
 uintptr_t ptrAfterTurnLeftAnimHook;
+uintptr_t ptrAfterMotionMoveHook1;
+uintptr_t ptrAfterMotionMoveHook2;
 uintptr_t ptrRetryLoadDLGstate;
+uintptr_t ptrPSVECAdd;
 
 uintptr_t* ptrInvMovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -26,6 +29,8 @@ DWORD _ESP;
 int mousedelta;
 int MovInputState;
 
+// Enable the turning animation if the mouse is moving and we're not
+// trying to walk backwards / forwards, or run.
 void __declspec(naked) TurnRightAnimHook()
 {
 	_asm
@@ -38,8 +43,6 @@ void __declspec(naked) TurnRightAnimHook()
 	mousedelta = *(int32_t*)(ptrMouseDeltaX);
 	MovInputState = *(int8_t*)(ptrMovInputState);
 
-	// Enable the turning animation if the mouse is moving and we're not
-	// trying to walk backwards / forwards, or run.
 	if ((cfg.bUseMouseTurning) && (mousedelta > 0))
 		if ((MovInputState != 0x01) && (MovInputState != 0x02) && (MovInputState != 0x41) && (MovInputState != 0x42))
 			_EAX = 0x1;
@@ -57,6 +60,8 @@ void __declspec(naked) TurnRightAnimHook()
 	}
 }
 
+// Enable the turning animation if the mouse is moving and we're not
+// trying to walk backwards / forwards, or run.
 void __declspec(naked) TurnLeftAnimHook()
 {
 	_asm
@@ -69,8 +74,6 @@ void __declspec(naked) TurnLeftAnimHook()
 	mousedelta = *(int32_t*)(ptrMouseDeltaX);
 	MovInputState = *(int8_t*)(ptrMovInputState);
 
-	// Enable the turning animation if the mouse is moving and we're not
-	// trying to walk backwards / forwards, or run.
 	if ((cfg.bUseMouseTurning) && (mousedelta < 0))
 		if ((MovInputState != 0x01) && (MovInputState != 0x02) && (MovInputState != 0x41) && (MovInputState != 0x42))
 			_EAX = 0x1;
@@ -85,6 +88,62 @@ void __declspec(naked) TurnLeftAnimHook()
 		test al, al
 
 		jmp ptrAfterTurnLeftAnimHook
+	}
+}
+
+// Only allow MotionMove to change the character's position if we're not trying to do so with the mouse
+void __declspec(naked) MotionMoveHook1()
+{
+	_asm
+	{
+		mov _EAX, eax
+		mov _ECX, ecx
+		mov _ESP, esp
+	}
+
+	mousedelta = *(int32_t*)(ptrMouseDeltaX);
+	MovInputState = *(int8_t*)(ptrMovInputState);
+
+	if (cfg.bUseMouseTurning)
+	{
+		if (MovInputState != 0x00)
+			_asm {call ptrPSVECAdd}
+	}
+	else
+		_asm {call ptrPSVECAdd}
+
+	_asm
+	{
+		mov eax, _EAX
+		mov ecx, _ECX
+		mov esp, _ESP
+
+		jmp ptrAfterMotionMoveHook1
+	}
+}
+
+// Only allow MotionMove to change the character's rotation if we're not trying to do so with the mouse
+void __declspec(naked) MotionMoveHook2()
+{
+	_asm
+	{
+		mov _EAX, eax
+		mov _ECX, ecx
+		mov _ESP, esp
+	}
+
+	mousedelta = *(int32_t*)(ptrMouseDeltaX);
+
+	if (mousedelta == 0)
+		_asm {call ptrPSVECAdd}
+
+	_asm
+	{
+		mov eax, _EAX
+		mov ecx, _ECX
+		mov esp, _ESP
+
+		jmp ptrAfterMotionMoveHook2
 	}
 }
 
@@ -172,18 +231,34 @@ void Init_KeyboardMouseTweaks()
 	}; injector::MakeInline<CameraAutoCenter>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Turning animations
+	// Trigger left turn
 	pattern = hook::pattern("83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 8A 86");
 	ptrAfterTurnLeftAnimHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
 	injector::MakeNOP(pattern.get_first(0), 5);
 	injector::MakeJMP(pattern.get_first(0), TurnLeftAnimHook, true);
 
+	// Trigger right turn
 	pattern = hook::pattern("83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
 	ptrAfterTurnRightAnimHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
 	injector::MakeNOP(pattern.get_first(0), 5);
 	injector::MakeJMP(pattern.get_first(0), TurnRightAnimHook, true);
 
+	// MotionMove hook 1
+	pattern = hook::pattern("e8 ? ? ? ? 8d 83 ? ? ? ? 50 8d 8d");
+	ptrAfterMotionMoveHook1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
+	injector::MakeNOP(pattern.get_first(0), 5);
+	injector::MakeJMP(pattern.get_first(0), MotionMoveHook1, true);
+
+	// MotionMove hook 2
+	pattern = hook::pattern("e8 ? ? ? ? 81 a3 ? ? ? ? ? ? ? ? 8b 0d");
+	ptrPSVECAdd = injector::GetBranchDestination(pattern.get_first(0)).as_int();
+	ptrAfterMotionMoveHook2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
+	injector::MakeNOP(pattern.get_first(0), 5);
+	injector::MakeJMP(pattern.get_first(0), MotionMoveHook2, true);
+
 	// Actual turning
 	// pl_R1_Turn
+	// Change rotation using the mouse
 	pattern = hook::pattern("0F B6 86 ? ? ? ? 83 F8 ? 0F 87 ? ? ? ? 53 33 DB FF 24 85 ? ? ? ? 8B 86 ? ? ? ? 8B 88");
 	struct TurnHookStill
 	{
@@ -196,6 +271,35 @@ void Init_KeyboardMouseTweaks()
 		}
 	}; injector::MakeInline<TurnHookStill>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	
+	// Makes it so the full animation is played after mousedelta is past a certain value
+	pattern = hook::pattern("A1 ? ? ? ? 83 E0 ? 33 C9 0B C1 75 ? 89 9E");
+	struct pl_R1_Turn_left
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.eax = *(int8_t*)(ptrMovInputState);
+
+			mousedelta = *(int32_t*)(ptrMouseDeltaX);
+
+			if ((cfg.bUseMouseTurning) && (mousedelta < -8))
+				regs.eax = 0x8;
+		}
+	}; injector::MakeInline<pl_R1_Turn_left>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	pattern = hook::pattern("A1 ? ? ? ? 83 E0 ? 33 C9 0B C1 75 ? 89 8E");
+	struct pl_R1_Turn_right
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.eax = *(int8_t*)(ptrMovInputState);
+
+			mousedelta = *(int32_t*)(ptrMouseDeltaX);
+
+			if ((cfg.bUseMouseTurning) && (mousedelta > 8))
+				regs.eax = 0x4;
+		}
+	}; injector::MakeInline<pl_R1_Turn_right>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
 	// Walk/Run struct
 	struct TurnHookWalkRun
 	{
