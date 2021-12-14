@@ -257,7 +257,6 @@ void Init_MouseTurning()
 
 	// Actual turning
 	// pl_R1_Turn
-	// Change rotation using the mouse
 	pattern = hook::pattern("0F B6 86 ? ? ? ? 83 F8 ? 0F 87 ? ? ? ? 53 33 DB FF 24 85 ? ? ? ? 8B 86 ? ? ? ? 8B 88");
 	struct TurnHookStill
 	{
@@ -269,6 +268,10 @@ void Init_MouseTurning()
 				MouseTurn();
 		}
 	}; injector::MakeInline<TurnHookStill>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+	// pl_R1_Turn180
+	pattern = hook::pattern("0F B6 86 ? ? ? ? 33 DB 2B C3 74 ? 48 74 ? 8B 16");
+	injector::MakeInline<TurnHookStill>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 	// Makes it so the full animation is played after mousedelta is past a certain value
 	pattern = hook::pattern("A1 ? ? ? ? 83 E0 ? 33 C9 0B C1 75 ? 89 9E");
