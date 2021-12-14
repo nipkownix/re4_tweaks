@@ -19,6 +19,8 @@ static uint32_t* ptrMouseAimMode;
 
 uint32_t* ptrCharRotationBase;
 
+bool isTurn;
+
 DWORD _EAX;
 DWORD _ECX;
 DWORD _ESP;
@@ -103,11 +105,15 @@ void __declspec(naked) MotionMoveHook1()
 
 	if (cfg.bUseMouseTurning)
 	{
-		if (MovInputState != 0x00)
+		if (isTurn && (MovInputState != 0x00))
+			_asm {call ptrPSVECAdd}
+		else if (!isTurn)
 			_asm {call ptrPSVECAdd}
 	}
 	else
 		_asm {call ptrPSVECAdd}
+
+	isTurn = false;
 
 	_asm
 	{
@@ -276,6 +282,8 @@ void Init_MouseTurning()
 
 			if ((cfg.bUseMouseTurning) && (mousedelta < -8))
 				regs.eax = 0x8;
+
+			isTurn = true;
 		}
 	}; injector::MakeInline<pl_R1_Turn_left>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
@@ -290,6 +298,8 @@ void Init_MouseTurning()
 
 			if ((cfg.bUseMouseTurning) && (mousedelta > 8))
 				regs.eax = 0x4;
+
+			isTurn = true;
 		}
 	}; injector::MakeInline<pl_R1_Turn_right>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
