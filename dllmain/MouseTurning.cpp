@@ -113,8 +113,6 @@ void __declspec(naked) MotionMoveHook1()
 	else
 		_asm {call ptrPSVECAdd}
 
-	isTurn = false;
-
 	_asm
 	{
 		mov eax, _EAX
@@ -137,8 +135,17 @@ void __declspec(naked) MotionMoveHook2()
 
 	mousedelta = *(int32_t*)(ptrMouseDeltaX);
 
-	if (mousedelta == 0)
+	if (cfg.bUseMouseTurning)
+	{
+		if (isTurn && (mousedelta == 0))
+			_asm {call ptrPSVECAdd}
+		else if (!isTurn)
+			_asm {call ptrPSVECAdd}
+	}
+	else
 		_asm {call ptrPSVECAdd}
+
+	isTurn = false;
 
 	_asm
 	{
