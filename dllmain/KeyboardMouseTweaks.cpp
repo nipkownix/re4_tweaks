@@ -9,7 +9,6 @@ uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
 uintptr_t ptrRetryLoadDLGstate;
 
-
 void Init_KeyboardMouseTweaks()
 {
 	Init_MouseTurning();

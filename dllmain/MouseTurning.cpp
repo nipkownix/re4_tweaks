@@ -25,8 +25,16 @@ DWORD _EAX;
 DWORD _ECX;
 DWORD _ESP;
 
-int mousedelta;
-int MovInputState;
+int intMouseDeltaX()
+{
+	// TODO: Maybe we'd get smoother results if we calculated the delta ourselves instead of using what the game provides.
+    return *(int32_t*)(ptrMouseDeltaX);
+}
+
+int intMovInputState()
+{
+    return *(int8_t*)(ptrMovInputState);
+}
 
 // Enable the turning animation if the mouse is moving and we're not
 // trying to walk backwards / forwards, or run.
@@ -39,11 +47,8 @@ void __declspec(naked) TurnRightAnimHook()
 		mov _ESP, esp
 	}
 
-	mousedelta = *(int32_t*)(ptrMouseDeltaX);
-	MovInputState = *(int8_t*)(ptrMovInputState);
-
-	if ((cfg.bUseMouseTurning) && (mousedelta > 0))
-		if ((MovInputState != 0x01) && (MovInputState != 0x02) && (MovInputState != 0x41) && (MovInputState != 0x42))
+	if ((cfg.bUseMouseTurning) && (intMouseDeltaX() > 0))
+		if ((intMovInputState() != 0x01) && (intMovInputState() != 0x02) && (intMovInputState() != 0x41) && (intMovInputState() != 0x42))
 			_EAX = 0x1;
 
 	_asm
@@ -70,11 +75,8 @@ void __declspec(naked) TurnLeftAnimHook()
 		mov _ESP, esp
 	}
 
-	mousedelta = *(int32_t*)(ptrMouseDeltaX);
-	MovInputState = *(int8_t*)(ptrMovInputState);
-
-	if ((cfg.bUseMouseTurning) && (mousedelta < 0))
-		if ((MovInputState != 0x01) && (MovInputState != 0x02) && (MovInputState != 0x41) && (MovInputState != 0x42))
+	if ((cfg.bUseMouseTurning) && (intMouseDeltaX() < 0))
+		if ((intMovInputState() != 0x01) && (intMovInputState() != 0x02) && (intMovInputState() != 0x41) && (intMovInputState() != 0x42))
 			_EAX = 0x1;
 
 	_asm
@@ -100,12 +102,9 @@ void __declspec(naked) MotionMoveHook1()
 		mov _ESP, esp
 	}
 
-	mousedelta = *(int32_t*)(ptrMouseDeltaX);
-	MovInputState = *(int8_t*)(ptrMovInputState);
-
 	if (cfg.bUseMouseTurning)
 	{
-		if (isTurn && (MovInputState != 0x00))
+		if (isTurn && (intMovInputState() != 0x00))
 			_asm {call ptrPSVECAdd}
 		else if (!isTurn)
 			_asm {call ptrPSVECAdd}
@@ -133,11 +132,9 @@ void __declspec(naked) MotionMoveHook2()
 		mov _ESP, esp
 	}
 
-	mousedelta = *(int32_t*)(ptrMouseDeltaX);
-
 	if (cfg.bUseMouseTurning)
 	{
-		if (isTurn && (mousedelta == 0))
+		if (isTurn && (intMouseDeltaX() == 0))
 			_asm {call ptrPSVECAdd}
 		else if (!isTurn)
 			_asm {call ptrPSVECAdd}
@@ -159,16 +156,13 @@ void __declspec(naked) MotionMoveHook2()
 
 void MouseTurn()
 {
-	// TODO: Maybe we'd get smoother results if we calculated the delta ourselves instead of using what the game provides.
-	int mousedelta = *(int32_t*)(ptrMouseDeltaX);
-
 	float SpeedMulti = 700;
 
 	// "Classic" aiming mode (0x00) needs lower sensitivity here.
 	if (*(int8_t*)(ptrMouseAimMode) == 0x00)
 		SpeedMulti = 1100;
 
-	*(float*)(*ptrCharRotationBase + 0xA4) += (-mousedelta / SpeedMulti) * cfg.fTurnSensitivity;
+	*(float*)(*ptrCharRotationBase + 0xA4) += (-intMouseDeltaX() / SpeedMulti) * cfg.fTurnSensitivity;
 }
 
 void GetMouseTurnPointers()
@@ -286,11 +280,9 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			regs.eax = *(int8_t*)(ptrMovInputState);
+			regs.eax = intMovInputState();
 
-			mousedelta = *(int32_t*)(ptrMouseDeltaX);
-
-			if ((cfg.bUseMouseTurning) && (mousedelta < -8))
+			if ((cfg.bUseMouseTurning) && (intMouseDeltaX() < -8))
 				regs.eax = 0x8;
 
 			isTurn = true;
@@ -302,11 +294,9 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			regs.eax = *(int8_t*)(ptrMovInputState);
+			regs.eax = intMovInputState();
 
-			mousedelta = *(int32_t*)(ptrMouseDeltaX);
-
-			if ((cfg.bUseMouseTurning) && (mousedelta > 8))
+			if ((cfg.bUseMouseTurning) && (intMouseDeltaX() > 8))
 				regs.eax = 0x4;
 
 			isTurn = true;
@@ -355,9 +345,7 @@ void Init_MouseTurning()
 		{
 			regs.eax = *(int32_t*)ptrKnife_r3_downMovAddr;
 
-			mousedelta = *(int32_t*)(ptrMouseDeltaX);
-
-			if ((cfg.bUseMouseTurning) && (mousedelta != 0))
+			if ((cfg.bUseMouseTurning) && (intMouseDeltaX() != 0))
 				regs.eax = 0x8;
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
