@@ -1,6 +1,5 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "..\Wrappers\wrapper.h"
 #include "tool_menu.h"
 #include "game_flags.h"
 #include "ConsoleWnd.h"
