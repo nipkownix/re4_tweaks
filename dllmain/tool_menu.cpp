@@ -19,6 +19,7 @@ uint32_t(__cdecl* DvdReadN)(const char* a1, int a2, int a3, int a4, int a5, __in
 int(__fastcall* cDvd__ReadCheck)(void* thisptr, void* unused, uint32_t a2, void* a3, void* a4, void* a5);
 int(__fastcall* cDvd__FileExistCheck)(void* thisptr, void* unused, const char* path, void* a2);
 void(__cdecl* CardSave)(uint8_t a1, char a2);
+void(__cdecl* SubScreenOpen)(int a1, int a2);
 void(*FlagEdit_die)();
 
 uintptr_t pG_ptr;
@@ -339,6 +340,22 @@ void ToolMenu_SaveGame()
 	ToolMenu_Exit();
 }
 
+void OpenMerchant()
+{
+	while (IsInDebugMenu())
+		Sleep(50);
+
+	SubScreenOpen(16, 0);
+}
+
+const char* ToolMenu_OpenMerchantName = "OPEN MERCHANT";
+void ToolMenu_OpenMerchant()
+{
+	CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&OpenMerchant, NULL, 0, NULL);
+
+	ToolMenu_Exit();
+}
+
 void GetToolMenuPointers()
 {
 	auto pattern = hook::pattern("80 3D ? ? ? ? ? 75 91 E9 ? ? ? ? ");
@@ -364,6 +381,9 @@ void GetToolMenuPointers()
 
 	pattern = hook::pattern("E8 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 15 ? ? ? ? A1");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CardSave);
+
+	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
+	SubScreenOpen = (decltype(SubScreenOpen))pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
 	FlagEdit_die = (decltype(FlagEdit_die))pattern.count(1).get(0).get<uint8_t>(0);
@@ -549,13 +569,17 @@ void Init_ToolMenu()
 		ToolMenuEntries[2].Name = ToolMenu_ToggleHUDName;
 		ToolMenuEntries[2].FuncPtr = &ToolMenu_ToggleHUD;
 
-		// MUTEKI OFF -> DOF/BLUR MENU
+		// EmMUTEKI OFF -> DOF/BLUR MENU
 		ToolMenuEntries[3].Name = ToolMenu_LightToolMenuName;
 		ToolMenuEntries[3].FuncPtr = &ToolMenu_LightToolMenu;
 
 		// MUGEN ON -> SAVE GAME
 		ToolMenuEntries[4].Name = ToolMenu_SaveGameName;
 		ToolMenuEntries[4].FuncPtr = &ToolMenu_SaveGame;
+
+		// MUGEN OFF -> OPEN MERCHANT
+		ToolMenuEntries[5].Name = ToolMenu_OpenMerchantName;
+		ToolMenuEntries[5].FuncPtr = &ToolMenu_OpenMerchant;
 
 		// INFO Disp ON -> Toggle INFO Disp
 		ToolMenuEntries[12].Name = ToolMenu_ToggleInfoDispName;
@@ -566,7 +590,7 @@ void Init_ToolMenu()
 		{
 			for (int i = 0; i < 32; i++)
 			{
-				if (i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 12 || i == 15 || i == 16 || i == 29)
+				if (i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 12 || i == 15 || i == 16 || i == 29)
 					continue;
 				ToolMenuEntries[i].Name = ToolMenu_UnusedName;
 				ToolMenuEntries[i].FuncPtr = nullptr; // some unused ones like "DEBUG OPTION" pointed to nullsub that'd hang game, null it out to prevent it
