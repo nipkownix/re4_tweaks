@@ -1,14 +1,13 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
 
 uintptr_t* ptrSFDMovAddr;
 
-static uint32_t* ptrcSofdec__startApp;
-static uint32_t* ptrmwPlyCalcWorkCprmSfd;
-static uint32_t* ptrcSofdec__finishMovie;
+uintptr_t ptrcSofdec__startApp;
+uintptr_t ptrmwPlyCalcWorkCprmSfd;
+uintptr_t ptrcSofdec__finishMovie;
 static uint32_t* ptrMemPoolMovie;
 
 float newMovPosX;
@@ -17,8 +16,7 @@ float newMovPosY;
 float newMovNegY;
 
 // SFD functions
-typedef int(__cdecl* mwPlyCalcWorkCprmSfd_Fn)(/* MwsfdCrePrm * */ void* cprm);
-mwPlyCalcWorkCprmSfd_Fn mwPlyCalcWorkCprmSfd_Orig;
+int (__cdecl* mwPlyCalcWorkCprmSfd_Orig)(/* MwsfdCrePrm * */ void* cprm);
 int __cdecl mwPlyCalcWorkCprmSfd_Hook(/* MwsfdCrePrm * */ void* cprm)
 {
 	int workarea_size = mwPlyCalcWorkCprmSfd_Orig(cprm);
@@ -32,9 +30,7 @@ int __cdecl mwPlyCalcWorkCprmSfd_Hook(/* MwsfdCrePrm * */ void* cprm)
 	return workarea_size;
 }
 
-typedef void(__fastcall* cSofdec__startApp_Fn)(void* thisptr);
-cSofdec__startApp_Fn cSofdec__startApp_Orig;
-
+void (__fastcall* cSofdec__startApp_Orig)(void* thisptr);
 void __fastcall cSofdec__startApp_Hook(void* thisptr)
 {
 	// Backup original g_MemPoolMovie value
@@ -51,8 +47,7 @@ void __fastcall cSofdec__startApp_Hook(void* thisptr)
 	*g_MemPoolMovie = g_MemPoolMovie_Original;
 }
 
-typedef void(__fastcall* cSofdec__finishMovie_Fn)(uint8_t* thisptr);
-cSofdec__finishMovie_Fn cSofdec__finishMovie_Orig;
+void (__fastcall* cSofdec__finishMovie_Orig)(uint8_t* thisptr);
 void __fastcall cSofdec__finishMovie_Hook(uint8_t* thisptr)
 {
 	cSofdec__finishMovie_Orig(thisptr);
@@ -67,14 +62,14 @@ void __fastcall cSofdec__finishMovie_Hook(uint8_t* thisptr)
 void GetSofdecPointers()
 {
 	// SFD
-	auto pattern = hook::pattern("56 57 8B F9 6A ? 8D 77 ? 6A ? 56 E8 ? ? ? ? C7 46 ? ? ? ? ? C7 06");
-	ptrcSofdec__startApp = pattern.count(1).get(0).get<uint32_t>(0);
+	auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 81 88 ? ? ? ? ? ? ? ? 8B CE E8 ? ? ? ? 53");
+	ptrcSofdec__startApp = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
 
-	pattern = hook::pattern("56 8B 74 24 ? 85 F6 75 ? 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 33 C0 5E C3 8B 06");
-	ptrmwPlyCalcWorkCprmSfd = pattern.count(1).get(0).get<uint32_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? 50 89 46 1C 8B 15 ? ? ? ? 6A");
+	ptrmwPlyCalcWorkCprmSfd = (uintptr_t)pattern.count(1).get(0).get<uintptr_t>(0);
 
-	pattern = hook::pattern("56 8B F1 57 8D 86 ? ? ? ? 50 33 FF 68 ? ? ? ? 89 3D ? ? ? ? E8 ? ? ? ? 8B 4E");
-	ptrcSofdec__finishMovie = pattern.count(1).get(0).get<uint32_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? EB 08 7E 06 40 A3 ? ? ? ? 83 3D ? ? ? ? ? 7E 31");
+	ptrcSofdec__finishMovie = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
 
 	pattern = hook::pattern("8B 15 ? ? ? ? 81 C2 ? ? ? ? 6A ? 51 89 56 ? E8 ? ? ? ? 8B 4E");
 	ptrMemPoolMovie = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(2), true);
@@ -85,9 +80,14 @@ void Init_sofdec()
 	GetSofdecPointers();
 
 	// Create mem hooks
-	MH_CreateHook(ptrcSofdec__startApp, cSofdec__startApp_Hook, (LPVOID*)&cSofdec__startApp_Orig);
-	MH_CreateHook(ptrmwPlyCalcWorkCprmSfd, mwPlyCalcWorkCprmSfd_Hook, (LPVOID*)&mwPlyCalcWorkCprmSfd_Orig);
-	MH_CreateHook(ptrcSofdec__finishMovie, cSofdec__finishMovie_Hook, (LPVOID*)&cSofdec__finishMovie_Orig);
+	ReadCall(ptrcSofdec__startApp, cSofdec__startApp_Orig);
+	InjectHook(ptrcSofdec__startApp, cSofdec__startApp_Hook);
+
+	ReadCall(ptrmwPlyCalcWorkCprmSfd, mwPlyCalcWorkCprmSfd_Orig);
+	InjectHook(ptrmwPlyCalcWorkCprmSfd, mwPlyCalcWorkCprmSfd_Hook);
+
+	ReadCall(ptrcSofdec__finishMovie, cSofdec__finishMovie_Orig);
+	InjectHook(ptrcSofdec__finishMovie, cSofdec__finishMovie_Hook);
 
 	// Get resolution and calculate new position
 	auto pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? DB 45 ? 0F B7 0D");
@@ -105,7 +105,7 @@ void Init_sofdec()
 			#endif
 
 			// Calculate new position
-			newMovPosX = MovResX / 2;
+			newMovPosX = MovResX / static_cast<float>(2);
 			newMovNegX = -newMovPosX;
 
 			newMovPosY = MovResY / 1.54;

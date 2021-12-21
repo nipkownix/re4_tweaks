@@ -1,14 +1,14 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
 #include "Settings.h"
 
 uint32_t* ptrpG;
 
+uintptr_t ptrSubScreenAramRead;
+
 static uint32_t* ptrpzzl_size;
 static uint32_t* ptrstageInit_mem_alloc_call;
-static uint32_t* ptrSubScreenAramRead;
 static uint32_t* ptrp_MemPool_SubScreen1;
 static uint32_t* ptrp_MemPool_SubScreen2;
 static uint32_t* ptrp_MemPool_SubScreen3;
@@ -46,8 +46,8 @@ void GetLimitPointers()
 	pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 00 AC 34 00 E8");
 	ptrstageInit_mem_alloc_call = pattern.count(1).get(0).get<uint32_t>(0xD);
 
-	pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 56 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 05");
-	ptrSubScreenAramRead = pattern.count(1).get(0).get<uint32_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? 8B 0D ? ? ? ? 6A 44");
+	ptrSubScreenAramRead = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
 
 	pattern = hook::pattern("8B 0D ? ? ? ? 03 F8 81 C1 ? ? ? ? 3B F9 73 ? 89 46 ? EB ? 81 FF ? ? ? ? 73 ? 8B 15");
 	ptrp_MemPool_SubScreen1 = pattern.count(1).get(0).get<uint32_t>(2);
@@ -136,8 +136,7 @@ void* __cdecl MessageControl__stageInit_mem_alloc_Hook(int a1, char* Str, int a3
 	return g_MemPool_SubScreen2;
 }
 
-typedef int(*SubScreenAramRead_Fn)();
-SubScreenAramRead_Fn SubScreenAramRead_Orig;
+int(*SubScreenAramRead_Orig)();
 int SubScreenAramRead_Hook()
 {
 	int pzzl_size = SubScreenAramRead_Orig();
@@ -191,7 +190,9 @@ void Init_HandleLimits()
 #endif
 
 		injector::MakeCALL(ptrstageInit_mem_alloc_call, MessageControl__stageInit_mem_alloc_Hook, true);
-		MH_CreateHook(ptrSubScreenAramRead, SubScreenAramRead_Hook, (LPVOID*)&SubScreenAramRead_Orig);
+
+		ReadCall(ptrSubScreenAramRead, SubScreenAramRead_Orig);
+		InjectHook(ptrSubScreenAramRead, SubScreenAramRead_Hook);
 
 		p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
 

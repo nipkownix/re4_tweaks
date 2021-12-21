@@ -1,10 +1,9 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "..\Wrappers\wrapper.h"
-#include "..\external\MinHook\MinHook.h"
 #include "tool_menu.h"
 #include "game_flags.h"
 #include "dllmain.h"
+#include "ConsoleWnd.h"
 
 // Light tool externs
 void LightTool_GetPointers();
@@ -12,35 +11,28 @@ void ToolMenu_LightToolMenu();
 extern const char* ToolMenu_LightToolMenuName;
 
 // Funcs called by debug menu stuff
-typedef void(__cdecl* DbMenuExec_Fn)();
-typedef void(__cdecl* GameTask_callee_Fn)(void* a1);
-typedef void* (__cdecl* GXLoadImage_Fn)(const char* path);
-typedef void(__cdecl* GX_ScreenDisp_Fn)(void* a1, float a2, float a3, float a4, float a5, float a6, float a7, float a8, float a9, int a10);
-typedef uint32_t(__cdecl* DvdReadN_Fn)(const char* a1, int a2, int a3, int a4, int a5, __int16 a6);
-typedef int(__fastcall* cDvd__ReadCheck_Fn)(void* thisptr, void* unused, uint32_t a2, void* a3, void* a4, void* a5);
-typedef int(__fastcall* cDvd__FileExistCheck_Fn)(void* thisptr, void* unused, const char* path, void* a2);
-typedef void(__cdecl* CardSave_Fn)(uint8_t a1, char a2);
-typedef void(*FlagEdit_die_Fn)();
-
-DbMenuExec_Fn DbMenuExec = nullptr;
-GameTask_callee_Fn GameTask_callee_Orig = nullptr;
-GXLoadImage_Fn GXLoadImage = nullptr;
-GX_ScreenDisp_Fn GX_ScreenDisp = nullptr;
-DvdReadN_Fn DvdReadN = nullptr;
-cDvd__ReadCheck_Fn cDvd__ReadCheck = nullptr;
-cDvd__FileExistCheck_Fn cDvd__FileExistCheck = nullptr;
-FlagEdit_die_Fn FlagEdit_die = nullptr;
-CardSave_Fn CardSave = nullptr;
+void(__cdecl* DbMenuExec)();
+void(__cdecl* GameTask_callee_Orig)(void* a1);
+void* (__cdecl* GXLoadImage)(const char* path);
+void(__cdecl* GX_ScreenDisp)(void* a1, float a2, float a3, float a4, float a5, float a6, float a7, float a8, float a9, int a10);
+uint32_t(__cdecl* DvdReadN)(const char* a1, int a2, int a3, int a4, int a5, __int16 a6);
+int(__fastcall* cDvd__ReadCheck)(void* thisptr, void* unused, uint32_t a2, void* a3, void* a4, void* a5);
+int(__fastcall* cDvd__FileExistCheck)(void* thisptr, void* unused, const char* path, void* a2);
+void(__cdecl* CardSave)(uint8_t a1, char a2);
+void(*FlagEdit_die)();
 
 uintptr_t pG_ptr;
 uintptr_t pSys_ptr;
 uintptr_t pPL_ptr; // cPlayer*
+uintptr_t* ptrtitleInitMovAddr;
 
 uint32_t* DbgFontColorArray = nullptr;
 uint32_t* PadButtonStates = nullptr;
 uint32_t* FlagEdit_Backup_pG = nullptr;
-void* cDvd = nullptr;
 uint32_t* roomInfoAddr = nullptr;
+
+void* cDvd = nullptr;
+void* DbgFont = nullptr;
 
 struct ToolMenuEntry
 {
@@ -50,27 +42,6 @@ struct ToolMenuEntry
 	uint32_t UnkC;
 };
 ToolMenuEntry* ToolMenuEntries = nullptr;
-
-// Funcs hooked for debug menu stuff
-typedef void(*MenuTask_Fn)();
-typedef void(*systemRestartInit_Fn)();
-typedef void* (__cdecl* titleInit_Fn)(void* a1);
-typedef void(__cdecl* FlagEdit_main_Fn)(void* a1);
-
-// restore code that loads dbgfont.tga texture
-// 0x6DB765 into debug EXE
-// DbgFont var doesn't seem to be anywhere in non-dbg EXE, so we'll define our own here
-// the dbg EXE includes code in titleExit to unload DbgFont (at 0x6DD944), but we probably don't need to bother with it
-void* DbgFont = nullptr;
-titleInit_Fn titleInit_Orig = nullptr;
-void* __cdecl titleInit_Hook(void* a1)
-{
-	void* ret = titleInit_Orig(a1);
-
-	DbgFont = GXLoadImage("sv\\dbgfont.tga");
-
-	return ret;
-}
 
 // restore screen-display part of eprintf
 // calls into some GX-layer related function, luckily that func was left (unused) in the final EXE, seems to work fine
@@ -210,7 +181,7 @@ void __cdecl gameDebug_recreation(void* a1)
 	GameTask_callee_Orig(a1);
 }
 
-MenuTask_Fn MenuTask_Orig = nullptr;
+void(*MenuTask_Orig)();
 void MenuTask_Hook()
 {
 	uint8_t* pG = *(uint8_t**)pG_ptr;
@@ -222,7 +193,7 @@ void MenuTask_Hook()
 }
 
 uint32_t PrevButtons = 0;
-FlagEdit_main_Fn FlagEdit_main_Orig = nullptr;
+void(__cdecl* FlagEdit_main_Orig)(void* a1);
 void FlagEdit_main_Hook(void* a1)
 {
 	uint32_t curButtons = PadButtonStates[3];
@@ -249,8 +220,7 @@ const char* RoomInfoFileName = "debug/roomInfo_new.dat";
 
 extern uint8_t* roomInfoDat; // replacement roomInfo inside roomInfo.cpp
 
-typedef void(*systemRestartInit_Fn)();
-systemRestartInit_Fn systemRestartInit_Orig = nullptr;
+void(*systemRestartInit_Orig)();
 void systemRestartInit_Hook()
 {
 	systemRestartInit_Orig();
@@ -371,34 +341,32 @@ void ToolMenu_SaveGame()
 
 void GetToolMenuPointers()
 {
-	auto pattern = hook::pattern("A1 ? ? ? ? 81 48 ? 00 00 00 80 A1 ? ? ? ? 8B 88 ? ? ? ?");
-	DbMenuExec = (DbMenuExec_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	auto pattern = hook::pattern("80 3D ? ? ? ? ? 75 91 E9 ? ? ? ? ");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(9)).as_int(), DbMenuExec);
 
-	pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
-	auto fnCallPtr = pattern.count(1).get(0).get<uint8_t>(2);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GameTask_callee_Orig = (GameTask_callee_Fn)fnCallPtr;
+	pattern = hook::pattern("E8 ? ? ? ? 8D 4D ? 51 8D 55 ? 52 8D 45 ? 50 E8 ? ? ? ? 8B 0D");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), GameTask_callee_Orig);
 
 	pattern = hook::pattern("55 8B EC 83 EC ? 56 8B 75 ? 56 E8 ? ? ? ? 50 68 ? ? ? ? 68 00 01 00 00 68 ? ? ? ?");
-	GXLoadImage = (GXLoadImage_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	GXLoadImage = (decltype(GXLoadImage))pattern.count(1).get(0).get<uint32_t>(0);
 
-	pattern = hook::pattern("D9 45 ? 03 C1 BA 30 00 00 00");
-	GX_ScreenDisp = (GX_ScreenDisp_Fn)pattern.count(1).get(0).get<uint8_t>(-0x2A);
+	pattern = hook::pattern("55 8B EC 8B 0D ? ? ? ? 8B 81 ? ? ? ? 83 C0 30");
+	GX_ScreenDisp = (decltype(GX_ScreenDisp))pattern.count(1).get(0).get<uint32_t>(0);
 
-	pattern = hook::pattern("55 8B EC 56 6A 58 68 ? ? ? ? E8 ? ? ? ? 8B 45 ? 50 68 ? ? ? ?");
-	DvdReadN = (DvdReadN_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? D9 05 ? ? ? ? 8B 4D ? 89 41");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), DvdReadN);
 
-	pattern = hook::pattern("55 8B EC 8B 55 ? 81 EC ? ? ? ? 8D 85 ? ? ? ? 50 52 E8 ? ? ? ? 83 F8 01 75");
-	cDvd__ReadCheck = (cDvd__ReadCheck_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? FE 46 ? 8B 07");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cDvd__ReadCheck);
 
-	pattern = hook::pattern("55 8B EC A1 ? ? ? ? 83 EC ? F7 40 54 00 00 02 00 74");
-	cDvd__FileExistCheck = (cDvd__FileExistCheck_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? 8B 85 ? ? ? ? 8B 0D ? ? ? ? 8B 15 ? ? ? ? 8D 44 08 0C");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cDvd__FileExistCheck);
 
-	pattern = hook::pattern("55 8B EC 8A 45 0C A8 02 74 ?");
-	CardSave = (CardSave_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 15 ? ? ? ? A1");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CardSave);
 
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
-	FlagEdit_die = (FlagEdit_die_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+	FlagEdit_die = (decltype(FlagEdit_die))pattern.count(1).get(0).get<uint8_t>(0);
 	pG_ptr = *(uintptr_t*)pattern.count(1).get(0).get<uint8_t>(1);
 	FlagEdit_Backup_pG = *(uint32_t**)pattern.count(1).get(0).get<uint8_t>(0x14);
 
@@ -436,35 +404,43 @@ void Init_ToolMenu()
 	GetToolMenuPointers();
 
 	// Hook systemRestartInit so we can make it load in roomInfo.dat
-	auto pattern = hook::pattern("53 56 E8 ? ? ? ? E8 ? ? ? ? 6A 01 E8 ? ? ? ? A1 ? ? ? ? 83 C0 ? 68");
-	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), systemRestartInit_Hook, (LPVOID*)&systemRestartInit_Orig);
+	auto pattern = hook::pattern("E8 ? ? ? ? 80 3D ? ? ? ? ? 74 ? 80 3D ? ? ? ? ? 75");
+	auto func = pattern.count(1).get(0).get<uint32_t>(0);
+	ReadCall(func, systemRestartInit_Orig);
+	InjectHook(func, systemRestartInit_Hook);
 
 	// Hook FlagEdit so we can slow it down by only exposing buttons to it when button state has changed at all
-	pattern = hook::pattern("55 8B EC 56 8B 75 ? 57 33 FF F6 05");
-	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), FlagEdit_main_Hook, (LPVOID*)&FlagEdit_main_Orig);
+	pattern = hook::pattern("8B 14 8D ? ? ? ? 68 ? ? ? ? FF D2 A1 ? ? ? ? 8B 88");
+	uint32_t* FlagEdit_funcs = *pattern.count(1).get(0).get<uint32_t*>(3);
+
+	FlagEdit_main_Orig = (decltype(FlagEdit_main_Orig))FlagEdit_funcs[0];
+	injector::WriteMemory(&FlagEdit_funcs[0], &FlagEdit_main_Hook, true);
 
 	// Hook MenuTask (task for tool-menu), since it seems the menu can sometimes be shown without the pG+0x60 flag being set
 	// eg. when backing out of area-jump menu
 	// (which could make game hang if this causes us to try opening tool-menu when it's already open...)
 	pattern = hook::pattern("53 57 33 DB 53 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4");
-	MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), MenuTask_Hook, (LPVOID*)&MenuTask_Orig);
+	MenuTask_Orig = (decltype(MenuTask_Orig))pattern.count(1).get(0).get<uint32_t>(0);
+
+	pattern = hook::pattern("68 ? ? ? ? 6A 04 E8 ? ? ? ? 83 C4 0C");
+	injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(1), &MenuTask_Hook, true);
+
+	pattern = hook::pattern("52 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D");
+	injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), &MenuTask_Hook, true);
 
 	if (bisDebugBuild)
 	{
 		// hook gameDebug so we can use the gamepad emulation stuff to add keyboard support
 		pattern = hook::pattern("EB 03 8D 49 00 E8 ? ? ? ? 53 E8 ? ? ? ?");
-		auto fnCallPtr = pattern.count(1).get(0).get<uint8_t>(6);
-		fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-
-		GameTask_callee_Orig = (GameTask_callee_Fn)fnCallPtr;
-
-		injector::MakeCALL(pattern.count(1).get(0).get<uint8_t>(5), gameDebug_recreation, true);
+		auto func = pattern.count(1).get(0).get<uint32_t>(5);
+		ReadCall(func, GameTask_callee_Orig);
+		InjectHook(func, gameDebug_recreation);
 	}
 	else // If this isn't a debug build, add hooks to allow debug menu to be activated
 	{
 		// hook GameTask_callee call to run our gameDebug recreation
 		pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
-		injector::MakeCALL(pattern.count(1).get(0).get<uint32_t>(1), gameDebug_recreation, true);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(1), gameDebug_recreation);
 
 		// Remove bzero call that clears flags every frame for some reason
 		pattern = hook::pattern("83 C0 60 6A 10 50 E8");
@@ -473,11 +449,25 @@ void Init_ToolMenu()
 		// Hook eprintf to add screen-drawing to it, like the GC debug has
 		// (required for debug-menu to be able to draw itself)
 		pattern = hook::pattern("55 8B EC 8B 4D ? 8D 45 ? 50 51 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D C3");
-		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), eprintf_Hook, NULL);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(0), eprintf_Hook, PATCH_JUMP);
 
 		// Hook titleInit to make it load dbgFont for us
-		pattern = hook::pattern("55 8B EC 53 68 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 33 DB 53 53 53 53 68 ? ? ? ? C6");
-		MH_CreateHook(pattern.count(1).get(0).get<uint8_t>(0), titleInit_Hook, (LPVOID*)&titleInit_Orig);
+		pattern = hook::pattern("C6 05 ? ? ? ? ? E8 ? ? ? ? D9 05");
+		ptrtitleInitMovAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
+		struct titleInit_Hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// restore code that loads dbgfont.tga texture
+				// 0x6DB765 into debug EXE
+				// DbgFont var doesn't seem to be anywhere in non-dbg EXE, so we'll define our own here
+				// the dbg EXE includes code in titleExit to unload DbgFont (at 0x6DD944), but we probably don't need to bother with it
+
+				DbgFont = GXLoadImage("sv\\dbgfont.tga");
+
+				*(int8_t*)(ptrtitleInitMovAddr) = 0x1;
+			}
+		}; injector::MakeInline<titleInit_Hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
 	// Patches to change debug menu button bindings

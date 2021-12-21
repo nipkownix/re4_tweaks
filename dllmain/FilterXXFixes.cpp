@@ -1,6 +1,5 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
 #include "Settings.h"
 
@@ -19,34 +18,25 @@ float* ptr_InternalHeightScale;
 int* ptr_RenderHeight;
 uint32_t* ptr_filter01_buff;
 
-typedef void(__cdecl* GXBegin_Fn)(int a1, int a2, short a3);
-typedef void(__cdecl* GXPosition3f32_Fn)(float a1, float a2, float a3);
-typedef void(__cdecl* GXColor4u8_Fn)(uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4);
-typedef void(__cdecl* GXTexCoord2f32_Fn)(float a1, float a2);
-typedef void(__cdecl* GXShaderCall_Maybe_Fn)(int a1);
+void(__cdecl* GXBegin)(int a1, int a2, short a3);
+void(__cdecl* GXPosition3f32)(float a1, float a2, float a3);
+void(__cdecl* GXColor4u8)(uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4);
+void(__cdecl* GXTexCoord2f32)(float a1, float a2);
+void(__cdecl* GXShaderCall_Maybe)(int a1);
 
-typedef void(__cdecl* GXSetTexCopySrc_Fn)(short a1, short a2, short a3, short a4);
-typedef void(__cdecl* GXSetTexCopyDst_Fn)(short a1, short a2, int a3, char a4);
-typedef void(__cdecl* GXCopyTex_Fn)(uint32_t a1, char a2, int a3);
+void(__cdecl* GXSetTexCopySrc)(short a1, short a2, short a3, short a4);
+void(__cdecl* GXSetTexCopyDst)(short a1, short a2, int a3, char a4);
+void(__cdecl* GXCopyTex)(uint32_t a1, char a2, int a3);
 
-GXBegin_Fn GXBegin = nullptr;
-GXPosition3f32_Fn GXPosition3f32 = nullptr;
-GXColor4u8_Fn GXColor4u8 = nullptr;
-GXTexCoord2f32_Fn GXTexCoord2f32 = nullptr;
-GXShaderCall_Maybe_Fn GXShaderCall_Maybe = nullptr;
-GXSetTexCopySrc_Fn GXSetTexCopySrc = nullptr;
-GXSetTexCopyDst_Fn GXSetTexCopyDst = nullptr;
-GXCopyTex_Fn GXCopyTex = nullptr;
-
-typedef void(__cdecl* Filter0aGXDraw_Fn)(
+void(__cdecl* Filter0aGXDraw_Orig)(
 	float PositionX, float PositionY, float PositionZ,
 	float TexOffsetX, float TexOffsetY,
 	float ColorA,
 	float ScreenSizeDivisor, int IsMaskTex);
 
-Filter0aGXDraw_Fn Filter0aGXDraw_Orig;
-
-uint32_t* ptr_Filter0aGXDraw;
+uint32_t* ptr_Filter0aGXDraw_call1;
+uint32_t* ptr_Filter0aGXDraw_call2;
+uint32_t* ptr_Filter0aGXDraw_call3;
 uint8_t* ptr_Filter0aDrawBuffer_GetEFBCall;
 int32_t* ptr_filter0a_shader_num;
 
@@ -334,36 +324,25 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 void GetFilterPointers()
 {
 	// GC blur fix
-	auto pattern = hook::pattern("6A 04 53 68 A0 00 00 00 E8 ? ? ? ?");
-	uint8_t* fnCallPtr = pattern.count(1).get(0).get<uint8_t>(9);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXBegin = (GXBegin_Fn)fnCallPtr;
+	auto pattern = hook::pattern("E8 ? ? ? ? 03 5D ? 6A ? 53 57 E8 ? ? ? ? 0F B6 56");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXBegin);
 
-	pattern = hook::pattern("D9 ? ? ? ? ? D9 ? ? ? D9 ? ? ? ? ? D9 ? ? ? D9 EE D9 ? ? E8 ? ? ? ?");
-	fnCallPtr = pattern.count(1).get(0).get<uint8_t>(26);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXPosition3f32 = (GXPosition3f32_Fn)fnCallPtr;
+	pattern = hook::pattern("E8 ? ? ? ? D9 45 ? 8B 75 ? 8B 7D ? D9 7D");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXPosition3f32);
 
-	pattern = hook::pattern("68 80 00 00 00 68 FF 00 00 00 68 FF 00 00 00 68 FF 00 00 00 E8 ? ? ? ?");
-	fnCallPtr = pattern.count(1).get(0).get<uint8_t>(21);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXColor4u8 = (GXColor4u8_Fn)fnCallPtr;
+	pattern = hook::pattern("E8 ? ? ? ? 8B 5D ? 8B 55 ? 83 C4 ? 6A ? 53");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXColor4u8);
 
-	pattern = hook::pattern("E8 ? ? ? ? D9 EE 83 ? ? D9 ? ? ? D9 ? ? E8 ? ? ? ?");
-	fnCallPtr = pattern.count(1).get(0).get<uint8_t>(18);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXTexCoord2f32 = (GXTexCoord2f32_Fn)fnCallPtr;
+	pattern = hook::pattern("E8 ? ? ? ? 8B 4D ? 51 E8 ? ? ? ? 8B 4D ? 83 C4 ? 33 CD");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXTexCoord2f32);
 
-	pattern = hook::pattern("D9 EE D9 ? ? E8 ? ? ? ? 6A 0E E8 ? ? ? ?");
-	fnCallPtr = pattern.count(1).get(0).get<uint8_t>(13);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXShaderCall_Maybe = (GXShaderCall_Maybe_Fn)fnCallPtr;
+	pattern = hook::pattern("E8 ? ? ? ? 47 83 C4 ? 83 C6 ? 3B 3D ? ? ? ? 0F 82");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXShaderCall_Maybe);
+
+	pattern = hook::pattern("E8 ? ? ? ? 0F B7 4E ? 0F B7 56 ? 6A ? 6A ? 51");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXSetTexCopySrc);
 
 	pattern = hook::pattern("E8 ? ? ? ? 6A 01 6A 06 D9");
-	fnCallPtr = pattern.count(1).get(0).get<uint8_t>(1);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXSetTexCopySrc = (GXSetTexCopySrc_Fn)fnCallPtr;
-
 	uint32_t* varPtr = pattern.count(1).get(0).get<uint32_t>(11);
 	ptr_InternalHeight = (float*)*varPtr;
 
@@ -371,17 +350,15 @@ void GetFilterPointers()
 	varPtr = pattern.count(1).get(0).get<uint32_t>(11);
 	ptr_InternalWidth = (float*)*varPtr;
 
-	pattern = hook::pattern("D1 E9 51 D9 AD ? ? ? ? E8 ? ? ? ? 8B 15");
-	fnCallPtr = pattern.count(1).get(0).get<uint8_t>(10);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXSetTexCopyDst = (GXSetTexCopyDst_Fn)fnCallPtr;
+	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 6A 04 6A 00 50 E8");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXSetTexCopyDst);
 
+	pattern = hook::pattern("D1 E9 51 D9 AD ? ? ? ? E8 ? ? ? ? 8B 15");
 	varPtr = pattern.count(1).get(0).get<uint32_t>(16);
 	ptr_filter01_buff = (uint32_t*)*varPtr;
 
-	fnCallPtr = pattern.count(1).get(0).get<uint8_t>(27);
-	fnCallPtr += sizeof(int32_t) + *(int32_t*)fnCallPtr;
-	GXCopyTex = (GXCopyTex_Fn)fnCallPtr;
+	pattern = hook::pattern("E8 ? ? ? ? D9 05 ? ? ? ? D9 7D ? 6A ? 0F B7 45");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXCopyTex);
 
 	pattern = hook::pattern("83 C4 ? D9 ? ? ? ? ? D9 05 ? ? ? ? 8B ? ? ? ? ? DD");
 	varPtr = pattern.count(1).get(0).get<uint32_t>(11);
@@ -390,8 +367,14 @@ void GetFilterPointers()
 	varPtr = pattern.count(1).get(0).get<uint32_t>(17);
 	ptr_RenderHeight = (int*)*varPtr;
 
-	pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? D9 05 ? ? ? ? 33 D2 D9 7D ? 0F B7 45 ? 0D 00 0C 00 00");
-	ptr_Filter0aGXDraw = pattern.count(1).get(0).get<uint32_t>(0);
+	pattern = hook::pattern("E8 ? ? ? ? 33 DB 83 C4 20 39 1D ? ? ? ? 0F 86 ? ? ? ? A1 ? ? ? ? 56");
+	ptr_Filter0aGXDraw_call1 = pattern.count(1).get(0).get<uint32_t>(0);
+
+	pattern = hook::pattern("E8 ? ? ? ? 46 83 C4 20 3B F7 0F 8C ? ? ? ? A1 ? ? ? ? 43 3B 1D ? ? ? ? 0F 82 ? ? ? ? 5F");
+	ptr_Filter0aGXDraw_call2 = pattern.count(1).get(0).get<uint32_t>(0);
+
+	pattern = hook::pattern("E8 ? ? ? ? 6A 01 6A 03 6A 01 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 8B 4D FC 83 C4 30 33 CD 5B E8 ? ? ? ? 8B E5 5D C3 90");
+	ptr_Filter0aGXDraw_call3 = pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("5F 5E 6A 01 6A 01 E8 ? ? ? ? 83 C4 ? E8");
 	ptr_Filter0aDrawBuffer_GetEFBCall = pattern.count(1).get(0).get<uint8_t>(3);
@@ -436,7 +419,9 @@ void Init_FilterXXFixes()
 		injector::WriteMemory(ptr_Filter0aDrawBuffer_GetEFBCall, uint8_t(0x4), true);
 		injector::WriteMemory(ptr_Filter0aDrawBuffer_GetEFBCall + 2, uint8_t(0x4), true);
 
-		MH_CreateHook(ptr_Filter0aGXDraw, Filter0aGXDraw_Hook, (LPVOID*)&Filter0aGXDraw_Orig);
+		ReadCall(ptr_Filter0aGXDraw_call1, Filter0aGXDraw_Orig);
+		InjectHook(ptr_Filter0aGXDraw_call1, Filter0aGXDraw_Hook);
+		InjectHook(ptr_Filter0aGXDraw_call2, Filter0aGXDraw_Hook);
+		InjectHook(ptr_Filter0aGXDraw_call3, Filter0aGXDraw_Hook);
 	}
-
 }

@@ -2,8 +2,6 @@
 #include <charconv>
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
-#include "..\external\ModUtils\MemoryMgr.h"
-#include "..\external\MinHook\MinHook.h"
 #include "WndProcHook.h"
 #include "dllmain.h"
 #include "cfgMenu.h"
@@ -92,7 +90,7 @@ void Init_Main()
 
 	// Detect game version
 	auto pattern = hook::pattern("31 2E ? ? ? 00 00 00 6D 6F 76 69 65 2F 64 65 6D 6F 30 65 6E 67 2E 73 66 64");
-	int ver = injector::ReadMemory<int>(pattern.get_first(2));
+	int ver = injector::ReadMemory<int>(pattern.count(1).get(0).get<uint32_t>(2));
 
 	if (ver == 0x362E30) {
 		game_version = "1.0.6";
@@ -114,8 +112,6 @@ void Init_Main()
 	#ifdef VERBOSE
 	con.AddConcatLog("Game version = ", game_version.data());
 	#endif
-
-	MH_Initialize();
 
 	cfg.ReadSettings();
 
@@ -166,7 +162,7 @@ void Init_Main()
 	if (cfg.bFixVsyncToggle)
 	{
 		auto pattern = hook::pattern("50 E8 ? ? ? ? C7 07 01 00 00 00 E9");
-		injector::MakeNOP(pattern.get_first(6), 6);
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 6);
 	}
 
 	// Apply window changes
@@ -316,9 +312,6 @@ void Init_Main()
 		if (bisDebugBuild)
 			Init_ToolMenuDebug();
 	}
-
-	// Enable MH hooks
-	MH_EnableHook(MH_ALL_HOOKS);
 }
 
 void LoadRealDLL(HMODULE hModule)

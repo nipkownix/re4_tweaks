@@ -1,6 +1,5 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "..\external\MinHook\MinHook.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
 

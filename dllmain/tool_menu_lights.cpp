@@ -1,7 +1,6 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
-#include "..\external\MinHook\MinHook.h"
 #include "game_flags.h"
 
 // dllmain.cpp externs

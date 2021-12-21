@@ -13,6 +13,9 @@
 #endif
 #include "injector\utility.hpp"
 #include "Patterns.h"
+#include "MemoryMgr.h"
 #include <filesystem>
 #include <string>
 #pragma warning(pop)
+
+using namespace Memory::VP;
