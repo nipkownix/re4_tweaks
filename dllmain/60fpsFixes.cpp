@@ -6,6 +6,11 @@
 
 static uint32_t* ptrGameFrameRate;
 
+int intCurrentFrameRate()
+{
+	return *(int32_t*)(ptrGameFrameRate);
+}
+
 void Init_60fpsFixes()
 {
 	auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -18,8 +23,7 @@ void Init_60fpsFixes()
 		void operator()(injector::reg_pack& regs)
 		{
 			float vanillaMulti = 10.0;
-			int curFPS = *(int32_t*)(ptrGameFrameRate);
-			float newMulti = static_cast<float>(30) / curFPS * 10;
+			float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
 
 			if (cfg.b60fpsFixes)
 				_asm{fsub newMulti}
@@ -35,8 +39,7 @@ void Init_60fpsFixes()
 		void operator()(injector::reg_pack& regs)
 		{
 			float vanillaMulti = 10.0;
-			int curFPS = *(int32_t*)(ptrGameFrameRate);
-			float newMulti = static_cast<float>(30) / curFPS * 10;
+			float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
 
 			if (cfg.b60fpsFixes)
 				_asm {fmul newMulti}
@@ -52,8 +55,7 @@ void Init_60fpsFixes()
 		void operator()(injector::reg_pack& regs)
 		{
 			float vanillaMulti = 10.0;
-			int curFPS = *(int32_t*)(ptrGameFrameRate);
-			float newMulti = static_cast<float>(30) / curFPS * 10;
+			float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
 
 			if (cfg.b60fpsFixes)
 				_asm {fld newMulti}
@@ -68,8 +70,7 @@ void Init_60fpsFixes()
 		void operator()(injector::reg_pack& regs)
 		{
 			float vanillaMulti = 10.0;
-			int curFPS = *(int32_t*)(ptrGameFrameRate);
-			float newMulti = static_cast<float>(30) / curFPS * 10;
+			float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
 
 			if (cfg.b60fpsFixes)
 				_asm {fdiv newMulti}
