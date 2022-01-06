@@ -60,6 +60,11 @@ SkipIntroLogos = false
 ; (may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)
 EnableDebugMenu = false
 
+; Keyboard key-combination to make the "tool menu" debug menu appear
+; All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names
+; (see top of Settings.cpp file for possible key names to use)
+DebugMenuKeyCombination = CTRL+F3
+
 [MOUSE]
 ; Makes it so the mouse turns the character instead of controlling the camera.
 ; "Modern" aiming mode in the game's settings is recomended.

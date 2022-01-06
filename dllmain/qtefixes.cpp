@@ -29,7 +29,7 @@ float fQTESpeedMult = 1.5f;
 // QTE Key 1 icons
 void __declspec(naked) KEY_1_icon1()
 {
-	intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), "dik");
+	intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), false);
 	_asm
 	{
 		lea edx, [ebp - 0x3B4]
@@ -40,7 +40,7 @@ void __declspec(naked) KEY_1_icon1()
 
 void __declspec(naked) KEY_1_icon2()
 {
-	intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), "dik");
+	intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), false);
 	_asm
 	{
 		lea ecx, [ebp - 0x4CC]
@@ -51,7 +51,7 @@ void __declspec(naked) KEY_1_icon2()
 
 void __declspec(naked) KEY_1_icon3()
 {
-	intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), "dik");
+	intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), false);
 	_asm
 	{
 		lea ecx, [ebp - 0x280]
@@ -64,7 +64,7 @@ void __declspec(naked) KEY_1_icon3()
 
 void __declspec(naked) KEY_2_icon1()
 {
-	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), "dik");
+	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), false);
 	_asm
 	{
 		lea ecx, [ebp - 0x37C]
@@ -75,7 +75,7 @@ void __declspec(naked) KEY_2_icon1()
 
 void __declspec(naked) KEY_2_icon2()
 {
-	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), "dik");
+	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), false);
 	_asm
 	{
 		lea ecx, [ebp - 0x76C]
@@ -86,7 +86,7 @@ void __declspec(naked) KEY_2_icon2()
 
 void __declspec(naked) KEY_2_icon3()
 {
-	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), "dik");
+	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), false);
 	_asm
 	{
 		lea edx, [ebp - 0x494]
@@ -97,7 +97,7 @@ void __declspec(naked) KEY_2_icon3()
 
 void __declspec(naked) KEY_2_icon4()
 {
-	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), "dik");
+	intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), false);
 	_asm
 	{
 		lea ecx, [ebp - 0x2F0]
@@ -174,7 +174,7 @@ void Init_QTEfixes()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), "dik");
+			intQTE_key_1 = cfg.KeyMap(cfg.QTE_key_1.data(), false);
 			regs.ebx = intQTE_key_1;
 			regs.eax = *(int32_t*)(regs.eax + 0x1C);
 		}
@@ -186,7 +186,7 @@ void Init_QTEfixes()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), "dik");
+			intQTE_key_2 = cfg.KeyMap(cfg.QTE_key_2.data(), false);
 			regs.edx = intQTE_key_2;
 			regs.eax = *(int32_t*)(regs.eax + 0x1C);
 		}

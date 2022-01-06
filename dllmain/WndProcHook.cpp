@@ -54,12 +54,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 		case WM_KEYDOWN:
-			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), "vk") || wParam == cfg.KeyMap(cfg.flip_item_right.data(), "vk"))
+			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
 			{
 				bShouldFlipX = true;
 				Sleep(1);
 			}
-			else if (wParam == cfg.KeyMap(cfg.flip_item_up.data(), "vk") || wParam == cfg.KeyMap(cfg.flip_item_down.data(), "vk"))
+			else if (wParam == cfg.KeyMap(cfg.flip_item_up.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_down.data(), true))
 			{
 				bShouldFlipY = true;
 				Sleep(1);
