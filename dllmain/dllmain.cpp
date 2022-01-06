@@ -309,8 +309,7 @@ void Init_Main()
 	if (cfg.bEnableDebugMenu)
 	{
 		Init_ToolMenu();
-		if (bisDebugBuild)
-			Init_ToolMenuDebug();
+		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
 	}
 }
 

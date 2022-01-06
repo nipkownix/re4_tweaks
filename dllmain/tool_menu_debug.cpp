@@ -7,6 +7,7 @@
 // Fixes for debug-builds tool menu
 // (mainly just hooks for funcs that handle input for those menus, so we can slow down inputs to them)
 
+extern bool bisDebugBuild; // dllmain.cpp
 extern uint32_t* PadButtonStates; // tool_menu.cpp
 uint32_t Keyboard2Gamepad(); // tool_menu.cpp
 
@@ -130,17 +131,8 @@ void tp_scr_Hook()
 
     *ToolOption_Buttons = curButtons;
 }
-
-void GetToolMenuDebugPointers()
-{
-    auto pattern = hook::pattern("A1 ? ? ? ? C6 80 EA 04 00 00 00 C3");
-    ToolOptionClass_ptr = *pattern.count(1).get(0).get<uint32_t*>(1);
-}
-
 void Init_ToolMenuDebug()
 {
-    GetToolMenuDebugPointers();
-
     // Move
     auto pattern = hook::pattern("E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4 08 EB EA");
     auto func = pattern.count(1).get(0).get<uint32_t>(0);
@@ -155,15 +147,21 @@ void Init_ToolMenuDebug()
     injector::WriteMemory(&roomJump_funcs[1], &roomJumpMove_Hook, true);
 
     // tp funcs
-    pattern = hook::pattern("8B 0C 85 ? ? ? ? FF D1 A1 ? ? ? ? FE 80 ? ? ? ? 39 1D");
-    uint32_t* tp_funcs = *pattern.count(1).get(0).get<uint32_t*>(3);
+    if (bisDebugBuild)
+    {
+        pattern = hook::pattern("A1 ? ? ? ? C6 80 EA 04 00 00 00 C3");
+        ToolOptionClass_ptr = *pattern.count(1).get(0).get<uint32_t*>(1);
 
-    tp_menu_Orig = (decltype(tp_menu_Orig))tp_funcs[0];
-    injector::WriteMemory(&tp_funcs[0], &tp_menu_Hook, true);
+        pattern = hook::pattern("8B 0C 85 ? ? ? ? FF D1 A1 ? ? ? ? FE 80 ? ? ? ? 39 1D");
+        uint32_t* tp_funcs = *pattern.count(1).get(0).get<uint32_t*>(3);
 
-    tp_pl_Orig = (decltype(tp_pl_Orig))tp_funcs[1];
-    injector::WriteMemory(&tp_funcs[1], &tp_pl_Hook, true);
+        tp_menu_Orig = (decltype(tp_menu_Orig))tp_funcs[0];
+        injector::WriteMemory(&tp_funcs[0], &tp_menu_Hook, true);
 
-    tp_scr_Orig = (decltype(tp_scr_Orig))tp_funcs[2];
-    injector::WriteMemory(&tp_funcs[2], &tp_scr_Hook, true);
+        tp_pl_Orig = (decltype(tp_pl_Orig))tp_funcs[1];
+        injector::WriteMemory(&tp_funcs[1], &tp_pl_Hook, true);
+
+        tp_scr_Orig = (decltype(tp_scr_Orig))tp_funcs[2];
+        injector::WriteMemory(&tp_funcs[2], &tp_scr_Hook, true);
+    }
 }
