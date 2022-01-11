@@ -18,6 +18,7 @@ struct key_type {
 std::unordered_map<std::string, key_type> key_map
 {
 	{ "ESCAPE", { 0x1B, 0x01 } },    // Esc
+	{ "ESC", { 0x1B, 0x01 } },    // Esc
 	{ "0", { 0x30, 0x0B } },    // 0
 	{ "1", { 0x31, 0x02 } },    // 1
 	{ "2", { 0x32, 0x03 } },    // 2
@@ -55,10 +56,18 @@ std::unordered_map<std::string, key_type> key_map
 	{ "Y", { 0x59, 0x15 } },    // Y
 	{ "Z", { 0x5A, 0x2C } },    // Z
 	{ "BACK", { 0x08, 0x0E } },    // Backspace
+	{ "BACKSPACE", { 0x08, 0x0E } },    // Backspace
+	{ "BKSP", { 0x08, 0x0E } },    // Backspace
 	{ "ADD", { 0x6B, 0x4E } },    // Numpad +
+	{ "NUM+", { 0x6B, 0x4E } },    // Numpad +
 	{ "DECIMAL", { 0x6E, 0x53 } },    // Numpad .
+	{ "NUM.", { 0x6E, 0x53 } },    // Numpad .
 	{ "DIVIDE", { 0x6F, 0xB5 } },    // Numpad /
+	{ "NUM/", { 0x6F, 0xB5 } },    // Numpad /
 	{ "MULTIPLY", { 0x6A, 0x37 } },    // Numpad *
+	{ "NUM*", { 0x6A, 0x37 } },    // Numpad *
+	{ "SUBTRACT", { 0x6D, 0x4A } },    // Numpad -
+	{ "NUM-", { 0x6D, 0x4A } },    // Numpad -
 	{ "NUMPAD0", { 0x60, 0x52 } },    // Numpad 0
 	{ "NUMPAD1", { 0x61, 0x4F } },    // Numpad 1
 	{ "NUMPAD2", { 0x62, 0x50 } },    // Numpad 2
@@ -69,6 +78,16 @@ std::unordered_map<std::string, key_type> key_map
 	{ "NUMPAD7", { 0x67, 0x47 } },    // Numpad 7
 	{ "NUMPAD8", { 0x68, 0x48 } },    // Numpad 8
 	{ "NUMPAD9", { 0x69, 0x49 } },    // Numpad 9
+	{ "NUM0", { 0x60, 0x52 } },    // Numpad 0
+	{ "NUM1", { 0x61, 0x4F } },    // Numpad 1
+	{ "NUM2", { 0x62, 0x50 } },    // Numpad 2
+	{ "NUM3", { 0x63, 0x51 } },    // Numpad 3
+	{ "NUM4", { 0x64, 0x4B } },    // Numpad 4
+	{ "NUM5", { 0x65, 0x4C } },    // Numpad 5
+	{ "NUM6", { 0x66, 0x4D } },    // Numpad 6
+	{ "NUM7", { 0x67, 0x47 } },    // Numpad 7
+	{ "NUM8", { 0x68, 0x48 } },    // Numpad 8
+	{ "NUM9", { 0x69, 0x49 } },    // Numpad 9
 	{ "OEM_COMMA", { 0xBC, 0x33 } },    // OEM_COMMA (< ,)
 	{ "OEM_MINUS", { 0xBD, 0x0C } },    // OEM_MINUS (_ -)
 	{ "OEM_PERIOD", { 0xBE, 0x34 } },    // OEM_PERIOD (> .)
@@ -82,9 +101,9 @@ std::unordered_map<std::string, key_type> key_map
 	{ "+", { 0xBB, 0x0D } },    // OEM_PLUS (+ =)
 	{ "=", { 0xBB, 0x0D } },    // OEM_PLUS (+ =)
 	{ "RETURN", { 0x0D, 0x1C } },    // Enter
-	{ "RENTER", { VK_SEPARATOR, 0 } },    // Enter
+	{ "ENTER", { 0x0D, 0x1C } },    // Enter
+	{ "RENTER", { 0x6C, 0 } },    // Right/Numpad Enter
 	{ "SPACE", { 0x20, 0x39 } },    // Space
-	{ "SUBTRACT", { 0x6D, 0x4A } },    // Num -
 	{ "TAB", { 0x09, 0x0F } },    // Tab
 	{ "APPS", { 0x5D, 0xDD } },    // Context Menu
 	{ "CAPSLOCK", { 0x14, 0x3A } },    // Caps Lock
@@ -111,6 +130,7 @@ std::unordered_map<std::string, key_type> key_map
 	{ "HOME", { 0x24, 0xC7 } },    // Home
 	{ "INSERT", { 0x2D, 0xD2 } },    // Insert
 	{ "DELETE", { 0x2E, 0xD3 } },    // Delete
+	{ "DEL", { 0x2E, 0xD3 } },    // Delete
 	{ "END", { 0x23, 0xCF } },    // End
 	{ "PAGEUP", { 0x21, 0xC9 } },    // Page Up
 	{ "PAGEDOWN", { 0x22, 0xD1 } },    // Page Down
@@ -119,68 +139,45 @@ std::unordered_map<std::string, key_type> key_map
 	{ "KANA", { 0x15, 0x70 } },    // Kana
 	{ "KANJI", { 0x19, 0x94 } },    // Kanji
 	{ "LCONTROL", { 0xA2, 0x1D } },    // Left Ctrl
+	{ "CONTROL", { 0xA2, 0x1D } },  // Left Ctrl
+	{ "CTRL", { 0xA2, 0x1D } },  // Left Ctrl
+	{ "LCTRL", { 0xA2, 0x1D } },  // Left Ctrl
 	{ "LMENU", { 0xA4, 0x38 } },    // Left Alt
-	{ "LSHIFT", { VK_LSHIFT, 0x2A } },    // Left Shift
-	{ "SHIFT", { VK_LSHIFT, 0x2A } },    // Left Shift
+	{ "ALT", { 0xA4, 0x38 } },  // Left Alt
+	{ "LALT", { 0xA4, 0x38 } },  // Left Alt
+	{ "LSHIFT", { 0xA0, 0x2A } },    // Left Shift
+	{ "SHIFT", { 0xA0, 0x2A } },    // Left Shift
 	{ "LWIN", { 0x5B, 0xDB } },    // Left Win
 	{ "NONCONVERT", { 0x1D, 0x7B } },    // Non Convert
 	{ "NUMLOCK", { 0x90, 0x45 } },    // Num Lock
 	{ "PAUSE", { 0x13, 0xC5 } },    // Pause
 	{ "RCONTROL", { 0xA3, 0x9D } },    // Right Ctrl
+	{ "RCTRL", { 0xA3, 0x9D } },  // Right Ctrl
 	{ "RMENU", { 0xA5, 0xB8 } },    // Right Alt
+	{ "ALTGR", { 0xA5, 0xB8 } },  // Right Alt
+	{ "RALT", { 0xA5, 0xB8 } },  // Right Alt
 	{ "RSHIFT", { 0xA1, 0x36 } },    // Right Shift
 	{ "RWIN", { 0x5C, 0xDC } },    // Right Win
 	{ "SCROLL", { 0x91, 0x46 } },    // Scrol Lock
 	{ "SLEEP", { 0x5F, 0xDF } },    // Sleep
 	{ "PRINTSCR", { 0x2C, 0xB7 } },    // Print Screen
-	{ "CONTROL", { VK_LCONTROL, 0 } },  // Control
-	{ "CTRL", { VK_LCONTROL, 0 } },  // Control
-	{ "LCONTROL", { VK_LCONTROL, 0 } },  // Control
-	{ "LCTRL", { VK_LCONTROL, 0 } },  // Control
-	{ "ALT", { VK_LMENU, 0 } },  // ALT
-	{ "LALT", { VK_LMENU, 0 } },  // ALT
-	{ "RCONTROL", { VK_RCONTROL, 0 } },  // Right Control
-	{ "RCTRL", { VK_RCONTROL, 0 } },  // Right Control
-	{ "ALTGR", { VK_RMENU, 0 } },  // Right ALT
-	{ "RALT", { VK_RMENU, 0 } },  // Right ALT
 
 	// VKs for localised keyboards
-	{ ";", { VK_OEM_1, 0 } },
-	{ ":", { VK_OEM_1, 0 } },
-	{ "/", { VK_OEM_2, 0 } },
-	{ "?", { VK_OEM_2, 0 } },
+	{ ";", { VK_OEM_1, 0x27 } },
+	{ ":", { VK_OEM_1, 0x27 } },
+	{ "/", { VK_OEM_2, 0x35 } },
+	{ "?", { VK_OEM_2, 0x35 } },
 	{ "'", { VK_OEM_3, 0 } }, // UK keyboard
 	{ "@", { VK_OEM_3, 0 } }, // UK keyboard
-	{ "[", { VK_OEM_4, 0 } },
-	{ "{", { VK_OEM_4, 0 } },
-	{ "\\", { VK_OEM_5, 0 } },
-	{ "|", { VK_OEM_5, 0 } },
-	{ "]", { VK_OEM_6, 0 } },
-	{ "}", { VK_OEM_6, 0 } },
+	{ "[", { VK_OEM_4, 0x1A } },
+	{ "{", { VK_OEM_4, 0x1A } },
+	{ "\\", { VK_OEM_5, 0x2B } },
+	{ "|", { VK_OEM_5, 0x2B } },
+	{ "]", { VK_OEM_6, 0x1B } },
+	{ "}", { VK_OEM_6, 0x1B } },
 	{ "#", { VK_OEM_7, 0 } },  // UK keyboard
-	{ "\"", { VK_OEM_7, 0 } },
-	{ "`", { VK_OEM_8, 0 } },  // UK keyboard, no idea what this is on US..
-
-	// Similar names to aid in parsing user data
-	{ "ESC", { 0x1B, 0x01 } },    // Esc
-	{ "BACKSPACE", { 0x08, 0x0E } },    // Backspace
-	{ "BKSP", { 0x08, 0x0E } },    // Backspace
-	{ "NUM+", { 0x6B, 0x4E } },    // Numpad +
-	{ "NUM-", { 0x6E, 0x53 } },    // Numpad .
-	{ "NUM/", { 0x6F, 0xB5 } },    // Numpad /
-	{ "NUM*", { 0x6A, 0x37 } },    // Numpad *
-	{ "NUM0", { 0x60, 0x52 } },    // Numpad 0
-	{ "NUM1", { 0x61, 0x4F } },    // Numpad 1
-	{ "NUM2", { 0x62, 0x50 } },    // Numpad 2
-	{ "NUM3", { 0x63, 0x51 } },    // Numpad 3
-	{ "NUM4", { 0x64, 0x4B } },    // Numpad 4
-	{ "NUM5", { 0x65, 0x4C } },    // Numpad 5
-	{ "NUM6", { 0x66, 0x4D } },    // Numpad 6
-	{ "NUM7", { 0x67, 0x47 } },    // Numpad 7
-	{ "NUM8", { 0x68, 0x48 } },    // Numpad 8
-	{ "NUM9", { 0x69, 0x49 } },    // Numpad 9
-	{ "ENTER", { 0x0D, 0x1C } },    // Enter
-	{ "DEL", { 0x2E, 0xD3 } },    // Delete
+	{ "\"", { VK_OEM_7, 0 } }, // UK keyboard
+	{ "`", { VK_OEM_8, 0 } },  // UK keyboard
 };
 
 int Settings::KeyMap(const char* key, bool get_vk)
