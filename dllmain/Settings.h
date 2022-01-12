@@ -8,7 +8,7 @@ struct Settings
 {
 	int Tab = 0;
 
-	int KeyMap(char* key, const char* type);
+	int KeyMap(const char* key, bool get_vk);
 
 	// Those save
 	float fFOVAdditional;
@@ -29,6 +29,7 @@ struct Settings
 	bool bFixQTE;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
+	std::string sDebugMenuKeyCombo;
 	bool bUseMouseTurning;
 	float fTurnSensitivity;
 	bool bFixSniperZoom;

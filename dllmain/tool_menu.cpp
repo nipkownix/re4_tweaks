@@ -4,6 +4,9 @@
 #include "game_flags.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
+#include "Settings.h"
+
+extern Settings cfg;
 
 // Light tool externs
 void LightTool_GetPointers();
@@ -34,6 +37,62 @@ uint32_t* roomInfoAddr = nullptr;
 
 void* cDvd = nullptr;
 void* DbgFont = nullptr;
+
+// Default tool-menu keyboard combo is currently LCONTROL + F3
+std::vector<uint32_t> toolMenuKeyCombo = { VK_LCONTROL, VK_F3 };
+
+// Parses an key combination string into the toolMenuKeyCombo vector, to be checked by tool-menu opening code
+bool ParseToolMenuKeyCombo(std::string_view in_combo)
+{
+	// Convert combo to uppercase to match Settings::key_map
+	std::string combo(in_combo);
+	std::transform(combo.begin(), combo.end(), combo.begin(),
+		[](unsigned char c) { return std::toupper(c); });
+
+	std::vector<uint32_t> new_combo;
+	std::string cur_token;
+
+	// Parse combo tokens into buttons bitfield (tokens seperated by any
+	// non-alphabetical char, eg. +)
+	for (size_t i = 0; i < combo.length(); i++)
+	{
+		char c = combo[i];
+
+		if (!isalpha(c) && (c < 0x30 || c > 0x39) && c != '-')
+		{
+			// seperator, try parsing previous token
+
+			if (cur_token.length())
+			{
+				uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
+				if (!token_num)
+					return false; // parse failed...
+				new_combo.push_back(token_num);
+			}
+
+			cur_token.clear();
+		}
+		else
+		{
+			// Must be a character key, convert to upper and add to our cur_token
+			cur_token += ::toupper(c);
+		}
+	}
+
+	if (cur_token.length())
+	{
+		uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
+		if (!token_num)
+			return false; // parse failed...
+		new_combo.push_back(token_num);
+	}
+
+	if (new_combo.size() <= 0)
+		return false; // failed to parse/update combo, return so we'll keep previous one
+
+	toolMenuKeyCombo = new_combo;
+	return true;
+}
 
 struct ToolMenuEntry
 {
@@ -106,10 +165,6 @@ uint32_t Keyboard2Gamepad()
 {
 	// Check pressed keys & emulate controller presses for tool-menu
 	uint32_t keyboardState = 0;
-	if (GetAsyncKeyState(VK_HOME))
-		keyboardState |= uint32_t(GamePadButton::LT);
-	if (GetAsyncKeyState(VK_END))
-		keyboardState |= uint32_t(GamePadButton::LS);
 
 	// Only emulate main keys if tool-menu is actually open
 	if (IsInDebugMenu())
@@ -164,6 +219,27 @@ void __cdecl gameDebug_recreation(void* a1)
 		// Check for LT + LS buttons
 		// (make sure they're the only ones pressed - if player opens a UI at same time it'll likely cause a hang...)
 		bool isOnlyDebugComboPressed = PadButtonStates[0] == (uint32_t(GamePadButton::LT) | uint32_t(GamePadButton::LS));
+
+		if (!isOnlyDebugComboPressed)
+		{
+			// check for toolMenuKeyCombo
+
+			if (toolMenuKeyCombo.size() > 0)
+			{
+				bool openToolMenu = true;
+				for (auto& key : toolMenuKeyCombo)
+				{
+					if (!GetAsyncKeyState(key))
+					{
+						openToolMenu = false;
+						break;
+					}
+				}
+
+				isOnlyDebugComboPressed = openToolMenu; // seperate bools to be safe...
+			}
+		}
+
 		if (isOnlyDebugComboPressed)
 		{
 			// Only run DbMenuExec if debug menu isn't open already, otherwise game can hang
