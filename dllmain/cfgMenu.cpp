@@ -13,7 +13,7 @@
 #include "..\external\imgui\imgui_impl_dx9.h"
 
 uintptr_t ptrInputProcess;
-uintptr_t* ptrResetMovAddr;
+uintptr_t* ptrD3D9Device;
 
 bool NeedsToRestart;
 
@@ -533,22 +533,24 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	return pDevice->EndScene();
+	return S_OK;
 }
 
 void Init_cfgMenu()
 {
-	// EndScene hook
-	auto pattern = hook::pattern("8B 08 8B 91 ? ? ? ? 50 FF D2 C6 05 ? ? ? ? ? A1");
+	auto pattern = hook::pattern("A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 50 FF D2 C6 05 ? ? ? ? ? A1");
+	ptrD3D9Device = *pattern.count(1).get(0).get<uint32_t*>(1);
 	struct EndScene_HookStruct
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			auto pDevice = (LPDIRECT3DDEVICE9)regs.eax;
+			auto pDevice = *(LPDIRECT3DDEVICE9*)(ptrD3D9Device);
+
+			regs.eax = (uint32_t)pDevice;
 
 			EndScene_hook(pDevice);
 		}
-	}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(11));
+	}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	
 	// Reset hook 1
 	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? 5E");
