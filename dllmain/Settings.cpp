@@ -239,6 +239,13 @@ void Settings::ReadSettings()
 	cfg.bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", true);
 	cfg.bUseMemcpy = iniReader.ReadBoolean("MEMORY", "UseMemcpy", true);
 	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
+	
+	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", 1.0f);
+	if (cfg.fFontSize < 1.0f)
+		cfg.fFontSize = 1.0f;
+
+	if (cfg.fFontSize > 1.3f)
+		cfg.fFontSize = 1.3f;
 
 	if (cfg.sDebugMenuKeyCombo.length())
 		ParseToolMenuKeyCombo(sDebugMenuKeyCombo);
@@ -292,6 +299,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc);
 	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc);
 	iniReader.WriteBoolean("MEMORY", "UseMemcpy", cfg.bUseMemcpy);
+	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);
 
 	cfg.HasUnsavedChanges = false;
 }

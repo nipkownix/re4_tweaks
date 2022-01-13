@@ -234,15 +234,6 @@
     <ClInclude Include="Settings.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="..\icons\iconcpp.h">
-      <Filter>icons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\icons\icons.h">
-      <Filter>icons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\icons\font\font.h">
-      <Filter>icons\font</Filter>
-    </ClInclude>
     <ClInclude Include="..\external\imgui\imconfig.h">
       <Filter>external\ImGui</Filter>
     </ClInclude>
@@ -285,6 +276,15 @@
     <ClInclude Include="MouseTurning.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="..\includes\faprolight.hpp">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\sffont.hpp">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\hashes.h">
+      <Filter>includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -316,12 +316,6 @@
     </Filter>
     <Filter Include="external\ImGui">
       <UniqueIdentifier>{8009d333-9eac-43b4-a9eb-014433e845ab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="icons">
-      <UniqueIdentifier>{e854338c-31ce-42c5-8981-d8020f3ad8f8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="icons\font">
-      <UniqueIdentifier>{74c220ed-a2a8-414d-9ec4-1e2dc8614579}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

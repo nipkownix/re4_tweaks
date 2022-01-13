@@ -45,6 +45,7 @@ struct Settings
 	bool bRaiseInventoryAlloc;
 	bool bUseMemcpy;
 	bool bIgnoreFPSWarning;
+	float fFontSize;
 
 	bool HasUnsavedChanges;
 

@@ -134,9 +134,9 @@
     <ClInclude Include="..\external\ModUtils\ModuleList.hpp" />
     <ClInclude Include="..\external\ModUtils\Patterns.h" />
     <ClInclude Include="..\external\ModUtils\Trampoline.h" />
-    <ClInclude Include="..\icons\font\font.h" />
-    <ClInclude Include="..\icons\iconcpp.h" />
-    <ClInclude Include="..\icons\icons.h" />
+    <ClInclude Include="..\includes\faprolight.hpp" />
+    <ClInclude Include="..\includes\hashes.h" />
+    <ClInclude Include="..\includes\sffont.hpp" />
     <ClInclude Include="..\includes\stdafx.h" />
     <ClInclude Include="..\settings\settings_string.h" />
     <ClInclude Include="..\Wrappers\bcrypt.h" />

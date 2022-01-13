@@ -5,12 +5,12 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
-#include "icons.h"
-#include "font/font.h"
-#include "iconcpp.h"
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
 #include "..\external\imgui\imgui_impl_dx9.h"
+#include <hashes.h>
+#include <sffont.hpp>
+#include <faprolight.hpp>
 
 uintptr_t ptrInputProcess;
 uintptr_t* ptrD3D9Device;
@@ -20,8 +20,8 @@ bool NeedsToRestart;
 int Tab = 1;
 void MenuRender()
 {
-	ImGui::SetNextWindowSize(ImVec2(900, 460), ImGuiCond_FirstUseEver);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(900, 460));
+	ImGui::SetNextWindowSize(ImVec2(900, 470), ImGuiCond_FirstUseEver);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(900, (470 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
 	if (ImGui::Begin("re4_tweaks - Configuration", 0))
 	{
 		// Left side
@@ -66,7 +66,10 @@ void MenuRender()
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
 			if (cfg.HasUnsavedChanges)
-				ImGui::BulletText("You have unsaved changes!");
+			{
+				ImGui::Bullet();
+				ImGui::TextWrapped("You have unsaved changes!");
+			}
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
@@ -76,13 +79,21 @@ void MenuRender()
 				ImGui::TextWrapped("Changes that have been made require the game to be restarted!");
 			}
 
-			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 30);
+			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 40);
 
-			if (ImGui::Button(ICON_FA_ERASER" Discard", ImVec2(104, 25)))
+			if (ImGui::Button(ICON_FA_ERASER" Discard", ImVec2(104, 35)))
+			{
 				cfg.ReadSettings();
+				ImGui::GetIO().FontGlobalScale = cfg.fFontSize - 0.35f;
+			}
+				
 			ImGui::SameLine();
-			if (ImGui::Button(ICON_FA_CODE" Save", ImVec2(104, 25)))
+
+			if (ImGui::Button(ICON_FA_CODE" Save", ImVec2(104, 35)))
+			{
+				cfg.fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
 				cfg.WriteSettings();
+			}
 
 			ImGui::EndChild();
 		}
@@ -99,6 +110,33 @@ void MenuRender()
 			// Display tab
 			if (Tab == 1)
 			{
+				// Config menu font size
+				if (ImGui::Button("-"))
+				{
+					if (ImGui::GetIO().FontGlobalScale > 0.65f)
+						ImGui::GetIO().FontGlobalScale -= 0.05f;
+
+					cfg.HasUnsavedChanges = true;
+				}
+
+				ImGui::SameLine();
+
+				if (ImGui::Button("+"))
+				{
+					if (ImGui::GetIO().FontGlobalScale < 0.95f)
+						ImGui::GetIO().FontGlobalScale += 0.05f;
+
+					cfg.HasUnsavedChanges = true;
+				}
+
+				ImGui::SameLine();
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("Font Size");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FOVAdditional
 				if (ImGui::BeginTable("FOVTable", 2, TableFlags))
 				{
@@ -487,20 +525,34 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 		io.IniFilename = nullptr;
 
-		static const ImWchar IconsRange[] = {0xf000, 0xf3ff, 0};
-		ImFontConfig CfgIcons;
+		static const ImWchar ranges[] =
+		{
+			0x0020, 0x00FF, // Basic Latin + Latin Supplement
+			0x2000, 0x206F, // General Punctuation
+			0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
+			0x31F0, 0x31FF, // Katakana Phonetic Extensions
+			0xFF00, 0xFFEF, // Half-width characters
+			0x4e00, 0x9FAF, // CJK Ideograms
+			0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
+			0x2DE0, 0x2DFF, // Cyrillic Extended-A
+			0xA640, 0xA69F, // Cyrillic Extended-B
+			0,
+		};
 
 		ImFontConfig ImCustomFont;
 		ImCustomFont.FontDataOwnedByAtlas = false;
 
-		CfgIcons.MergeMode = true;
-		CfgIcons.PixelSnapH = true;
-		CfgIcons.OversampleH = 2.5;
-		CfgIcons.OversampleV = 2.5;
+		io.Fonts->AddFontFromMemoryCompressedTTF(sfpro_compressed_data, sfpro_compressed_size, 24, &ImCustomFont, ranges);
 
-		io.Fonts->AddFontFromMemoryTTF(const_cast<std::uint8_t*>(CustomFont), sizeof(CustomFont), 13.0f, &ImCustomFont);
-		io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_data, font_awesome_size, 13.0f, &CfgIcons, IconsRange);
-		io.Fonts->AddFontDefault();
+		static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+
+		ImFontConfig ImCustomIcons;
+		ImCustomIcons.MergeMode = true;
+		ImCustomIcons.PixelSnapH = true;
+
+		io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 24, &ImCustomIcons, icon_ranges);
+
+		io.FontGlobalScale = cfg.fFontSize - 0.35f;
 
 		ApplyMenuTheme();
 
@@ -522,7 +574,7 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		// Make cursor visible
 		ImGui::GetIO().MouseDrawCursor = true;
 
-		//ImGui::ShowDemoWindow();
+		ImGui::ShowDemoWindow();
 		MenuRender();
 	}
 	else
