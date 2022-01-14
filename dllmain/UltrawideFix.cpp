@@ -107,8 +107,8 @@ void Init_UltraWideFix()
 	injector::WriteMemory(pattern.get_first(2), &fNewFilesItemsPos, true);
 
 	// Map icons
-	pattern = hook::pattern("DC 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C9 D9 98 ? ? ? ? D9 45");
-	injector::WriteMemory(pattern.get_first(2), &fNewMapIconsPos, true);
+	pattern = hook::pattern("DD 05 ? ? ? ? DC C9 D9 C9 D8 6D ? DC 05 ? ? ? ? D9");
+	injector::WriteMemory(pattern.get_first(15), &fNewMapIconsPos, true);
 
 	// Merchant's greeting
 	pattern = hook::pattern("DC 05 ? ? ? ? 50 DE C9 E8 ? ? ? ? 50 0F B6 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 0F B6 7D ? 8B 75 ? C7 43 28 ? ? ? ? E8");
