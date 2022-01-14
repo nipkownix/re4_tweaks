@@ -51,6 +51,9 @@ RememberWindowPos = false
 ; This fix makes QTEs that involve rapid button presses much more forgiving.
 FixQTE = true
 
+; Unlocks the JP-only classic camera angles during Ashley segment.
+AshleyJPCameraAngles = false
+
 ; Whether to skip the Capcom etc intro logos when starting the game.
 SkipIntroLogos = false
 

@@ -21,6 +21,7 @@ struct Settings
 	bool bDisableFilmGrain;
 	bool bEnableGCBlur;
 	bool bEnableGCScopeBlur;
+	bool bAshleyJPCameraAngles;
 	bool bWindowBorderless;
 	int iWindowPositionX;
 	int iWindowPositionY;

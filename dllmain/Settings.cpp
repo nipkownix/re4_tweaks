@@ -219,11 +219,12 @@ void Settings::ReadSettings()
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
 	cfg.b60fpsFixes = iniReader.ReadBoolean("MISC", "60fpsFixes", true);
 	cfg.bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
+	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
 	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
 	cfg.sDebugMenuKeyCombo = iniReader.ReadString("MISC", "DebugMenuKeyCombination", "CTRL+F3"); // if default changed, make sure to edit tool_menu.cpp!toolMenuKeyCombo vector!
-    cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
-    cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
+	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
+	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
 	cfg.flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
@@ -282,6 +283,7 @@ void Settings::WriteSettings()
 	iniReader.WriteInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
 	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
 	iniReader.WriteBoolean("MISC", "FixQTE", cfg.bFixQTE);
+	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
 	iniReader.WriteString("MISC", "DebugMenuKeyCombination", cfg.sDebugMenuKeyCombo);
