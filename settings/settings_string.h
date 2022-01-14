@@ -55,7 +55,7 @@ FixQTE = true
 SkipIntroLogos = false
 
 ; Enables the "tool menu" debug menu, present inside the game but unused, and adds a few custom menu entries ("SAVE GAME", "DOF/BLUR MENU", etc).
-; Can be opened with the LT+LS button combination (or HOME+END on keyboard).
+; Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard).
 ; If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.
 ; (may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)
 EnableDebugMenu = false

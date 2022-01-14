@@ -5,6 +5,7 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
+#include "tool_menu.h"
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
 #include "..\external\imgui\imgui_impl_dx9.h"
@@ -308,9 +309,28 @@ void MenuRender()
 					NeedsToRestart = true;
 				}
 				ImGui::TextWrapped("Enables the \"tool menu\" debug menu, present inside the game but unused, and adds a few custom menu entries (\"SAVE GAME\", \"DOF / BLUR MENU\", etc).");
-				ImGui::TextWrapped("Can be opened with the LT+LS button combination (or HOME+END on keyboard).");
+				ImGui::TextWrapped("Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard).");
 				ImGui::TextWrapped("If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.");
 				ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
+			
+				ImGui::Spacing();
+				ImGui::Spacing();
+				ImGui::Spacing();
+
+				// Debug menu keyboard bindings
+				ImGui::TextWrapped("Keyboard key-combination to make the \"tool menu\" debug menu appear");
+				ImGui::TextWrapped("All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names");
+				ImGui::TextWrapped("(see top of Settings.cpp file for possible key names to use)");
+
+				ImGui::PushItemWidth(100);
+				ImGui::InputText("Open debug menu", cfg.sDebugMenuKeyCombo.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth;
+
+				if (ImGui::IsItemEdited())
+				{
+					cfg.HasUnsavedChanges = true;
+					ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
+				}
 			}
 
 			// Mouse tab
@@ -574,7 +594,7 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		// Make cursor visible
 		ImGui::GetIO().MouseDrawCursor = true;
 
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 		MenuRender();
 	}
 	else

@@ -4,9 +4,7 @@
 #include "ConsoleWnd.h"
 #include "Settings.h"
 #include "settings_string.h"
-
-// tool_menu.cpp
-bool ParseToolMenuKeyCombo(std::string_view in_combo);
+#include "tool_menu.h"
 
 Settings cfg;
 
@@ -248,7 +246,7 @@ void Settings::ReadSettings()
 		cfg.fFontSize = 1.3f;
 
 	if (cfg.sDebugMenuKeyCombo.length())
-		ParseToolMenuKeyCombo(sDebugMenuKeyCombo);
+		ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
 }
 
 void Settings::WriteSettings()
