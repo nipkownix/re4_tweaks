@@ -294,6 +294,14 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// AshleyJPCameraAngles
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &cfg.bAshleyJPCameraAngles);
+				ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// SkipIntroLogos
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
 				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");

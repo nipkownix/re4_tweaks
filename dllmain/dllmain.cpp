@@ -236,6 +236,28 @@ void Init_Main()
 		injector::MakeJMP(pattern.get_first(0), memcpy, true);
 	}
 
+	// Unlock JP-only classic camera angle during Ashley segment
+	static uint8_t* pSys = nullptr;
+	struct UnlockAshleyJPCameraAngles
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			bool unlock = *(uint32_t*)(pSys + 8) == 0 // pSys->language_8
+				|| cfg.bAshleyJPCameraAngles;
+
+			// set zero-flag if we're unlocking the camera, for the jz game uses after this hook
+			if (unlock)
+				regs.ef |= (1 << regs.zero_flag);
+			else
+				regs.ef &= ~(1 << regs.zero_flag); // clear zero_flag if unlock is false, in case it was set by something previously
+		}
+	};
+
+	pattern = hook::pattern("8B 0D ? ? ? ? 80 79 08 00 75 ? 8A 80 A3 4F 00 00");
+	pSys = *pattern.count(1).get(0).get<uint8_t*>(2);
+
+	injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
+
 	// Option to skip the intro logos when starting up the game
 	if (cfg.bSkipIntroLogos)
 	{
