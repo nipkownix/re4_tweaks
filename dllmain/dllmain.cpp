@@ -73,6 +73,16 @@ void __declspec(naked) Esp04TransHook()
 		_asm {ret}
 }
 
+bool GameIsLargeAddressAware() // TODO: move to a utility.cpp file?
+{
+	static PBYTE module_base = reinterpret_cast<PBYTE>(GetModuleHandle(nullptr));
+
+	PIMAGE_DOS_HEADER dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(module_base);
+	PIMAGE_NT_HEADERS nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS>(module_base + dos_header->e_lfanew);
+
+	return (nt_headers->FileHeader.Characteristics & IMAGE_FILE_LARGE_ADDRESS_AWARE) == IMAGE_FILE_LARGE_ADDRESS_AWARE;
+}
+
 void HandleAppID()
 {
 	//Create missing steam_appid file
