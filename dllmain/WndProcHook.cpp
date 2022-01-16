@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "../external/imgui/imgui.h"
+#include "LAApatch.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -145,7 +146,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 
-	if (bCfgMenuOpen) {
+	if (bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing)) {
 		// Use raw mouse input because this game is weird and won't let me use window messages properly.
 		RAWINPUTDEVICE rid[1];
 

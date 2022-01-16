@@ -82,6 +82,9 @@
     <ClCompile Include="MouseTurning.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="LAApatch.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -284,6 +287,9 @@
     </ClInclude>
     <ClInclude Include="..\includes\hashes.h">
       <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="LAApatch.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

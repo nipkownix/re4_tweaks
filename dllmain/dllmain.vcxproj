@@ -96,6 +96,7 @@
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
+    <ClCompile Include="LAApatch.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
     <ClCompile Include="qtefixes.cpp" />
     <ClCompile Include="roomInfo.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="HandleLimits.h" />
     <ClInclude Include="KeyboardMouseTweaks.h" />
+    <ClInclude Include="LAApatch.h" />
     <ClInclude Include="MouseTurning.h" />
     <ClInclude Include="qtefixes.h" />
     <ClInclude Include="Settings.h" />
