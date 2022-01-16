@@ -31,7 +31,7 @@ void LAARender()
 {
 	if (GameIsLargeAddressAware())
 	{
-		// Not sure how we ended up here, exit out
+		// Exit out in case we needlessly ended up here somehow
 		LAA_State = LAADialogState::NotShowing;
 		return;
 	}
@@ -43,7 +43,8 @@ void LAARender()
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2(400, 175), ImGuiCond_FirstUseEver);
 		ImGui::Begin("4GB / Large Address Aware patch missing!");
-		ImGui::TextWrapped("Your game executable is missing the 4GB/LAA patch, this will likely cause issues with mods that require increased memory. Do you want re4_tweaks to patch the game EXE for you? (requires relaunch!)");
+		ImGui::TextWrapped("Your game executable is missing the 4GB/LAA patch, this will likely cause issues with mods that require increased memory.\n\nDo you want re4_tweaks to patch the game EXE for you? (requires relaunch!)");
+		
 		if (ImGui::Button("Yes"))
 		{
 			char module_path_array[4096];
@@ -116,6 +117,7 @@ void LAARender()
 
 			LAA_State = LAADialogState::Finished;
 		}
+		ImGui::SameLine();
 		if (ImGui::Button("No"))
 		{
 			LAA_State = LAADialogState::NotShowing;
@@ -125,21 +127,21 @@ void LAARender()
 	}
 	else if (LAA_State == LAADialogState::Finished)
 	{
+		// Prompted the user & finished performing patches, report the results back to them
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2(400, 175), ImGuiCond_FirstUseEver);
-		// Prompted the user & finished performing patches, report the results back to them
 		if (LAA_ErrorNum == 0)
 		{
-			ImGui::Begin("Game LAA patched successfully!");
-			ImGui::TextWrapped("re4_tweaks has successfully patched your game EXE (a backup has also been made)\nPlease relaunch the game for the patch to take effect!");
+			ImGui::Begin("Game 4GB patched successfully!");
+			ImGui::TextWrapped("re4_tweaks has successfully patched your game EXE (a backup has also been made)\n\nPlease relaunch the game for the patch to take effect!");
 		}
 		else
 		{
-			ImGui::Begin("Game LAA patch failed...");
-			ImGui::TextWrapped("re4_tweaks failed to patch the game EXE (error %d)\nYou can manually patch it yourself by using the \"NTCore 4GB Patch\" tool - an internet search should find it for you pretty quickly!", LAA_ErrorNum);
+			ImGui::Begin("Game 4GB patch failed...");
+			ImGui::TextWrapped("re4_tweaks failed to patch the game EXE (error %d)\n\nYou can manually patch it yourself by using the \"NTCore 4GB Patch\" tool - an internet search should help find it!", LAA_ErrorNum);
 		}
 
-		if (ImGui::Button("Ok"))
+		if (ImGui::Button("OK"))
 		{
 			LAA_State = LAADialogState::NotShowing;
 			bCfgMenuOpen = false;
