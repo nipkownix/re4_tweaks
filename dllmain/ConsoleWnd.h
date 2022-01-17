@@ -1,6 +1,5 @@
 #pragma once
 
-
 struct ConsoleOutput
 {
 	void ShowConsoleOutput();

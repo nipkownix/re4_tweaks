@@ -10,3 +10,5 @@ extern bool bisDebugBuild;
 
 extern std::string iniPath;
 extern std::string game_version;
+
+bool GameIsLargeAddressAware();

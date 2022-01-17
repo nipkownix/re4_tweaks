@@ -5,6 +5,7 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
+#include "LAApatch.h"
 #include "tool_menu.h"
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
@@ -586,6 +587,11 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 		ImGui_ImplWin32_Init(hWindow);
 		ImGui_ImplDX9_Init(pDevice);
+
+		if (!laa.GameIsLargeAddressAware())
+		{
+			laa.LAA_State = LAADialogState::Showing;
+		}
 	}
 
 	ImGui_ImplDX9_NewFrame();
@@ -596,6 +602,15 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	con.ShowConsoleOutput();
 	#endif 
 
+	// Calls the LAA window if needed
+	if (laa.LAA_State != LAADialogState::NotShowing)
+	{
+		// Make cursor visible
+		ImGui::GetIO().MouseDrawCursor = true;
+
+		laa.LAARender();
+	}
+
 	// Calls the actual menu function
 	if (bCfgMenuOpen)
 	{
@@ -605,7 +620,8 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		//ImGui::ShowDemoWindow();
 		MenuRender();
 	}
-	else
+	
+	if (!bCfgMenuOpen && (laa.LAA_State == LAADialogState::NotShowing))
 		ImGui::GetIO().MouseDrawCursor = false;
 
 	ImGui::EndFrame();
