@@ -31,6 +31,8 @@ bool bShouldFlipX;
 bool bShouldFlipY;
 bool bisDebugBuild;
 
+int g_UserRefreshRate;
+
 uintptr_t* ptrNonBlurryVertex;
 uintptr_t* ptrBlurryVertex;
 uintptr_t ptrGXCopyTex;
@@ -163,6 +165,36 @@ void Init_Main()
 	{
 		auto pattern = hook::pattern("50 E8 ? ? ? ? C7 07 01 00 00 00 E9");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 6);
+	}
+
+	// Game is hardcoded to only allow 60Hz display modes for some reason...
+	// Hook func that runs EnumAdapterModes & checks for 60Hz modes, make it use the refresh rate from Windows instead
+	if (cfg.bFixDisplayMode)
+	{
+		DEVMODE lpDevMode;
+		if (EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lpDevMode) == 0) {
+			#ifdef VERBOSE
+			con.AddLogChar("Couldn't read display refresh rate. Using fallback value.");
+			#endif
+			g_UserRefreshRate = 60; // Fallback value.
+		}
+		else
+		{
+			g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
+			#ifdef VERBOSE
+			con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
+			#endif
+		}
+
+		pattern = hook::pattern("8B 45 ? 83 F8 ? 75 ? 8B 4D ? 8B 7D ? 3B 4D");
+		struct DisplayModeFix
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.eax = g_UserRefreshRate;
+				regs.ef |= (1 << injector::reg_pack::ef_flag::zero_flag);
+			}
+		}; injector::MakeInline<DisplayModeFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// Apply window changes

@@ -11,6 +11,10 @@ FixUltraWideAspectRatio = true
 ; Makes it so that the vsync option found in the game's config.ini actually works.
 FixVsyncToggle = true
 
+; Allows game to use non-60Hz refresh rates in fullscreen, fixing the black screen issue people have
+; when starting the game.
+FixDisplayMode = true
+
 ; Restores transparency on the item pickup screeen.
 RestorePickupTransparency = true
 

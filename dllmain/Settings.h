@@ -15,6 +15,7 @@ struct Settings
 	bool bEnableFOV;
 	bool bFixUltraWideAspectRatio;
 	bool bFixVsyncToggle;
+	bool bFixDisplayMode;
 	bool bRestorePickupTransparency;
 	bool bDisableBrokenFilter03;
 	bool bFixBlurryImage;
