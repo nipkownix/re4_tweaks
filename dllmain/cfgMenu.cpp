@@ -191,6 +191,18 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// FixDisplayMode
+				if (ImGui::Checkbox("FixDisplayMode", &cfg.bFixDisplayMode))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Allows game to use non - 60Hz refresh rates in fullscreen, fixing the black screen issue people have when starting the game.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// RestorePickupTransparency
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("RestorePickupTransparency", &cfg.bRestorePickupTransparency);
 				ImGui::TextWrapped("Restores transparency on the item pickup screeen.");
