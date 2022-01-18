@@ -54,6 +54,17 @@ int curPosY;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
+		case WM_KEYUP:
+			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
+			{
+				bShouldFlipX = false;
+			}
+			else if (wParam == cfg.KeyMap(cfg.flip_item_up.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_down.data(), true))
+			{
+				bShouldFlipY = false;
+			}
+			break;
+
 		case WM_KEYDOWN:
 			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
 			{
