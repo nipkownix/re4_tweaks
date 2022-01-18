@@ -15,6 +15,11 @@ FixVsyncToggle = true
 ; when starting the game.
 FixDisplayMode = true
 
+; Determines a custom refresh rate for the game to use.
+; Requires FixDisplayMode to be enabled.
+; -1 will make it try to use the current refresh rate as reported by Windows.
+CustomRefreshRate = -1
+
 ; Restores transparency on the item pickup screeen.
 RestorePickupTransparency = true
 

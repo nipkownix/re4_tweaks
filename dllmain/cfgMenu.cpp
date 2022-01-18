@@ -203,6 +203,19 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				ImGui::TextWrapped("Determines a custom refresh rate for the game to use.");
+				ImGui::TextWrapped("Requires FixDisplayMode to be enabled.");
+				ImGui::TextWrapped("-1 will make it try to use the current refresh rate as reported by Windows.");
+
+				ImGui::PushItemWidth(150);
+				ImGui::InputInt("Hz", &cfg.iCustomRefreshRate);
+				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
+				ImGui::PopItemWidth();
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// RestorePickupTransparency
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("RestorePickupTransparency", &cfg.bRestorePickupTransparency);
 				ImGui::TextWrapped("Restores transparency on the item pickup screeen.");

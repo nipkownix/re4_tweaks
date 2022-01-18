@@ -171,20 +171,30 @@ void Init_Main()
 	// Hook func that runs EnumAdapterModes & checks for 60Hz modes, make it use the refresh rate from Windows instead
 	if (cfg.bFixDisplayMode)
 	{
-		DEVMODE lpDevMode;
-		if (EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lpDevMode) == 0) {
-			#ifdef VERBOSE
-			con.AddLogChar("Couldn't read display refresh rate. Using fallback value.");
-			#endif
-			g_UserRefreshRate = 60; // Fallback value.
+
+		if (cfg.iCustomRefreshRate > -1)
+		{
+			g_UserRefreshRate = cfg.iCustomRefreshRate;
 		}
 		else
 		{
-			g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
-			#ifdef VERBOSE
-			con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
-			#endif
+			DEVMODE lpDevMode;
+			if (EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lpDevMode) == 0)
+			{
+				#ifdef VERBOSE
+				con.AddLogChar("Couldn't read the display refresh rate. Using fallback value.");
+				#endif
+				g_UserRefreshRate = 60; // Fallback value.
+			}
+			else
+			{
+				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
+			}
 		}
+
+		#ifdef VERBOSE
+		con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
+		#endif
 
 		pattern = hook::pattern("8B 45 ? 83 F8 ? 75 ? 8B 4D ? 8B 7D ? 3B 4D");
 		struct DisplayModeFix
