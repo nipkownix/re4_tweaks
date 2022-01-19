@@ -15,11 +15,12 @@
 #include "qtefixes.h"
 #include "60fpsFixes.h"
 #include "KeyboardMouseTweaks.h"
+#include "ExceptionHandler.h"
 
 std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
-std::string iniPath;
+std::string rootPath;
 std::string game_version;
 
 HMODULE wrapper_dll = nullptr;
@@ -132,6 +133,8 @@ void Init_Main()
 	Init_60fpsFixes();
 
 	Init_KeyboardMouseTweaks();
+
+	Init_ExceptionHandler();
 
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
 	if (cfg.bFixUltraWideAspectRatio)
@@ -413,9 +416,9 @@ void LoadRealDLL(HMODULE hModule)
 	WrapperName.assign(strrchr(configname, '\\') + 1);
 	std::transform(WrapperName.begin(), WrapperName.end(), WrapperName.begin(), ::tolower);
 
-	// Store ini path
+	// Store root path
 	std::string modulePath = configname;
-	iniPath = modulePath.substr(0, modulePath.rfind('\\') + 1) + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+	rootPath = modulePath.substr(0, modulePath.rfind('\\') + 1);
 
 	// Get wrapper mode
 	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());

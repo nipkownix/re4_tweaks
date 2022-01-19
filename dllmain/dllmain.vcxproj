@@ -95,6 +95,7 @@
     <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="ExceptionHandler.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="..\external\ModUtils\ModuleList.hpp" />
     <ClInclude Include="..\external\ModUtils\Patterns.h" />
     <ClInclude Include="..\external\ModUtils\Trampoline.h" />
+    <ClInclude Include="..\includes\exception.hpp" />
     <ClInclude Include="..\includes\faprolight.hpp" />
     <ClInclude Include="..\includes\hashes.h" />
     <ClInclude Include="..\includes\sffont.hpp" />
@@ -165,6 +167,7 @@
     <ClInclude Include="..\Wrappers\wsock32.h" />
     <ClInclude Include="60fpsFixes.h" />
     <ClInclude Include="ConsoleWnd.h" />
+    <ClInclude Include="ExceptionHandler.h" />
     <ClInclude Include="FilterXXFixes.h" />
     <ClInclude Include="game_flags.h" />
     <ClInclude Include="dllmain.h" />
