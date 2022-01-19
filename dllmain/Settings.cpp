@@ -256,6 +256,8 @@ void Settings::WriteSettings()
 {
 	CIniReader iniReader("");
 
+	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+
 	#ifdef VERBOSE
 	con.AddConcatLog("Writing settings to: ", iniPath.data());
 	#endif

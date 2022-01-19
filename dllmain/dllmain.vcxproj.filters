@@ -11,7 +11,7 @@
       <Filter>Wrappers</Filter>
     </ClCompile>
     <ClCompile Include="..\external\ModUtils\Patterns.cpp">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClCompile>
     <ClCompile Include="tool_menu.cpp">
       <Filter>dllmain</Filter>
@@ -44,25 +44,25 @@
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui.cpp">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_demo.cpp">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_draw.cpp">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_impl_dx9.cpp">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_impl_win32.cpp">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_tables.cpp">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Settings.cpp">
       <Filter>dllmain</Filter>
@@ -85,31 +85,34 @@
     <ClCompile Include="LAApatch.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="ExceptionHandler.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
       <Filter>includes</Filter>
     </ClInclude>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
-      <Filter>external\inireader</Filter>
+      <Filter>includes\external\inireader</Filter>
     </ClInclude>
     <ClInclude Include="..\external\inireader\IniReader.h">
-      <Filter>external\inireader</Filter>
+      <Filter>includes\external\inireader</Filter>
     </ClInclude>
     <ClInclude Include="..\external\injector\include\injector\assembly.hpp">
-      <Filter>external\injector</Filter>
+      <Filter>includes\external\injector</Filter>
     </ClInclude>
     <ClInclude Include="..\external\injector\include\injector\calling.hpp">
-      <Filter>external\injector</Filter>
+      <Filter>includes\external\injector</Filter>
     </ClInclude>
     <ClInclude Include="..\external\injector\include\injector\hooking.hpp">
-      <Filter>external\injector</Filter>
+      <Filter>includes\external\injector</Filter>
     </ClInclude>
     <ClInclude Include="..\external\injector\include\injector\injector.hpp">
-      <Filter>external\injector</Filter>
+      <Filter>includes\external\injector</Filter>
     </ClInclude>
     <ClInclude Include="..\external\injector\include\injector\utility.hpp">
-      <Filter>external\injector</Filter>
+      <Filter>includes\external\injector</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>resources</Filter>
@@ -184,28 +187,28 @@
       <Filter>Wrappers</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\DelimStringReader.h">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\HookInit.hpp">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\LateStaticInit.h">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\MemoryMgr.GTA.h">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\MemoryMgr.h">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\ModuleList.hpp">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\Patterns.h">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\Trampoline.h">
-      <Filter>external\ModUtils</Filter>
+      <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
     <ClInclude Include="game_flags.h">
       <Filter>dllmain</Filter>
@@ -238,28 +241,28 @@
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imconfig.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imgui.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imgui_impl_dx9.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imgui_impl_win32.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imgui_internal.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imstb_rectpack.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imstb_textedit.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imstb_truetype.h">
-      <Filter>external\ImGui</Filter>
+      <Filter>includes\external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\settings\settings_string.h">
       <Filter>settings</Filter>
@@ -291,19 +294,16 @@
     <ClInclude Include="LAApatch.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="..\includes\exception.hpp">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ExceptionHandler.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
       <UniqueIdentifier>{0b4197c1-e92b-4635-82ba-a9286f6fbc24}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external">
-      <UniqueIdentifier>{519c6c33-721f-48c7-ae8d-02adbc3058ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\inireader">
-      <UniqueIdentifier>{4e462c16-30a0-469e-837e-e087a37306f3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\injector">
-      <UniqueIdentifier>{aae8b126-aaff-4521-8354-1de4e1c22a11}</UniqueIdentifier>
     </Filter>
     <Filter Include="resources">
       <UniqueIdentifier>{ca2daba6-e9de-43f2-a1bb-51be9b1d0d15}</UniqueIdentifier>
@@ -317,10 +317,19 @@
     <Filter Include="settings">
       <UniqueIdentifier>{a5f93009-19d5-47c0-8537-020855d842b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external\ModUtils">
+    <Filter Include="includes\external">
+      <UniqueIdentifier>{519c6c33-721f-48c7-ae8d-02adbc3058ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="includes\external\inireader">
+      <UniqueIdentifier>{4e462c16-30a0-469e-837e-e087a37306f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="includes\external\injector">
+      <UniqueIdentifier>{aae8b126-aaff-4521-8354-1de4e1c22a11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="includes\external\ModUtils">
       <UniqueIdentifier>{88d1e229-57d4-46a5-8f87-f1ec6de9bcbd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external\ImGui">
+    <Filter Include="includes\external\ImGui">
       <UniqueIdentifier>{8009d333-9eac-43b4-a9eb-014433e845ab}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

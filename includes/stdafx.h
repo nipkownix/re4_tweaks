@@ -21,3 +21,5 @@
 using namespace Memory::VP;
 
 void CreateThreadAutoClose(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
+
+std::wstring GetModuleFileNameW(HMODULE hModule);
