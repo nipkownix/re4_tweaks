@@ -202,9 +202,38 @@ void Init_Main()
 			void operator()(injector::reg_pack& regs)
 			{
 				regs.eax = g_UserRefreshRate;
-				regs.ef |= (1 << injector::reg_pack::ef_flag::zero_flag);
+				regs.ef |= (1 << regs.zero_flag);
 			}
 		}; injector::MakeInline<DisplayModeFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("8B 45 ? 83 F8 ? 7C ? 7E ? EB ? 8B 3B");
+		struct DisplayModeResListFix
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.eax = *(int32_t*)(regs.ebp - 0x0C);
+
+				// Mimic what CMP does, since we're overwriting it.
+				if (regs.eax > g_UserRefreshRate)
+				{
+					// Clear both flags
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+				else if (regs.eax < g_UserRefreshRate)
+				{
+					// ZF = 0, CF = 1
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.carry_flag);
+				}
+				else if (regs.eax == g_UserRefreshRate)
+				{
+					// ZF = 1, CF = 0
+					regs.ef |= (1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+			}
+		}; injector::MakeInline<DisplayModeResListFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// Apply window changes
