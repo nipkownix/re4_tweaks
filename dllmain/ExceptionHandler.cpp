@@ -4,19 +4,18 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include <exception.hpp>
-#include <codecvt>
 
 LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
 {
     wchar_t     modulename[MAX_PATH];
     wchar_t     filename[MAX_PATH];
     wchar_t     timestamp[128];
-    wchar_t* modulenameptr{};
+    wchar_t*    modulenameptr{};
     bool        bDumpSuccess;
     __time64_t  time;
     struct tm   ltime;
     HWND        hWnd;
-    HANDLE hFile;
+    HANDLE      hFile;
 
     // Write minidump
     if (GetModuleFileNameW(GetModuleHandle(NULL), modulename, _countof(modulename)) != 0)
@@ -100,17 +99,23 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
 
 void Init_ExceptionHandler()
 {
-    std::wstring dumpPath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(rootPath) + L"CrashDumps";
+    std::string dumpPath = rootPath + "CrashDumps";
 
-    auto FolderExists = [](LPCWSTR szPath) -> BOOL
+    auto FolderExists = [](LPCSTR szPath) -> BOOL
     {
-        DWORD dwAttrib = GetFileAttributes(szPath);
+        DWORD dwAttrib = GetFileAttributesA(szPath);
         return (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
     };
 
     if (FolderExists(dumpPath.c_str()))
     {
-        //SetUnhandledExceptionFilter(CustomUnhandledExceptionFilter); Doesn't seem to work for me?
-        AddVectoredExceptionHandler(1, CustomUnhandledExceptionFilter);
+        SetUnhandledExceptionFilter(CustomUnhandledExceptionFilter);
+
+        // Now stub out SetUnhandledExceptionFilter so NO ONE ELSE can set it!
+        uint32_t ret = 0x900004C2; //ret4
+        DWORD protect[2];
+        VirtualProtect(&SetUnhandledExceptionFilter, sizeof(ret), PAGE_EXECUTE_READWRITE, &protect[0]);
+        memcpy(&SetUnhandledExceptionFilter, &ret, sizeof(ret));
+        VirtualProtect(&SetUnhandledExceptionFilter, sizeof(ret), protect[0], &protect[1]);
     }
 }
