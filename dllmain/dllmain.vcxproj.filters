@@ -300,6 +300,12 @@
     <ClInclude Include="ExceptionHandler.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="..\Wrappers\xinput1_3.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\x3daudio1_7.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

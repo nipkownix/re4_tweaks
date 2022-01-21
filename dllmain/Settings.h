@@ -29,6 +29,7 @@ struct Settings
 	int iWindowPositionY;
 	bool bRememberWindowPos;
 	bool b60fpsFixes;
+	std::string sWrappedDllPath;
 	bool bFixQTE;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;

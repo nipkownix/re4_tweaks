@@ -52,6 +52,10 @@ WindowPositionY = -1
 RememberWindowPos = false
 
 [MISC]
+; Path to DLL to wrap, comment or leave empty to wrap system DLL
+; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)
+;WrappedDLLPath = 
+
 ; Fixes animation inconsistencies between 30 and 60 FPS that were not addressed by the developers.
 60fpsFixes = true
 
