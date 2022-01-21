@@ -219,6 +219,7 @@ void Settings::ReadSettings()
 	cfg.iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
 	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
+	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
 	cfg.b60fpsFixes = iniReader.ReadBoolean("MISC", "60fpsFixes", true);
 	cfg.bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
@@ -272,7 +273,6 @@ void Settings::WriteSettings()
 		iniFile << defaultSettings;
 		iniFile.close();
 	}
-
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
 	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
 	iniReader.WriteBoolean("DISPLAY", "FixVsyncToggle", cfg.bFixVsyncToggle);
@@ -288,6 +288,7 @@ void Settings::WriteSettings()
 	iniReader.WriteInteger("DISPLAY", "WindowPositionX", cfg.iWindowPositionX);
 	iniReader.WriteInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
 	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
+	iniReader.WriteString("MISC", "WrappedDLLPath", cfg.sWrappedDllPath);
 	iniReader.WriteBoolean("MISC", "FixQTE", cfg.bFixQTE);
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
