@@ -11,8 +11,8 @@ FixUltraWideAspectRatio = true
 ; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
 DisableVsync = false
 
-; Allows game to use non-60Hz refresh rates in fullscreen, fixing the black screen issue people have
-; when starting the game.
+; Allows the game to use non-60Hz refresh rates in fullscreen, fixing the black screen issue people have
+; when starting it.
 FixDisplayMode = true
 
 ; Determines a custom refresh rate for the game to use.
@@ -20,7 +20,7 @@ FixDisplayMode = true
 ; -1 will make it try to use the current refresh rate as reported by Windows.
 CustomRefreshRate = -1
 
-; Restores transparency on the item pickup screeen.
+; Restores a transparency effect that is missing from the item pickup screeen.
 RestorePickupTransparency = true
 
 ; This filter was originally meant to add an extra glow effect on certain fire sources, but it was broken
@@ -64,7 +64,7 @@ RememberWindowPos = false
 ; This fix makes QTEs that involve rapid button presses much more forgiving.
 FixQTE = true
 
-; Unlocks the JP-only classic camera angles during Ashley segment.
+; Unlocks the JP-only classic camera angles during Ashley's segment.
 AshleyJPCameraAngles = false
 
 ; Whether to skip the Capcom etc intro logos when starting the game.
