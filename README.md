@@ -58,8 +58,8 @@ More info in the .ini file.
 
 ### Installation
 
-Extract winmm.dll and winmm.ini to "Steam\steamapps\common\Resident Evil 4\Bin32".
+Extract dinput8.dll and dinput8.ini to "Steam\steamapps\common\Resident Evil 4\Bin32".
 
-Options can be configured inside winmm.ini.
+Options can be configured inside dinput8.ini.
 
 Massive thanks to [emoose](https://github.com/emoose) for his incredible help with many of these features.

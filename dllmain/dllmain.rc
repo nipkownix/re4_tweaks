@@ -70,9 +70,9 @@ BEGIN
             VALUE "CompanyName", "nipkow"
             VALUE "FileDescription", "re4_tweaks"
             VALUE "FileVersion", "1.6.0.0"
-            VALUE "InternalName", "winmm.dll"
+            VALUE "InternalName", "dinput8.dll"
             VALUE "LegalCopyright", "Copyright (C) 2021"
-            VALUE "OriginalFilename", "winmm.dll"
+            VALUE "OriginalFilename", "dinput8.dll"
             VALUE "ProductName", "re4_tweaks"
             VALUE "ProductVersion", "1.6.0.0"
         END
