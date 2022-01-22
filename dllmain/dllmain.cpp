@@ -17,7 +17,6 @@
 #include "KeyboardMouseTweaks.h"
 #include "ExceptionHandler.h"
 
-std::string RealDllPath;
 std::string WrapperMode;
 std::string WrapperName;
 std::string rootPath;
@@ -434,7 +433,16 @@ void LoadRealDLL(HMODULE hModule)
 	// Get wrapper mode
 	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());
 
-	proxy_dll = Wrapper::CreateWrapper((RealDllPath.size()) ? RealDllPath.c_str() : nullptr, (WrapperMode.size()) ? WrapperMode.c_str() : nullptr, WrapperName.c_str());
+	const char* wrappedDllPath = nullptr;
+	if (cfg.sWrappedDllPath.size())
+	{
+		wrappedDllPath = cfg.sWrappedDllPath.c_str();
+		// User has specified a DLL to wrap, make sure it exists first:
+		if (GetFileAttributesA(wrappedDllPath) == 0xFFFFFFFF)
+			wrappedDllPath = nullptr;
+	}
+	
+	proxy_dll = Wrapper::CreateWrapper(wrappedDllPath, (WrapperMode.size()) ? WrapperMode.c_str() : nullptr, WrapperName.c_str());
 }
 
 // Dll main function
@@ -446,13 +454,13 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 
-		LoadRealDLL(hModule);
-
 		#ifdef VERBOSE
 		con.AddLogChar("\n");
 		#endif
 
 		Init_Main();
+
+		LoadRealDLL(hModule);
 
 		break;
 	case DLL_PROCESS_DETACH:

@@ -3,21 +3,18 @@ EXPORTS
 
 
 ; ****
-;LIBRARY "dsound"    <--- Needs to have the correct ordinals since some programs use the ordinal numbers for dsound APIs
+;LIBRARY "xinput1_3"    <--- Needs correct ordinals, some games don't include import names for this some reason
 ; ****
-DirectSoundCreate				@1
-DirectSoundEnumerateA			@2
-DirectSoundEnumerateW			@3
+DllMain				@1
+XInputGetState			@2
+XInputSetState			@3
+XInputGetCapabilities	@4
+XInputEnable			@5
+XInputGetDSoundAudioDeviceGuids		@6
+XInputGetBatteryInformation	@7
+XInputGetKeystroke	@8
 DllCanUnloadNow					PRIVATE
 DllGetClassObject				PRIVATE
-DirectSoundCaptureCreate		@6
-DirectSoundCaptureEnumerateA	@7
-DirectSoundCaptureEnumerateW	@8
-GetDeviceID						@9
-DirectSoundFullDuplexCreate		@10
-DirectSoundCreate8				@11
-DirectSoundCaptureCreate8		@12
-
 
 ; ****
 ;Forces Nvidia and AMD high performance graphics
@@ -1302,3 +1299,10 @@ NSPStartup
 TransmitFile
 AcceptEx
 GetAcceptExSockaddrs
+
+; ****
+;LIBRARY "x3daudio1_7"
+; ****
+X3DAudioInitialize
+X3DAudioCalculate
+CreateFX

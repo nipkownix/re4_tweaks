@@ -165,6 +165,8 @@
     <ClInclude Include="..\Wrappers\winmm.h" />
     <ClInclude Include="..\Wrappers\wrapper.h" />
     <ClInclude Include="..\Wrappers\wsock32.h" />
+    <ClInclude Include="..\Wrappers\x3daudio1_7.h" />
+    <ClInclude Include="..\Wrappers\xinput1_3.h" />
     <ClInclude Include="60fpsFixes.h" />
     <ClInclude Include="ConsoleWnd.h" />
     <ClInclude Include="ExceptionHandler.h" />
