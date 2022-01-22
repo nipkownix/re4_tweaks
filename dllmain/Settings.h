@@ -14,7 +14,7 @@ struct Settings
 	float fFOVAdditional;
 	bool bEnableFOV;
 	bool bFixUltraWideAspectRatio;
-	bool bFixVsyncToggle;
+	bool bDisableVsync;
 	bool bFixDisplayMode;
 	int iCustomRefreshRate;
 	bool bRestorePickupTransparency;

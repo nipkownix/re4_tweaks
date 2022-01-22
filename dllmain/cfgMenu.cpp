@@ -179,13 +179,13 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				// FixVsyncToggle
-				if (ImGui::Checkbox("FixVsyncToggle", &cfg.bFixVsyncToggle))
+				// DisableVsync
+				if (ImGui::Checkbox("DisableVsync", &cfg.bDisableVsync))
 				{
 					cfg.HasUnsavedChanges = true;
 					NeedsToRestart = true;
 				}
-				ImGui::TextWrapped("Makes it so that the vsync option found in the game's config.ini actually works.");
+				ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
 
 				ImGui::Spacing();
 				ImGui::Separator();

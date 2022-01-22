@@ -8,8 +8,8 @@ FOVAdditional = 0.0
 ; Only tested in 21:9.
 FixUltraWideAspectRatio = true
 
-; Makes it so that the vsync option found in the game's config.ini actually works.
-FixVsyncToggle = true
+; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
+DisableVsync = false
 
 ; Allows game to use non-60Hz refresh rates in fullscreen, fixing the black screen issue people have
 ; when starting the game.

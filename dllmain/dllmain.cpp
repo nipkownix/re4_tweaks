@@ -163,11 +163,22 @@ void Init_Main()
 		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 	
-	// Fix vsync option
-	if (cfg.bFixVsyncToggle)
+	// Force v-sync off
+	if (cfg.bDisableVsync)
 	{
-		auto pattern = hook::pattern("50 E8 ? ? ? ? C7 07 01 00 00 00 E9");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 6);
+		auto pattern = hook::pattern("C7 07 ? ? ? ? E9 ? ? ? ? 8D 4E ? 51 8D 95 ? ? ? ? 52");
+		injector::WriteMemory(pattern.get_first(2), uint32_t(0x0), true);
+
+		pattern = hook::pattern("8B 56 ? 8B 85 ? ? ? ? 83 C4 ? 52 68 ? ? ? ? 50");
+		struct WriteIniHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.edx = 0; // This is what the game will write as the v-sync value inside config.ini
+
+				regs.eax = *(int32_t*)(regs.ebp - 0x808);
+			}
+		}; injector::MakeInline<WriteIniHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 	}
 
 	// Game is hardcoded to only allow 60Hz display modes for some reason...
