@@ -87,7 +87,7 @@ void ConsoleOutput::AddLogFloat(float fmt, ...)
 
 void ConsoleOutput::AddConcatLog(const char* fmt, int value, ...)
 {
-    char logBuffer[100];
+    char logBuffer[200];
     strcpy_s(logBuffer, fmt);
     strcat_s(logBuffer, std::to_string(value).data());
     con.AddLogChar(logBuffer);
@@ -96,7 +96,7 @@ void ConsoleOutput::AddConcatLog(const char* fmt, int value, ...)
 
 void ConsoleOutput::AddConcatLog(const char* fmt, const char* value, ...)
 {
-    char logBuffer[100];
+    char logBuffer[200];
     strcpy_s(logBuffer, fmt);
     strcat_s(logBuffer, value);
     con.AddLogChar(logBuffer);
