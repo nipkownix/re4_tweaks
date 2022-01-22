@@ -273,6 +273,7 @@ void Settings::WriteSettings()
 		iniFile << defaultSettings;
 		iniFile.close();
 	}
+
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
 	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
 	iniReader.WriteBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
@@ -288,12 +289,14 @@ void Settings::WriteSettings()
 	iniReader.WriteInteger("DISPLAY", "WindowPositionX", cfg.iWindowPositionX);
 	iniReader.WriteInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
 	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
-	iniReader.WriteString("MISC", "WrappedDLLPath", cfg.sWrappedDllPath);
+	iniReader.WriteBoolean("MISC", "60fpsFixes", cfg.b60fpsFixes);
 	iniReader.WriteBoolean("MISC", "FixQTE", cfg.bFixQTE);
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
 	iniReader.WriteString("MISC", "DebugMenuKeyCombination", cfg.sDebugMenuKeyCombo);
+	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
+	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
 	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
 	iniReader.WriteString("KEYBOARD", "flip_item_up", " " + cfg.flip_item_up);
