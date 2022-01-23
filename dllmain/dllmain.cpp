@@ -316,8 +316,8 @@ void Init_Main()
 	// Replace MemorySwap with memcpy
 	if (cfg.bUseMemcpy)
 	{
-		auto pattern = hook::pattern("8b 49 14 33 c0 a3 ? ? ? ? 85 c9 74 ? 8b ff f6 81 ? ? ? ? 20 8b 49 ? 74 ? b8 01 00 00 00 a3 ? ? ? ? 85 c9 75 ? c3");
-		injector::MakeJMP(pattern.get_first(0), memcpy, true);
+		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 68 ? ? ? ? 50 E8 ? ? ? ? A1");
+		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), memcpy);
 	}
 
 	// Unlock JP-only classic camera angle during Ashley segment
