@@ -5,10 +5,10 @@
 
 uint32_t* ptrpG;
 
+uintptr_t ptrstageInit;
 uintptr_t ptrSubScreenAramRead;
 
 static uint32_t* ptrpzzl_size;
-static uint32_t* ptrstageInit_mem_alloc_call;
 static uint32_t* ptrp_MemPool_SubScreen1;
 static uint32_t* ptrp_MemPool_SubScreen2;
 static uint32_t* ptrp_MemPool_SubScreen3;
@@ -43,10 +43,10 @@ void GetLimitPointers()
 	pattern = hook::pattern("05 ? ? ? ? F6 C1 ? 8B 0D ? ? ? ? A3 ? ? ? ? 8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1");
 	ptrpzzl_size = pattern.count(1).get(0).get<uint32_t>(1);
 
-	pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 00 AC 34 00 E8");
-	ptrstageInit_mem_alloc_call = pattern.count(1).get(0).get<uint32_t>(0xD);
+	pattern = hook::pattern("E8 ? ? ? ? 6A 03 6A 02 E8 ? ? ? ? 6A ? E8 ? ? ? ? A1");
+	ptrstageInit = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
 
-	pattern = hook::pattern("E8 ? ? ? ? 8B 0D ? ? ? ? 6A 44");
+	pattern = hook::pattern("E8 ? ? ? ? 8B 0D ? ? ? ? 6A ? 81 C1 ? ? ? ? 53");
 	ptrSubScreenAramRead = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
 
 	pattern = hook::pattern("8B 0D ? ? ? ? 03 F8 81 C1 ? ? ? ? 3B F9 73 ? 89 46 ? EB ? 81 FF ? ? ? ? 73 ? 8B 15");
@@ -121,19 +121,22 @@ void GetLimitPointers()
 
 // Inventory screen mem functions
 __declspec(align(4096)) uint8_t g_MemPool_SubScreen[0x4000000];
-
-#ifdef _DEBUG
-// guard buffer in debug builds between SubScreen & SubScreen2, will be protected with PAGE_READONLY so writes will cause an exception
-uint8_t g_MemPool_SubScreen_SafetyBuf[0x4000000];
-#endif
-
 uint8_t g_MemPool_SubScreen2[0x4000000];
 
 uint8_t* p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
 
-void* __cdecl MessageControl__stageInit_mem_alloc_Hook(int a1, char* Str, int a3, int a4, int a5)
+bool(__fastcall* MessageControl__stageInit_Orig)(void* thisptr);
+bool __fastcall MessageControl__stageInit_Hook(void* thisptr)
 {
-	return g_MemPool_SubScreen2;
+	bool ret = MessageControl__stageInit_Orig(thisptr);
+
+	// Set pG+0x3C to point to an extended buffer we control
+	// The game uses this for some MemorySwap operation later on - not really sure why that swap is needed though, but oh well
+	uint8_t* pG = *(uint8_t**)(ptrpG);
+
+	*(void**)(pG + 0x3C) = &g_MemPool_SubScreen2;
+
+	return ret;
 }
 
 int(*SubScreenAramRead_Orig)();
@@ -183,13 +186,8 @@ void Init_HandleLimits()
 		memset(g_MemPool_SubScreen, 0, sizeof(g_MemPool_SubScreen));
 		memset(g_MemPool_SubScreen2, 0, sizeof(g_MemPool_SubScreen2));
 
-#ifdef _DEBUG
-		memset(g_MemPool_SubScreen_SafetyBuf, 0x69, sizeof(g_MemPool_SubScreen_SafetyBuf));
-		DWORD prev = 0;
-		BOOL ret = VirtualProtect(g_MemPool_SubScreen_SafetyBuf, sizeof(g_MemPool_SubScreen_SafetyBuf), PAGE_READONLY, &prev);
-#endif
-
-		injector::MakeCALL(ptrstageInit_mem_alloc_call, MessageControl__stageInit_mem_alloc_Hook, true);
+		ReadCall(ptrstageInit, MessageControl__stageInit_Orig);
+		InjectHook(ptrstageInit, MessageControl__stageInit_Hook);
 
 		ReadCall(ptrSubScreenAramRead, SubScreenAramRead_Orig);
 		InjectHook(ptrSubScreenAramRead, SubScreenAramRead_Hook);
@@ -201,8 +199,8 @@ void Init_HandleLimits()
 		injector::WriteMemory<int>(ptrp_MemPool_SubScreen3, (uintptr_t)&p_MemPool_SubScreen, true);
 
 		injector::WriteMemory<int>(ptrp_MemPool_SubScreen4, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads rel/Sscrn.rel
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen5, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads  ss_cmmn.dat read
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen6, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads  omk_pzzl.dat / ss_pzzl.dat
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen5, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads ss_cmmn.dat read
+		injector::WriteMemory<int>(ptrp_MemPool_SubScreen6, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads omk_pzzl.dat / ss_pzzl.dat
 
 		injector::WriteMemory<int>(ptrp_MemPool_SubScreen7, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExec MemorySwap call
 		injector::WriteMemory<int>(ptrp_MemPool_SubScreen8, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExitCore MemorySwap call
