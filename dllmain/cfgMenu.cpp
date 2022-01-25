@@ -487,6 +487,7 @@ void MenuRender()
 				}
 				ImGui::TextWrapped("Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.");
 
+				/*
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
@@ -498,6 +499,7 @@ void MenuRender()
 					NeedsToRestart = true;
 				}
 				ImGui::TextWrapped("Makes the game use the memcpy function instead of MemorySwap, possibly resulting in some slight performance improvement.");
+				*/
 			}
 
 			ImGui::EndChild();

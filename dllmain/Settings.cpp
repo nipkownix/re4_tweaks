@@ -239,7 +239,7 @@ void Settings::ReadSettings()
 	cfg.bAllowHighResolutionSFD = iniReader.ReadBoolean("MOVIE", "AllowHighResolutionSFD", true);
 	cfg.bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", true);
 	cfg.bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", true);
-	cfg.bUseMemcpy = iniReader.ReadBoolean("MEMORY", "UseMemcpy", true);
+	//cfg.bUseMemcpy = iniReader.ReadBoolean("MEMORY", "UseMemcpy", true);
 	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
 	
 	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", 1.0f);
@@ -308,7 +308,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MOVIE", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD);
 	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc);
 	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc);
-	iniReader.WriteBoolean("MEMORY", "UseMemcpy", cfg.bUseMemcpy);
+	//iniReader.WriteBoolean("MEMORY", "UseMemcpy", cfg.bUseMemcpy);
 	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);
 
 	cfg.HasUnsavedChanges = false;

@@ -123,10 +123,6 @@ RaiseVertexAlloc = true
 ; Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.
 RaiseInventoryAlloc = true
 
-; Makes the game use the memcpy function instead of MemorySwap,
-; possibly resulting in some slight performance improvement.
-UseMemcpy = true
-
 [FRAME RATE]
 ; This version of RE4 only works properly if played at 30 or 60 FPS. Anything else can and will cause numerous amounts of
 ; different bugs, most of which aren't even documented. By default, re4_tweaks will warn you about these issues and change

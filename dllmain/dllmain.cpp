@@ -313,12 +313,13 @@ void Init_Main()
 		}; injector::MakeInline<ReadFPS>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
-	// Replace MemorySwap with memcpy
+	/* // Replace MemorySwap with memcpy
 	if (cfg.bUseMemcpy)
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 68 ? ? ? ? 50 E8 ? ? ? ? A1");
 		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), memcpy);
 	}
+	*/ // Unused for now since it is crashing the game. Maybe we could fix this in the future?
 
 	// Unlock JP-only classic camera angle during Ashley segment
 	static uint8_t* pSys = nullptr;

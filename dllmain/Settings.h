@@ -47,7 +47,7 @@ struct Settings
 	bool bAllowHighResolutionSFD;
 	bool bRaiseVertexAlloc;
 	bool bRaiseInventoryAlloc;
-	bool bUseMemcpy;
+	//bool bUseMemcpy;
 	bool bIgnoreFPSWarning;
 	float fFontSize;
 
