@@ -63,8 +63,6 @@ More info in the .ini file.
  
  * **RaiseInventoryAlloc** - Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.
 
- * **UseMemcpy** - Makes the game use the memcpy function instead of MemorySwap, possibly resulting in some slight performance improvement.
-
 ### Installation
 
 Extract dinput8.dll and dinput8.ini to "Steam\steamapps\common\Resident Evil 4\Bin32".
