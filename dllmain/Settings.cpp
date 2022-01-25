@@ -294,7 +294,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
-	iniReader.WriteString("MISC", "DebugMenuKeyCombination", cfg.sDebugMenuKeyCombo);
+	iniReader.WriteString("MISC", "DebugMenuKeyCombination", " " + cfg.sDebugMenuKeyCombo);
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
 	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
