@@ -227,6 +227,7 @@ void MenuRender()
 				// DisableBrokenFilter03
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("DisableBrokenFilter03", &cfg.bDisableBrokenFilter03);
 				ImGui::TextWrapped("This filter was originally meant to add an extra glow effect on certain fire sources, but it was broken when the game was ported to the Xbox 360, making the entire image have an orange tint overlay applied to it.");
+				ImGui::TextWrapped("(if you're using the HD Project, you should disable this option)");
 
 				ImGui::Spacing();
 				ImGui::Separator();

@@ -25,6 +25,7 @@ RestorePickupTransparency = true
 
 ; This filter was originally meant to add an extra glow effect on certain fire sources, but it was broken
 ; when the game was ported to the Xbox 360, making the entire image have an orange tint overlay applied to it.
+; (if you're using the HD Project, you should disable this option)
 DisableBrokenFilter03 = true
 
 ; Fixes a problem related to a vertex buffer that caused the image to be slightly blurred,
