@@ -37,6 +37,7 @@ struct Settings
 	bool bUseMouseTurning;
 	float fTurnSensitivity;
 	bool bFixSniperZoom;
+	bool bFixSniperFocus;
 	bool bFixRetryLoadMouseSelector;
 	std::string flip_item_up;
 	std::string flip_item_down;

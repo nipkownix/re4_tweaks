@@ -3,6 +3,7 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
+#include "KeyboardMouseTweaks.h"
 
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -16,7 +17,6 @@ uintptr_t ptrAfterMotionMoveHook2;
 static uint32_t* ptrMouseDeltaX;
 static uint32_t* ptrMovInputState;
 static uint32_t* ptrMouseAimMode;
-static uint32_t* ptrLastUsedController;
 
 uint32_t* ptrCharRotationBase;
 
@@ -35,11 +35,6 @@ int intMouseDeltaX()
 int intMovInputState()
 {
     return *(int8_t*)(ptrMovInputState);
-}
-
-int intLastUsedController()
-{
-	return *(int32_t*)(ptrLastUsedController);
 }
 
 // Enable the turning animation if the mouse is moving and we're not
@@ -201,9 +196,6 @@ void GetMouseTurnPointers()
 
 	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
 	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
-
-	pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
-	ptrLastUsedController = *pattern.count(1).get(0).get<uint32_t*>(1);
 
 	pattern = hook::pattern("A1 ? ? ? ? D9 80 ? ? ? ? 51 8D 90 ? ? ? ? D9 1C ? E8 ? ? ? ? 83 C4 ? 84 C0 0F 85 ? ? ? ? 8B 45 ? 8B 7D");
 	ptrCharRotationBase = *pattern.count(1).get(0).get<uint32_t*>(1);

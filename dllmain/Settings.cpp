@@ -229,6 +229,7 @@ void Settings::ReadSettings()
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
+	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", true);
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
 	cfg.flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	cfg.flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
@@ -298,6 +299,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
 	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
+	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", cfg.bFixSniperFocus);
 	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
 	iniReader.WriteString("KEYBOARD", "flip_item_up", " " + cfg.flip_item_up);
 	iniReader.WriteString("KEYBOARD", "flip_item_down", " " + cfg.flip_item_down);

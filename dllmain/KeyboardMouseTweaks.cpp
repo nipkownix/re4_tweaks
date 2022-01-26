@@ -7,14 +7,26 @@
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
+uintptr_t* ptrFocusAnimFldAddr;
 uintptr_t ptrRetryLoadDLGstate;
+
+static uint32_t* ptrLastUsedController;
+
+int intLastUsedController()
+{
+	// 2 = Controller
+	return *(int32_t*)(ptrLastUsedController);
+}
 
 void Init_KeyboardMouseTweaks()
 {
+	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
+	ptrLastUsedController = *pattern.count(1).get(0).get<uint32_t*>(1);
+
 	Init_MouseTurning();
 
 	// Inventory item flip binding
-	auto pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
+	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
 	ptrInvMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
 	struct InvFlip
 	{
@@ -82,5 +94,33 @@ void Init_KeyboardMouseTweaks()
 					*(int32_t*)ptrRifleMovAddr = regs.eax;
 			}
 		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
+
+	// Fix the "focus animation" not looking as strong as when triggered with a controller
+	if (cfg.bFixSniperFocus)
+	{
+		auto pattern = hook::pattern("D9 05 ? ? ? ? 8A 15 ? ? ? ? 56 8B F1");
+		ptrFocusAnimFldAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
+		struct FixScopeZoomFocus
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (intLastUsedController() != 2)
+					*(float*)ptrFocusAnimFldAddr = 12.0f; // Makes the focus animation last longer when using the mouse.
+				else
+					*(float*)ptrFocusAnimFldAddr = 5.0f;
+
+				float focus_frame = *(float*)ptrFocusAnimFldAddr;
+
+				_asm
+				{
+					fld focus_frame
+				}
+			}
+		}; injector::MakeInline<FixScopeZoomFocus>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	
+		// This jl instruction makes the focus animation stop almost immediately when using the mouse. Noping it doesn't seem to affect the controller at all.
+		pattern = hook::pattern("7C ? C6 06 ? EB ? C7 46 ? ? ? ? ? EB ? DD D8 83 3D");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
 	}
 }

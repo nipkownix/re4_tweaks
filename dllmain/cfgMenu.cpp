@@ -406,6 +406,20 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// FixSniperFocus
+				if (ImGui::Checkbox("FixSniperFocus", &cfg.bFixSniperFocus))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+
+				ImGui::TextWrapped("When zooming in and out with the sniper rifle, this option makes the \"focus\" animation look similar to how it looks like with a controller.");
+				ImGui::TextWrapped("Requires EnableGCBlur to be enabled.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FixRetryLoadMouseSelector
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixRetryLoadMouseSelector", &cfg.bFixRetryLoadMouseSelector);
 				ImGui::TextWrapped("Prevents the game from overriding your selection in the \"Retry / Load\" screen when moving the mouse before confirming an action.");
@@ -444,10 +458,6 @@ void MenuRender()
 				ImGui::InputText("QTE key 2", cfg.QTE_key_2.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
 			}
 
 			// Movie tab

@@ -91,6 +91,10 @@ TurnSensitivity = 1.0
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.
 FixSniperZoom = true
 
+; When zooming in and out with the sniper rifle, this option makes the "focus" animation look similar to how it looks like with a controller.
+; Requires EnableGCBlur to be enabled.
+FixSniperFocus = true
+
 ; Prevents the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
 ; This bug usually causes people to return to the main menu by mistake, when they actually wanted to just restart from the last checkpoint.
 FixRetryLoadMouseSelector = true
