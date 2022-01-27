@@ -201,9 +201,9 @@ void Settings::ReadSettings()
 
 	cfg.fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
 	if (cfg.fFOVAdditional > 0.0f)
-		bEnableFOV = true;
+		cfg.bEnableFOV = true;
 	else
-		bEnableFOV = false;
+		cfg.bEnableFOV = false;
 
 	cfg.bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
 	cfg.bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", false);
@@ -226,6 +226,13 @@ void Settings::ReadSettings()
 	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
 	cfg.sDebugMenuKeyCombo = iniReader.ReadString("MISC", "DebugMenuKeyCombination", "CTRL+F3"); // if default changed, make sure to edit tool_menu.cpp!toolMenuKeyCombo vector!
+	
+	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", 1.0f);
+	if (cfg.fControllerSensitivity != 1.0f)
+		cfg.bEnableControllerSens = true;
+	else
+		cfg.bEnableControllerSens = false;
+
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
@@ -296,6 +303,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
 	iniReader.WriteString("MISC", "DebugMenuKeyCombination", " " + cfg.sDebugMenuKeyCombo);
+	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
 	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);

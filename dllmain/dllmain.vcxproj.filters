@@ -88,6 +88,9 @@
     <ClCompile Include="ExceptionHandler.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="ControllerTweaks.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -305,6 +308,9 @@
     </ClInclude>
     <ClInclude Include="..\Wrappers\x3daudio1_7.h">
       <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="ControllerTweaks.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

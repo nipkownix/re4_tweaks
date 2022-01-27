@@ -82,10 +82,18 @@ EnableDebugMenu = false
 ; (see top of Settings.cpp file for possible key names to use)
 DebugMenuKeyCombination = CTRL+F3
 
+[CONTROLLER]
+; Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.
+; Min 0.5, max 4.0.
+ControllerSensitivity = 1.0
+
 [MOUSE]
 ; Makes it so the mouse turns the character instead of controlling the camera.
 ; "Modern" aiming mode in the game's settings is recomended.
 UseMouseTurning = true
+
+; Sensitivity for the mouse turning feature.
+; Min 0.5, max 2.0.
 TurnSensitivity = 1.0
 
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.

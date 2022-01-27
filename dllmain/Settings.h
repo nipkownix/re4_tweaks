@@ -34,6 +34,8 @@ struct Settings
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
 	std::string sDebugMenuKeyCombo;
+	float fControllerSensitivity;
+	bool bEnableControllerSens;
 	bool bUseMouseTurning;
 	float fTurnSensitivity;
 	bool bFixSniperZoom;

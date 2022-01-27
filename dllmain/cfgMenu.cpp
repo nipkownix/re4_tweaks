@@ -22,8 +22,8 @@ bool NeedsToRestart;
 int Tab = 1;
 void MenuRender()
 {
-	ImGui::SetNextWindowSize(ImVec2(900, 470), ImGuiCond_FirstUseEver);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(900, (470 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
+	ImGui::SetNextWindowSize(ImVec2(910, 520), ImGuiCond_FirstUseEver);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(910, (520 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
 	if (ImGui::Begin("re4_tweaks - Configuration", 0))
 	{
 		// Left side
@@ -45,25 +45,30 @@ void MenuRender()
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 3 ? active : inactive);
-			if (ImGui::Button(ICON_FA_LOCATION_ARROW " Mouse", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_JOYSTICK " Controller", ImVec2(230 - 15, 41)))
 				Tab = 3;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 4 ? active : inactive);
-			if (ImGui::Button(ICON_FA_KEYBOARD " Keyboard", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_LOCATION_ARROW " Mouse", ImVec2(230 - 15, 41)))
 				Tab = 4;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 5 ? active : inactive);
-			if (ImGui::Button(ICON_FA_VIDEO " Movie", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_KEYBOARD " Keyboard", ImVec2(230 - 15, 41)))
 				Tab = 5;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 6 ? active : inactive);
-			if (ImGui::Button(ICON_FA_CALCULATOR " Memory", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_VIDEO " Movie", ImVec2(230 - 15, 41)))
 				Tab = 6;
 
-			ImGui::PopStyleColor(6);
+			ImGui::Spacing();
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 7 ? active : inactive);
+			if (ImGui::Button(ICON_FA_CALCULATOR " Memory", ImVec2(230 - 15, 41)))
+				Tab = 7;
+
+			ImGui::PopStyleColor(7);
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
@@ -368,12 +373,41 @@ void MenuRender()
 				}
 			}
 
-			// Mouse tab
+			// Controller tab
 			if (Tab == 3)
+			{
+				// ControllerSensitivity
+				if (ImGui::BeginTable("CSensTable", 2, TableFlags))
+				{
+					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 340.0f);
+					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
+
+					ImGui::TableNextColumn();
+					if (ImGui::Checkbox("Controller Sensitivity", &cfg.bEnableControllerSens))
+					{
+						cfg.HasUnsavedChanges = true;
+					}
+					ImGui::TextWrapped("Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.");
+
+					ImGui::TableNextColumn();
+					ImGui::Dummy(ImVec2(0.0f, 20.0f));
+					ImGui::PushItemWidth(170);
+					if (!cfg.bEnableControllerSens)
+						cfg.fControllerSensitivity = 1.0f;
+					ImGui::SliderFloat("Sensitivity Slider", &cfg.fControllerSensitivity, 0.50f, 4.0f, "%.2f");
+					ImGui::PopItemWidth();
+
+					ImGui::EndTable();
+				}
+
+			}
+
+			// Mouse tab
+			if (Tab == 4)
 			{
 				if (ImGui::BeginTable("FOVTable", 2, TableFlags))
 				{
-					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 320.0f);
+					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 340.0f);
 					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
 
 					ImGui::TableNextColumn();
@@ -385,10 +419,10 @@ void MenuRender()
 					ImGui::TextWrapped("\"Modern\" aiming mode in the game's settings is recommended.");
 
 					ImGui::TableNextColumn();
-					ImGui::Dummy(ImVec2(0.0f, 15.0f));
+					ImGui::Dummy(ImVec2(0.0f, 20.0f));
 					ImGui::PushItemWidth(170);
 
-					ImGui::SliderFloat("Sensitivity Slider", &cfg.fTurnSensitivity, 0.10f, 2.0f, "%.2f");
+					ImGui::SliderFloat("Sensitivity Slider", &cfg.fTurnSensitivity, 0.50f, 2.0f, "%.2f");
 					ImGui::PopItemWidth();
 
 					ImGui::EndTable();
@@ -427,7 +461,7 @@ void MenuRender()
 			}
 
 			// Keyboard tab
-			if (Tab == 4)
+			if (Tab == 5)
 			{
 				// Inv flip key bindings
 				ImGui::TextWrapped("Key bindings for flipping items in the inventory screen when using keyboard and mouse.");
@@ -461,7 +495,7 @@ void MenuRender()
 			}
 
 			// Movie tab
-			if (Tab == 5)
+			if (Tab == 6)
 			{
 				// AllowHighResolutionSFD
 				if (ImGui::Checkbox("AllowHighResolutionSFD", &cfg.bAllowHighResolutionSFD))
@@ -474,7 +508,7 @@ void MenuRender()
 			}
 
 			// Memory tab
-			if (Tab == 6)
+			if (Tab == 7)
 			{
 				// RaiseVertexAlloc
 				if (ImGui::Checkbox("RaiseVertexAlloc", &cfg.bRaiseVertexAlloc))
