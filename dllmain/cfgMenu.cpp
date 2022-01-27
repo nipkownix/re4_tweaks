@@ -19,6 +19,8 @@ uintptr_t* ptrD3D9Device;
 
 bool NeedsToRestart;
 
+int F1timer = 500; // F1 tooltip timer
+
 int Tab = 1;
 void MenuRender()
 {
@@ -616,6 +618,22 @@ void ApplyMenuTheme()
 	style->Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 }
 
+void ShowF1Tip()
+{
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(ImVec2(20, viewport->Pos.y + 20));
+	ImGui::SetNextWindowBgAlpha(0.5);
+
+	if (ImGui::BeginPopup("F1tip"))
+	{
+		ImGui::Selectable("re4_tweaks: Press F1 to open the configuration menu");
+		ImGui::EndPopup();
+	}
+
+	if ((!ImGui::IsPopupOpen("F1tip")) && (!bCfgMenuOpen) && (laa.LAA_State == LAADialogState::NotShowing))
+		ImGui::OpenPopup("F1tip");
+}
+
 // Add our new code right before the game calls EndScene
 HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -677,6 +695,13 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	#ifdef VERBOSE
 	con.ShowConsoleOutput();
 	#endif 
+
+	// Show F1 tip
+	if (F1timer > 0)
+	{
+		F1timer--;
+		ShowF1Tip();
+	}
 
 	// Calls the LAA window if needed
 	if (laa.LAA_State != LAADialogState::NotShowing)
