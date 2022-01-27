@@ -25,7 +25,7 @@ void Init_60fpsFixes()
 			float vanillaMulti = 10.0;
 			float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
 
-			if (cfg.b60fpsFixes)
+			if (cfg.bFixFallingItemsSpeed)
 				_asm{fsub newMulti}
 			else
 				_asm {fsub vanillaMulti}
@@ -41,7 +41,7 @@ void Init_60fpsFixes()
 			float vanillaMulti = 10.0;
 			float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
 
-			if (cfg.b60fpsFixes)
+			if (cfg.bFixFallingItemsSpeed)
 				_asm {fmul newMulti}
 			else
 				_asm {fmul vanillaMulti}

@@ -22,8 +22,8 @@ bool NeedsToRestart;
 int Tab = 1;
 void MenuRender()
 {
-	ImGui::SetNextWindowSize(ImVec2(910, 520), ImGuiCond_FirstUseEver);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(910, (520 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
+	ImGui::SetNextWindowSize(ImVec2(910, 570), ImGuiCond_FirstUseEver);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(910, (570 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
 	if (ImGui::Begin("re4_tweaks - Configuration", 0))
 	{
 		// Left side
@@ -60,15 +60,20 @@ void MenuRender()
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 6 ? active : inactive);
-			if (ImGui::Button(ICON_FA_VIDEO " Movie", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_CHESS_CLOCK " Frame rate", ImVec2(230 - 15, 41)))
 				Tab = 6;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 7 ? active : inactive);
-			if (ImGui::Button(ICON_FA_CALCULATOR " Memory", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_VIDEO " Movie", ImVec2(230 - 15, 41)))
 				Tab = 7;
 
-			ImGui::PopStyleColor(7);
+			ImGui::Spacing();
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 8 ? active : inactive);
+			if (ImGui::Button(ICON_FA_CALCULATOR " Memory", ImVec2(230 - 15, 41)))
+				Tab = 8;
+
+			ImGui::PopStyleColor(8);
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
@@ -309,23 +314,6 @@ void MenuRender()
 			// Misc tab
 			if (Tab == 2)
 			{
-				// 60FPSfixes
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("60fpsFixes", &cfg.b60fpsFixes);
-				ImGui::TextWrapped("Fixes animation inconsistencies between 30 and 60 FPS that were not addressed by the developers.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				// FixQTE
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
-				ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");
-				ImGui::TextWrapped("This fix makes QTEs that involve rapid button presses much more forgiving.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
 				// AshleyJPCameraAngles
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &cfg.bAshleyJPCameraAngles);
 				ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
@@ -399,7 +387,6 @@ void MenuRender()
 
 					ImGui::EndTable();
 				}
-
 			}
 
 			// Mouse tab
@@ -494,8 +481,25 @@ void MenuRender()
 				ImGui::PopItemWidth;
 			}
 
-			// Movie tab
+			// Frame rate tab
 			if (Tab == 6)
+			{
+				// FixFallingItemsSpeed
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &cfg.bFixFallingItemsSpeed);
+				ImGui::TextWrapped("Fixes the speed of falling items in 60 FPS, making them not fall at double speed.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// FixQTE
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
+				ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");
+				ImGui::TextWrapped("This fix makes QTEs that involve rapid button presses much more forgiving.");
+			}
+
+			// Movie tab
+			if (Tab == 7)
 			{
 				// AllowHighResolutionSFD
 				if (ImGui::Checkbox("AllowHighResolutionSFD", &cfg.bAllowHighResolutionSFD))
@@ -508,7 +512,7 @@ void MenuRender()
 			}
 
 			// Memory tab
-			if (Tab == 7)
+			if (Tab == 8)
 			{
 				// RaiseVertexAlloc
 				if (ImGui::Checkbox("RaiseVertexAlloc", &cfg.bRaiseVertexAlloc))

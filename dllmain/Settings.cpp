@@ -220,8 +220,6 @@ void Settings::ReadSettings()
 	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
 	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
-	cfg.b60fpsFixes = iniReader.ReadBoolean("MISC", "60fpsFixes", true);
-	cfg.bFixQTE = iniReader.ReadBoolean("MISC", "FixQTE", true);
 	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
 	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
@@ -244,11 +242,13 @@ void Settings::ReadSettings()
 	cfg.flip_item_right = iniReader.ReadString("KEYBOARD", "flip_item_right", "PAGEUP");
 	cfg.QTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
 	cfg.QTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
+	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", true);
+	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", true);
 	cfg.bAllowHighResolutionSFD = iniReader.ReadBoolean("MOVIE", "AllowHighResolutionSFD", true);
 	cfg.bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", true);
 	cfg.bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", true);
 	//cfg.bUseMemcpy = iniReader.ReadBoolean("MEMORY", "UseMemcpy", true);
-	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("FRAME RATE", "IgnoreFPSWarning", false);
+	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", false);
 	
 	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", 1.0f);
 	if (cfg.fFontSize < 1.0f)
@@ -297,8 +297,6 @@ void Settings::WriteSettings()
 	iniReader.WriteInteger("DISPLAY", "WindowPositionX", cfg.iWindowPositionX);
 	iniReader.WriteInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
 	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
-	iniReader.WriteBoolean("MISC", "60fpsFixes", cfg.b60fpsFixes);
-	iniReader.WriteBoolean("MISC", "FixQTE", cfg.bFixQTE);
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
@@ -315,6 +313,8 @@ void Settings::WriteSettings()
 	iniReader.WriteString("KEYBOARD", "flip_item_right", " " + cfg.flip_item_right);
 	iniReader.WriteString("KEYBOARD", "QTE_key_1", " " + cfg.QTE_key_1);
 	iniReader.WriteString("KEYBOARD", "QTE_key_2", " " + cfg.QTE_key_2);
+	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
+	iniReader.WriteBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
 	iniReader.WriteBoolean("MOVIE", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD);
 	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc);
 	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc);

@@ -28,9 +28,7 @@ struct Settings
 	int iWindowPositionX;
 	int iWindowPositionY;
 	bool bRememberWindowPos;
-	bool b60fpsFixes;
 	std::string sWrappedDllPath;
-	bool bFixQTE;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
 	std::string sDebugMenuKeyCombo;
@@ -47,6 +45,8 @@ struct Settings
 	std::string flip_item_right;
 	std::string QTE_key_1;
 	std::string QTE_key_2;
+	bool bFixFallingItemsSpeed;
+	bool bFixQTE;
 	bool bAllowHighResolutionSFD;
 	bool bRaiseVertexAlloc;
 	bool bRaiseInventoryAlloc;

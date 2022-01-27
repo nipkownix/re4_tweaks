@@ -57,14 +57,6 @@ RememberWindowPos = false
 ; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)
 ;WrappedDLLPath = 
 
-; Fixes animation inconsistencies between 30 and 60 FPS that were not addressed by the developers.
-60fpsFixes = true
-
-; When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty,
-; making it seem almost impossible to survive the minecart and the statue bridge QTEs.
-; This fix makes QTEs that involve rapid button presses much more forgiving.
-FixQTE = true
-
 ; Unlocks the JP-only classic camera angles during Ashley's segment.
 AshleyJPCameraAngles = false
 
@@ -122,6 +114,15 @@ flip_item_right = PAGEUP
 QTE_key_1 = D
 QTE_key_2 = A
 
+[FRAME RATE]
+; Fixes the speed of falling items in 60 FPS, making them not fall at double speed.
+FixFallingItemsSpeed = true
+
+; When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty,
+; making it seem almost impossible to survive the minecart and the statue bridge QTEs.
+; This fix makes QTEs that involve rapid button presses much more forgiving.
+FixQTE = true
+
 [MOVIE]
 ; Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.
 ; Not tested beyond 1920x1080.
@@ -135,7 +136,7 @@ RaiseVertexAlloc = true
 ; Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.
 RaiseInventoryAlloc = true
 
-[FRAME RATE]
+[WARNING]
 ; This version of RE4 only works properly if played at 30 or 60 FPS. Anything else can and will cause numerous amounts of
 ; different bugs, most of which aren't even documented. By default, re4_tweaks will warn you about these issues and change
 ; the FPS to either 30 or 60.
