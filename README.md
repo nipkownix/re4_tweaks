@@ -30,10 +30,8 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
  * **Borderless window** - Whether to use a borderless-window when using windowed-mode.
 
  * **60 FPS fixes** - Tries to fix some issues left by the people who created the 60 FPS mode in this port. Currently, it changes the following:
-    * Makes the aim speed consistent between 30 and 60 FPS.
     * Fixes the speed of falling items, making them not fall at double speed. This issue was one of the first issues people noticed (when this port was still being teased in trailers), but Q-LOC never fixed it, even after releasing 6 patches.
-
- * **Fix QTE** - When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs. This fix makes QTEs that involve rapid button presses much more forgiving.
+	* When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs. This fix makes QTEs that involve rapid button presses much more forgiving.
 
  * **Ashley's fixed camera angles** - Unlocks the JP-only classic camera angles during Ashley's segment.
 
@@ -42,9 +40,13 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
  * **Enable debug menu** - Enables the "tool menu" debug menu, present inside the game but unused, and adds a few custom menu entries ("SAVE GAME", "DOF/BLUR MENU", etc).
 More info in the .ini file.
 
+ * **Change controller sensitivity** - For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.
+
  * **Mouse turning** - Makes the mouse turn the character instead of controlling the camera, similar to Resident Evil 5.
 
  * **Fix sniper zoom** - When playing with keyboard and mouse, this fixes an annoying bug which would cause your camera to be off-center after you zoomed in with a sniper rifle.
+
+ * **Fix sniper focus** - When zooming in and out with the sniper rifle using a mouse, this option makes the "focus" animation look similar to how it looks like with a controller.
 
  * **Fix "Retry/Load" mouse selector** - Prevents the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action. This bug usually causes people to return to the main menu by mistake, when they actually wanted to just restart from the last checkpoint.
 
