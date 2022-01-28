@@ -4,6 +4,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "MouseTurning.h"
+#include "KeyboardMouseTweaks.h"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -14,10 +15,26 @@ static uint32_t* ptrLastUsedController;
 
 int iMinFocusTime;
 
-int intLastUsedController()
+LastDevice GetLastUsedDevice()
 {
-	// 2 = Controller
-	return *(int32_t*)(ptrLastUsedController);
+	// 0 = Keyboard?
+	// 1 = Mouse
+	// 2 = Xinput Controller
+	// 3 = Dinput Controller
+
+	switch (*(int32_t*)(ptrLastUsedController))
+	{
+	case 0:
+		return LastDevice::Keyboard;
+	case 1:
+		return LastDevice::Mouse;
+	case 2:
+		return LastDevice::XinputController;
+	case 3:
+		return LastDevice::DinputController;
+	default:
+		return LastDevice::Keyboard;
+	}
 }
 
 void Init_KeyboardMouseTweaks()
@@ -110,7 +127,7 @@ void Init_KeyboardMouseTweaks()
 				regs.ecx = *(int32_t*)(regs.ebp + 0x8);
 
 				// This makes it so the focus animation has to play for at least X ammount of time
-				if (intLastUsedController() != 2)
+				if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 				{
 					if (regs.ecx == 1)
 					{

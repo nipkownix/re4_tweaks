@@ -18,7 +18,7 @@ void Init_ControllerTweaks()
 		{
 			double aim_spd_val = *(double*)ptrAimSpeedFldAddr;
 
-			if (intLastUsedController() == 2)
+			if ((GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
 				aim_spd_val /= cfg.fControllerSensitivity;
 
 			_asm
@@ -27,4 +27,7 @@ void Init_ControllerTweaks()
 			}
 		}
 	}; injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+	pattern = hook::pattern("DD 05 ? ? ? ? DC F9 DD 05 ? ? ? ? DC FA D9 01");
+	injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 }

@@ -1,4 +1,12 @@
 #pragma once
 
+enum class LastDevice
+{
+	Keyboard,
+	Mouse,
+	XinputController,
+	DinputController
+};
+
 void Init_KeyboardMouseTweaks();
-int intLastUsedController();
+LastDevice GetLastUsedDevice();
