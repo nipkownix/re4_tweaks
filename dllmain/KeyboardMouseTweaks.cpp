@@ -12,6 +12,8 @@ uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t* ptrLastUsedController;
 
+int iMinFocusTime;
+
 int intLastUsedController()
 {
 	// 2 = Controller
@@ -99,25 +101,33 @@ void Init_KeyboardMouseTweaks()
 	// Fix the "focus animation" not looking as strong as when triggered with a controller
 	if (cfg.bFixSniperFocus)
 	{
-		auto pattern = hook::pattern("D9 05 ? ? ? ? 8A 15 ? ? ? ? 56 8B F1");
-		ptrFocusAnimFldAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
+		pattern = hook::pattern("8B F1 8B 4D ? 57 85 C9 74 ? D9 56 ? 88 56");
 		struct FixScopeZoomFocus
 		{
 			void operator()(injector::reg_pack& regs)
 			{
+				regs.esi = regs.ecx;
+				regs.ecx = *(int32_t*)(regs.ebp + 0x8);
+
+				// This makes it so the focus animation has to play for at least X ammount of time
 				if (intLastUsedController() != 2)
-					*(float*)ptrFocusAnimFldAddr = 12.0f; // Makes the focus animation last longer when using the mouse.
-				else
-					*(float*)ptrFocusAnimFldAddr = 5.0f;
-
-				float focus_frame = *(float*)ptrFocusAnimFldAddr;
-
-				_asm
 				{
-					fld focus_frame
+					if (regs.ecx == 1)
+					{
+						iMinFocusTime = 5;
+					}
+					else if (regs.ecx == 0)
+					{
+						iMinFocusTime--;
+					}
+
+					if (iMinFocusTime > 0)
+						regs.ecx = 1;
+					else
+						regs.ecx = 0;
 				}
 			}
-		}; injector::MakeInline<FixScopeZoomFocus>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		}; injector::MakeInline<FixScopeZoomFocus>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	
 		// This jl instruction makes the focus animation stop almost immediately when using the mouse. Noping it doesn't seem to affect the controller at all.
 		pattern = hook::pattern("7C ? C6 06 ? EB ? C7 46 ? ? ? ? ? EB ? DD D8 83 3D");
