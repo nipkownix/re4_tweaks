@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,2,0
- PRODUCTVERSION 1,7,2,0
+ FILEVERSION 1,7,3,0
+ PRODUCTVERSION 1,7,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "nipkow"
             VALUE "FileDescription", "re4_tweaks"
-            VALUE "FileVersion", "1.7.2.0"
+            VALUE "FileVersion", "1.7.3.0"
             VALUE "InternalName", "dinput8.dll"
             VALUE "LegalCopyright", "Copyright (C) 2021-2022 nipkow"
             VALUE "OriginalFilename", "dinput8.dll"
             VALUE "ProductName", "re4_tweaks"
-            VALUE "ProductVersion", "1.7.2.0"
+            VALUE "ProductVersion", "1.7.3.0"
         END
     END
     BLOCK "VarFileInfo"
