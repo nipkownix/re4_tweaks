@@ -96,7 +96,6 @@
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
-    <ClCompile Include="ControllerTweaks.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ExceptionHandler.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
@@ -173,7 +172,6 @@
     <ClInclude Include="..\Wrappers\xinput1_3.h" />
     <ClInclude Include="60fpsFixes.h" />
     <ClInclude Include="ConsoleWnd.h" />
-    <ClInclude Include="ControllerTweaks.h" />
     <ClInclude Include="ExceptionHandler.h" />
     <ClInclude Include="FilterXXFixes.h" />
     <ClInclude Include="GameFlags.h" />

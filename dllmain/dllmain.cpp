@@ -16,7 +16,6 @@
 #include "60fpsFixes.h"
 #include "KeyboardMouseTweaks.h"
 #include "ExceptionHandler.h"
-#include "ControllerTweaks.h"
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -133,8 +132,6 @@ void Init_Main()
 	Init_60fpsFixes();
 
 	Init_KeyboardMouseTweaks();
-
-	Init_ControllerTweaks();
 
 	Init_ExceptionHandler();
 

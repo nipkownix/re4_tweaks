@@ -547,14 +547,6 @@ void MenuRender()
 			// Frame rate tab
 			if (Tab == 6)
 			{
-				// FixFallingItemsSpeed
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &cfg.bFixFallingItemsSpeed);
-				ImGui::TextWrapped("Fixes the speed of falling items in 60 FPS, making them not fall at double speed.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
 				// FixQTE
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
 				ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");
@@ -564,6 +556,22 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// FixFallingItemsSpeed
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &cfg.bFixFallingItemsSpeed);
+				ImGui::TextWrapped("Fixes the speed of falling items in 60 FPS, making them not fall at double speed.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// FixAimingSpeed
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixAimingSpeed", &cfg.bFixAimingSpeed);
+				ImGui::TextWrapped("Fixes the movement speed when aiming weapons being slower on every frame rate above 30 FPS.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+				
 				// AshleyBustPhysicsFix
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixAshleyBustPhysics", &cfg.bFixAshleyBustPhysics);
 				ImGui::TextWrapped("Fixes difference between 30/60FPS on physics applied to Ashley.");

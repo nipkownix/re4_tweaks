@@ -47,8 +47,9 @@ struct Settings
 	std::string sFlipItemRight;
 	std::string sQTE_key_1;
 	std::string sQTE_key_2;
-	bool bFixFallingItemsSpeed;
 	bool bFixQTE;
+	bool bFixFallingItemsSpeed;
+	bool bFixAimingSpeed;
 	bool bFixAshleyBustPhysics;
 	bool bAllowHighResolutionSFD;
 	bool bRaiseVertexAlloc;

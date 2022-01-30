@@ -217,11 +217,21 @@ void __declspec(naked) MotionMoveHook2()
 
 void MouseTurn()
 {
-	float SpeedMulti = 900;
+	float SpeedMulti;
+
+	if (cfg.bFixAimingSpeed)
+		SpeedMulti = 700;
+	else
+		SpeedMulti = 900;
 
 	// "Classic" aiming mode (0x00) needs lower sensitivity here.
 	if (*(int8_t*)(ptrMouseAimMode) == 0x00)
-		SpeedMulti = 1300;
+	{
+		if (cfg.bFixAimingSpeed)
+			SpeedMulti = 1100;
+		else
+			SpeedMulti = 1300;
+	}
 
 	*(float*)(*ptrCharRotationBase + 0xA4) += (-intMouseDeltaX() / SpeedMulti) * cfg.fTurnSensitivity;
 }
