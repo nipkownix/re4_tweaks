@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 #include "MouseTurning.h"
 #include "KeyboardMouseTweaks.h"
+#include "60fpsFixes.h"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -247,7 +248,7 @@ void Init_KeyboardMouseTweaks()
 				{
 					if (regs.ecx == 1)
 					{
-						iMinFocusTime = 5;
+						iMinFocusTime = intCurrentFrameRate() / 12;
 					}
 					else if (regs.ecx == 0)
 					{
