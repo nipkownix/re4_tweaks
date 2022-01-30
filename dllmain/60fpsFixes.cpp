@@ -11,6 +11,31 @@ int intCurrentFrameRate()
 	return *(int32_t*)(ptrGameFrameRate);
 }
 
+double* ptrMaxFrameTime = nullptr;
+
+struct INIConfig
+{
+	int resolutionWidth;
+	int resolutionHeight;
+	int resolutionRefreshRate;
+	int vsync;
+	int fullscreen;
+	int adapter;
+	int shadowQuality;
+	int motionblurEnabled;
+	int ppEnabled;
+	int useHDTexture;
+	int antialiasing;
+	int anisotropy;
+	int variableframerate;
+	int subtitle;
+	int laserR;
+	int laserG;
+	int laserB;
+	int laserA;
+};
+void(_cdecl* ConfigReadINI)(INIConfig* config);
+
 void Init_60fpsFixes()
 {
 	auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -47,6 +72,28 @@ void Init_60fpsFixes()
 				_asm {fmul vanillaMulti}
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+
+	// Fix games framelimiter to improve support for framerates greater than 60
+	pattern = hook::pattern("00 00 00 20 11 11 91 3F"); // default is 0.1666666..., luckily only one instance of it in the game EXE
+	ptrMaxFrameTime = pattern.count(1).get(0).get<double>();
+
+	// Hook call to ConfigReadINI so we can update frametime after INI has been read from
+	pattern = hook::pattern("89 95 ? ? ? ? 89 85 ? ? ? ? E8 ? ? ? ? 83 C4 04 6A 00");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(12)).as_int(), ConfigReadINI);
+	ConfigReadINI = ConfigReadINI;
+	struct MaxFrameTime
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			INIConfig* config = (INIConfig*)regs.ecx;
+			ConfigReadINI(config);
+
+			if (config->variableframerate > 60)
+			{
+				injector::WriteMemory(ptrMaxFrameTime, (double)1 / (double)config->variableframerate, true);
+			}
+		}
+	}; injector::MakeInline<MaxFrameTime>(pattern.count(1).get(0).get<uint32_t>(12));
 
 	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust
 	// Seems to make Ashley bust physics speed match between 30 & 60FPS
