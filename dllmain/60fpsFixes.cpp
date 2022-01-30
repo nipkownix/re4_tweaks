@@ -13,6 +13,9 @@ int intCurrentFrameRate()
 
 double* ptrMaxFrameTime = nullptr;
 
+const int32_t g_supportedFrameRates[] = { 30, 60, 90, 120, 144 };
+const int32_t g_numSupportedFrameRates = sizeof(g_supportedFrameRates) / sizeof(int32_t);
+
 struct INIConfig
 {
 	int resolutionWidth;
@@ -94,6 +97,49 @@ void Init_60fpsFixes()
 			}
 		}
 	}; injector::MakeInline<MaxFrameTime>(pattern.count(1).get(0).get<uint32_t>(12));
+
+	// Patch graphics menu to show our custom framerate list
+	pattern = hook::pattern("33 F6 E8 ? ? ? ? 39 05 ? ? ? ? 74 ? 4E");
+	auto ptrFramerateList1 = pattern.count(1).get(0).get<intptr_t>(9); // 0x0074655e
+	auto ptrAndEsi1 = pattern.count(1).get(0).get<uint8_t>(0xF); // 0x00746565
+	auto ptrAndEsi1_end = pattern.count(1).get(0).get<uint8_t>(0x18); // 0x0074656d
+	auto ptrFramerateList2 = pattern.count(1).get(0).get<intptr_t>(0x1B); // 0x00746570
+
+	pattern = hook::pattern("83 E6 01 8B 04 B5 ? ? ? ? 50 E8 ? ? ? ? 83 C4 04 E9 ? ? ? ?");
+	auto ptrAndEsi2 = pattern.count(1).get(0).get<uint8_t>(0); // 0x007465bb
+	auto ptrAndEsi2_end = pattern.count(1).get(0).get<uint8_t>(0x10); // 0x007465cb
+
+	// Change framerate list pointers to point to our list
+	injector::WriteMemory(ptrFramerateList1, &g_supportedFrameRates, true);
+	injector::WriteMemory(ptrFramerateList2, &g_supportedFrameRates, true);
+
+	// Update "AND ESI, 1" insns to use a modulo of framerate list count instead
+	struct MakeEsiInFramerateListBounds
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.esi = (regs.esi + 1) % g_numSupportedFrameRates;
+			regs.eax = intCurrentFrameRate();
+		}
+	}; injector::MakeInline<MakeEsiInFramerateListBounds>(ptrAndEsi1, ptrAndEsi1_end);
+
+	struct UpdateFramerate
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			if (int32_t(regs.esi) < 0)
+				regs.esi = g_numSupportedFrameRates - 1;
+
+			int newFramerate = g_supportedFrameRates[regs.esi % g_numSupportedFrameRates];
+			*ptrGameFrameRate = newFramerate;
+
+			// Also update frametime here, saves us needing to hook ConfigWriteINI
+			if (newFramerate > 60)
+			{
+				injector::WriteMemory(ptrMaxFrameTime, (double)1 / (double)newFramerate, true);
+			}
+		}
+	}; injector::MakeInline<UpdateFramerate>(ptrAndEsi2, ptrAndEsi2_end);
 
 	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust
 	// Seems to make Ashley bust physics speed match between 30 & 60FPS
