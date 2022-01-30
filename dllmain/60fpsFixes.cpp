@@ -14,7 +14,8 @@ int intCurrentFrameRate()
 double* ptrMaxFrameTime = nullptr;
 
 int32_t g_supportedFrameRates[] = { 30, 60, 90, 120, 144, 0 }; // last item will be filled with users custom refresh rate, if set
-int32_t g_numSupportedFrameRates = (sizeof(g_supportedFrameRates) / sizeof(int32_t)) - 1; // will be increased by 1 if user has custom refresh rate
+uint32_t g_maxSupportedFrameRates = sizeof(g_supportedFrameRates) / sizeof(int32_t);
+uint32_t g_numSupportedFrameRates = g_maxSupportedFrameRates - 1; // will be increased by 1 if user has custom refresh rate
 
 struct INIConfig
 {
@@ -116,9 +117,10 @@ void Init_60fpsFixes()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (regs.esi + 1 >= g_numSupportedFrameRates)
+			if (regs.esi + 1 >= g_numSupportedFrameRates && g_numSupportedFrameRates != g_maxSupportedFrameRates)
 			{
-				// must be a custom refresh rate, set that in our custom list
+				// game searched through the whole refresh rate list
+				// must be a custom refresh rate, update our list with it
 				g_supportedFrameRates[g_numSupportedFrameRates] = intCurrentFrameRate();
 				g_numSupportedFrameRates++;
 			}
