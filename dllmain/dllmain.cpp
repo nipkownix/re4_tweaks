@@ -222,34 +222,12 @@ void Init_Main()
 			}
 		}; injector::MakeInline<DisplayModeFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-		pattern = hook::pattern("8B 45 ? 83 F8 ? 7C ? 7E ? EB ? 8B 3B");
-		struct DisplayModeResListFix
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				regs.eax = *(int32_t*)(regs.ebp - 0x0C);
-
-				// Mimic what CMP does, since we're overwriting it.
-				if (regs.eax > g_UserRefreshRate)
-				{
-					// Clear both flags
-					regs.ef &= ~(1 << regs.zero_flag);
-					regs.ef &= ~(1 << regs.carry_flag);
-				}
-				else if (regs.eax < g_UserRefreshRate)
-				{
-					// ZF = 0, CF = 1
-					regs.ef &= ~(1 << regs.zero_flag);
-					regs.ef |= (1 << regs.carry_flag);
-				}
-				else if (regs.eax == g_UserRefreshRate)
-				{
-					// ZF = 1, CF = 0
-					regs.ef |= (1 << regs.zero_flag);
-					regs.ef &= ~(1 << regs.carry_flag);
-				}
-			}
-		}; injector::MakeInline<DisplayModeResListFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		// Patch function that fills resolution list, normally it filters resolutions to only 60Hz modes, which is bad for non-60Hz players...
+		// Changing it to check for desktop refresh-rate helped, but unfortunately D3D doesn't always match desktop refresh rate
+		// Luckily it turns out this function has an unused code-path which filters by checking for duplicate width/height combos instead, so any refresh rate can be allowed
+		// who knows why they chose not to use it...
+		pattern = hook::pattern("81 FA 98 26 00 00 77 ? 38 45 ? 75 ?");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(11), uint8_t(0xEB), true);
 	}
 
 	// Apply window changes
