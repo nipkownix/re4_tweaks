@@ -13,8 +13,8 @@ int intCurrentFrameRate()
 
 double* ptrMaxFrameTime = nullptr;
 
-const int32_t g_supportedFrameRates[] = { 30, 60, 90, 120, 144 };
-const int32_t g_numSupportedFrameRates = sizeof(g_supportedFrameRates) / sizeof(int32_t);
+int32_t g_supportedFrameRates[] = { 30, 60, 90, 120, 144, 0 }; // last item will be filled with users custom refresh rate, if set
+int32_t g_numSupportedFrameRates = (sizeof(g_supportedFrameRates) / sizeof(int32_t)) - 1; // will be increased by 1 if user has custom refresh rate
 
 struct INIConfig
 {
@@ -92,9 +92,7 @@ void Init_60fpsFixes()
 			ConfigReadINI(config);
 
 			if (config->variableframerate > 60)
-			{
 				injector::WriteMemory(ptrMaxFrameTime, (double)1 / (double)config->variableframerate, true);
-			}
 		}
 	}; injector::MakeInline<MaxFrameTime>(pattern.count(1).get(0).get<uint32_t>(12));
 
@@ -118,6 +116,13 @@ void Init_60fpsFixes()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
+			if (regs.esi + 1 >= g_numSupportedFrameRates)
+			{
+				// must be a custom refresh rate, set that in our custom list
+				g_supportedFrameRates[g_numSupportedFrameRates] = intCurrentFrameRate();
+				g_numSupportedFrameRates++;
+			}
+
 			regs.esi = (regs.esi + 1) % g_numSupportedFrameRates;
 			regs.eax = intCurrentFrameRate();
 		}
@@ -135,9 +140,7 @@ void Init_60fpsFixes()
 
 			// Also update frametime here, saves us needing to hook ConfigWriteINI
 			if (newFramerate > 60)
-			{
 				injector::WriteMemory(ptrMaxFrameTime, (double)1 / (double)newFramerate, true);
-			}
 		}
 	}; injector::MakeInline<UpdateFramerate>(ptrAndEsi2, ptrAndEsi2_end);
 
