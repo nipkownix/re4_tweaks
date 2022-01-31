@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 #include "KeyboardMouseTweaks.h"
 #include "WndProcHook.h"
+#include "60fpsFixes.h"
 
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -23,6 +24,8 @@ uint32_t* ptrCharRotationBase;
 uint32_t* ptrCamXPosAddr;
 
 bool isTurn;
+
+float SpeedMulti;
 
 DWORD _EAX;
 DWORD _ECX;
@@ -217,10 +220,8 @@ void __declspec(naked) MotionMoveHook2()
 
 void MouseTurn()
 {
-	float SpeedMulti;
-
 	if (cfg.bFixAimingSpeed)
-		SpeedMulti = 700;
+		SpeedMulti = 700 * (intCurrentFrameRate() / 30.0f);
 	else
 		SpeedMulti = 900;
 
@@ -228,7 +229,7 @@ void MouseTurn()
 	if (*(int8_t*)(ptrMouseAimMode) == 0x00)
 	{
 		if (cfg.bFixAimingSpeed)
-			SpeedMulti = 1100;
+			SpeedMulti = 1100 * (intCurrentFrameRate() / 30.0f);
 		else
 			SpeedMulti = 1300;
 	}
@@ -334,7 +335,9 @@ void Init_MouseTurning()
 		{
 			regs.eax = intMovInputState();
 
-			if (isMouseTurnEnabled() && (intMouseDeltaX() < -8))
+			int trigger_zone = 7000 * (intCurrentFrameRate() / 30);
+
+			if (isMouseTurnEnabled() && ((intMouseDeltaX() * SpeedMulti) < -trigger_zone))
 				regs.eax = 0x8;
 
 			isTurn = true;
@@ -348,7 +351,9 @@ void Init_MouseTurning()
 		{
 			regs.eax = intMovInputState();
 
-			if (isMouseTurnEnabled() && (intMouseDeltaX() > 8))
+			int trigger_zone = 7000 * (intCurrentFrameRate() / 30);
+
+			if (isMouseTurnEnabled() && ((intMouseDeltaX() * SpeedMulti) > trigger_zone))
 				regs.eax = 0x4;
 
 			isTurn = true;
