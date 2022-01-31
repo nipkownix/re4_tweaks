@@ -6,8 +6,8 @@
 #include "KeyboardMouseTweaks.h"
 
 static uint32_t* ptrGameFrameRate;
-
-uintptr_t* ptrAimSpeedFldAddr;
+static uint32_t* ptrMouseDeltaX;
+static uint32_t* ptrMouseDeltaY;
 
 int intCurrentFrameRate()
 {
@@ -80,31 +80,39 @@ void Init_60fpsFixes()
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
 
-	// Aiming speed
-	pattern = hook::pattern("DD 05 ? ? ? ? DC F9 DD 05 ? ? ? ? DC FA D9 01 DE CB D9 45");
-	ptrAimSpeedFldAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
-	struct AimSpeed
+	// Try to make mouse delta values consistent
+	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
+	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct MouseDeltaX
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			double aim_spd_val = *(double*)ptrAimSpeedFldAddr;
+			int delta_factor = (intCurrentFrameRate() / 30);
+			int cur_delta = regs.eax;
 
 			if (cfg.bFixAimingSpeed)
-				aim_spd_val = static_cast<double>(6000) / intCurrentFrameRate();
-
-			// Apply custom controller sensitivity
-			if ((GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-				aim_spd_val /= cfg.fControllerSensitivity;
-
-			_asm
-			{
-				fld aim_spd_val
-			}
+				*(int32_t*)(ptrMouseDeltaX) = cur_delta * delta_factor;
+			else
+				*(int32_t*)(ptrMouseDeltaX) = cur_delta;
 		}
-	}; injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-	pattern = hook::pattern("DD 05 ? ? ? ? DC F9 DD 05 ? ? ? ? DC FA D9 01");
-	injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	// Same as above, but for the Y delta
+	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85");
+	ptrMouseDeltaY = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct MouseDeltaY
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			int delta_factor = (intCurrentFrameRate() / 30);
+			int cur_delta = regs.eax;
+
+			if (cfg.bFixAimingSpeed)
+				*(int32_t*)(ptrMouseDeltaY) = cur_delta * delta_factor;
+			else
+				*(int32_t*)(ptrMouseDeltaY) = cur_delta;
+		}
+	}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Fix games framelimiter to improve support for framerates greater than 60
 	pattern = hook::pattern("00 00 00 20 11 11 91 3F"); // default is 0.1666666..., luckily only one instance of it in the game EXE
