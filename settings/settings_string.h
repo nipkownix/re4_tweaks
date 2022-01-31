@@ -136,7 +136,7 @@ FixQTE = true
 ; Fixes the speed of falling items in 60 FPS, making them not fall at double speed.
 FixFallingItemsSpeed = true
 
-; Fixes the movement speed when aiming weapons being slower on every frame rate above 30 FPS.
+; Fixes the movement speed when aiming weapons with the mouse being slower on every frame rate above 30 FPS.
 FixAimingSpeed = true
 
 ; Fixes difference between 30/60FPS on physics applied to Ashley.

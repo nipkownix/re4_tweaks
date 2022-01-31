@@ -566,7 +566,7 @@ void MenuRender()
 
 				// FixAimingSpeed
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixAimingSpeed", &cfg.bFixAimingSpeed);
-				ImGui::TextWrapped("Fixes the movement speed when aiming weapons being slower on every frame rate above 30 FPS.");
+				ImGui::TextWrapped("Fixes the movement speed when aiming weapons with the mouse being slower on every frame rate above 30 FPS.");
 
 				ImGui::Spacing();
 				ImGui::Separator();
