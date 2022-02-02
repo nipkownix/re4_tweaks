@@ -1,6 +1,7 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
 #include <d3d9.h>
+#include <shellapi.h>
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
@@ -146,7 +147,7 @@ void LAApatch::LAARender()
 		if (LAA_ErrorNum == 0)
 		{
 			ImGui::Begin("Game 4GB patched successfully!");
-			ImGui::TextWrapped("re4_tweaks has successfully patched your game EXE (a backup has also been made)\n\nPlease relaunch the game for the patch to take effect!");
+			ImGui::TextWrapped("re4_tweaks has successfully patched your game EXE (a backup has also been made)\n\nPress OK to relaunch the game for the patch to take effect!");
 		}
 		else
 		{
@@ -161,6 +162,14 @@ void LAApatch::LAARender()
 		if (ImGui::Button("OK", ImVec2(104, 35)))
 		{
 			LAA_State = LAADialogState::NotShowing;
+
+			// Relaunch the game
+			std::string bio4path = rootPath + "bio4.exe";
+			if ((int)ShellExecuteA(nullptr, "open", bio4path.c_str(), nullptr, nullptr, SW_SHOWDEFAULT) > 32)
+			{
+				exit(0);
+				return;
+			}
 		}
 
 		ImGui::End();
