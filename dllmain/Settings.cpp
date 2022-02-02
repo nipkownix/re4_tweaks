@@ -282,6 +282,21 @@ void Settings::WriteSettings()
 		iniFile.close();
 	}
 
+	// Try to remove read-only flag is it is set, for some reason.
+	DWORD iniFile = GetFileAttributesA(iniPath.c_str());
+	if (iniFile != INVALID_FILE_ATTRIBUTES) {
+		bool isReadOnly = iniFile & FILE_ATTRIBUTE_READONLY;
+
+		if (isReadOnly)
+		{
+			#ifdef VERBOSE
+			con.AddLogChar("Read-only ini file detected. Attempting to remove flag.");
+			#endif
+
+			SetFileAttributesA(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
+		}
+	}
+
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
 	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
 	iniReader.WriteBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
