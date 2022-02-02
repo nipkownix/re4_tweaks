@@ -157,7 +157,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 
-	if (bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing)) {
+	if (bCfgMenuOpen) {
 		// Use raw mouse input because this game is weird and won't let me use window messages properly.
 		RAWINPUTDEVICE rid[1];
 

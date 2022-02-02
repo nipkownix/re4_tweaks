@@ -8,6 +8,7 @@
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
 #include "..\external\imgui\imgui_impl_dx9.h"
+#include "WndProcHook.h"
 
 LAApatch laa;
 
@@ -25,14 +26,24 @@ LAADialogState LAA_State = LAADialogState::NotShowing;
 int LAA_ErrorNum = 0;
 void LAApatch::LAARender()
 {
+	// Use simple input watcher instead of raw input.
+	// Looks like it was causing problems with GeForce Experience Overlay (but not in the cfgMenu for some reason?)
+	ImGuiIO& io = ImGui::GetIO();
+	POINT mPos;
+	GetCursorPos(&mPos);
+	ScreenToClient(hWindow, &mPos);
+	io.MousePos.x = mPos.x;
+	io.MousePos.y = mPos.y;
+	io.MouseDown[0] = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+	io.MouseDown[1] = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+	io.MouseDown[2] = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+
 	if (GameIsLargeAddressAware())
 	{
 		// Exit out in case we needlessly ended up here somehow
 		LAA_State = LAADialogState::NotShowing;
 		return;
 	}
-
-	ImGuiIO& io = ImGui::GetIO();
 
 	if (LAA_State == LAADialogState::Showing)
 	{
