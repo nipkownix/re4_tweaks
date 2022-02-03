@@ -138,6 +138,11 @@ void Init_Main()
 
 	Init_ExceptionHandler();
 
+	// Remove savegame SteamID checks, allows easier save transfers
+	pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
+	Nop(pattern.count(1).get(0).get<uint8_t>(0x9), 6);
+	Nop(pattern.count(1).get(0).get<uint8_t>(0x18), 6);
+
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
 	if (cfg.bFixUltraWideAspectRatio)
 		Init_UltraWideFix();
