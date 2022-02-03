@@ -192,23 +192,28 @@ void Init_Main()
 	// Hook func that runs EnumAdapterModes & checks for 60Hz modes, make it use the refresh rate from Windows instead
 	if (cfg.bFixDisplayMode)
 	{
-
 		if (cfg.iCustomRefreshRate > -1)
 		{
 			g_UserRefreshRate = cfg.iCustomRefreshRate;
 		}
 		else
 		{
-			DEVMODE lpDevMode;
-			if (EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lpDevMode) == 0)
+			DISPLAY_DEVICE device{ 0 };
+			device.cb = sizeof(DISPLAY_DEVICE);
+			DEVMODE lpDevMode{ 0 };
+			if (EnumDisplayDevices(NULL, 0, &device, 0) == false || 
+				EnumDisplaySettings(device.DeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode) == false)
 			{
-				#ifdef VERBOSE
+#ifdef VERBOSE
 				con.AddLogChar("Couldn't read the display refresh rate. Using fallback value.");
-				#endif
+#endif
 				g_UserRefreshRate = 60; // Fallback value.
 			}
 			else
 			{
+#ifdef VERBOSE
+				con.AddLogChar("Device 0 name: %s", device.DeviceName);
+#endif
 				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
 			}
 		}
