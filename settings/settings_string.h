@@ -100,6 +100,10 @@ FixSniperFocus = true
 FixRetryLoadMouseSelector = true
 
 [KEYBOARD]
+; Forces English key icons to appear for action buttons displayed on screen
+; (game seems to only support certain keyboard languages, if the game fails to show keys for you, try enabling this)
+ForceEnglishKeyIcons = false
+
 ; Key bindings for flipping items in the inventory screen when using keyboard and mouse.
 ; Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is
 ; possible using a controller.

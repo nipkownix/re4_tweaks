@@ -37,6 +37,11 @@ LastDevice GetLastUsedDevice()
 	}
 }
 
+HKL __stdcall GetKeyboardLayout_Hook(DWORD idThread)
+{
+	return (HKL)MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+}
+
 void Init_KeyboardMouseTweaks()
 {
 	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
@@ -149,5 +154,12 @@ void Init_KeyboardMouseTweaks()
 		// This jl instruction makes the focus animation stop almost immediately when using the mouse. Noping it doesn't seem to affect the controller at all.
 		pattern = hook::pattern("7C ? C6 06 ? EB ? C7 46 ? ? ? ? ? EB ? DD D8 83 3D");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
+	}
+
+	if (cfg.bForceEnglishKeyIcons)
+	{
+		// Replace GetKeyboardLayout IAT to point to our GetKeyboardLayout_Hook
+		pattern = hook::pattern("68 FF 00 00 00 8D 85 ? ? ? ? 6A 00 50 C6 85 ? ? ? ? 00 E8 ? ? ? ? 8B 3D ? ? ? ?");
+		injector::WriteMemory(*pattern.count(1).get(0).get<uintptr_t>(0x1C), GetKeyboardLayout_Hook, true);
 	}
 }
