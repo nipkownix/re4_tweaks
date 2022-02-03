@@ -481,6 +481,14 @@ void MenuRender()
 				ImGui::InputText("QTE key 2", cfg.QTE_key_2.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// English key icons
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("ForceEnglishKeyIcons", &cfg.bForceEnglishKeyIcons);
+				ImGui::TextWrapped("Game seems to only support certain keyboard layouts/languages, if the game fails to show keys for you, try enabling this (requires game restart)");
 			}
 
 			// Frame rate tab
