@@ -1,7 +1,7 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "tool_menu.h"
-#include "game_flags.h"
+#include "ToolMenu.h"
+#include "GameFlags.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
 #include "Settings.h"

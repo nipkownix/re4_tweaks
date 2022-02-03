@@ -4,7 +4,7 @@
 #include "ConsoleWnd.h"
 #include "Settings.h"
 #include "settings_string.h"
-#include "tool_menu.h"
+#include "ToolMenu.h"
 
 Settings cfg;
 
