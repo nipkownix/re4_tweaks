@@ -236,7 +236,7 @@ void Settings::ReadSettings()
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
 	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", true);
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
-	cfg.bForceEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "ForceEnglishKeyIcons", false);
+	cfg.bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", true);
 	cfg.flip_item_up = iniReader.ReadString("KEYBOARD", "flip_item_up", "HOME");
 	cfg.flip_item_down = iniReader.ReadString("KEYBOARD", "flip_item_down", "END");
 	cfg.flip_item_left = iniReader.ReadString("KEYBOARD", "flip_item_left", "INSERT");
@@ -323,7 +323,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
 	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", cfg.bFixSniperFocus);
 	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
-	iniReader.WriteBoolean("KEYBOARD", "ForceEnglishKeyIcons", cfg.bForceEnglishKeyIcons);
+	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
 	iniReader.WriteString("KEYBOARD", "flip_item_up", " " + cfg.flip_item_up);
 	iniReader.WriteString("KEYBOARD", "flip_item_down", " " + cfg.flip_item_down);
 	iniReader.WriteString("KEYBOARD", "flip_item_left", " " + cfg.flip_item_left);

@@ -487,8 +487,8 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// English key icons
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("ForceEnglishKeyIcons", &cfg.bForceEnglishKeyIcons);
-				ImGui::TextWrapped("Game seems to only support certain keyboard layouts/languages, if the game fails to show keys for you, try enabling this (requires game restart)");
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FallbackToEnglishKeyIcons", &cfg.bFallbackToEnglishKeyIcons);
+				ImGui::TextWrapped("Game will turn keys invisible for certain unsupported keyboard languages, enabling this should make game use English keys for unsupported ones instead (requires game restart)");
 			}
 
 			// Frame rate tab

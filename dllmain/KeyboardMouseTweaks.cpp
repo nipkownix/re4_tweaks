@@ -39,6 +39,21 @@ LastDevice GetLastUsedDevice()
 
 HKL __stdcall GetKeyboardLayout_Hook(DWORD idThread)
 {
+	auto userLanguage = GetKeyboardLayout(idThread);
+
+	// Return user language if it's one that the game should have support for
+	switch (PRIMARYLANGID(userLanguage))
+	{
+	case LANG_CHINESE:
+	case LANG_ENGLISH:
+	case LANG_FRENCH:
+	case LANG_GERMAN:
+	case LANG_ITALIAN:
+	case LANG_JAPANESE:
+	case LANG_SPANISH:
+		return userLanguage;
+	}
+
 	return (HKL)MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
 }
 
@@ -156,7 +171,7 @@ void Init_KeyboardMouseTweaks()
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
 	}
 
-	if (cfg.bForceEnglishKeyIcons)
+	if (cfg.bFallbackToEnglishKeyIcons)
 	{
 		// Replace GetKeyboardLayout IAT to point to our GetKeyboardLayout_Hook
 		pattern = hook::pattern("68 FF 00 00 00 8D 85 ? ? ? ? 6A 00 50 C6 85 ? ? ? ? 00 E8 ? ? ? ? 8B 3D ? ? ? ?");
