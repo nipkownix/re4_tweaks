@@ -72,4 +72,8 @@ Options can be configured either by manually editing dinput8.ini, or by pressing
 
 **If you use Raz0r's "Ultimate Trainer Companion"**, you will notice both mods use the same "dinput8" name. In this case, for them to work together, rename re4_tweaks's files to either "winmm" or "xinput1_3".
 
+### Contributions
+
+Any contributions are welcomed! For those with reverse-engineering experience, we have [an IDA database](https://github.com/emoose/re4-research/issues/1) for the latest version of the game with a huge amount of the games code labelled (based on debug symbols from GC version), has come in very useful for some of the fixes here.
+
 Massive thanks to [emoose](https://github.com/emoose) for his incredible help with many of these features.
