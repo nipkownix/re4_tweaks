@@ -13,16 +13,16 @@
     <ClCompile Include="..\external\ModUtils\Patterns.cpp">
       <Filter>includes\external\ModUtils</Filter>
     </ClCompile>
-    <ClCompile Include="tool_menu.cpp">
+    <ClCompile Include="ToolMenu.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="roomInfo.cpp">
+    <ClCompile Include="RoomInfo.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="tool_menu_debug.cpp">
+    <ClCompile Include="ToolMenuDebug.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="tool_menu_lights.cpp">
+    <ClCompile Include="ToolMenuLights.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="WndProcHook.cpp">
@@ -70,7 +70,7 @@
     <ClCompile Include="ConsoleWnd.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="qtefixes.cpp">
+    <ClCompile Include="QTEFixes.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="60fpsFixes.cpp">
@@ -213,7 +213,7 @@
     <ClInclude Include="..\external\ModUtils\Trampoline.h">
       <Filter>includes\external\ModUtils</Filter>
     </ClInclude>
-    <ClInclude Include="game_flags.h">
+    <ClInclude Include="GameFlags.h">
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="dllmain.h">
@@ -237,7 +237,7 @@
     <ClInclude Include="UltrawideFix.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="tool_menu.h">
+    <ClInclude Include="ToolMenu.h">
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="Settings.h">
@@ -273,7 +273,7 @@
     <ClInclude Include="ConsoleWnd.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="qtefixes.h">
+    <ClInclude Include="QTEFixes.h">
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="60fpsFixes.h">

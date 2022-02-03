@@ -3,7 +3,7 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
-#include "qtefixes.h"
+#include "QTEFixes.h"
 
 uint32_t* ptrKEY_1_icon1;
 uint32_t* ptrKEY_1_icon2;

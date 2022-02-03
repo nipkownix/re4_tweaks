@@ -100,8 +100,8 @@
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
-    <ClCompile Include="qtefixes.cpp" />
-    <ClCompile Include="roomInfo.cpp" />
+    <ClCompile Include="QTEFixes.cpp" />
+    <ClCompile Include="RoomInfo.cpp" />
     <ClCompile Include="cfgMenu.cpp" />
     <ClCompile Include="HandleLimits.cpp" />
     <ClCompile Include="Settings.cpp" />
@@ -109,9 +109,9 @@
     <ClCompile Include="FilterXXFixes.cpp" />
     <ClCompile Include="UltrawideFix.cpp" />
     <ClCompile Include="WndProcHook.cpp" />
-    <ClCompile Include="tool_menu.cpp" />
-    <ClCompile Include="tool_menu_debug.cpp" />
-    <ClCompile Include="tool_menu_lights.cpp" />
+    <ClCompile Include="ToolMenu.cpp" />
+    <ClCompile Include="ToolMenuDebug.cpp" />
+    <ClCompile Include="ToolMenuLights.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\imgui\imconfig.h" />
@@ -173,17 +173,17 @@
     <ClInclude Include="ControllerTweaks.h" />
     <ClInclude Include="ExceptionHandler.h" />
     <ClInclude Include="FilterXXFixes.h" />
-    <ClInclude Include="game_flags.h" />
+    <ClInclude Include="GameFlags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="HandleLimits.h" />
     <ClInclude Include="KeyboardMouseTweaks.h" />
     <ClInclude Include="LAApatch.h" />
     <ClInclude Include="MouseTurning.h" />
-    <ClInclude Include="qtefixes.h" />
+    <ClInclude Include="QTEFixes.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Sofdec.h" />
-    <ClInclude Include="tool_menu.h" />
+    <ClInclude Include="ToolMenu.h" />
     <ClInclude Include="UltrawideFix.h" />
     <ClInclude Include="WndProcHook.h" />
     <ClInclude Include="resource.h" />

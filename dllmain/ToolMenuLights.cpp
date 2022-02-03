@@ -1,6 +1,6 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "game_flags.h"
+#include "GameFlags.h"
 
 // dllmain.cpp externs
 extern uint32_t* ptrpG;

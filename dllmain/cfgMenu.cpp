@@ -6,7 +6,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "LAApatch.h"
-#include "tool_menu.h"
+#include "ToolMenu.h"
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
 #include "..\external\imgui\imgui_impl_dx9.h"
