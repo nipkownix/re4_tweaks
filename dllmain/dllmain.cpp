@@ -228,6 +228,31 @@ void Init_Main()
 		// who knows why they chose not to use it...
 		pattern = hook::pattern("81 FA 98 26 00 00 77 ? 38 45 ? 75 ?");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(11), uint8_t(0xEB), true);
+
+		// Patch above function to only allow 59Hz+ modes
+		// (workaround for game potentially displaying invalid modes that some displays expose)
+		struct DisplayModeFilter
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				const int GameMaxHeight = 10480 - 600; // game does strange optimized check involving 600 taken away from edx...
+
+				// Game does JA after the CMP we patched, so we set ZF and CF both to 1 here
+				// then if we want game to take the JA, we clear them both
+				regs.ef |= (1 << regs.zero_flag);
+				regs.ef |= (1 << regs.carry_flag);
+
+				// Make game skip any mode under 59, since they're likely invalid
+				// (old game code would only accept 60Hz modes, so I think this is fine for us to do)
+				int refreshRate = *(int*)(regs.ebp - 0xC);
+				if (regs.edx > GameMaxHeight || refreshRate < 59)
+				{
+					// Clear both flags to make game take JA and skip this mode
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+			}
+		}; injector::MakeInline<DisplayModeFilter>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// Apply window changes
