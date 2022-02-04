@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 
+// Parses an key combination string into a vector of VKs
+std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);
 
 // Globals
 struct Settings
@@ -32,6 +34,7 @@ struct Settings
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
 	std::string sDebugMenuKeyCombo;
+	std::string sMouseTurnModifierKeyCombo;
 	float fControllerSensitivity;
 	bool bEnableControllerSens;
 	bool bUseMouseTurning;

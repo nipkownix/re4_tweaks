@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include "settings_string.h"
 #include "ToolMenu.h"
+#include "MouseTurning.h"
 
 Settings cfg;
 
@@ -176,7 +177,76 @@ std::unordered_map<std::string, key_type> key_map
 	{ "#", { VK_OEM_7, 0 } },  // UK keyboard
 	{ "\"", { VK_OEM_7, 0 } }, // UK keyboard
 	{ "`", { VK_OEM_8, 0 } },  // UK keyboard
+
+	// Mouse
+	{ "LMOUSE", { VK_LBUTTON, 0 } },
+	{ "RMOUSE", { VK_RBUTTON, 0 } },
+	{ "MMOUSE", { VK_MBUTTON, 0 } },
+	{ "LCLICK", { VK_LBUTTON, 0 } },
+	{ "RCLICK", { VK_RBUTTON, 0 } },
+	{ "MCLICK", { VK_MBUTTON, 0 } },
+	{ "MOUSE1", { VK_LBUTTON, 0 } },
+	{ "MOUSE2", { VK_RBUTTON, 0 } },
+	{ "MOUSE3", { VK_MBUTTON, 0 } },
+	{ "MOUSE4", { VK_XBUTTON1, 0 } },
+	{ "MOUSE5", { VK_XBUTTON2, 0 } }
 };
+
+std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
+{
+	// Convert combo to uppercase to match Settings::key_map
+	std::string combo(in_combo);
+	std::transform(combo.begin(), combo.end(), combo.begin(),
+		[](unsigned char c) { return std::toupper(c); });
+
+	std::vector<uint32_t> new_combo;
+	std::string cur_token;
+
+	// Parse combo tokens into buttons bitfield (tokens seperated by any
+	// non-alphabetical char, eg. +)
+	for (size_t i = 0; i < combo.length(); i++)
+	{
+		char c = combo[i];
+
+		if (!isalpha(c) && (c < 0x30 || c > 0x39) && c != '-')
+		{
+			// seperator, try parsing previous token
+
+			if (cur_token.length())
+			{
+				uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
+				if (!token_num)
+				{
+					// parse failed...
+					new_combo.clear();
+					return new_combo;
+				}
+				new_combo.push_back(token_num);
+			}
+
+			cur_token.clear();
+		}
+		else
+		{
+			// Must be a character key, convert to upper and add to our cur_token
+			cur_token += ::toupper(c);
+		}
+	}
+
+	if (cur_token.length())
+	{
+		uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
+		if (!token_num)
+		{
+			// parse failed...
+			new_combo.clear();
+			return new_combo;
+		}
+		new_combo.push_back(token_num);
+	}
+
+	return new_combo;
+}
 
 int Settings::KeyMap(const char* key, bool get_vk)
 {
@@ -224,7 +294,8 @@ void Settings::ReadSettings()
 	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
 	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
 	cfg.sDebugMenuKeyCombo = iniReader.ReadString("MISC", "DebugMenuKeyCombination", "CTRL+F3"); // if default changed, make sure to edit tool_menu.cpp!toolMenuKeyCombo vector!
-	
+	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurnModifier", "ALT");
+
 	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", 1.0f);
 	if (cfg.fControllerSensitivity != 1.0f)
 		cfg.bEnableControllerSens = true;
@@ -258,8 +329,8 @@ void Settings::ReadSettings()
 	if (cfg.fFontSize > 1.3f)
 		cfg.fFontSize = 1.3f;
 
-	if (cfg.sDebugMenuKeyCombo.length())
-		ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
+	ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
+	ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 }
 
 void Settings::WriteSettings()
@@ -317,6 +388,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
 	iniReader.WriteString("MISC", "DebugMenuKeyCombination", " " + cfg.sDebugMenuKeyCombo);
+	iniReader.WriteString("HOTKEYS", "MouseTurnModifier", " " + cfg.sMouseTurnModifierKeyCombo);
 	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
 	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);

@@ -41,57 +41,10 @@ void* DbgFont = nullptr;
 // Default tool-menu keyboard combo is currently LCONTROL + F3
 std::vector<uint32_t> toolMenuKeyCombo = { VK_LCONTROL, VK_F3 };
 
-// Parses an key combination string into the toolMenuKeyCombo vector, to be checked by tool-menu opening code
 bool ParseToolMenuKeyCombo(std::string_view in_combo)
 {
-	// Convert combo to uppercase to match Settings::key_map
-	std::string combo(in_combo);
-	std::transform(combo.begin(), combo.end(), combo.begin(),
-		[](unsigned char c) { return std::toupper(c); });
-
-	std::vector<uint32_t> new_combo;
-	std::string cur_token;
-
-	// Parse combo tokens into buttons bitfield (tokens seperated by any
-	// non-alphabetical char, eg. +)
-	for (size_t i = 0; i < combo.length(); i++)
-	{
-		char c = combo[i];
-
-		if (!isalpha(c) && (c < 0x30 || c > 0x39) && c != '-')
-		{
-			// seperator, try parsing previous token
-
-			if (cur_token.length())
-			{
-				uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
-				if (!token_num)
-					return false; // parse failed...
-				new_combo.push_back(token_num);
-			}
-
-			cur_token.clear();
-		}
-		else
-		{
-			// Must be a character key, convert to upper and add to our cur_token
-			cur_token += ::toupper(c);
-		}
-	}
-
-	if (cur_token.length())
-	{
-		uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
-		if (!token_num)
-			return false; // parse failed...
-		new_combo.push_back(token_num);
-	}
-
-	if (new_combo.size() <= 0)
-		return false; // failed to parse/update combo, return so we'll keep previous one
-
-	toolMenuKeyCombo = new_combo;
-	return true;
+	toolMenuKeyCombo = ParseKeyCombo(in_combo);
+	return toolMenuKeyCombo.size() > 0;
 }
 
 struct ToolMenuEntry
