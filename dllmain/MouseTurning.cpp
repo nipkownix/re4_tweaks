@@ -45,6 +45,9 @@ bool ParseMouseTurnModifierCombo(std::string_view in_combo)
 	return mouseTurnModifierCombo.size() > 0;
 }
 
+bool bPrevMouseTurnState = false;
+bool bMouseTurnStateChanged = false;
+
 bool MouseTurnEnabled()
 {
 	bool modifierPressed = mouseTurnModifierCombo.size() > 0;
@@ -57,7 +60,11 @@ bool MouseTurnEnabled()
 		}
 	}
 
-	return cfg.bUseMouseTurning && !modifierPressed;
+	bool state = cfg.bUseMouseTurning && !modifierPressed;
+	bMouseTurnStateChanged = bPrevMouseTurnState != state;
+	bPrevMouseTurnState = state;
+
+	return state;
 }
 
 // Enable the turning animation if the mouse is moving and we're not
@@ -237,6 +244,8 @@ void Init_MouseTurning()
 		{
 			if (!MouseTurnEnabled() || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
 				*(int8_t*)(ptrCamXmovAddr) = (int8_t)regs.eax;
+			if (bMouseTurnStateChanged)
+				*(int8_t*)(ptrCamXmovAddr) = 0;
 		}
 	}; injector::MakeInline<CameraControl1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
@@ -247,6 +256,8 @@ void Init_MouseTurning()
 		{
 			if (!MouseTurnEnabled() || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
 				*(int8_t*)(ptrCamXmovAddr) = 0x7F;
+			if (bMouseTurnStateChanged)
+				*(int8_t*)(ptrCamXmovAddr) = 0;
 		}
 	}; injector::MakeInline<CameraControl2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
@@ -257,6 +268,8 @@ void Init_MouseTurning()
 		{
 			if (!MouseTurnEnabled() || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
 				*(int8_t*)(ptrCamXmovAddr) = -0x7F;
+			if (bMouseTurnStateChanged)
+				*(int8_t*)(ptrCamXmovAddr) = 0;
 		}
 	}; injector::MakeInline<CameraControl3>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
@@ -269,7 +282,7 @@ void Init_MouseTurning()
 			regs.edx = *(int32_t*)(regs.esi);
 			regs.eax = *(int32_t*)(regs.edx + 0x54);
 
-			if (MouseTurnEnabled() && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			if ((MouseTurnEnabled() || bMouseTurnStateChanged) && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 				regs.edi = 1;
 		}
 	}; injector::MakeInline<CameraAutoCenter>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
