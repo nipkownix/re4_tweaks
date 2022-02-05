@@ -57,26 +57,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// Key bindings for flipping inventory items on keyboard
 	InventoryFlipBindings(uMsg, wParam);
 
-	switch (uMsg) {
-		case WM_KEYDOWN:
-			if (wParam == VK_F1)
-			{
-				bCfgMenuOpen ^= 1;
-				// Send WM_ACTIVATE to make the game immediately respond to mouse messages
-				SendMessage(hWnd, WM_ACTIVATE, (WPARAM)lParam, 0);
-			}
-			#ifdef VERBOSE
-			if (wParam == VK_F2)
-			{
-				bConsoleOpen ^= 1;
-			}
-			else if (wParam == VK_NUMPAD3)
-			{
-				con.AddLogChar("Sono me... dare no me?");
-			}
-			#endif
-			break;
+	// Key binding for brining up the config menu
+	cfgMenuBinding(hWnd, uMsg, wParam);
 
+	#ifdef VERBOSE
+	// Key binding for showing/hiding the console window
+	ConsoleBinding(uMsg, wParam);
+	#endif
+
+	switch (uMsg) {
 		case WM_MOVE:
 			// Get current window position
 			curPosX = (int)(short)LOWORD(lParam);   // horizontal position 

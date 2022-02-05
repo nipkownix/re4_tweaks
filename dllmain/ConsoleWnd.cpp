@@ -14,6 +14,22 @@ ImGuiTextBuffer     Buf;
 ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
 bool                AutoScroll = true;  // Keep scrolling if already at the bottom.
 
+void ConsoleBinding(UINT uMsg, WPARAM wParam)
+{
+    switch (uMsg) {
+    case WM_KEYDOWN:
+        if (wParam == VK_F2)
+        {
+            bConsoleOpen ^= 1;
+        }
+        else if (wParam == VK_NUMPAD3)
+        {
+            con.AddLogChar("Sono me... dare no me?");
+        }
+        break;
+    }
+}
+
 void ConsoleOutput::Clear()
 {
     Buf.clear();

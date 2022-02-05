@@ -12,4 +12,6 @@ struct ConsoleOutput
 	void Clear();
 };
 
+void ConsoleBinding(UINT uMsg, WPARAM wParam);
+
 extern ConsoleOutput con;

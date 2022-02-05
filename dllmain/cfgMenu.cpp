@@ -22,6 +22,22 @@ bool NeedsToRestart;
 int F1timer = 500; // F1 tooltip timer
 
 int Tab = 1;
+
+void cfgMenuBinding(HWND hWnd, UINT uMsg, WPARAM wParam)
+{
+	switch (uMsg) {
+	case WM_KEYDOWN:
+		if (wParam == VK_F1)
+		{
+			bCfgMenuOpen ^= 1;
+
+			// Send WM_ACTIVATE to make the game immediately respond to mouse messages
+			SendMessage(hWnd, WM_ACTIVATE, WA_CLICKACTIVE, 0);
+		}
+		break;
+	}
+}
+
 void MenuRender()
 {
 	ImGui::SetNextWindowSize(ImVec2(910, 570), ImGuiCond_FirstUseEver);
