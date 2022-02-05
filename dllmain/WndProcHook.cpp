@@ -7,6 +7,7 @@
 #include "ConsoleWnd.h"
 #include "../external/imgui/imgui.h"
 #include "LAApatch.h"
+#include "MouseTurning.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -53,6 +54,9 @@ int curPosX;
 int curPosY;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	// Evaluate mouse turning state
+	isMouseTurnEnabled(uMsg, wParam);
+
 	switch (uMsg) {
 		case WM_KEYUP:
 			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
