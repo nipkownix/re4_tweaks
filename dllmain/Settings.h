@@ -40,12 +40,12 @@ struct Settings
 	bool bFixSniperZoom;
 	bool bFixSniperFocus;
 	bool bFixRetryLoadMouseSelector;
-	std::string flip_item_up;
-	std::string flip_item_down;
-	std::string flip_item_left;
-	std::string flip_item_right;
-	std::string QTE_key_1;
-	std::string QTE_key_2;
+	std::string sFlipItemUp;
+	std::string sFlipItemDown;
+	std::string sFlipItemLeft;
+	std::string sFlipItemRight;
+	std::string sQTE_key_1;
+	std::string sQTE_key_2;
 	bool bFixFallingItemsSpeed;
 	bool bFixQTE;
 	bool bAllowHighResolutionSFD;

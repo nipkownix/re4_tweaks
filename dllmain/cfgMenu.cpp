@@ -457,13 +457,13 @@ void MenuRender()
 				ImGui::TextWrapped("Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is possible using a controller.");
 
 				ImGui::PushItemWidth(100);
-				ImGui::InputText("Flip UP", cfg.flip_item_up.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip UP", cfg.sFlipItemUp.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip DOWN", cfg.flip_item_down.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip DOWN", cfg.sFlipItemDown.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip LEFT", cfg.flip_item_left.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip LEFT", cfg.sFlipItemLeft.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip RIGHT", cfg.flip_item_right.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip RIGHT", cfg.sFlipItemRight.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
 
@@ -476,9 +476,9 @@ void MenuRender()
 				ImGui::TextWrapped("Unlike the \"official\" way of rebinding keys through usr_input.ini, this option also changes the on-screen prompt to properly match the selected key.");
 
 				ImGui::PushItemWidth(100);
-				ImGui::InputText("QTE key 1", cfg.QTE_key_1.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("QTE key 1", cfg.sQTE_key_1.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("QTE key 2", cfg.QTE_key_2.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("QTE key 2", cfg.sQTE_key_2.data(), 64, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
 

@@ -7,6 +7,7 @@
 #include "ConsoleWnd.h"
 #include "../external/imgui/imgui.h"
 #include "LAApatch.h"
+#include "KeyboardMouseTweaks.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -53,29 +54,11 @@ int curPosX;
 int curPosY;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch (uMsg) {
-		case WM_KEYUP:
-			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
-			{
-				bShouldFlipX = false;
-			}
-			else if (wParam == cfg.KeyMap(cfg.flip_item_up.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_down.data(), true))
-			{
-				bShouldFlipY = false;
-			}
-			break;
+	// Key bindings for flipping inventory items on keyboard
+	InventoryFlipBindings(uMsg, wParam);
 
+	switch (uMsg) {
 		case WM_KEYDOWN:
-			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
-			{
-				bShouldFlipX = true;
-				Sleep(1);
-			}
-			else if (wParam == cfg.KeyMap(cfg.flip_item_up.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_down.data(), true))
-			{
-				bShouldFlipY = true;
-				Sleep(1);
-			}
 			if (wParam == VK_F1)
 			{
 				bCfgMenuOpen ^= 1;
