@@ -83,3 +83,9 @@ Options can be configured either by manually editing dinput8.ini, or by pressing
 Any contributions are welcomed! For those with reverse-engineering experience, we have [an IDA database](https://github.com/emoose/re4-research/issues/1) for the latest version of the game with a huge amount of the games code labelled (based on debug symbols from GC version), has come in very useful for some of the fixes here.
 
 Massive thanks to [emoose](https://github.com/emoose) for his incredible help with many of these features.
+
+### Support/Problems
+
+In case your game is crashing/failing to load, please try checking the [RE4HD known issues page](https://www.re4hd.com/?p=9454), and follow the file verification guide there - many crashes have been caused by incomplete/corrupt files being used.
+
+If your issue still persists feel free to make a report about it on the [GitHub issues page](https://github.com/nipkownix/re4_tweaks/issues) - if the problem is crashing/loading related you can try creating a `CrashDumps` folder inside the `Bin32` directory (next to `bio4.exe`/`steam_api.dll`/etc), then the next time game crashes hopefully some info about it will be written in there, please include that with any reports you make!
