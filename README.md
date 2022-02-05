@@ -29,6 +29,12 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **Borderless window** - Whether to use a borderless-window when using windowed-mode.
 
+ * **4GB Patch** - Can automatically 4GB patch the game executable for you, rather than needing to use tools from other places.
+
+ * **Savegame Transfers** - Removes SteamID check from savegames, allowing saves to be easily transferred between accounts.
+
+ * **Key Icon Fallback** - Game is missing icons for certain keyboard languages, normally they would be made invisible, but can now have English equivalents shown instead.
+
  * **60 FPS fixes** - Tries to fix some issues left by the people who created the 60 FPS mode in this port. Currently, it changes the following:
     * Fixes the speed of falling items, making them not fall at double speed. This issue was one of the first issues people noticed (when this port was still being teased in trailers), but Q-LOC never fixed it, even after releasing 6 patches.
 	* When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs. This fix makes QTEs that involve rapid button presses much more forgiving.
@@ -77,3 +83,9 @@ Options can be configured either by manually editing dinput8.ini, or by pressing
 Any contributions are welcomed! For those with reverse-engineering experience, we have [an IDA database](https://github.com/emoose/re4-research/issues/1) for the latest version of the game with a huge amount of the games code labelled (based on debug symbols from GC version), has come in very useful for some of the fixes here.
 
 Massive thanks to [emoose](https://github.com/emoose) for his incredible help with many of these features.
+
+### Support/Problems
+
+In case your game is crashing/failing to load, please try checking the [RE4HD known issues page](https://www.re4hd.com/?p=9454), and follow the file verification guide there - many crashes have been caused by incomplete/corrupt files being used.
+
+If your issue still persists feel free to make a report about it on the [GitHub issues page](https://github.com/nipkownix/re4_tweaks/issues) - if the problem is crashing/loading related you can try creating a `CrashDumps` folder inside the `Bin32` directory (next to `bio4.exe`/`steam_api.dll`/etc), then the next time game crashes hopefully some info about it will be written in there, please include that with any reports you make!
