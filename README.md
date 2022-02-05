@@ -29,6 +29,12 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **Borderless window** - Whether to use a borderless-window when using windowed-mode.
 
+ * **4GB Patch** - Can automatically 4GB patch the game executable for you, rather than needing to use tools from other places.
+
+ * **Savegame Transfers** - Removes SteamID check from savegames, allowing saves to be easily transferred between accounts.
+
+ * **Key Icon Fallback** - Game is missing icons for certain keyboard languages, normally they would be made invisible, but can now have English equivalents shown instead.
+
  * **60 FPS fixes** - Tries to fix some issues left by the people who created the 60 FPS mode in this port. Currently, it changes the following:
     * Fixes the speed of falling items, making them not fall at double speed. This issue was one of the first issues people noticed (when this port was still being teased in trailers), but Q-LOC never fixed it, even after releasing 6 patches.
 	* When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs. This fix makes QTEs that involve rapid button presses much more forgiving.
