@@ -108,10 +108,10 @@ FallbackToEnglishKeyIcons = true
 ; Key bindings for flipping items in the inventory screen when using keyboard and mouse.
 ; Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is
 ; possible using a controller.
-flip_item_up    = HOME
-flip_item_down  = END
-flip_item_left  = INSERT
-flip_item_right = PAGEUP
+FlipItemUp    = HOME
+FlipItemDown  = END
+FlipItemLeft  = INSERT
+FlipItemRight = PAGEUP
 
 ; Key bindings for QTE keys when playing with keyboard and mouse.
 ; Unlike the "official" way of rebinding keys through usr_input.ini, this
