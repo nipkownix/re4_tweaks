@@ -60,7 +60,15 @@ bool MouseTurnEnabled()
 		}
 	}
 
-	bool state = cfg.bUseMouseTurning && !modifierPressed;
+	bool state = cfg.bUseMouseTurning;
+
+	// Invert mouse turning setting if modifier pressed
+	// If mouse turning enabled: modifier disables turning, allows camera movement
+	// If mouse turning disabled: modifier enables mouse turning temporarily
+	// (if user wants to completely disable mouse turning, they can clear the combination)
+	if (modifierPressed)
+		state = !state;
+
 	bMouseTurnStateChanged = bPrevMouseTurnState != state;
 	bPrevMouseTurnState = state;
 
