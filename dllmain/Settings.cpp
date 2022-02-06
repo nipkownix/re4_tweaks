@@ -191,9 +191,6 @@ std::unordered_map<std::string, key_type> key_map
 
 bool IsComboKeyPressed(std::vector<KeyBindingInfo> *KeyInfo, UINT uMsg, WPARAM wParam)
 {
-	if ((uMsg != WM_KEYDOWN) && (uMsg != WM_SYSKEYDOWN) && (uMsg != WM_KEYUP) && (uMsg != WM_SYSKEYUP))
-		return false;
-
 	for (auto& key : *KeyInfo)
 	{
 		// Left Alt (VK_LMENU) seems to actually be VK_MENU when sent via WM_SYSKEYDOWN

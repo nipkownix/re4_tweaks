@@ -56,22 +56,26 @@ int curPosX;
 int curPosY;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	// Evaluate mouse turning state
-	isMouseTurnEnabled(uMsg, wParam);
-	
-	// Key bindings for flipping inventory items on keyboard
-	InventoryFlipBindings(uMsg, wParam);
+	// Send key events where necessary
+	if ((uMsg == WM_KEYDOWN) || (uMsg == WM_SYSKEYDOWN) || (uMsg == WM_KEYUP) || (uMsg == WM_SYSKEYUP))
+	{
+		// Evaluate mouse turning state
+		isMouseTurnEnabled(uMsg, wParam);
 
-	// Key binding for brining up the config menu
-	cfgMenuBinding(hWindow, uMsg, wParam, lParam);
+		// Key bindings for flipping inventory items on keyboard
+		InventoryFlipBindings(uMsg, wParam);
 
-	// Key binding for brining up the config menu
-	ToolMenuBinding(uMsg, wParam);
+		// Key binding for brining up the config menu
+		cfgMenuBinding(hWindow, uMsg, wParam, lParam);
 
-	#ifdef VERBOSE
-	// Key binding for showing/hiding the console window
-	ConsoleBinding(uMsg, wParam);
-	#endif
+		// Key binding for brining up the config menu
+		ToolMenuBinding(uMsg, wParam);
+
+		#ifdef VERBOSE
+		// Key binding for showing/hiding the console window
+		ConsoleBinding(uMsg, wParam);
+		#endif
+	}
 
 	switch (uMsg) {
 		case WM_MOVE:
