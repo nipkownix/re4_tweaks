@@ -390,7 +390,7 @@ void Settings::ReadSettings()
 	if (cfg.sDebugMenuKeyCombo.length())
 		ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
 
-	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurnModifier", "ALT");
+	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurningModifier", "ALT");
 	if (cfg.sMouseTurnModifierKeyCombo.length())
 		ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 
@@ -496,7 +496,7 @@ void Settings::WriteSettings()
 	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + cfg.sConfigMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "Console", " " + cfg.sConsoleKeyCombo);
 	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + cfg.sDebugMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "MouseTurnModifier", " " + cfg.sMouseTurnModifierKeyCombo);
+	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + cfg.sMouseTurnModifierKeyCombo);
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);
