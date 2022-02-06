@@ -384,7 +384,12 @@ void Settings::ReadSettings()
 
 	cfg.sConsoleKeyCombo = iniReader.ReadString("HOTKEYS", "Console", "F2");
 	if (cfg.sConsoleKeyCombo.length())
+	{
 		ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
+
+		// Update console title
+		con.TitleKeyCombo = cfg.sConsoleKeyCombo;
+	}
 
 	cfg.sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", "CTRL+F3");
 	if (cfg.sDebugMenuKeyCombo.length())

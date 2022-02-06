@@ -146,6 +146,9 @@ void MenuRender()
 				ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
 				ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 
+				// Update console title
+				con.TitleKeyCombo = cfg.sConsoleKeyCombo;
+
 				cfg.fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
 				cfg.WriteSettings();
 			}

@@ -16,6 +16,8 @@ bool                AutoScroll = true;  // Keep scrolling if already at the bott
 
 std::vector<KeyBindingInfo> ConsoleKeyInfoVector;
 
+std::string TitleCombo;
+
 // Reads the key combo into an array containing the key id and isPressed state
 bool ParseConsoleKeyCombo(std::string_view in_combo)
 {
@@ -203,7 +205,7 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
-    std::string name = std::string("Console Output - ") + cfg.sConsoleKeyCombo + std::string(" to Show/Hide");
+    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide");
     ImGui::Begin(name.data());
     ImGui::End();
     Draw(name.data());

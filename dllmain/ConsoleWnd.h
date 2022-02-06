@@ -2,6 +2,7 @@
 
 struct ConsoleOutput
 {
+	std::string TitleKeyCombo;
 	void ShowConsoleOutput();
 	void AddLogChar(const char* fmt, ...);
 	void AddLogHex(int fmt, ...);
