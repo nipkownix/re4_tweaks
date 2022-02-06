@@ -214,7 +214,7 @@ bool IsComboKeyPressed(std::vector<KeyBindingInfo> *KeyInfo, UINT uMsg, WPARAM w
 	if (uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
 		return false;
 
-	bool isComboPressed = true;
+	bool isComboPressed = KeyInfo->size() > 0;
 	for (auto& key : *KeyInfo)
 	{
 		if (!key.isPressed)
@@ -378,6 +378,8 @@ void Settings::ReadSettings()
 		ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
 
 	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurnModifier", "ALT");
+	if (cfg.sMouseTurnModifierKeyCombo.length())
+		ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 
 	// FPS WARNING
 	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", false);
@@ -481,7 +483,7 @@ void Settings::WriteSettings()
 	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + cfg.sConfigMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "Console", " " + cfg.sConsoleKeyCombo);
 	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + cfg.sDebugMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "MouseTurnModifier", " " + cfg.sDebugMenuKeyCombo);
+	iniReader.WriteString("HOTKEYS", "MouseTurnModifier", " " + cfg.sMouseTurnModifierKeyCombo);
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);

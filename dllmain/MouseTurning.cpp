@@ -21,6 +21,7 @@ static uint32_t* ptrMouseAimMode;
 uint32_t* ptrCharRotationBase;
 
 bool shouldMouseTurn;
+bool modifierPressed;
 bool isTurn;
 
 DWORD _EAX;
@@ -38,24 +39,21 @@ int intMovInputState()
     return *(int8_t*)(ptrMovInputState);
 }
 
-struct mouseTurnKeyInfo {
-	uint32_t id;
-	bool isPressed;
-};
-
-std::vector<mouseTurnKeyInfo> mouseTurnModifierKeyInfo;
+std::vector<KeyBindingInfo> TurnModifierKeyInfoVector;
 
 bool ParseMouseTurnModifierCombo(std::string_view in_combo)
 {
+	TurnModifierKeyInfoVector.clear();
+
 	std::vector<uint32_t> mouseTurnModifierCombo = ParseKeyCombo(in_combo);
 
 	for (auto& key : mouseTurnModifierCombo)
 	{
-		mouseTurnKeyInfo curkey = { key, false };
-		mouseTurnModifierKeyInfo.push_back(curkey);
+		KeyBindingInfo curkey = { key, false };
+		TurnModifierKeyInfoVector.push_back(curkey);
 	}
 
-	return mouseTurnModifierKeyInfo.size() > 0;
+	return TurnModifierKeyInfoVector.size() > 0;
 }
 
 bool bPrevMouseTurnState = false;
@@ -63,35 +61,7 @@ bool bMouseTurnStateChanged = false;
 
 void isMouseTurnEnabled(UINT uMsg, WPARAM wParam)
 {
-	for (auto& key : mouseTurnModifierKeyInfo)
-	{
-		// Left Alt (VK_LMENU) seems to actually be VK_MENU when sent via WM_SYSKEYDOWN
-		if ((uMsg == WM_SYSKEYDOWN) && (key.id == VK_LMENU))
-			key.id = VK_MENU;
-
-		switch (uMsg) {
-		case WM_KEYDOWN:
-		case WM_SYSKEYDOWN: // Also handle WM_SYSKEYxx since Alt sends that for some reason
-			if (wParam == key.id)
-				key.isPressed = true;
-			break;
-		case WM_KEYUP:
-		case WM_SYSKEYUP:
-			if (wParam == key.id)
-				key.isPressed = false;
-			break;
-		}
-	}
-
-	bool modifierPressed = mouseTurnModifierKeyInfo.size() > 0;
-	for (auto& key : mouseTurnModifierKeyInfo)
-	{
-		if (!key.isPressed)
-		{
-			modifierPressed = false;
-			break;
-		}
-	}
+	modifierPressed = IsComboKeyPressed(&TurnModifierKeyInfoVector, uMsg, wParam);
 
 	bool state = cfg.bUseMouseTurning;
 
@@ -283,10 +253,11 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (!shouldMouseTurn || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-				*(int8_t*)(ptrCamXmovAddr) = (int8_t)regs.eax;
 			if (bMouseTurnStateChanged)
 				*(int8_t*)(ptrCamXmovAddr) = 0;
+
+			if (!shouldMouseTurn || modifierPressed || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
+				*(int8_t*)(ptrCamXmovAddr) = (int8_t)regs.eax;
 		}
 	}; injector::MakeInline<CameraControl1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
@@ -295,10 +266,11 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (!shouldMouseTurn || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-				*(int8_t*)(ptrCamXmovAddr) = 0x7F;
 			if (bMouseTurnStateChanged)
 				*(int8_t*)(ptrCamXmovAddr) = 0;
+
+			if (!shouldMouseTurn || modifierPressed || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
+				*(int8_t*)(ptrCamXmovAddr) = 0x7F;
 		}
 	}; injector::MakeInline<CameraControl2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
@@ -307,10 +279,11 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (!shouldMouseTurn || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-				*(int8_t*)(ptrCamXmovAddr) = -0x7F;
 			if (bMouseTurnStateChanged)
 				*(int8_t*)(ptrCamXmovAddr) = 0;
+
+			if (!shouldMouseTurn || modifierPressed || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
+				*(int8_t*)(ptrCamXmovAddr) = -0x7F;
 		}
 	}; injector::MakeInline<CameraControl3>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 

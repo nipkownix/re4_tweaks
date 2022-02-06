@@ -14,6 +14,7 @@
 #include <hashes.h>
 #include <sffont.hpp>
 #include <faprolight.hpp>
+#include "MouseTurning.h"
 
 uintptr_t ptrInputProcess;
 uintptr_t* ptrD3D9Device;
@@ -143,6 +144,7 @@ void MenuRender()
 				ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
 				ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
 				ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
+				ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 
 				cfg.fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
 				cfg.WriteSettings();
@@ -615,6 +617,21 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("Open debug menu", &cfg.sDebugMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth;
+
+				if (ImGui::IsItemEdited())
+					cfg.HasUnsavedChanges = true;
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// MouseTurningModifier bindings
+				ImGui::TextWrapped("MouseTurning camera modifier. When holding this key combination, MouseTurning is temporarily activated/deactivated.");
+				ImGui::TextWrapped("Requires MouseTurning to be enabled.");
+
+				ImGui::PushItemWidth(100);
+				ImGui::InputText("MouseTurning modifier", &cfg.sMouseTurnModifierKeyCombo, ImGuiInputTextFlags_CharsUppercase);
 				ImGui::PopItemWidth;
 
 				if (ImGui::IsItemEdited())
