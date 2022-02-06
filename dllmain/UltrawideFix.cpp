@@ -37,10 +37,10 @@ void Init_UltraWideFix()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			#ifdef VERBOSE
+#ifdef VERBOSE
 			con.AddConcatLog("ResX = ", regs.eax);
 			con.AddConcatLog("ResY = ", regs.ecx);
-			#endif
+#endif
 
 			double fGameWidth = regs.eax;
 			double fGameHeight = regs.ecx;
@@ -51,13 +51,34 @@ void Init_UltraWideFix()
 			double fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
 			double fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
 
-			// if ultrawide
-			if (fGameDisplayAspectRatio > 2.2)
+			// if super ultrawise
+			if (fGameDisplayAspectRatio > 3.4)
 			{
-				#ifdef VERBOSE
+#ifdef VERBOSE
 				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
 				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
-				#endif
+#endif
+
+				fNewInvItemNamePos = 450;
+				fNewFilesTitlePos = 410;
+				fNewFilesItemsPos = 423;
+				fNewMapIconsPos = 353;
+				fNewMerchItemListPos = 345;
+				fNewMerchItemDescPos = 465;
+				fNewMerchGreetingPos = 430;
+				fNewTItemNamesPos = 450;
+				fNewRadioNamesPos = 410;
+				
+				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
+				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
+			}
+			// if ultrawide
+			else if (fGameDisplayAspectRatio > 2.2)
+			{
+#ifdef VERBOSE
+				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
+				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
+#endif
 
 				fNewInvItemNamePos = 385;
 				fNewFilesTitlePos = 370;
@@ -73,9 +94,9 @@ void Init_UltraWideFix()
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
 			}
 			else {
-				#ifdef VERBOSE
+#ifdef VERBOSE
 				con.AddLogChar("Wrote default aspect ratio values");
-				#endif
+#endif
 				fNewInvItemNamePos = 320;
 				fNewFilesTitlePos = 320;
 				fNewFilesItemsPos = 320;
