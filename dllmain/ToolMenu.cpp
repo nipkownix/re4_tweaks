@@ -6,8 +6,6 @@
 #include "ConsoleWnd.h"
 #include "Settings.h"
 
-extern Settings cfg;
-
 // Light tool externs
 void LightTool_GetPointers();
 void ToolMenu_LightToolMenu();
@@ -38,13 +36,29 @@ uint32_t* roomInfoAddr = nullptr;
 void* cDvd = nullptr;
 void* DbgFont = nullptr;
 
-// Default tool-menu keyboard combo is currently LCONTROL + F3
-std::vector<uint32_t> toolMenuKeyCombo = { VK_LCONTROL, VK_F3 };
+bool DebugComboPressed;
 
+std::vector<KeyBindingInfo> toolMenuKeyInfoVector;
+
+// Reads the key combo into an array containing the key id and isPressed state
 bool ParseToolMenuKeyCombo(std::string_view in_combo)
 {
-	toolMenuKeyCombo = ParseKeyCombo(in_combo);
-	return toolMenuKeyCombo.size() > 0;
+	toolMenuKeyInfoVector.clear();
+
+	std::vector<uint32_t> DebugMenuCombo = ParseKeyCombo(in_combo);
+
+	for (auto& key : DebugMenuCombo)
+	{
+		KeyBindingInfo curkey = { key, false };
+		toolMenuKeyInfoVector.push_back(curkey);
+	}
+
+	return toolMenuKeyInfoVector.size() > 0;
+}
+
+void ToolMenuBinding(UINT uMsg, WPARAM wParam)
+{
+	DebugComboPressed = IsComboKeyPressed(&toolMenuKeyInfoVector, uMsg, wParam);
 }
 
 struct ToolMenuEntry
@@ -177,20 +191,8 @@ void __cdecl gameDebug_recreation(void* a1)
 		{
 			// check for toolMenuKeyCombo
 
-			if (toolMenuKeyCombo.size() > 0)
-			{
-				bool openToolMenu = true;
-				for (auto& key : toolMenuKeyCombo)
-				{
-					if (!GetAsyncKeyState(key))
-					{
-						openToolMenu = false;
-						break;
-					}
-				}
-
-				isOnlyDebugComboPressed = openToolMenu; // seperate bools to be safe...
-			}
+			if (toolMenuKeyInfoVector.size() > 0)
+				isOnlyDebugComboPressed = DebugComboPressed; // seperate bools to be safe...
 		}
 
 		if (isOnlyDebugComboPressed)

@@ -64,15 +64,10 @@ AshleyJPCameraAngles = false
 SkipIntroLogos = false
 
 ; Enables the "tool menu" debug menu, present inside the game but unused, and adds a few custom menu entries ("SAVE GAME", "DOF/BLUR MENU", etc).
-; Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard).
+; Can be opened with the LT+LS button combination (or CTRL+F3 by default on keyboard).
 ; If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.
 ; (may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)
 EnableDebugMenu = false
-
-; Keyboard key-combination to make the "tool menu" debug menu appear
-; All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names
-; (see top of Settings.cpp file for possible key names to use)
-DebugMenuKeyCombination = CTRL+F3
 
 [CONTROLLER]
 ; Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.
@@ -100,24 +95,24 @@ FixSniperFocus = true
 FixRetryLoadMouseSelector = true
 
 [KEYBOARD]
-; Game will turn keys invisible for certain unsupported keyboard languages
-; Enabling this should make game use English keys for unsupported ones instead
-; (if game supports your current language it should still use it however)
-FallbackToEnglishKeyIcons = true
-
 ; Key bindings for flipping items in the inventory screen when using keyboard and mouse.
 ; Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is
 ; possible using a controller.
-flip_item_up    = HOME
-flip_item_down  = END
-flip_item_left  = INSERT
-flip_item_right = PAGEUP
+FlipItemUp    = HOME
+FlipItemDown  = END
+FlipItemLeft  = INSERT
+FlipItemRight = PAGEUP
 
 ; Key bindings for QTE keys when playing with keyboard and mouse.
 ; Unlike the "official" way of rebinding keys through usr_input.ini, this
 ; option also changes the on-screen prompt to properly match the selected key.
 QTE_key_1 = D
 QTE_key_2 = A
+
+; Game will turn keys invisible for certain unsupported keyboard languages
+; Enabling this should make game use English keys for unsupported ones instead
+; (if game supports your current language it should still use it however)
+FallbackToEnglishKeyIcons = true
 
 [FRAME RATE]
 ; Fixes the speed of falling items in 60 FPS, making them not fall at double speed.
@@ -128,18 +123,32 @@ FixFallingItemsSpeed = true
 ; This fix makes QTEs that involve rapid button presses much more forgiving.
 FixQTE = true
 
-[MOVIE]
+[MEMORY]
 ; Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.
 ; Not tested beyond 1920x1080.
 AllowHighResolutionSFD = true
 
-[MEMORY]
 ; Allocate more memory for some vertex buffers.
 ; This prevents a crash that can happen when playing with a high FOV.
 RaiseVertexAlloc = true
 
 ; Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.
 RaiseInventoryAlloc = true
+
+[HOTKEYS]
+; Key combinations for various re4_tweaks features
+; All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names
+; (see top of Settings.cpp file for possible key names to use)
+
+; Key combination to open the re4_tweaks config menu
+ConfigMenu = F1
+
+; Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)
+Console = F2
+
+; Key combination to make the "tool menu" debug menu appear
+; Requires EnableDebugMenu to be enabled.
+DebugMenu = CTRL+F3
 
 [WARNING]
 ; This version of RE4 only works properly if played at 30 or 60 FPS. Anything else can and will cause numerous amounts of

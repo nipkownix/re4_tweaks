@@ -9,4 +9,6 @@ enum class LastDevice
 };
 
 void Init_KeyboardMouseTweaks();
+void InventoryFlipBindings(UINT uMsg, WPARAM wParam);
+
 LastDevice GetLastUsedDevice();

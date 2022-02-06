@@ -2,8 +2,10 @@
 #include <iostream>
 #include <vector>
 
-// Parses an key combination string into a vector of VKs
-std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);
+struct KeyBindingInfo {
+	uint32_t id;
+	bool isPressed;
+};
 
 // Globals
 struct Settings
@@ -33,8 +35,6 @@ struct Settings
 	std::string sWrappedDllPath;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
-	std::string sDebugMenuKeyCombo;
-	std::string sMouseTurnModifierKeyCombo;
 	float fControllerSensitivity;
 	bool bEnableControllerSens;
 	bool bUseMouseTurning;
@@ -43,18 +43,21 @@ struct Settings
 	bool bFixSniperZoom;
 	bool bFixSniperFocus;
 	bool bFixRetryLoadMouseSelector;
-	std::string flip_item_up;
-	std::string flip_item_down;
-	std::string flip_item_left;
-	std::string flip_item_right;
-	std::string QTE_key_1;
-	std::string QTE_key_2;
+	std::string sFlipItemUp;
+	std::string sFlipItemDown;
+	std::string sFlipItemLeft;
+	std::string sFlipItemRight;
+	std::string sQTE_key_1;
+	std::string sQTE_key_2;
 	bool bFixFallingItemsSpeed;
 	bool bFixQTE;
 	bool bAllowHighResolutionSFD;
 	bool bRaiseVertexAlloc;
 	bool bRaiseInventoryAlloc;
-	//bool bUseMemcpy;
+	std::string sConfigMenuKeyCombo;
+	std::string sConsoleKeyCombo;
+	std::string sDebugMenuKeyCombo;
+	std::string sMouseTurnModifierKeyCombo;
 	bool bIgnoreFPSWarning;
 	float fFontSize;
 
@@ -63,5 +66,11 @@ struct Settings
 	void ReadSettings();
 	void WriteSettings();
 };
+
+// Parses an key combination string into a vector of VKs
+std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);
+
+// Checks if a key combo is being pressed
+bool IsComboKeyPressed(std::vector<KeyBindingInfo>* KeyInfo, UINT uMsg, WPARAM wParam);
 
 extern Settings cfg;

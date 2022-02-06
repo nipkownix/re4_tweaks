@@ -8,6 +8,8 @@
 #include "../external/imgui/imgui.h"
 #include "LAApatch.h"
 #include "MouseTurning.h"
+#include "KeyboardMouseTweaks.h"
+#include "ToolMenu.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -56,48 +58,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	// Evaluate mouse turning state
 	isMouseTurnEnabled(uMsg, wParam);
+	
+	// Key bindings for flipping inventory items on keyboard
+	InventoryFlipBindings(uMsg, wParam);
+
+	// Key binding for brining up the config menu
+	cfgMenuBinding(hWindow, uMsg, wParam, lParam);
+
+	// Key binding for brining up the config menu
+	ToolMenuBinding(uMsg, wParam);
+
+	#ifdef VERBOSE
+	// Key binding for showing/hiding the console window
+	ConsoleBinding(uMsg, wParam);
+	#endif
 
 	switch (uMsg) {
-		case WM_KEYUP:
-			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
-			{
-				bShouldFlipX = false;
-			}
-			else if (wParam == cfg.KeyMap(cfg.flip_item_up.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_down.data(), true))
-			{
-				bShouldFlipY = false;
-			}
-			break;
-
-		case WM_KEYDOWN:
-			if (wParam == cfg.KeyMap(cfg.flip_item_left.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_right.data(), true))
-			{
-				bShouldFlipX = true;
-				Sleep(1);
-			}
-			else if (wParam == cfg.KeyMap(cfg.flip_item_up.data(), true) || wParam == cfg.KeyMap(cfg.flip_item_down.data(), true))
-			{
-				bShouldFlipY = true;
-				Sleep(1);
-			}
-			if (wParam == VK_F1)
-			{
-				bCfgMenuOpen ^= 1;
-				// Send WM_ACTIVATE to make the game immediately respond to mouse messages
-				SendMessage(hWnd, WM_ACTIVATE, (WPARAM)lParam, 0);
-			}
-			#ifdef VERBOSE
-			if (wParam == VK_F2)
-			{
-				bConsoleOpen ^= 1;
-			}
-			else if (wParam == VK_NUMPAD3)
-			{
-				con.AddLogChar("Sono me... dare no me?");
-			}
-			#endif
-			break;
-
 		case WM_MOVE:
 			// Get current window position
 			curPosX = (int)(short)LOWORD(lParam);   // horizontal position 

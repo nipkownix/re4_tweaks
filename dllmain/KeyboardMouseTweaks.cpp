@@ -57,6 +57,25 @@ HKL __stdcall GetKeyboardLayout_Hook(DWORD idThread)
 	return (HKL)MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
 }
 
+void InventoryFlipBindings(UINT uMsg, WPARAM wParam)
+{
+	switch (uMsg) {
+	case WM_KEYDOWN:
+		if (wParam == cfg.KeyMap(cfg.sFlipItemLeft.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemRight.data(), true))
+			bShouldFlipX = true;
+		else if (wParam == cfg.KeyMap(cfg.sFlipItemUp.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemDown.data(), true))
+			bShouldFlipY = true;
+		break;
+
+	case WM_KEYUP:
+		if (wParam == cfg.KeyMap(cfg.sFlipItemLeft.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemRight.data(), true))
+			bShouldFlipX = false;
+		else if (wParam == cfg.KeyMap(cfg.sFlipItemUp.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemDown.data(), true))
+			bShouldFlipY = false;
+		break;
+	}
+}
+
 void Init_KeyboardMouseTweaks()
 {
 	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
