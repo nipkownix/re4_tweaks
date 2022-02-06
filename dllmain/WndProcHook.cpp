@@ -51,6 +51,26 @@ void processRawMouse(RAWMOUSE rawMouse)
 	}
 }
 
+void EvalKeyBindings(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	// Evaluate mouse turning state
+	isMouseTurnEnabled(uMsg, wParam);
+
+	// Key bindings for flipping inventory items on keyboard
+	InventoryFlipBindings(uMsg, wParam);
+
+	// Key binding for brining up the config menu
+	cfgMenuBinding(hWindow, uMsg, wParam, lParam);
+
+	// Key binding for brining up the config menu
+	ToolMenuBinding(uMsg, wParam);
+
+	#ifdef VERBOSE
+	// Key binding for showing/hiding the console window
+	ConsoleBinding(uMsg, wParam);
+	#endif
+}
+
 // Our new hooked WndProc function
 int curPosX;
 int curPosY;
@@ -59,22 +79,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// Send key events where necessary
 	if ((uMsg == WM_KEYDOWN) || (uMsg == WM_SYSKEYDOWN) || (uMsg == WM_KEYUP) || (uMsg == WM_SYSKEYUP))
 	{
-		// Evaluate mouse turning state
-		isMouseTurnEnabled(uMsg, wParam);
-
-		// Key bindings for flipping inventory items on keyboard
-		InventoryFlipBindings(uMsg, wParam);
-
-		// Key binding for brining up the config menu
-		cfgMenuBinding(hWindow, uMsg, wParam, lParam);
-
-		// Key binding for brining up the config menu
-		ToolMenuBinding(uMsg, wParam);
-
-		#ifdef VERBOSE
-		// Key binding for showing/hiding the console window
-		ConsoleBinding(uMsg, wParam);
-		#endif
+		EvalKeyBindings(hWnd, uMsg, wParam, lParam);
 	}
 
 	switch (uMsg) {
@@ -162,6 +167,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 	}
 }
+std::vector<KeyBindingInfo> MouseVKlist{
+	{VK_LBUTTON, false},
+	{VK_RBUTTON, false},
+	{VK_MBUTTON, false},
+	{VK_XBUTTON1, false},
+	{VK_XBUTTON2, false}
+};
+
+// Sigh
+void VKMouse_Watcher()
+{
+	while (true)
+	{
+		for (auto& key : MouseVKlist)
+		{
+			bool isPressed = GetAsyncKeyState(key.id);
+
+			if (isPressed)
+			{
+				if (key.isPressed)
+					break;
+				WndProc(hWindow, WM_KEYDOWN, (WPARAM)key.id, 0);
+				key.isPressed = true;
+			}
+			else if (!isPressed && key.isPressed)
+			{
+				WndProc(hWindow, WM_KEYUP, (WPARAM)key.id, 0);
+				key.isPressed = false;
+			}
+		}
+		Sleep(100);
+	}
+}
 
 // CreateWindowExA hook to get the hWindow and set up the WndProc hook
 HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
@@ -174,6 +212,9 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);
 
+	// Thread to watch for mouse key presses, since we can't get them from WndProc
+	CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&VKMouse_Watcher, NULL, 0, NULL);
+
 	return result;
 }
 
@@ -182,7 +223,7 @@ void Init_WndProcHook()
 	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
 	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
 
-	//CreateWindowEx hook
+	// CreateWindowEx hook
 	pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
 	injector::MakeNOP(pattern.get_first(0x12), 6);
 	injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
