@@ -8,6 +8,7 @@
 #include "../external/imgui/imgui.h"
 #include "LAApatch.h"
 #include "KeyboardMouseTweaks.h"
+#include "ToolMenu.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -58,7 +59,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	InventoryFlipBindings(uMsg, wParam);
 
 	// Key binding for brining up the config menu
-	cfgMenuBinding(hWnd, uMsg, wParam);
+	cfgMenuBinding(hWindow, uMsg, wParam, lParam);
+
+	// Key binding for brining up the config menu
+	ToolMenuBinding(uMsg, wParam);
 
 	#ifdef VERBOSE
 	// Key binding for showing/hiding the console window

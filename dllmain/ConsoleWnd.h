@@ -13,5 +13,6 @@ struct ConsoleOutput
 };
 
 void ConsoleBinding(UINT uMsg, WPARAM wParam);
+bool ParseConsoleKeyCombo(std::string_view in_combo);
 
 extern ConsoleOutput con;

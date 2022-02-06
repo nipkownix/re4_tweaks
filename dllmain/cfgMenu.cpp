@@ -10,6 +10,7 @@
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
 #include "..\external\imgui\imgui_impl_dx9.h"
+#include "..\external\imgui\imgui_stdlib.h"
 #include <hashes.h>
 #include <sffont.hpp>
 #include <faprolight.hpp>
@@ -19,22 +20,39 @@ uintptr_t* ptrD3D9Device;
 
 bool NeedsToRestart;
 
-int F1timer = 500; // F1 tooltip timer
+int MenuTipTimer = 500; // cfgMenu tooltip timer
 
 int Tab = 1;
 
-void cfgMenuBinding(HWND hWnd, UINT uMsg, WPARAM wParam)
-{
-	switch (uMsg) {
-	case WM_KEYDOWN:
-		if (wParam == VK_F1)
-		{
-			bCfgMenuOpen ^= 1;
+std::vector<KeyBindingInfo> cfgMenuKeyInfoVector;
 
+// Reads the key combo into an array containing the key id and isPressed state
+bool ParseConfigMenuKeyCombo(std::string_view in_combo)
+{
+	cfgMenuKeyInfoVector.clear();
+
+	std::vector<uint32_t> cfgMenuCombo = ParseKeyCombo(in_combo);
+
+	for (auto& key : cfgMenuCombo)
+	{
+		KeyBindingInfo curkey = { key, false };
+		cfgMenuKeyInfoVector.push_back(curkey);
+	}
+
+	return cfgMenuKeyInfoVector.size() > 0;
+}
+
+void cfgMenuBinding(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (IsComboKeyPressed(&cfgMenuKeyInfoVector, uMsg, wParam))
+	{
+		bCfgMenuOpen = !bCfgMenuOpen;
+
+		if (!bCfgMenuOpen)
+		{
 			// Send WM_ACTIVATE to make the game immediately respond to mouse messages
-			SendMessage(hWnd, WM_ACTIVATE, WA_CLICKACTIVE, 0);
+			SendMessage(hWnd, WM_ACTIVATE, (WPARAM)lParam, 0);
 		}
-		break;
 	}
 }
 
@@ -83,12 +101,12 @@ void MenuRender()
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 7 ? active : inactive);
-			if (ImGui::Button(ICON_FA_VIDEO " Movie", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_CALCULATOR " Memory", ImVec2(230 - 15, 41)))
 				Tab = 7;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 8 ? active : inactive);
-			if (ImGui::Button(ICON_FA_CALCULATOR " Memory", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_LAMBDA " Hotkeys", ImVec2(230 - 15, 41)))
 				Tab = 8;
 
 			ImGui::PopStyleColor(8);
@@ -121,6 +139,11 @@ void MenuRender()
 
 			if (ImGui::Button(ICON_FA_CODE" Save", ImVec2(104, 35)))
 			{
+				// Parse key combos on save
+				ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
+				ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
+				ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
+
 				cfg.fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
 				cfg.WriteSettings();
 			}
@@ -355,28 +378,9 @@ void MenuRender()
 					NeedsToRestart = true;
 				}
 				ImGui::TextWrapped("Enables the \"tool menu\" debug menu, present inside the game but unused, and adds a few custom menu entries (\"SAVE GAME\", \"DOF / BLUR MENU\", etc).");
-				ImGui::TextWrapped("Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard).");
+				ImGui::TextWrapped("Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard by default).");
 				ImGui::TextWrapped("If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.");
 				ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
-			
-				ImGui::Spacing();
-				ImGui::Spacing();
-				ImGui::Spacing();
-
-				// Debug menu keyboard bindings
-				ImGui::TextWrapped("Keyboard key-combination to make the \"tool menu\" debug menu appear");
-				ImGui::TextWrapped("All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names");
-				ImGui::TextWrapped("(see top of Settings.cpp file for possible key names to use)");
-
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("Open debug menu", cfg.sDebugMenuKeyCombo.data(), 64, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth;
-
-				if (ImGui::IsItemEdited())
-				{
-					cfg.HasUnsavedChanges = true;
-					ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
-				}
 			}
 
 			// Controller tab
@@ -473,13 +477,13 @@ void MenuRender()
 				ImGui::TextWrapped("Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is possible using a controller.");
 
 				ImGui::PushItemWidth(100);
-				ImGui::InputText("Flip UP", cfg.sFlipItemUp.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip UP", &cfg.sFlipItemUp, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip DOWN", cfg.sFlipItemDown.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip DOWN", &cfg.sFlipItemDown, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip LEFT", cfg.sFlipItemLeft.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip LEFT", &cfg.sFlipItemLeft, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip RIGHT", cfg.sFlipItemRight.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("Flip RIGHT", &cfg.sFlipItemRight, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
 
@@ -492,9 +496,9 @@ void MenuRender()
 				ImGui::TextWrapped("Unlike the \"official\" way of rebinding keys through usr_input.ini, this option also changes the on-screen prompt to properly match the selected key.");
 
 				ImGui::PushItemWidth(100);
-				ImGui::InputText("QTE key 1", cfg.sQTE_key_1.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("QTE key 1", &cfg.sQTE_key_1, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("QTE key 2", cfg.sQTE_key_2.data(), 64, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::InputText("QTE key 2", &cfg.sQTE_key_2, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::PopItemWidth;
 
@@ -524,7 +528,7 @@ void MenuRender()
 				ImGui::TextWrapped("This fix makes QTEs that involve rapid button presses much more forgiving.");
 			}
 
-			// Movie tab
+			// Memory tab
 			if (Tab == 7)
 			{
 				// AllowHighResolutionSFD
@@ -535,11 +539,11 @@ void MenuRender()
 				}
 				ImGui::TextWrapped("Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.");
 				ImGui::TextWrapped("Not tested beyond 1920x1080.");
-			}
 
-			// Memory tab
-			if (Tab == 8)
-			{
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// RaiseVertexAlloc
 				if (ImGui::Checkbox("RaiseVertexAlloc", &cfg.bRaiseVertexAlloc))
 				{
@@ -560,20 +564,61 @@ void MenuRender()
 					NeedsToRestart = true;
 				}
 				ImGui::TextWrapped("Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.");
+			}
 
-				/*
+			// Hotkeys tab
+			if (Tab == 8)
+			{
+				ImGui::TextWrapped("All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names.");
+				ImGui::TextWrapped("(Press \"Save\" for changes to take effect.)");
+				ImGui::TextWrapped("(see top of Settings.cpp file for possible key names to use)");
+
+				ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				// UseMemcpy
-				if (ImGui::Checkbox("UseMemcpy", &cfg.bUseMemcpy))
-				{
+				ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+				// cfgMenu key binding
+				ImGui::TextWrapped("Key combination to open the re4_tweaks config menu");
+
+				ImGui::PushItemWidth(100);
+				ImGui::InputText("Open config menu", &cfg.sConfigMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth;
+
+				if (ImGui::IsItemEdited())
 					cfg.HasUnsavedChanges = true;
-					NeedsToRestart = true;
-				}
-				ImGui::TextWrapped("Makes the game use the memcpy function instead of MemorySwap, possibly resulting in some slight performance improvement.");
-				*/
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// Console key binding
+				ImGui::TextWrapped("Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)");
+
+				ImGui::PushItemWidth(100);
+				ImGui::InputText("Open console", &cfg.sConsoleKeyCombo, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth;
+
+				if (ImGui::IsItemEdited())
+					cfg.HasUnsavedChanges = true;
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// Debug menu keyboard bindings
+				ImGui::TextWrapped("Key-combination to make the \"tool menu\" debug menu appear.");
+				ImGui::TextWrapped("Requires EnableDebugMenu to be enabled.");
+
+				ImGui::PushItemWidth(100);
+				ImGui::InputText("Open debug menu", &cfg.sDebugMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth;
+
+				if (ImGui::IsItemEdited())
+					cfg.HasUnsavedChanges = true;
 			}
 
 			ImGui::EndChild();
@@ -642,20 +687,22 @@ void ApplyMenuTheme()
 	style->Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 }
 
-void ShowF1Tip()
+void ShowCfgMenuTip()
 {
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(ImVec2(20, viewport->Pos.y + 20));
 	ImGui::SetNextWindowBgAlpha(0.5);
 
-	if (ImGui::BeginPopup("F1tip"))
+	if (ImGui::BeginPopup("cfgMenuTip"))
 	{
-		ImGui::Selectable("re4_tweaks: Press F1 to open the configuration menu");
+		std::string tooltip = std::string("re4_tweaks: Press ") + cfg.sConfigMenuKeyCombo + std::string(" to open the configuration menu");
+
+		ImGui::Selectable(tooltip.data());
 		ImGui::EndPopup();
 	}
 
-	if ((!ImGui::IsPopupOpen("F1tip")) && (!bCfgMenuOpen) && (laa.LAA_State == LAADialogState::NotShowing))
-		ImGui::OpenPopup("F1tip");
+	if ((!ImGui::IsPopupOpen("cfgMenuTip")) && (!bCfgMenuOpen) && (laa.LAA_State == LAADialogState::NotShowing))
+		ImGui::OpenPopup("cfgMenuTip");
 }
 
 // Add our new code right before the game calls EndScene
@@ -720,11 +767,11 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	con.ShowConsoleOutput();
 	#endif 
 
-	// Show F1 tip
-	if (F1timer > 0)
+	// Show cfgMenu tip
+	if (MenuTipTimer > 0)
 	{
-		F1timer--;
-		ShowF1Tip();
+		MenuTipTimer--;
+		ShowCfgMenuTip();
 	}
 
 	// Calls the LAA window if needed

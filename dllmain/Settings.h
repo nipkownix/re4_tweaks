@@ -2,6 +2,10 @@
 #include <iostream>
 #include <vector>
 
+struct KeyBindingInfo {
+	uint32_t id;
+	bool isPressed;
+};
 
 // Globals
 struct Settings
@@ -31,7 +35,6 @@ struct Settings
 	std::string sWrappedDllPath;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
-	std::string sDebugMenuKeyCombo;
 	float fControllerSensitivity;
 	bool bEnableControllerSens;
 	bool bUseMouseTurning;
@@ -51,7 +54,9 @@ struct Settings
 	bool bAllowHighResolutionSFD;
 	bool bRaiseVertexAlloc;
 	bool bRaiseInventoryAlloc;
-	//bool bUseMemcpy;
+	std::string sConfigMenuKeyCombo;
+	std::string sConsoleKeyCombo;
+	std::string sDebugMenuKeyCombo;
 	bool bIgnoreFPSWarning;
 	float fFontSize;
 
@@ -60,5 +65,11 @@ struct Settings
 	void ReadSettings();
 	void WriteSettings();
 };
+
+// Parses an key combination string into a vector of VKs
+std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);
+
+// Checks if a key combo is being pressed
+bool IsComboKeyPressed(std::vector<KeyBindingInfo>* KeyInfo, UINT uMsg, WPARAM wParam);
 
 extern Settings cfg;

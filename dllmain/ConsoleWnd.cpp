@@ -14,15 +14,34 @@ ImGuiTextBuffer     Buf;
 ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
 bool                AutoScroll = true;  // Keep scrolling if already at the bottom.
 
+std::vector<KeyBindingInfo> ConsoleKeyInfoVector;
+
+// Reads the key combo into an array containing the key id and isPressed state
+bool ParseConsoleKeyCombo(std::string_view in_combo)
+{
+    ConsoleKeyInfoVector.clear();
+
+	std::vector<uint32_t> ConsoleCombo = ParseKeyCombo(in_combo);
+
+	for (auto& key : ConsoleCombo)
+	{
+		KeyBindingInfo curkey = { key, false };
+        ConsoleKeyInfoVector.push_back(curkey);
+	}
+
+	return ConsoleKeyInfoVector.size() > 0;
+}
+
 void ConsoleBinding(UINT uMsg, WPARAM wParam)
 {
+    if (IsComboKeyPressed(&ConsoleKeyInfoVector, uMsg, wParam))
+    {
+        bConsoleOpen = !bConsoleOpen;
+    }
+
     switch (uMsg) {
     case WM_KEYDOWN:
-        if (wParam == VK_F2)
-        {
-            bConsoleOpen ^= 1;
-        }
-        else if (wParam == VK_NUMPAD3)
+        if (wParam == VK_NUMPAD3)
         {
             con.AddLogChar("Sono me... dare no me?");
         }
@@ -183,8 +202,9 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 550, viewport->Pos.y + 20));
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
-    ImGui::Begin("Console Output - F2 to Show/Hide");
 
+    std::string name = std::string("Console Output - ") + cfg.sConsoleKeyCombo + std::string(" to Show/Hide");
+    ImGui::Begin(name.data());
     ImGui::End();
-    Draw("Console Output - F2 to Show/Hide");
+    Draw(name.data());
 }
