@@ -187,6 +187,19 @@ std::unordered_map<std::string, key_type> key_map
 	{ "#",	{ VK_OEM_7, 0 } },  // UK keyboard
 	{ "\"", { VK_OEM_7, 0 } },  // UK keyboard
 	{ "`",	{ VK_OEM_8, 0 } },  // UK keyboard
+
+	// Mouse
+	{ "LMOUSE", { VK_LBUTTON, 0 } },
+	{ "RMOUSE", { VK_RBUTTON, 0 } },
+	{ "MMOUSE", { VK_MBUTTON, 0 } },
+	{ "LCLICK", { VK_LBUTTON, 0 } },
+	{ "RCLICK", { VK_RBUTTON, 0 } },
+	{ "MCLICK", { VK_MBUTTON, 0 } },
+	{ "MOUSE1", { VK_LBUTTON, 0 } },
+	{ "MOUSE2", { VK_RBUTTON, 0 } },
+	{ "MOUSE3", { VK_MBUTTON, 0 } },
+	{ "MOUSE4", { VK_XBUTTON1, 0 } },
+	{ "MOUSE5", { VK_XBUTTON2, 0 } }
 };
 
 bool IsComboKeyPressed(std::vector<KeyBindingInfo> *KeyInfo, UINT uMsg, WPARAM wParam)
