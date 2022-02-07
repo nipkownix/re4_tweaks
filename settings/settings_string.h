@@ -151,7 +151,6 @@ Console = F2
 DebugMenu = CTRL+F3
 
 ; MouseTurning camera modifier. When holding this key combination, MouseTurning is temporarily activated/deactivated.
-; Requires MouseTurning to be enabled.
 MouseTurningModifier = ALT
 
 [WARNING]

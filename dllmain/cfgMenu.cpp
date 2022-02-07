@@ -622,7 +622,6 @@ void MenuRender()
 
 				// MouseTurningModifier bindings
 				ImGui::TextWrapped("MouseTurning camera modifier. When holding this key combination, MouseTurning is temporarily activated/deactivated.");
-				ImGui::TextWrapped("Requires MouseTurning to be enabled.");
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("MouseTurning modifier", &cfg.sMouseTurnModifierKeyCombo, ImGuiInputTextFlags_CharsUppercase);
