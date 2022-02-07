@@ -9,7 +9,6 @@
 #include "LAApatch.h"
 #include "MouseTurning.h"
 #include "KeyboardMouseTweaks.h"
-#include "ToolMenu.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -51,24 +50,35 @@ void processRawMouse(RAWMOUSE rawMouse)
 	}
 }
 
-void EvalKeyBindings(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+std::vector<key_state> vk_states(0x100); // are there VKs with value higher than 0x100?
+
+key_state& GetVKState(int vk)
 {
-	// Evaluate mouse turning state
-	isMouseTurnEnabled(uMsg, wParam);
+	if ((vk == VK_LBUTTON || vk == VK_RBUTTON || vk == VK_MBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2))
+	{
+		bool new_state = GetAsyncKeyState(vk);
+		
+		vk_states[vk].changed = vk_states[vk].pressed != new_state;
+		vk_states[vk].pressed = new_state;
+	}
+	
+	return vk_states[vk];
+}
 
-	// Key bindings for flipping inventory items on keyboard
-	InventoryFlipBindings(uMsg, wParam);
+bool changed;
+bool IsComboKeyPressed(std::vector<uint32_t>* KeyVector)
+{
+	bool isComboPressed = KeyVector->size() > 0;
+	for (auto& key : *KeyVector)
+	{
+		if (!GetVKState(key).pressed)
+		{
+			isComboPressed = false;
+			break;
+		}
+	}
 
-	// Key binding for brining up the config menu
-	cfgMenuBinding(hWindow, uMsg, wParam, lParam);
-
-	// Key binding for brining up the config menu
-	ToolMenuBinding(uMsg, wParam);
-
-	#ifdef VERBOSE
-	// Key binding for showing/hiding the console window
-	ConsoleBinding(uMsg, wParam);
-	#endif
+	return isComboPressed;
 }
 
 // Our new hooked WndProc function
@@ -79,10 +89,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// Send key events where necessary
 	if ((uMsg == WM_KEYDOWN) || (uMsg == WM_SYSKEYDOWN) || (uMsg == WM_KEYUP) || (uMsg == WM_SYSKEYUP))
 	{
-		EvalKeyBindings(hWnd, uMsg, wParam, lParam);
+		// Key bindings for flipping inventory items on keyboard
+		InventoryFlipBindings(uMsg, wParam);
+
+		// Key binding for brining up the config menu
+		cfgMenuBinding(hWnd, lParam);
+
+		#ifdef VERBOSE
+		// Key binding for showing/hiding the console window
+		ConsoleBinding();
+		#endif
 	}
 
 	switch (uMsg) {
+		case WM_SYSKEYUP:
+		case WM_KEYUP:
+			// update key state map
+			{
+				bool new_state = false;
+				if (wParam >= vk_states.size())
+					vk_states.resize(wParam + 1);
+				vk_states[wParam].changed = vk_states[wParam].pressed != new_state;
+				vk_states[wParam].pressed = new_state;
+			}
+			break;
+
+		case WM_SYSKEYDOWN:
+		case WM_KEYDOWN:
+			// update key state map
+			{
+				bool new_state = true;
+				if (wParam >= vk_states.size())
+					vk_states.resize(wParam + 1);
+				vk_states[wParam].changed = vk_states[wParam].pressed != new_state;
+				vk_states[wParam].pressed = new_state;
+			}
+			break;
+
 		case WM_MOVE:
 			// Get current window position
 			curPosX = (int)(short)LOWORD(lParam);   // horizontal position 
@@ -167,39 +210,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 	}
 }
-std::vector<KeyBindingInfo> MouseVKlist{
-	{VK_LBUTTON, false},
-	{VK_RBUTTON, false},
-	{VK_MBUTTON, false},
-	{VK_XBUTTON1, false},
-	{VK_XBUTTON2, false}
-};
-
-// Sigh
-void VKMouse_Watcher()
-{
-	while (true)
-	{
-		for (auto& key : MouseVKlist)
-		{
-			bool isPressed = GetAsyncKeyState(key.id);
-
-			if (isPressed)
-			{
-				if (key.isPressed)
-					break;
-				WndProc(hWindow, WM_KEYDOWN, (WPARAM)key.id, 0);
-				key.isPressed = true;
-			}
-			else if (!isPressed && key.isPressed)
-			{
-				WndProc(hWindow, WM_KEYUP, (WPARAM)key.id, 0);
-				key.isPressed = false;
-			}
-		}
-		Sleep(100);
-	}
-}
 
 // CreateWindowExA hook to get the hWindow and set up the WndProc hook
 HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
@@ -211,9 +221,6 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	hWindow = result;
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);
-
-	// Thread to watch for mouse key presses, since we can't get them from WndProc
-	CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&VKMouse_Watcher, NULL, 0, NULL);
 
 	return result;
 }

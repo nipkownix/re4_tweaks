@@ -4,6 +4,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "KeyboardMouseTweaks.h"
+#include "WndProcHook.h"
 
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -19,9 +20,8 @@ static uint32_t* ptrMovInputState;
 static uint32_t* ptrMouseAimMode;
 
 uint32_t* ptrCharRotationBase;
+uint32_t* ptrCamXPosAddr;
 
-bool shouldMouseTurn;
-bool modifierPressed;
 bool isTurn;
 
 DWORD _EAX;
@@ -39,29 +39,21 @@ int intMovInputState()
     return *(int8_t*)(ptrMovInputState);
 }
 
-std::vector<KeyBindingInfo> TurnModifierKeyInfoVector;
+std::vector<uint32_t> mouseTurnModifierCombo;
 
 bool ParseMouseTurnModifierCombo(std::string_view in_combo)
 {
-	TurnModifierKeyInfoVector.clear();
-
-	std::vector<uint32_t> mouseTurnModifierCombo = ParseKeyCombo(in_combo);
-
-	for (auto& key : mouseTurnModifierCombo)
-	{
-		KeyBindingInfo curkey = { key, false };
-		TurnModifierKeyInfoVector.push_back(curkey);
-	}
-
-	return TurnModifierKeyInfoVector.size() > 0;
+	mouseTurnModifierCombo.clear();
+	mouseTurnModifierCombo = ParseKeyCombo(in_combo);
+	return mouseTurnModifierCombo.size() > 0;
 }
 
 bool bPrevMouseTurnState = false;
 bool bMouseTurnStateChanged = false;
 
-void isMouseTurnEnabled(UINT uMsg, WPARAM wParam)
+bool isMouseTurnEnabled()
 {
-	modifierPressed = IsComboKeyPressed(&TurnModifierKeyInfoVector, uMsg, wParam);
+	bool modifierPressed = IsComboKeyPressed(&mouseTurnModifierCombo);
 
 	bool state = cfg.bUseMouseTurning;
 
@@ -73,9 +65,16 @@ void isMouseTurnEnabled(UINT uMsg, WPARAM wParam)
 		state = !state;
 
 	bMouseTurnStateChanged = bPrevMouseTurnState != state;
+
+	if (bMouseTurnStateChanged)
+	{
+		*(float*)(ptrCamXPosAddr) = 0.0f;
+		*(int8_t*)(ptrCamXmovAddr) = 0;
+	}
+
 	bPrevMouseTurnState = state;
 
-	shouldMouseTurn = state;
+	return state;
 }
 
 // Enable the turning animation if the mouse is moving and we're not
@@ -91,7 +90,7 @@ void __declspec(naked) TurnRightAnimHook()
 
 	if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 	{
-		if (shouldMouseTurn && (intMouseDeltaX() > 0))
+		if (isMouseTurnEnabled() && (intMouseDeltaX() > 0))
 			if ((intMovInputState() != 0x01) && (intMovInputState() != 0x02) && (intMovInputState() != 0x41) && (intMovInputState() != 0x42))
 				_EAX = 0x1;
 	}
@@ -122,7 +121,7 @@ void __declspec(naked) TurnLeftAnimHook()
 
 	if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 	{
-		if (shouldMouseTurn && (intMouseDeltaX() < 0))
+		if (isMouseTurnEnabled() && (intMouseDeltaX() < 0))
 			if ((intMovInputState() != 0x01) && (intMovInputState() != 0x02) && (intMovInputState() != 0x41) && (intMovInputState() != 0x42))
 				_EAX = 0x1;
 	}
@@ -156,7 +155,7 @@ void __declspec(naked) MotionMoveHook1()
 	}
 	else
 	{
-		if (shouldMouseTurn)
+		if (isMouseTurnEnabled())
 		{
 			if (isTurn && (intMovInputState() != 0x00))
 				_asm {call ptrPSVECAdd}
@@ -193,7 +192,7 @@ void __declspec(naked) MotionMoveHook2()
 	}
 	else
 	{
-		if (shouldMouseTurn)
+		if (isMouseTurnEnabled())
 		{
 			if (isTurn && (intMouseDeltaX() == 0))
 				_asm {call ptrPSVECAdd}
@@ -232,6 +231,9 @@ void GetMouseTurnPointers()
 	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
 	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
 
+	pattern = hook::pattern("A2 ? ? ? ? EB ? DD D8 8B 0D ? ? ? ? 8B 81 ? ? ? ? A9");
+	ptrCamXmovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
+
 	pattern = hook::pattern("A1 ? ? ? ? 25 ? ? ? ? 33 C9 0B C1 74 ? B8 ? ? ? ? C3");
 	ptrMovInputState = *pattern.count(1).get(0).get<uint32_t*>(1);
 
@@ -246,60 +248,29 @@ void Init_MouseTurning()
 {
 	GetMouseTurnPointers();
 
-	// Camera control
-	auto pattern = hook::pattern("A2 ? ? ? ? EB ? DD D8 8B 0D ? ? ? ? 8B 81 ? ? ? ? A9");
-	ptrCamXmovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
-	struct CameraControl1
+	// Key CameraXpos at 0f while isMouseTurnEnabled
+	auto pattern = hook::pattern("D9 05 ? ? ? ? DE C2 D9 C9 D9 1D ? ? ? ? D9 85");
+	ptrCamXPosAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
+	struct CameraPositionWriter
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (bMouseTurnStateChanged)
-				*(int8_t*)(ptrCamXmovAddr) = 0;
+			float CameraXpos;
 
-			if (!shouldMouseTurn || modifierPressed || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-				*(int8_t*)(ptrCamXmovAddr) = (int8_t)regs.eax;
+			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			{
+				if (isMouseTurnEnabled())
+					CameraXpos = 0.0f;
+				else
+					CameraXpos = *(float*)(ptrCamXPosAddr);
+			}
+			else
+				CameraXpos = *(float*)(ptrCamXPosAddr);
+
+			_asm {fld CameraXpos}
+
 		}
-	}; injector::MakeInline<CameraControl1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-	pattern = hook::pattern("C6 05 ? ? ? ? ? EB ? 83 F8 ? 7D ? C6 05 ? ? ? ? ? EB ? E8");
-	struct CameraControl2
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			if (bMouseTurnStateChanged)
-				*(int8_t*)(ptrCamXmovAddr) = 0;
-
-			if (!shouldMouseTurn || modifierPressed || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-				*(int8_t*)(ptrCamXmovAddr) = 0x7F;
-		}
-	}; injector::MakeInline<CameraControl2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
-
-	pattern = hook::pattern("C6 05 ? ? ? ? ? EB ? E8 ? ? ? ? EB");
-	struct CameraControl3
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			if (bMouseTurnStateChanged)
-				*(int8_t*)(ptrCamXmovAddr) = 0;
-
-			if (!shouldMouseTurn || modifierPressed || (GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-				*(int8_t*)(ptrCamXmovAddr) = -0x7F;
-		}
-	}; injector::MakeInline<CameraControl3>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
-
-	// Always center the camera behind the character
-	pattern = hook::pattern("8B 16 8B 42 ? 8B CE FF D0 8B CE E8 ? ? ? ? 8B CE E8 ? ? ? ? 8B CE");
-	struct CameraAutoCenter
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			regs.edx = *(int32_t*)(regs.esi);
-			regs.eax = *(int32_t*)(regs.edx + 0x54);
-
-			if ((shouldMouseTurn || bMouseTurnStateChanged) && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
-				regs.edi = 1;
-		}
-	}; injector::MakeInline<CameraAutoCenter>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}; injector::MakeInline<CameraPositionWriter>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 	// Turning animations
 	// Trigger left turn
@@ -336,7 +307,7 @@ void Init_MouseTurning()
 		{
 			regs.eax = *(int8_t*)(regs.esi + 0xFE);
 
-			if (shouldMouseTurn && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			if (isMouseTurnEnabled() && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 				MouseTurn();
 		}
 	}; injector::MakeInline<TurnHookStill>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
@@ -353,7 +324,7 @@ void Init_MouseTurning()
 		{
 			regs.eax = intMovInputState();
 
-			if (shouldMouseTurn && (intMouseDeltaX() < -8))
+			if (isMouseTurnEnabled() && (intMouseDeltaX() < -8))
 				regs.eax = 0x8;
 
 			isTurn = true;
@@ -367,7 +338,7 @@ void Init_MouseTurning()
 		{
 			regs.eax = intMovInputState();
 
-			if (shouldMouseTurn && (intMouseDeltaX() > 8))
+			if (isMouseTurnEnabled() && (intMouseDeltaX() > 8))
 				regs.eax = 0x4;
 
 			isTurn = true;
@@ -382,7 +353,7 @@ void Init_MouseTurning()
 			regs.ebp = *(int32_t*)(regs.esp);
 			*(int32_t*)(regs.esp) -= 0x8;
 
-			if (shouldMouseTurn && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			if (isMouseTurnEnabled() && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 				MouseTurn();
 		}
 	};
@@ -401,7 +372,7 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (shouldMouseTurn && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			if (isMouseTurnEnabled() && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 				MouseTurn();
 		}
 	}; injector::MakeInline<TurnHookWalkingBack>(pattern.count(3).get(1).get<uint32_t>(0), pattern.count(3).get(1).get<uint32_t>(7));
@@ -415,7 +386,7 @@ void Init_MouseTurning()
 		void operator()(injector::reg_pack& regs)
 		{
 			regs.eax = *(int32_t*)ptrKnife_r3_downMovAddr;
-			if (shouldMouseTurn && (intMouseDeltaX() != 0) && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			if (isMouseTurnEnabled() && (intMouseDeltaX() != 0) && (GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 				regs.eax = 0x8;
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));

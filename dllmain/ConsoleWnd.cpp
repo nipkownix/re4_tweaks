@@ -7,6 +7,7 @@
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
 #include "..\external\imgui\imgui_impl_dx9.h"
+#include "WndProcHook.h"
 
 ConsoleOutput con;
 
@@ -14,40 +15,22 @@ ImGuiTextBuffer     Buf;
 ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
 bool                AutoScroll = true;  // Keep scrolling if already at the bottom.
 
-std::vector<KeyBindingInfo> ConsoleKeyInfoVector;
-
 std::string TitleCombo;
 
-// Reads the key combo into an array containing the key id and isPressed state
+std::vector<uint32_t> ConsoleCombo;
+
 bool ParseConsoleKeyCombo(std::string_view in_combo)
 {
-    ConsoleKeyInfoVector.clear();
-
-	std::vector<uint32_t> ConsoleCombo = ParseKeyCombo(in_combo);
-
-	for (auto& key : ConsoleCombo)
-	{
-		KeyBindingInfo curkey = { key, false };
-        ConsoleKeyInfoVector.push_back(curkey);
-	}
-
-	return ConsoleKeyInfoVector.size() > 0;
+    ConsoleCombo.clear();
+    ConsoleCombo = ParseKeyCombo(in_combo);
+    return ConsoleCombo.size() > 0;
 }
 
-void ConsoleBinding(UINT uMsg, WPARAM wParam)
+void ConsoleBinding()
 {
-    if (IsComboKeyPressed(&ConsoleKeyInfoVector, uMsg, wParam))
+    if (IsComboKeyPressed(&ConsoleCombo))
     {
         bConsoleOpen = !bConsoleOpen;
-    }
-
-    switch (uMsg) {
-    case WM_KEYDOWN:
-        if (wParam == VK_NUMPAD3)
-        {
-            con.AddLogChar("Sono me... dare no me?");
-        }
-        break;
     }
 }
 

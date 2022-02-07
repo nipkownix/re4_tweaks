@@ -25,27 +25,18 @@ int MenuTipTimer = 500; // cfgMenu tooltip timer
 
 int Tab = 1;
 
-std::vector<KeyBindingInfo> cfgMenuKeyInfoVector;
+std::vector<uint32_t> cfgMenuCombo;
 
-// Reads the key combo into an array containing the key id and isPressed state
 bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 {
-	cfgMenuKeyInfoVector.clear();
-
-	std::vector<uint32_t> cfgMenuCombo = ParseKeyCombo(in_combo);
-
-	for (auto& key : cfgMenuCombo)
-	{
-		KeyBindingInfo curkey = { key, false };
-		cfgMenuKeyInfoVector.push_back(curkey);
-	}
-
-	return cfgMenuKeyInfoVector.size() > 0;
+	cfgMenuCombo.clear();
+	cfgMenuCombo = ParseKeyCombo(in_combo);
+	return cfgMenuCombo.size() > 0;
 }
 
-void cfgMenuBinding(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+void cfgMenuBinding(HWND hWnd, LPARAM lParam)
 {
-	if (IsComboKeyPressed(&cfgMenuKeyInfoVector, uMsg, wParam))
+	if (IsComboKeyPressed(&cfgMenuCombo))
 	{
 		bCfgMenuOpen = !bCfgMenuOpen;
 

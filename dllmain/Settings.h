@@ -2,11 +2,6 @@
 #include <iostream>
 #include <vector>
 
-struct KeyBindingInfo {
-	uint32_t id;
-	bool isPressed;
-};
-
 // Globals
 struct Settings
 {
@@ -69,8 +64,5 @@ struct Settings
 
 // Parses an key combination string into a vector of VKs
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);
-
-// Checks if a key combo is being pressed
-bool IsComboKeyPressed(std::vector<KeyBindingInfo>* KeyInfo, UINT uMsg, WPARAM wParam);
 
 extern Settings cfg;

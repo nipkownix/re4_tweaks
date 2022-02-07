@@ -202,44 +202,6 @@ std::unordered_map<std::string, key_type> key_map
 	{ "MOUSE5", { VK_XBUTTON2, 0 } }
 };
 
-bool IsComboKeyPressed(std::vector<KeyBindingInfo> *KeyInfo, UINT uMsg, WPARAM wParam)
-{
-	for (auto& key : *KeyInfo)
-	{
-		// Left Alt (VK_LMENU) seems to actually be VK_MENU when sent via WM_SYSKEYDOWN
-		if ((uMsg == WM_SYSKEYDOWN) && (key.id == VK_LMENU))
-			key.id = VK_MENU;
-
-		switch (uMsg) {
-		case WM_KEYDOWN:
-		case WM_SYSKEYDOWN: // Also handle WM_SYSKEYxx since Alt sends that for some reason
-			if (wParam == key.id)
-				key.isPressed = true;
-			break;
-		case WM_KEYUP:
-		case WM_SYSKEYUP:
-			if (wParam == key.id)
-				key.isPressed = false;
-			break;
-		}
-	}
-
-	if (uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
-		return false;
-
-	bool isComboPressed = KeyInfo->size() > 0;
-	for (auto& key : *KeyInfo)
-	{
-		if (!key.isPressed)
-		{
-			isComboPressed = false;
-			break;
-		}
-	}
-
-	return isComboPressed;
-}
-
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 {
 	// Convert combo to uppercase to match Settings::key_map
