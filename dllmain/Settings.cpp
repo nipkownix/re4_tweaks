@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include "settings_string.h"
 #include "ToolMenu.h"
+#include "MouseTurning.h"
 #include "cfgMenu.h"
 
 Settings cfg;
@@ -186,48 +187,20 @@ std::unordered_map<std::string, key_type> key_map
 	{ "#",	{ VK_OEM_7, 0 } },  // UK keyboard
 	{ "\"", { VK_OEM_7, 0 } },  // UK keyboard
 	{ "`",	{ VK_OEM_8, 0 } },  // UK keyboard
+
+	// Mouse
+	{ "LMOUSE", { VK_LBUTTON, 0 } },
+	{ "RMOUSE", { VK_RBUTTON, 0 } },
+	{ "MMOUSE", { VK_MBUTTON, 0 } },
+	{ "LCLICK", { VK_LBUTTON, 0 } },
+	{ "RCLICK", { VK_RBUTTON, 0 } },
+	{ "MCLICK", { VK_MBUTTON, 0 } },
+	{ "MOUSE1", { VK_LBUTTON, 0 } },
+	{ "MOUSE2", { VK_RBUTTON, 0 } },
+	{ "MOUSE3", { VK_MBUTTON, 0 } },
+	{ "MOUSE4", { VK_XBUTTON1, 0 } },
+	{ "MOUSE5", { VK_XBUTTON2, 0 } }
 };
-
-bool IsComboKeyPressed(std::vector<KeyBindingInfo> *KeyInfo, UINT uMsg, WPARAM wParam)
-{
-	if ((uMsg != WM_KEYDOWN) && (uMsg != WM_SYSKEYDOWN) && (uMsg != WM_KEYUP) && (uMsg != WM_SYSKEYUP))
-		return false;
-
-	for (auto& key : *KeyInfo)
-	{
-		// Left Alt (VK_LMENU) seems to actually be VK_MENU when sent via WM_SYSKEYDOWN
-		if ((uMsg == WM_SYSKEYDOWN) && (key.id == VK_LMENU))
-			key.id = VK_MENU;
-
-		switch (uMsg) {
-		case WM_KEYDOWN:
-		case WM_SYSKEYDOWN: // Also handle WM_SYSKEYxx since Alt sends that for some reason
-			if (wParam == key.id)
-				key.isPressed = true;
-			break;
-		case WM_KEYUP:
-		case WM_SYSKEYUP:
-			if (wParam == key.id)
-				key.isPressed = false;
-			break;
-		}
-	}
-
-	if (uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
-		return false;
-
-	bool isComboPressed = true;
-	for (auto& key : *KeyInfo)
-	{
-		if (!key.isPressed)
-		{
-			isComboPressed = false;
-			break;
-		}
-	}
-
-	return isComboPressed;
-}
 
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 {
@@ -373,11 +346,20 @@ void Settings::ReadSettings()
 
 	cfg.sConsoleKeyCombo = iniReader.ReadString("HOTKEYS", "Console", "F2");
 	if (cfg.sConsoleKeyCombo.length())
+	{
 		ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
+
+		// Update console title
+		con.TitleKeyCombo = cfg.sConsoleKeyCombo;
+	}
 
 	cfg.sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", "CTRL+F3");
 	if (cfg.sDebugMenuKeyCombo.length())
 		ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
+
+	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurningModifier", "ALT");
+	if (cfg.sMouseTurnModifierKeyCombo.length())
+		ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 
 	// FPS WARNING
 	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", false);
@@ -481,6 +463,7 @@ void Settings::WriteSettings()
 	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + cfg.sConfigMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "Console", " " + cfg.sConsoleKeyCombo);
 	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + cfg.sDebugMenuKeyCombo);
+	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + cfg.sMouseTurnModifierKeyCombo);
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);

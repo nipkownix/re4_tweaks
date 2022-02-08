@@ -14,6 +14,7 @@
 #include <hashes.h>
 #include <sffont.hpp>
 #include <faprolight.hpp>
+#include "MouseTurning.h"
 
 uintptr_t ptrInputProcess;
 uintptr_t* ptrD3D9Device;
@@ -24,27 +25,18 @@ int MenuTipTimer = 500; // cfgMenu tooltip timer
 
 int Tab = 1;
 
-std::vector<KeyBindingInfo> cfgMenuKeyInfoVector;
+std::vector<uint32_t> cfgMenuCombo;
 
-// Reads the key combo into an array containing the key id and isPressed state
 bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 {
-	cfgMenuKeyInfoVector.clear();
-
-	std::vector<uint32_t> cfgMenuCombo = ParseKeyCombo(in_combo);
-
-	for (auto& key : cfgMenuCombo)
-	{
-		KeyBindingInfo curkey = { key, false };
-		cfgMenuKeyInfoVector.push_back(curkey);
-	}
-
-	return cfgMenuKeyInfoVector.size() > 0;
+	cfgMenuCombo.clear();
+	cfgMenuCombo = ParseKeyCombo(in_combo);
+	return cfgMenuCombo.size() > 0;
 }
 
-void cfgMenuBinding(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+void cfgMenuBinding(HWND hWnd, LPARAM lParam)
 {
-	if (IsComboKeyPressed(&cfgMenuKeyInfoVector, uMsg, wParam))
+	if (IsComboKeyPressed(&cfgMenuCombo))
 	{
 		bCfgMenuOpen = !bCfgMenuOpen;
 
@@ -143,6 +135,10 @@ void MenuRender()
 				ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
 				ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
 				ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
+				ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
+
+				// Update console title
+				con.TitleKeyCombo = cfg.sConsoleKeyCombo;
 
 				cfg.fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
 				cfg.WriteSettings();
@@ -615,6 +611,20 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("Open debug menu", &cfg.sDebugMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth;
+
+				if (ImGui::IsItemEdited())
+					cfg.HasUnsavedChanges = true;
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// MouseTurningModifier bindings
+				ImGui::TextWrapped("MouseTurning camera modifier. When holding this key combination, MouseTurning is temporarily activated/deactivated.");
+
+				ImGui::PushItemWidth(100);
+				ImGui::InputText("MouseTurning modifier", &cfg.sMouseTurnModifierKeyCombo, ImGuiInputTextFlags_CharsUppercase);
 				ImGui::PopItemWidth;
 
 				if (ImGui::IsItemEdited())

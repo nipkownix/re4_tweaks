@@ -7,8 +7,8 @@
 #include "ConsoleWnd.h"
 #include "../external/imgui/imgui.h"
 #include "LAApatch.h"
+#include "MouseTurning.h"
 #include "KeyboardMouseTweaks.h"
-#include "ToolMenu.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -50,26 +50,82 @@ void processRawMouse(RAWMOUSE rawMouse)
 	}
 }
 
+std::vector<key_state> vk_states(0x100); // are there VKs with value higher than 0x100?
+
+key_state& GetVKState(int vk)
+{
+	if ((vk == VK_LBUTTON || vk == VK_RBUTTON || vk == VK_MBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2))
+	{
+		bool new_state = GetAsyncKeyState(vk);
+		
+		vk_states[vk].changed = vk_states[vk].pressed != new_state;
+		vk_states[vk].pressed = new_state;
+	}
+	
+	return vk_states[vk];
+}
+
+bool changed;
+bool IsComboKeyPressed(std::vector<uint32_t>* KeyVector)
+{
+	bool isComboPressed = KeyVector->size() > 0;
+	for (auto& key : *KeyVector)
+	{
+		if (!GetVKState(key).pressed)
+		{
+			isComboPressed = false;
+			break;
+		}
+	}
+
+	return isComboPressed;
+}
+
 // Our new hooked WndProc function
 int curPosX;
 int curPosY;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	// Key bindings for flipping inventory items on keyboard
-	InventoryFlipBindings(uMsg, wParam);
+	// Send key events where necessary
+	if ((uMsg == WM_KEYDOWN) || (uMsg == WM_SYSKEYDOWN) || (uMsg == WM_KEYUP) || (uMsg == WM_SYSKEYUP))
+	{
+		// Key bindings for flipping inventory items on keyboard
+		InventoryFlipBindings(uMsg, wParam);
 
-	// Key binding for brining up the config menu
-	cfgMenuBinding(hWindow, uMsg, wParam, lParam);
+		// Key binding for brining up the config menu
+		cfgMenuBinding(hWnd, lParam);
 
-	// Key binding for brining up the config menu
-	ToolMenuBinding(uMsg, wParam);
-
-	#ifdef VERBOSE
-	// Key binding for showing/hiding the console window
-	ConsoleBinding(uMsg, wParam);
-	#endif
+		#ifdef VERBOSE
+		// Key binding for showing/hiding the console window
+		ConsoleBinding();
+		#endif
+	}
 
 	switch (uMsg) {
+		case WM_SYSKEYUP:
+		case WM_KEYUP:
+			// update key state map
+			{
+				bool new_state = false;
+				if (wParam >= vk_states.size())
+					vk_states.resize(wParam + 1);
+				vk_states[wParam].changed = vk_states[wParam].pressed != new_state;
+				vk_states[wParam].pressed = new_state;
+			}
+			break;
+
+		case WM_SYSKEYDOWN:
+		case WM_KEYDOWN:
+			// update key state map
+			{
+				bool new_state = true;
+				if (wParam >= vk_states.size())
+					vk_states.resize(wParam + 1);
+				vk_states[wParam].changed = vk_states[wParam].pressed != new_state;
+				vk_states[wParam].pressed = new_state;
+			}
+			break;
+
 		case WM_MOVE:
 			// Get current window position
 			curPosX = (int)(short)LOWORD(lParam);   // horizontal position 
@@ -174,7 +230,7 @@ void Init_WndProcHook()
 	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
 	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
 
-	//CreateWindowEx hook
+	// CreateWindowEx hook
 	pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
 	injector::MakeNOP(pattern.get_first(0x12), 6);
 	injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);

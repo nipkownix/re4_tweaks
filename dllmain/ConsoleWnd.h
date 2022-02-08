@@ -2,6 +2,7 @@
 
 struct ConsoleOutput
 {
+	std::string TitleKeyCombo;
 	void ShowConsoleOutput();
 	void AddLogChar(const char* fmt, ...);
 	void AddLogHex(int fmt, ...);
@@ -12,7 +13,7 @@ struct ConsoleOutput
 	void Clear();
 };
 
-void ConsoleBinding(UINT uMsg, WPARAM wParam);
+void ConsoleBinding();
 bool ParseConsoleKeyCombo(std::string_view in_combo);
 
 extern ConsoleOutput con;
