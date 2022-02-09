@@ -9,22 +9,22 @@ void Init_HandleLimits()
 	if (cfg.bRaiseVertexAlloc)
 	{
 		auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
-		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68000C3500, true);  // 400000 -> 800000
-		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68000C3500, true);
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 800000, true);  // 400000 -> 800000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 800000, true);
 
 		pattern = hook::pattern("68 00 09 3D 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1 ? ? ? ? 8B 08");
-		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68007A1200, true);  // 4000000 -> 8000000
-		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68007A1200, true);
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 8000000, true);  // 4000000 -> 8000000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 8000000, true);
 
 		pattern = hook::pattern("68 80 84 1E 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1");
-		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68003D0900, true);  // 2000000 -> 4000000
-		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68003D0900, true);
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 4000000, true);  // 2000000 -> 4000000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 4000000, true);
 
 		pattern = hook::pattern("68 80 8D 5B 00 50 8B 41 ? FF D0 85 C0 0F 85");
-		injector::WriteMemory<int>(pattern.count(4).get(0).get<uint32_t>(1), 0x6800B71B00, true);  // 6000000 -> 12000000
-		injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 0x6800B71B00, true);
-		injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 0x6800B71B00, true);
-		injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 0x6800B71B00, true);
+		injector::WriteMemory<int>(pattern.count(4).get(0).get<uint32_t>(1), 12000000, true);  // 6000000 -> 12000000
+		injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 12000000, true);
+		injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 12000000, true);
+		injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 12000000, true);
 
 		// Make it so models don't disappear when a certain polygon limit is reached
 		pattern = hook::pattern("81 80 ? ? ? ? ? ? ? ? A1 ? ? ? ? 8B 90 ? ? ? ? 03 D2");
