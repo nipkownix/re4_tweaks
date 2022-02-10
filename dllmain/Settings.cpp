@@ -390,7 +390,7 @@ void Settings::WriteSettings()
 		con.AddLogChar("ini file doesn't exist in folder. Creating new one.");
 		#endif
 		std::ofstream iniFile(iniPath);
-		iniFile << defaultSettings;
+		iniFile << defaultSettings + 1; // +1 to skip the first new line
 		iniFile.close();
 	}
 

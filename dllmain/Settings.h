@@ -62,7 +62,7 @@ struct Settings
 	void WriteSettings();
 };
 
+extern Settings cfg;
+
 // Parses an key combination string into a vector of VKs
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);
-
-extern Settings cfg;
