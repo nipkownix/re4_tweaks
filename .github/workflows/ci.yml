@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: recursive
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -33,10 +33,16 @@ jobs:
         run: |
           msbuild re4_tweaks.sln /p:Configuration=Release /p:PostBuildEventUseInBuild=false
 
+      - name: Create default configuration file
+        shell: bash
+        run: |
+          head -n -1 settings/settings_string.h | tail -n +3 > dinput8.ini
+
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
           path: |
             Debug/dinput8.dll
             Release/dinput8.dll
+            dinput8.ini
           name: re4_tweaks_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
