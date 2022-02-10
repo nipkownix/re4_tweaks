@@ -29,6 +29,11 @@ jobs:
         run: |
           msbuild re4_tweaks.sln /p:Configuration=Debug /p:PostBuildEventUseInBuild=false
 
+      - name: Remove VERBOSE
+        shell: bash
+        run: |
+          sed -i "s/#define VERBOSE//" dllmain/dllmain.h
+
       - name: Build Release
         run: |
           msbuild re4_tweaks.sln /p:Configuration=Release /p:PostBuildEventUseInBuild=false
