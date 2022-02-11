@@ -159,11 +159,12 @@ void Init_Main()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				float vanillaFov = *(float*)(regs.ebp - 0x34);
-				_asm {fld vanillaFov}
+				float FOV = *(float*)(regs.ebp - 0x34);
 
 				if (cfg.fFOVAdditional > 0.0f)
-					_asm {fadd cfg.fFOVAdditional}
+					FOV += cfg.fFOVAdditional;
+
+				_asm {fld FOV}
 
 				*(int32_t*)(regs.esi + 0x4) = regs.ecx;
 			}
@@ -442,9 +443,9 @@ void Init_Main()
 
 		struct PRICE_INFO // name from PS2/VR
 		{
-			short item_id_0;
-			short price_2; // gets multiplied by 100 or 50
-			short valid_4; // set to 1 on valid items? not sure if checked
+			unsigned short item_id_0;
+			unsigned short price_2; // gets multiplied by 100 or 50
+			unsigned short valid_4; // set to 1 on valid items? not sure if checked
 		};
 
 		// g_item_price_tbl has just enough room at the end to include 1 more item, so we'll add silencer to it there

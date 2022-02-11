@@ -63,7 +63,7 @@ void __cdecl Filter0aGXDraw_Hook(
 {
 	// We lost the ECX parameter since VC doesn't have any caller-saved calling conventions that use it, game probably had LTO or something to create a custom one
 	// Luckily the game only uses a couple different values for it, so we can work out what it was pretty easily
-	filter0a_ecx_value = ScreenSizeDivisor;
+	filter0a_ecx_value = (int)ScreenSizeDivisor;
 	if (ColorA == 255 && ScreenSizeDivisor == 4 && IsMaskTex == 0)
 		filter0a_ecx_value = 1; // special case for first GXDraw call inside Filter0aDrawBuffer
 
@@ -89,35 +89,35 @@ void __cdecl Filter0aGXDraw_Hook(
 	float pos_right = PositionX + GameWidth / ScreenSizeDivisor;
 
 	// Prevent bleed-thru of certain effects into the transparency-drawing area
-	pos_left += -0.25;
+	pos_left += -0.25f;
 
 	// Roughly center the blur-mask-effect inside the scope
 	// TODO: GC version seems to have no blur in the inner-scope at all, any way we can fix this to make it the same here?
 	if (IsMaskTex)
 	{
-		pos_top += -1;
-		pos_bottom += 4;
-		pos_left += -4;
-		pos_right += 4;
+		pos_top += -1.0f;
+		pos_bottom += 4.0f;
+		pos_left += -4.0f;
+		pos_right += 4.0f;
 	}
 
 	GXBegin(0x80, 0, 4);
 
 	GXPosition3f32(pos_left, pos_top, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
-	GXTexCoord2f32(0.0 + TexOffsetX, 0.0 + TexOffsetY);
+	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	GXTexCoord2f32(0.0f + TexOffsetX, 0.0f + TexOffsetY);
 
 	GXPosition3f32(pos_right, pos_top, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
-	GXTexCoord2f32(1.0 + TexOffsetX, 0.0 + TexOffsetY);
+	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	GXTexCoord2f32(1.0f + TexOffsetX, 0.0f + TexOffsetY);
 
 	GXPosition3f32(pos_right, pos_bottom, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
-	GXTexCoord2f32(1.0 + TexOffsetX, 1.0 + TexOffsetY);
+	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	GXTexCoord2f32(1.0f + TexOffsetX, 1.0f + TexOffsetY);
 
 	GXPosition3f32(pos_left, pos_bottom, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, ColorA);
-	GXTexCoord2f32(0.0 + TexOffsetX, 1.0 + TexOffsetY);
+	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	GXTexCoord2f32(0.0f + TexOffsetX, 1.0f + TexOffsetY);
 
 	int filter0a_shader_num = *ptr_filter0a_shader_num;
 	GXShaderCall_Maybe(filter0a_shader_num);
@@ -138,7 +138,7 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 
 	float deltaX = 0;
 	float deltaY = 0;
-	float posZ = params->Distance;
+	float posZ = (float)params->Distance;
 	for (int loopIdx = 0; loopIdx < 4; loopIdx++)
 	{
 		// Main reason for this hook is to add the deltaX/deltaY vars below, needed for the DoF effect to work properly
@@ -146,76 +146,76 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 		// (yet even though this was removed, the X360 devs did add the code for offsetY above to fix the blur...)
 
 		if (loopIdx == 0) {
-			deltaX = 0.0 - blurPositionOffset;
-			deltaY = 0.0 - blurPositionOffset;
+			deltaX = 0.0f - blurPositionOffset;
+			deltaY = 0.0f - blurPositionOffset;
 		}
 		else if (loopIdx == 1) {
-			deltaX = 0.0 + blurPositionOffset;
-			deltaY = 0.0 + blurPositionOffset;
+			deltaX = 0.0f + blurPositionOffset;
+			deltaY = 0.0f + blurPositionOffset;
 		}
 		else if (loopIdx == 2) {
-			deltaX = 0.0 + blurPositionOffset;
-			deltaY = 0.0 - blurPositionOffset;
+			deltaX = 0.0f + blurPositionOffset;
+			deltaY = 0.0f - blurPositionOffset;
 		}
 		else if (loopIdx == 3) {
-			deltaX = 0.0 - blurPositionOffset;
-			deltaY = 0.0 + blurPositionOffset;
+			deltaX = 0.0f - blurPositionOffset;
+			deltaY = 0.0f + blurPositionOffset;
 		}
 
-		posZ = posZ + 100.f;
+		posZ = posZ + 100.0f;
 		if (posZ > 65536)
 			posZ = 65536;
 
 		GXBegin(0x80, 0, 4);
 
-		GXPosition3f32(0.0 + deltaX, 0.0 + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(0.0, 0.0);
+		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(0.0f, 0.0f);
 
-		GXPosition3f32(0.0 + deltaX + GameWidth, 0.0 + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(1.0, 0.0);
+		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(1.0f, 0.0f);
 
-		GXPosition3f32(0.0 + deltaX + GameWidth, 0.0 + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(1.0, 1.0);
+		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(1.0f, 1.0f);
 
-		GXPosition3f32(0.0 + deltaX, 0.0 + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(0.0, 1.0);
+		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(0.0f, 1.0f);
 
 		GXShaderCall_Maybe(0xE);
 	}
 
 	if (params->AlphaLevel > 1)
 	{
-		float blurAlpha = (params->AlphaLevel - 1) * 25;
-		if (blurAlpha > 255)
-			blurAlpha = 255;
+		float blurAlpha = ((float)params->AlphaLevel - 1.0f) * 25.0f;
+		if (blurAlpha > 255.0f)
+			blurAlpha = 255.0f;
 
-		if (blurAlpha > 0)
+		if (blurAlpha > 0.0f)
 		{
-			GXSetTexCopySrc(0, 0, GameWidth, GameHeight);
-			GXSetTexCopyDst(((int)GameWidth) >> 1, ((int)GameHeight) >> 1, 6, 1);
+			GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
+			GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, 6, 1);
 			GXCopyTex(*ptr_filter01_buff, 0, 0);
 
 			GXBegin(0x80, 0, 4);
 
-			GXPosition3f32(0.25 + deltaX, 0.25 + deltaY + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (int)blurAlpha);
-			GXTexCoord2f32(0.0, 0.0);
+			GXPosition3f32(0.25f + deltaX, 0.25f + deltaY + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 0.0f);
 
-			GXPosition3f32(0.25 + deltaX + GameWidth, 0.25 + deltaY + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (int)blurAlpha);
-			GXTexCoord2f32(1.0, 0.0);
+			GXPosition3f32(0.25f + deltaX + GameWidth, 0.25f + deltaY + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 0.0f);
 
-			GXPosition3f32(0.25 + deltaX + GameWidth, 0.25 + deltaY + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (int)blurAlpha);
-			GXTexCoord2f32(1.0, 1.0);
+			GXPosition3f32(0.25f + deltaX + GameWidth, 0.25f + deltaY + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 1.0f);
 
-			GXPosition3f32(0.25 + deltaX, 0.25 + deltaY + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (int)blurAlpha);
-			GXTexCoord2f32(0.0, 1.0);
+			GXPosition3f32(0.25f + deltaX, 0.25f + deltaY + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 1.0f);
 
 			GXShaderCall_Maybe(0xE);
 		}
@@ -228,17 +228,17 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 	float GameHeight = *ptr_InternalHeight;
 
 	float AlphaLvlTable[] = { // level_tbl1 in GC debug
-		0,
-		0.60, // 0.60000002
-		1.5,
-		2.60, // 2.5999999
-		1.5,
-		1.6,
-		1.6,
-		2.5,
-		2.60, // 2.5999999
-		4.5,
-		6.60 // 6.5999999
+		0.0f,
+		0.60f, // 0.60000002
+		1.5f,
+		2.60f, // 2.5999999
+		1.5f,
+		1.6f,
+		1.6f,
+		2.5f,
+		2.60f, // 2.5999999
+		4.5f,
+		6.60f // 6.5999999
 	};
 
 	int AlphaLevel_floor = (int)floorf(params->AlphaLevel); // TODO: should this be ceil instead?
@@ -269,9 +269,9 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 	float heightScaled = *ptr_InternalHeightScale * 448.0f;
 	float offsetY = 448.0f * (heightScaled - *ptr_RenderHeight) / (heightScaled + heightScaled);
 
-	float deltaX = 0;
-	float deltaY = 0;
-	float posZ = params->Distance;
+	float deltaX = 0.0f;
+	float deltaY = 0.0f;
+	float posZ = (float)params->Distance;
 	for (int loopIdx = 0; loopIdx < numBlurPasses; loopIdx++)
 	{
 		// Main reason for this hook is to add the deltaX/deltaY vars below, needed for the DoF effect to work properly
@@ -279,43 +279,43 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 		// (yet even though this was removed, the X360 devs did add the code for offsetY above to fix the blur...)
 
 		if (loopIdx == 0) {
-			deltaX = 0.0 - blurPositionOffset;
-			deltaY = 0.0 - blurPositionOffset;
+			deltaX = 0.0f - blurPositionOffset;
+			deltaY = 0.0f - blurPositionOffset;
 		}
 		else if (loopIdx == 1) {
-			deltaX = 0.0 + blurPositionOffset;
-			deltaY = 0.0 + blurPositionOffset;
+			deltaX = 0.0f + blurPositionOffset;
+			deltaY = 0.0f + blurPositionOffset;
 		}
 		else if (loopIdx == 2) {
-			deltaX = 0.0 + blurPositionOffset;
-			deltaY = 0.0 - blurPositionOffset;
+			deltaX = 0.0f + blurPositionOffset;
+			deltaY = 0.0f - blurPositionOffset;
 		}
 		else if (loopIdx == 3) {
-			deltaX = 0.0 - blurPositionOffset;
-			deltaY = 0.0 + blurPositionOffset;
+			deltaX = 0.0f - blurPositionOffset;
+			deltaY = 0.0f + blurPositionOffset;
 		}
 
 		posZ = posZ + 100.f;
-		if (posZ > 65536)
-			posZ = 65536;
+		if (posZ > 65536.0f)
+			posZ = 65536.0f;
 
 		GXBegin(0xA0, 0, 4); // TODO: 0xA0 (GX_TRIANGLEFAN) in PC, 0x80 (GX_QUADS) in GC - should this be changed?
 
-		GXPosition3f32(0.0 + deltaX, 0.0 + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(0.0, 0.0);
+		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(0.0f, 0.0f);
 
-		GXPosition3f32(0.0 + deltaX + GameWidth, 0.0 + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(1.0, 0.0);
+		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(1.0f, 0.0f);
 
-		GXPosition3f32(0.0 + deltaX + GameWidth, 0.0 + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(1.0, 1.0);
+		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(1.0f, 1.0f);
 
-		GXPosition3f32(0.0 + deltaX, 0.0 + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, 0x80);
-		GXTexCoord2f32(0.0, 1.0);
+		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		GXTexCoord2f32(0.0f, 1.0f);
 
 		GXShaderCall_Maybe(0xE);
 	}

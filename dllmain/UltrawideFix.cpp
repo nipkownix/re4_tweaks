@@ -54,10 +54,10 @@ void Init_UltraWideFix()
 			// if super ultrawise
 			if (fGameDisplayAspectRatio > 3.4)
 			{
-#ifdef VERBOSE
-				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
-				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
-#endif
+				#ifdef VERBOSE
+				con.AddConcatLog("fNewEngineWidthScale = ", (int)fNewEngineWidthScale);
+				con.AddConcatLog("fNewAspectRatio = ", (int)fNewAspectRatio);
+				#endif
 
 				fNewInvItemNamePos = 450;
 				fNewFilesTitlePos = 410;
@@ -75,10 +75,10 @@ void Init_UltraWideFix()
 			// if ultrawide
 			else if (fGameDisplayAspectRatio > 2.2)
 			{
-#ifdef VERBOSE
-				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
-				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
-#endif
+				#ifdef VERBOSE
+				con.AddConcatLog("fNewEngineWidthScale = ", (int)fNewEngineWidthScale);
+				con.AddConcatLog("fNewAspectRatio = ", (int)fNewAspectRatio);
+				#endif
 
 				fNewInvItemNamePos = 385;
 				fNewFilesTitlePos = 370;

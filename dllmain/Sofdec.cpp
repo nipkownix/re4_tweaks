@@ -105,18 +105,18 @@ void Init_sofdec()
 			#endif
 
 			// Calculate new position
-			newMovPosX = MovResX / static_cast<float>(2);
+			newMovPosX = MovResX / 2.0f;
 			newMovNegX = -newMovPosX;
 
-			newMovPosY = MovResY / 1.54;
+			newMovPosY = MovResY / 1.54f;
 			newMovNegY = -newMovPosY;
 
 			#ifdef VERBOSE
-			con.AddConcatLog("newMovPosX = ", newMovPosX);
-			con.AddConcatLog("newMovNegX = ", newMovNegX);
+			con.AddConcatLog("newMovPosX = ", static_cast<int>(newMovPosX));
+			con.AddConcatLog("newMovNegX = ", static_cast<int>(newMovNegX));
 
-			con.AddConcatLog("newMovPosY = ", newMovPosY);
-			con.AddConcatLog("newMovNegY = ", newMovNegY);
+			con.AddConcatLog("newMovPosY = ", static_cast<int>(newMovPosY));
+			con.AddConcatLog("newMovNegY = ", static_cast<int>(newMovNegY));
 			#endif
 
 			* (int32_t*)(ptrSFDMovAddr) = regs.eax;

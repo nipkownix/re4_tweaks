@@ -63,9 +63,9 @@ void __cdecl eprintf_ScreenDisp(const char* str, float x, float y, int color)
 {
 	int length = strlen(str);
 
-	double v7 = 0.9900000095367432;
-	double v8 = 0.1428571492433548;
-	double v9 = 0.0625;
+	float v7 = 0.9900000095367432;
+	float v8 = 0.1428571492433548;
+	float v9 = 0.0625;
 	for (int i = 0; i < length; i++)
 	{
 		char ch = str[i] - 0x20;

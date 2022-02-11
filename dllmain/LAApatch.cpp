@@ -47,8 +47,8 @@ void LAApatch::LAARender()
 	POINT mPos;
 	GetCursorPos(&mPos);
 	ScreenToClient(hWindow, &mPos);
-	io.MousePos.x = mPos.x;
-	io.MousePos.y = mPos.y;
+	io.MousePos.x = static_cast<float>(mPos.x);
+	io.MousePos.y = static_cast<float>(mPos.y);
 	io.MouseDown[0] = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
 	io.MouseDown[1] = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
 	io.MouseDown[2] = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;

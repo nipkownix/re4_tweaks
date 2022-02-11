@@ -42,7 +42,7 @@ HKL __stdcall GetKeyboardLayout_Hook(DWORD idThread)
 	auto userLanguage = GetKeyboardLayout(idThread);
 
 	// Return user language if it's one that the game should have support for
-	switch (PRIMARYLANGID(userLanguage))
+	switch (PRIMARYLANGID(LOWORD(userLanguage)))
 	{
 	case LANG_CHINESE:
 	case LANG_ENGLISH:

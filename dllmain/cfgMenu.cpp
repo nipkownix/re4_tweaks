@@ -59,8 +59,8 @@ void MenuRender()
 		{
 			ImGui::BeginChild("left side", ImVec2(230, 0));
 
-			static ImVec4 active = ImVec4(41 / 255.0, 40 / 255.0, 41 / 255.0, 255 / 255.0);
-			static ImVec4 inactive = ImVec4(31 / 255.0, 30 / 255.0, 31 / 255.0, 255 / 255.0);
+			static ImVec4 active = ImVec4(41.0f / 255.0f, 40.0f / 255.0f, 41.0f / 255.0f, 255.0f / 255.0f);
+			static ImVec4 inactive = ImVec4(31.0f / 255.0f, 30.0f / 255.0f, 31.0f / 255.0f, 255.0f / 255.0f);
 
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 1 ? active : inactive);
 			if (ImGui::Button(ICON_FA_DESKTOP " Display", ImVec2(230 - 15, 41)))
@@ -489,7 +489,7 @@ void MenuRender()
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::InputText("Flip RIGHT", &cfg.sFlipItemRight, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::PopItemWidth;
+				ImGui::PopItemWidth();
 
 				ImGui::Spacing();
 				ImGui::Separator();
@@ -504,7 +504,7 @@ void MenuRender()
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
 				ImGui::InputText("QTE key 2", &cfg.sQTE_key_2, ImGuiInputTextFlags_CharsUppercase);
 				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::PopItemWidth;
+				ImGui::PopItemWidth();
 
 				ImGui::Spacing();
 				ImGui::Separator();
@@ -590,7 +590,7 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("Open config menu", &cfg.sConfigMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth;
+				ImGui::PopItemWidth();
 
 				if (ImGui::IsItemEdited())
 					cfg.HasUnsavedChanges = true;
@@ -604,7 +604,7 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("Open console", &cfg.sConsoleKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth;
+				ImGui::PopItemWidth();
 
 				if (ImGui::IsItemEdited())
 					cfg.HasUnsavedChanges = true;
@@ -619,7 +619,7 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("Open debug menu", &cfg.sDebugMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth;
+				ImGui::PopItemWidth();
 
 				if (ImGui::IsItemEdited())
 					cfg.HasUnsavedChanges = true;
@@ -633,7 +633,7 @@ void MenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("MouseTurning modifier", &cfg.sMouseTurnModifierKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth;
+				ImGui::PopItemWidth();
 
 				if (ImGui::IsItemEdited())
 					cfg.HasUnsavedChanges = true;
