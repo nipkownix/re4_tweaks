@@ -21,8 +21,6 @@
 #include <DbgHelp.h>
 #pragma comment(lib, "Dbghelp.lib")
 
-#define _CRT_SECURE_NO_WARNINGS
-
  /*
   *  Special Note:
   *      Try not to allocate any memory in this file!
