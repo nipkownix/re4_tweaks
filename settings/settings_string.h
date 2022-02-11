@@ -61,6 +61,11 @@ RememberWindowPos = false
 ; Unlocks the JP-only classic camera angles during Ashley's segment.
 AshleyJPCameraAngles = false
 
+; Allows selling the (normally unused) handgun silencer to the merchant.
+; If you use a mod that changes the merchant price tables you might want to disable this
+; But if you're only using RE4HD you can leave this enabled
+AllowSellingHandgunSilencer = true
+
 ; Whether to skip the Capcom etc intro logos when starting the game.
 SkipIntroLogos = false
 

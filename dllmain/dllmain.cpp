@@ -434,6 +434,33 @@ void Init_Main()
 		Init_ToolMenu();
 		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
 	}
+
+	// Add Handgun silencer to merchant sell list
+	if (cfg.bAllowSellingHandgunSilencer)
+	{
+		auto pattern = hook::pattern("DB 00 AC 0D 01 00 FF FF 00 00 00 00 00 00 00 00 00 00 0B 01");
+
+		struct PRICE_INFO // name from PS2/VR
+		{
+			short item_id_0;
+			short price_2; // gets multiplied by 100 or 50
+			short valid_4; // set to 1 on valid items? not sure if checked
+		};
+
+		// g_item_price_tbl has just enough room at the end to include 1 more item, so we'll add silencer to it there
+		PRICE_INFO* g_item_price_tbl_130 = pattern.count(1).get(0).get<PRICE_INFO>(0);
+		g_item_price_tbl_130[1].item_id_0 = 0x3F;
+		g_item_price_tbl_130[1].price_2 = 3000; // buy price will be 30000, sell price should end up as 15000 - fair for a easter-egg item like this?
+		g_item_price_tbl_130[1].valid_4 = 1;
+		g_item_price_tbl_130[2].item_id_0 = 0xFFFF; // add new record end marker
+		g_item_price_tbl_130[2].price_2 = 0;
+		g_item_price_tbl_130[2].valid_4 = 0;
+
+		// Add 1 to price table count
+		pattern = hook::pattern("83 00 00 00 78 00 00 00");
+		uint32_t* g_item_price_tbl_num = pattern.count(1).get(0).get<uint32_t>(0);
+		*g_item_price_tbl_num += 1;
+	}
 }
 
 void LoadRealDLL(HMODULE hModule)
