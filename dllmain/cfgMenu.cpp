@@ -359,6 +359,14 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// AllowSellingHandgunSilencer
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("AllowSellingHandgunSilencer", &cfg.bAllowSellingHandgunSilencer);
+				ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// SkipIntroLogos
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
 				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");
