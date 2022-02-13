@@ -66,6 +66,9 @@ AshleyJPCameraAngles = false
 ; But if you're only using RE4HD you can leave this enabled
 AllowSellingHandgunSilencer = true
 
+; Allows the game to display Leon's mafia outfit ("Special 2") on cutscenes.
+AllowMafiaLeonCutscenes = true
+
 ; Whether to skip the Capcom etc intro logos when starting the game.
 SkipIntroLogos = false
 

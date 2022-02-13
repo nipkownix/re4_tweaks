@@ -367,6 +367,18 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// AllowMafiaLeonCutscenes
+				if (ImGui::Checkbox("AllowMafiaLeonCutscenes", &cfg.bAllowMafiaLeonCutscenes))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Allows the game to display Leon's mafia outfit (\"Special 2\") on cutscenes.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// SkipIntroLogos
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
 				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");

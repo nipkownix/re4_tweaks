@@ -29,6 +29,7 @@ struct Settings
 	bool bRememberWindowPos;
 	std::string sWrappedDllPath;
 	bool bSkipIntroLogos;
+	bool bAllowMafiaLeonCutscenes;
 	bool bEnableDebugMenu;
 	bool bAllowSellingHandgunSilencer;
 	float fControllerSensitivity;
