@@ -360,7 +360,11 @@ void MenuRender()
 				ImGui::Spacing();
 
 				// AllowSellingHandgunSilencer
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("AllowSellingHandgunSilencer", &cfg.bAllowSellingHandgunSilencer);
+				if (ImGui::Checkbox("AllowSellingHandgunSilencer", &cfg.bAllowSellingHandgunSilencer))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
 
 				ImGui::Spacing();
