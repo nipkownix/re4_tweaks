@@ -276,6 +276,13 @@ void Init_Main()
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(11), (uint8_t)-1, true); // Allow the correct animations to be used
 	}
 
+	// Silence armored Ashley
+	if (cfg.bSilenceArmoredAshley)
+	{
+		auto pattern = hook::pattern("75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(0), (uint8_t)0xEB, true); // jne -> jmp
+	}
+
 	// Apply window changes
 	if (cfg.bWindowBorderless || cfg.iWindowPositionX > -1 || cfg.iWindowPositionY > -1)
 	{

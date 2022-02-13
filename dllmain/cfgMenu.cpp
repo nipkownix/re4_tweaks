@@ -383,6 +383,19 @@ void MenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// SilenceArmoredAshley
+				if (ImGui::Checkbox("SilenceArmoredAshley", &cfg.bSilenceArmoredAshley))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
+				ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// SkipIntroLogos
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
 				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");

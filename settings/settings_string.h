@@ -69,6 +69,10 @@ AllowSellingHandgunSilencer = true
 ; Allows the game to display Leon's mafia outfit ("Special 2") on cutscenes.
 AllowMafiaLeonCutscenes = true
 
+; Silence Ashley's armored outfit ("Special 2").
+; For those who also hate the constant "Clank Clank Clank".
+SilenceArmoredAshley = false
+
 ; Whether to skip the Capcom etc intro logos when starting the game.
 SkipIntroLogos = false
 

@@ -30,6 +30,7 @@ struct Settings
 	std::string sWrappedDllPath;
 	bool bSkipIntroLogos;
 	bool bAllowMafiaLeonCutscenes;
+	bool bSilenceArmoredAshley;
 	bool bEnableDebugMenu;
 	bool bAllowSellingHandgunSilencer;
 	float fControllerSensitivity;
