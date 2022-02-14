@@ -6,6 +6,7 @@
 double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
 double fDefaultAspectRatio = 1.333333373;
+double fDefaultEsp18Height = 0.375;
 
 double fNewInvItemNamePos;
 double fNewFilesTitlePos;
@@ -21,6 +22,7 @@ uintptr_t* ptrResMovAddr;
 
 static uint32_t* ptrEngineWidthScale;
 static uint32_t* ptrAspectRatio;
+static uint32_t* ptrEsp18Height;
 
 void Init_UltraWideFix()
 {
@@ -30,6 +32,9 @@ void Init_UltraWideFix()
 	pattern = hook::pattern("D9 05 ? ? ? ? C7 45 ? ? ? ? ? D9 5C 24 ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? C7 45 ? ? ? ? ? D9 81");
 	ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(2);
 
+	pattern = hook::pattern("DC 0D ? ? ? ? D9 9D ? ? ? ? D9 85 ? ? ? ? D9 5C 24 ? D9 5C 24");
+	ptrEsp18Height = *pattern.count(1).get(0).get<uint32_t*>(2);
+
 	// Hook function that changes the resolution
 	pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? 5E 5B 8B E5 5D C3");
 	ptrResMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
@@ -37,10 +42,10 @@ void Init_UltraWideFix()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-#ifdef VERBOSE
-			con.AddConcatLog("ResX = ", regs.eax);
-			con.AddConcatLog("ResY = ", regs.ecx);
-#endif
+			#ifdef VERBOSE
+			con.AddConcatLog("ResX = ", (int)regs.eax);
+			con.AddConcatLog("ResY = ", (int)regs.ecx);
+			#endif
 
 			double fGameWidth = regs.eax;
 			double fGameHeight = regs.ecx;
@@ -51,12 +56,16 @@ void Init_UltraWideFix()
 			double fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
 			double fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
 
-			// if super ultrawise
+			// Fix Esp18 height
+			double fNewEsp18Height = 0.50068 / fNewAspectRatio;
+
+			// if super ultrawide
 			if (fGameDisplayAspectRatio > 3.4)
 			{
 				#ifdef VERBOSE
-				con.AddConcatLog("fNewEngineWidthScale = ", (int)fNewEngineWidthScale);
-				con.AddConcatLog("fNewAspectRatio = ", (int)fNewAspectRatio);
+				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
+				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
+				con.AddConcatLog("fNewEsp18Height = ", fNewEsp18Height);
 				#endif
 
 				fNewInvItemNamePos = 450;
@@ -68,7 +77,8 @@ void Init_UltraWideFix()
 				fNewMerchGreetingPos = 430;
 				fNewTItemNamesPos = 450;
 				fNewRadioNamesPos = 410;
-				
+
+				injector::WriteMemory(ptrEsp18Height, static_cast<double>(-fNewEsp18Height), true);
 				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
 			}
@@ -76,8 +86,9 @@ void Init_UltraWideFix()
 			else if (fGameDisplayAspectRatio > 2.2)
 			{
 				#ifdef VERBOSE
-				con.AddConcatLog("fNewEngineWidthScale = ", (int)fNewEngineWidthScale);
-				con.AddConcatLog("fNewAspectRatio = ", (int)fNewAspectRatio);
+				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
+				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
+				con.AddConcatLog("fNewEsp18Height = ", fNewEsp18Height);
 				#endif
 
 				fNewInvItemNamePos = 385;
@@ -90,13 +101,15 @@ void Init_UltraWideFix()
 				fNewTItemNamesPos = 385;
 				fNewRadioNamesPos = 380;
 
+				injector::WriteMemory(ptrEsp18Height, static_cast<double>(-fNewEsp18Height), true);
 				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
 			}
-			else {
-#ifdef VERBOSE
+			else 
+			{
+				#ifdef VERBOSE
 				con.AddLogChar("Wrote default aspect ratio values");
-#endif
+				#endif
 				fNewInvItemNamePos = 320;
 				fNewFilesTitlePos = 320;
 				fNewFilesItemsPos = 320;
@@ -107,6 +120,7 @@ void Init_UltraWideFix()
 				fNewTItemNamesPos = 320;
 				fNewRadioNamesPos = 320;
 
+				injector::WriteMemory(ptrEsp18Height, static_cast<double>(-fDefaultEsp18Height), true);
 				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
 			}

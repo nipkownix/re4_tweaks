@@ -114,6 +114,24 @@ void ConsoleOutput::AddConcatLog(const char* fmt, int value, ...)
     memset(logBuffer, 0, sizeof(logBuffer));
 }
 
+void ConsoleOutput::AddConcatLog(const char* fmt, float value, ...)
+{
+    char logBuffer[200];
+    strcpy_s(logBuffer, fmt);
+    strcat_s(logBuffer, std::to_string(value).data());
+    con.AddLogChar(logBuffer);
+    memset(logBuffer, 0, sizeof(logBuffer));
+}
+
+void ConsoleOutput::AddConcatLog(const char* fmt, double value, ...)
+{
+    char logBuffer[200];
+    strcpy_s(logBuffer, fmt);
+    strcat_s(logBuffer, std::to_string(value).data());
+    con.AddLogChar(logBuffer);
+    memset(logBuffer, 0, sizeof(logBuffer));
+}
+
 void ConsoleOutput::AddConcatLog(const char* fmt, const char* value, ...)
 {
     char logBuffer[200];

@@ -9,6 +9,8 @@ struct ConsoleOutput
 	void AddLogInt(int fmt, ...);
 	void AddLogFloat(float fmt, ...);
 	void AddConcatLog(const char* fmt, int value, ...);
+	void AddConcatLog(const char* fmt, float value, ...);
+	void AddConcatLog(const char* fmt, double value, ...);
 	void AddConcatLog(const char* fmt, const char* value, ...);
 	void Clear();
 };
