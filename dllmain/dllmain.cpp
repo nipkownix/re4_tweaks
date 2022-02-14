@@ -479,6 +479,15 @@ void Init_Main()
 		uint32_t* g_item_price_tbl_num = pattern.count(1).get(0).get<uint32_t>(0);
 		*g_item_price_tbl_num += 1;
 	}
+
+	// Allow physics to apply to tactical vest outfit
+	// Some reason they specifically excluded that outfit inside the physics functions, maybe there's an issue with it somewhere
+	// (Raz0r trainer overwrites this patch every frame for some reason, too bad)
+	{
+		auto pattern = hook::pattern("80 B8 C9 4F 00 00 02 74");
+		injector::MakeNOP(pattern.count(2).get(0).get<uint8_t>(7), 2);
+		injector::MakeNOP(pattern.count(2).get(1).get<uint8_t>(7), 2);
+	}
 }
 
 void LoadRealDLL(HMODULE hModule)
