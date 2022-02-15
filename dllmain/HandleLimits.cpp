@@ -3,177 +3,28 @@
 #include "dllmain.h"
 #include "Settings.h"
 
-uint32_t* ptrpG;
-
-uintptr_t ptrstageInit;
-uintptr_t ptrSubScreenAramRead;
-
-static uint32_t* ptrpzzl_size;
-static uint32_t* ptrp_MemPool_SubScreen1;
-static uint32_t* ptrp_MemPool_SubScreen2;
-static uint32_t* ptrp_MemPool_SubScreen3;
-static uint32_t* ptrp_MemPool_SubScreen4;
-static uint32_t* ptrp_MemPool_SubScreen5;
-static uint32_t* ptrp_MemPool_SubScreen6;
-static uint32_t* ptrp_MemPool_SubScreen7;
-static uint32_t* ptrp_MemPool_SubScreen8;
-static uint32_t* ptrp_MemPool_SubScreen9;
-static uint32_t* ptrp_MemPool_SubScreen10;
-static uint32_t* ptrp_MemPool_SubScreen11;
-static uint32_t* ptrp_MemPool_SubScreen12;
-static uint32_t* ptrp_MemPool_SubScreen13;
-static uint32_t* ptrp_MemPool_SubScreen14;
-static uint32_t* ptrp_MemPool_SubScreen15;
-static uint32_t* ptrp_MemPool_SubScreen16;
-static uint32_t* ptrp_MemPool_SubScreen17;
-static uint32_t* ptrg_MemPool_SubScreen1;
-static uint32_t* ptrg_MemPool_SubScreen2;
-static uint32_t* ptrg_MemPool_SubScreen3;
-static uint32_t* ptrg_MemPool_SubScreen4;
-static uint32_t* ptrg_MemPool_SubScreen5;
-static uint32_t* ptrg_MemPool_SubScreen6;
-
-void GetLimitPointers()
-{
-	// pG (globals?) pointer
-	auto pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
-	ptrpG = *pattern.count(1).get(0).get<uint32_t*>(1);
-
-	// Inventory screen mem
-	pattern = hook::pattern("05 ? ? ? ? F6 C1 ? 8B 0D ? ? ? ? A3 ? ? ? ? 8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1");
-	ptrpzzl_size = pattern.count(1).get(0).get<uint32_t>(1);
-
-	pattern = hook::pattern("E8 ? ? ? ? 6A 03 6A 02 E8 ? ? ? ? 6A ? E8 ? ? ? ? A1");
-	ptrstageInit = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
-
-	pattern = hook::pattern("E8 ? ? ? ? 8B 0D ? ? ? ? 6A ? 81 C1 ? ? ? ? 53");
-	ptrSubScreenAramRead = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
-
-	pattern = hook::pattern("8B 0D ? ? ? ? 03 F8 81 C1 ? ? ? ? 3B F9 73 ? 89 46 ? EB ? 81 FF ? ? ? ? 73 ? 8B 15");
-	ptrp_MemPool_SubScreen1 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("8B 15 ? ? ? ? 81 C2 ? ? ? ? 89 56 ? 83 0E ? 8B 06 A8 ? 74 ? 8B 4E ? 8B 56 ? 8B 45");
-	ptrp_MemPool_SubScreen2 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("A1 ? ? ? ? 05 ? ? ? ? 39 46 ? 72 ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 4E ? 51");
-	ptrp_MemPool_SubScreen3 = pattern.count(1).get(0).get<uint32_t>(1);
-
-	pattern = hook::pattern("08 A1 ? ? ? ? 56 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 05 ? ? ? ? 50 6A ? 68");
-	ptrp_MemPool_SubScreen4 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("8B 0D ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 8D 94 ? ? ? ? ? 52 6A");
-	if (game_version == "1.0.6") // only in 1.0.6 non-debug build
-		ptrp_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(2);
-	else
-		ptrp_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(-4);
-
-	pattern = hook::pattern("8B 15 ? ? ? ? A1 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 6A ? 6A ? 8D 8C");
-	if (game_version == "1.0.6") // only in 1.0.6 non-debug build
-		ptrp_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(2);
-	else
-		ptrp_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(7);
-
-	pattern = hook::pattern("8B 0D ? ? ? ? A1 ? ? ? ? 8B 40 ? 68 ? ? ? ? 81 C1 ? ? ? ? 51 50 A3");
-	ptrp_MemPool_SubScreen7 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("15 ? ? ? ? 8B 86 ? ? ? ? 68 ? ? ? ? 81 C2 ? ? ? ? 52 50 E8 ? ? ? ? 6A");
-	ptrp_MemPool_SubScreen8 = pattern.count(1).get(0).get<uint32_t>(1);
-
-	pattern = hook::pattern("8B 0D ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 6A ? 53 53 8D 94 08 ? ? ? ? 52 53");
-	ptrp_MemPool_SubScreen9 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("05 ? ? ? ? 39 46 ? 72 ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 4E ? 51");
-	ptrp_MemPool_SubScreen11 = pattern.count(1).get(0).get<uint32_t>(1);
-
-	pattern = hook::pattern("81 C1 ? ? ? ? 51 50 A3 ? ? ? ? 88 1D ? ? ? ? E8 ? ? ? ? 0F BE 05");
-	ptrp_MemPool_SubScreen12 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("05 ? ? ? ? 50 6A ? 68 ? ? ? ? C7 05 ? ? ? ? ? ? ? ? E8");
-	ptrp_MemPool_SubScreen13 = pattern.count(1).get(0).get<uint32_t>(1);
-
-	pattern = hook::pattern("6A 09 6A 00 6A 00 ? ? ? ? ? ? ? ? 6A 00 68");
-	ptrp_MemPool_SubScreen14 = pattern.count(2).get(0).get<uint32_t>(9);
-	ptrp_MemPool_SubScreen15 = pattern.count(2).get(1).get<uint32_t>(9);
-
-	pattern = hook::pattern("81 C2 ? ? ? ? 52 50 E8 ? ? ? ? 6A ? E8 ? ? ? ? 6A ? E8");
-	ptrp_MemPool_SubScreen16 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("8D 94 08 ? ? ? ? 52 53 68 ? ? ? ? E8 ? ? ? ? 83");
-	ptrp_MemPool_SubScreen17 = pattern.count(1).get(0).get<uint32_t>(3);
-
-	pattern = hook::pattern("68 ? ? ? ? 81 C1 ? ? ? ? 51 50 A3 ? ? ? ? 88 1D ? ? ? ? E8");
-	ptrg_MemPool_SubScreen1 = pattern.count(1).get(0).get<uint32_t>(1);
-
-	pattern = hook::pattern("68 ? ? ? ? 81 C2 ? ? ? ? 52 50 E8 ? ? ? ? 6A ? E8 ? ? ? ? 6A ? E8 ");
-	ptrg_MemPool_SubScreen2 = pattern.count(1).get(0).get<uint32_t>(1);
-
-	pattern = hook::pattern("8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1 50 6A ? E8 ? ? ? ? 83");
-	ptrg_MemPool_SubScreen3 = pattern.count(1).get(0).get<uint32_t>(2);
-	ptrg_MemPool_SubScreen4 = pattern.count(1).get(0).get<uint32_t>(10);
-
-	pattern = hook::pattern("81 C2 ? ? ? ? 89 15 ? ? ? ? 80 B8 ? ? ? ? ? 74 ? 0F B7 0D ? ? ? ? 51");
-	ptrg_MemPool_SubScreen5 = pattern.count(1).get(0).get<uint32_t>(2);
-
-	pattern = hook::pattern("81 FF ? ? ? ? 73 ? 8B 15 ? ? ? ? 81 C2 ? ? ? ? 89 56 ? 83 0E");
-	ptrg_MemPool_SubScreen6 = pattern.count(1).get(0).get<uint32_t>(2);
-	ptrp_MemPool_SubScreen10 = pattern.count(1).get(0).get<uint32_t>(16);
-}
-
-// Inventory screen mem functions
-__declspec(align(4096)) uint8_t g_MemPool_SubScreen[0x4000000];
-uint8_t g_MemPool_SubScreen2[0x4000000];
-
-uint8_t* p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
-
-bool(__fastcall* MessageControl__stageInit_Orig)(void* thisptr);
-bool __fastcall MessageControl__stageInit_Hook(void* thisptr)
-{
-	bool ret = MessageControl__stageInit_Orig(thisptr);
-
-	// Set pG+0x3C to point to an extended buffer we control
-	// The game uses this for some MemorySwap operation later on - not really sure why that swap is needed though, but oh well
-	uint8_t* pG = *(uint8_t**)(ptrpG);
-
-	*(void**)(pG + 0x3C) = &g_MemPool_SubScreen2;
-
-	return ret;
-}
-
-int(*SubScreenAramRead_Orig)();
-int SubScreenAramRead_Hook()
-{
-	int pzzl_size = SubScreenAramRead_Orig();
-
-	// Patch SubScreenExec heap size, seems to be max size to read from ss_pzzl/omk_pzzl file
-	injector::WriteMemory<int>(ptrpzzl_size, pzzl_size, true);
-
-	return pzzl_size;
-}
-
 void Init_HandleLimits()
 {
-	GetLimitPointers();
-
 	// vertex buffers
 	if (cfg.bRaiseVertexAlloc)
 	{
 		auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
-		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68000C3500, true);  // 400000 -> 800000
-		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68000C3500, true);
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 800000, true);  // 400000 -> 800000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 800000, true);
 
 		pattern = hook::pattern("68 00 09 3D 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1 ? ? ? ? 8B 08");
-		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68007A1200, true);  // 4000000 -> 8000000
-		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68007A1200, true);
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 8000000, true);  // 4000000 -> 8000000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 8000000, true);
 
 		pattern = hook::pattern("68 80 84 1E 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? A1");
-		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 0x68003D0900, true);  // 2000000 -> 4000000
-		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 0x68003D0900, true);
+		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 4000000, true);  // 2000000 -> 4000000
+		injector::WriteMemory<int>(pattern.count(2).get(1).get<uint32_t>(1), 4000000, true);
 
 		pattern = hook::pattern("68 80 8D 5B 00 50 8B 41 ? FF D0 85 C0 0F 85");
-		injector::WriteMemory<int>(pattern.count(4).get(0).get<uint32_t>(1), 0x6800B71B00, true);  // 6000000 -> 12000000
-		injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 0x6800B71B00, true);
-		injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 0x6800B71B00, true);
-		injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 0x6800B71B00, true);
+		injector::WriteMemory<int>(pattern.count(4).get(0).get<uint32_t>(1), 12000000, true);  // 6000000 -> 12000000
+		injector::WriteMemory<int>(pattern.count(4).get(1).get<uint32_t>(1), 12000000, true);
+		injector::WriteMemory<int>(pattern.count(4).get(2).get<uint32_t>(1), 12000000, true);
+		injector::WriteMemory<int>(pattern.count(4).get(3).get<uint32_t>(1), 12000000, true);
 
 		// Make it so models don't disappear when a certain polygon limit is reached
 		pattern = hook::pattern("81 80 ? ? ? ? ? ? ? ? A1 ? ? ? ? 8B 90 ? ? ? ? 03 D2");
@@ -183,46 +34,65 @@ void Init_HandleLimits()
 	// Inventory screen mem
 	if (cfg.bRaiseInventoryAlloc)
 	{
-		memset(g_MemPool_SubScreen, 0, sizeof(g_MemPool_SubScreen));
-		memset(g_MemPool_SubScreen2, 0, sizeof(g_MemPool_SubScreen2));
+		const int SSOldSize = 0x34AC00;
+		const int SSNewSize = 0x2000000;
+		const int WepDataSize = 0x400000; // space for loading ss wep models
+		const int PzzlNewSize = SSNewSize - WepDataSize;
 
-		ReadCall(ptrstageInit, MessageControl__stageInit_Orig);
-		InjectHook(ptrstageInit, MessageControl__stageInit_Hook);
+		const int Mem1OrigSize = 0x1D00000;
+		const int Mem2OrigSize = 0x3700000;
 
-		ReadCall(ptrSubScreenAramRead, SubScreenAramRead_Orig);
-		InjectHook(ptrSubScreenAramRead, SubScreenAramRead_Hook);
+		// (SubScreenExec) Not sure what this is, changes offset into SS memory depending on 0x20 flag
+		auto pattern = hook::pattern("05 ? ? ? ? F6 C1 ? 8B 0D ? ? ? ? A3 ? ? ? ? 8D 91 ? ? ? ? 75 ? 8D 91 ? ? ? ? 52 03 C1");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(1), 0x00600000, true); // 0x007681d7
 
-		p_MemPool_SubScreen = (uint8_t*)&g_MemPool_SubScreen;
+		// (SubScreenExec) Change offset to pzzl data inside mem2 to end of original mem2 space
+		// and change size of pzzl data to new size
+		pattern = hook::pattern("68 ? ? ? ? 81 c1 ? ? ? ? 51 50");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(1), PzzlNewSize, true); // 0x007680fc
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(7), Mem2OrigSize, true); // 0x00768102
 
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen1, (uintptr_t)&p_MemPool_SubScreen, true);
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen2, (uintptr_t)&p_MemPool_SubScreen, true);
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen3, (uintptr_t)&p_MemPool_SubScreen, true);
+		// (SubScreenExec) update pzzl data end size (used for ss-wep.dat load?), and skip pointless check
+		pattern = hook::pattern("8d 91 ? ? ? ? 75 ? 8d 91 ? ? ? ? 52 03 c1");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(2), PzzlNewSize, true); // 0x007681eb
+		injector::WriteMemory<uint8_t>(pattern.count(1).get(0).get<uint32_t>(6), uint8_t(0xEB), true); // 0x007681ef
 
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen4, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads rel/Sscrn.rel
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen5, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads ss_cmmn.dat read
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen6, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenAramRead, reads omk_pzzl.dat / ss_pzzl.dat
+		// (SubScreenAramRead) Change offset to pzzl data inside mem2 to end of original mem2 space
+		pattern = hook::pattern("05 ? ? ? ? 50 6a ? 68 ? ? ? ? c7 05 ? ? ? ? ? ? ? ? e8 ? ? ? ? 8b 0d");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(1), Mem2OrigSize, true); // 0x00768ded
+		pattern = hook::pattern("8d 94 ? ? ? ? ? 52 6a ? 68 ? ? ? ? e8 ? ? ? ? 8b 0d");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(3), Mem2OrigSize, true); // 0x00768e78 - ss_cmmn.dat load
+		pattern = hook::pattern("8d 8c ? ? ? ? ? 51 6a ? 68 ? ? ? ? e8 ? ? ? ? 8b 15");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(3), Mem2OrigSize, true); // 0x00768fb2 - ss_pzzl.dat load
 
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen7, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExec MemorySwap call
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen8, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExitCore MemorySwap call
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen9, (uintptr_t)&p_MemPool_SubScreen, true); // SubScreenExit
+		// (SubScreenExitCore) Change offset to pzzl data inside mem2...
+		pattern = hook::pattern("81 c2 ? ? ? ? 52 50 e8 ? ? ? ? 6a");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(2), Mem2OrigSize, true); // 0x0076938b
 
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen10, 0x000000, true);
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen11, 0x000000, true);
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen12, 0x000000, true);
+		// (SubScreenExit) Change offset to pzzl data inside mem2...
+		pattern = hook::pattern("8d 94 08 ? ? ? ? 52 53");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(3), Mem2OrigSize, true); // 0x007695b3
 
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen13, 0x000000, true);
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen14, 0x000000, true);
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen15, 0x000000, true);
+		// (SubScreenTask) Change offset to ss_wep data inside mem2 (end of pzzl data)
+		pattern = hook::pattern("81 c2 ? ? ? ? 89 15 ? ? ? ? 80 b8");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(2), PzzlNewSize, true); // 0x00774e20 - ss-wep.dat load?
 
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen16, 0x000000, true);
-		injector::WriteMemory<int>(ptrp_MemPool_SubScreen17, 0x000000, true);
+		// (MemAlloc) Increase mem2 size to include space for our SSNewSize
+		pattern = hook::pattern("68 ? ? ? ? 89 35 ? ? ? ? e8 ? ? ? ? 68");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(1), Mem2OrigSize + SSNewSize, true); // 0x0097485f
 
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen1, (uint32_t)sizeof(g_MemPool_SubScreen), true); // SubScreenExec MemorySwap size
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen2, (uint32_t)sizeof(g_MemPool_SubScreen), true); // SubScreenExitCore MemorySwap size
+		// (MemAlloc) Increase mem1 area size
+		pattern = hook::pattern("68 00 00 D0 01");
+		injector::WriteMemory<int>(pattern.count(3).get(0).get<uint32_t>(1), Mem1OrigSize + SSNewSize - SSOldSize, true); // 0x0097483a
+		injector::WriteMemory<int>(pattern.count(3).get(1).get<uint32_t>(1), Mem1OrigSize + SSNewSize - SSOldSize, true); // 0x0097484e
+		injector::WriteMemory<int>(pattern.count(3).get(2).get<uint32_t>(1), Mem1OrigSize + SSNewSize - SSOldSize, true); // 0x0097486f
 
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen3, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x1000000), true); // SubScreenExec, some heap size
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen4, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true); // SubScreenExec, some heap size
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen5, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
-		injector::WriteMemory<int>(ptrg_MemPool_SubScreen6, (uint32_t)(sizeof(g_MemPool_SubScreen) - 0x2000000), true);
+		// (SystemMemInit) Increase heap 0 end ptr offset 
+		pattern = hook::pattern("8D 8E 00 00 D0 01");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(2), Mem1OrigSize + SSNewSize - SSOldSize, true); // 0x006562cd
+		
+		// (MessageControl::stageInit) Increase size given to mem_alloc for pG+0x3C buffer 
+		pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 00 AC 34 00");
+		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(9), SSNewSize, true); // 0x00719817
 	}
 }

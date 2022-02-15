@@ -2,9 +2,6 @@
 #include "..\includes\stdafx.h"
 #include "GameFlags.h"
 
-// dllmain.cpp externs
-extern uint32_t* ptrpG;
-
 // tool_menu.cpp externs
 extern uint32_t* PadButtonStates;
 void MenuTask_Hook();
@@ -162,6 +159,8 @@ struct cFilter00Params2
     GXTevScale scale;
 };
 #pragma pack(pop)
+
+uint32_t* ptrpG;
 
 cLightMgr* LightMgr;
 cFilter00Params* Filter00Params;
@@ -416,7 +415,11 @@ void ToolMenu_LightToolMenu()
 
 void LightTool_GetPointers()
 {
-    auto pattern = hook::pattern("6A 00 53 6A 00 57 B9 ? ? ? ?");
+    // pG (Globals) pointer
+    auto pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
+    ptrpG = *pattern.count(1).get(0).get<uint32_t*>(1);
+
+    pattern = hook::pattern("6A 00 53 6A 00 57 B9 ? ? ? ?");
     auto varPtr = pattern.count(1).get(0).get<uint32_t>(7);
     LightMgr = (cLightMgr*)*varPtr;
 
