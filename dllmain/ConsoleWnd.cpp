@@ -7,7 +7,7 @@
 #include "..\external\imgui\imgui.h"
 #include "..\external\imgui\imgui_impl_win32.h"
 #include "..\external\imgui\imgui_impl_dx9.h"
-#include "WndProcHook.h"
+#include "input.hpp"
 
 ConsoleOutput con;
 
@@ -28,10 +28,8 @@ bool ParseConsoleKeyCombo(std::string_view in_combo)
 
 void ConsoleBinding()
 {
-    if (IsComboKeyPressed(&ConsoleCombo))
-    {
+    if (_input->is_combo_pressed(&ConsoleCombo))
         bConsoleOpen = !bConsoleOpen;
-    }
 }
 
 void ConsoleOutput::Clear()

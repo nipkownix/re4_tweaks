@@ -17,14 +17,19 @@
 #include "KeyboardMouseTweaks.h"
 #include "ExceptionHandler.h"
 #include "ControllerTweaks.h"
+#include "input.hpp"
+#include "EndSceneHook.h"
 
 std::string WrapperMode;
 std::string WrapperName;
 std::string rootPath;
 std::string game_version;
 
+std::ofstream LOG;
+
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
+HMODULE g_module_handle = nullptr;
 
 bool bCfgMenuOpen;
 bool bConsoleOpen;
@@ -91,6 +96,13 @@ void Init_Main()
 {
 	con.AddLogChar("Big ironic thanks to QLOC S.A.");
 
+	// Start logging
+	std::string logPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".log";
+	Logging::Open(logPath);
+
+	Logging::Log() << "Starting re4_tweaks";
+	Logging::Log() << logPath;
+
 	// Detect game version
 	auto pattern = hook::pattern("31 2E ? ? ? 00 00 00 6D 6F 76 69 65 2F 64 65 6D 6F 30 65 6E 67 2E 73 66 64");
 	int ver = injector::ReadMemory<int>(pattern.count(1).get(0).get<uint32_t>(2));
@@ -116,13 +128,13 @@ void Init_Main()
 	con.AddConcatLog("Game version = ", game_version.data());
 	#endif
 
-	cfg.ReadSettings();
-
 	HandleAppID();
+	
+	input::Init_Input();
 
 	Init_WndProcHook();
 
-	Init_cfgMenu();
+	Init_EndSceneHook();
 
 	Init_HandleLimits();
 
@@ -525,13 +537,17 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 
+		g_module_handle = hModule;
+
 		#ifdef VERBOSE
 		con.AddLogChar("\n");
 		#endif
 
-		Init_Main();
+		cfg.ReadSettings();
 
 		LoadRealDLL(hModule);
+
+		Init_Main();
 
 		break;
 	case DLL_PROCESS_DETACH:

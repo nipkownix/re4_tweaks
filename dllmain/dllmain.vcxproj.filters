@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\includes\stdafx.cpp">
@@ -94,6 +94,9 @@
     <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
       <Filter>external\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
     <ClCompile Include="..\external\Hooking\Hook.cpp">
       <Filter>external\Hooking</Filter>
     </ClCompile>
@@ -105,6 +108,9 @@
     </ClCompile>
     <ClCompile Include="..\external\Logging\Logging.cpp">
       <Filter>external\Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="EndSceneHook.cpp">
+      <Filter>dllmain</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -330,11 +336,17 @@
     <ClInclude Include="..\external\imgui\imgui_stdlib.h">
       <Filter>external\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="input.hpp">
+      <Filter>dllmain</Filter>
+    </ClInclude>
     <ClInclude Include="..\external\Hooking\Hook.h">
       <Filter>external\Hooking</Filter>
     </ClInclude>
     <ClInclude Include="..\external\Logging\Logging.h">
       <Filter>external\Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="EndSceneHook.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

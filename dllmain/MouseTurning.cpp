@@ -4,7 +4,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "KeyboardMouseTweaks.h"
-#include "WndProcHook.h"
+#include "input.hpp"
 
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -53,7 +53,7 @@ bool bMouseTurnStateChanged = false;
 
 bool isMouseTurnEnabled()
 {
-	bool modifierPressed = IsComboKeyPressed(&mouseTurnModifierCombo);
+	bool modifierPressed = _input->is_combo_down(&mouseTurnModifierCombo);
 
 	bool state = cfg.bUseMouseTurning;
 

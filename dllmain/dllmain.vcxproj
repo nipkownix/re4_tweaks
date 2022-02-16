@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -102,7 +102,9 @@
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="ControllerTweaks.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="EndSceneHook.cpp" />
     <ClCompile Include="ExceptionHandler.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
@@ -180,12 +182,14 @@
     <ClInclude Include="60fpsFixes.h" />
     <ClInclude Include="ConsoleWnd.h" />
     <ClInclude Include="ControllerTweaks.h" />
+    <ClInclude Include="EndSceneHook.h" />
     <ClInclude Include="ExceptionHandler.h" />
     <ClInclude Include="FilterXXFixes.h" />
     <ClInclude Include="GameFlags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="HandleLimits.h" />
+    <ClInclude Include="input.hpp" />
     <ClInclude Include="KeyboardMouseTweaks.h" />
     <ClInclude Include="LAApatch.h" />
     <ClInclude Include="MouseTurning.h" />

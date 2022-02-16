@@ -5,7 +5,7 @@
 #include "dllmain.h"
 #include "ConsoleWnd.h"
 #include "Settings.h"
-#include "WndProcHook.h"
+#include "input.hpp"
 
 // Light tool externs
 void LightTool_GetPointers();
@@ -179,7 +179,7 @@ void __cdecl gameDebug_recreation(void* a1)
 
 			if (toolMenuKeyCombo.size() > 0)
 			{
-				bool openToolMenu = IsComboKeyPressed(&toolMenuKeyCombo);
+				bool openToolMenu = _input->is_combo_pressed(&toolMenuKeyCombo);
 
 				isOnlyDebugComboPressed = openToolMenu; // seperate bools to be safe...
 			}
