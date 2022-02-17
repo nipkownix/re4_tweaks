@@ -6,6 +6,7 @@
 #include "MouseTurning.h"
 #include "KeyboardMouseTweaks.h"
 #include "Logging/Logging.h"
+#include "WndProcHook.h"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -208,5 +209,64 @@ void Init_KeyboardMouseTweaks()
 		injector::WriteMemory(*pattern.count(1).get(0).get<uintptr_t>(0x1C), GetKeyboardLayout_Hook, true);
 
 		Logging::Log() << __FUNCTION__ << " -> FallbackToEnglishKeyIcons enabled";
+
+		if (cfg.bVerboseLog)
+		{
+			Logging::Log() << "+------------------+------------------+";
+			Logging::Log() << "| Keyboard/locale info:               |";
+
+			// KeyboardLayout
+			wchar_t KeyboardLayoutBuff[25];
+
+			HKL userKeyboardLayout = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));
+			int userKeyboardLayoutID = PRIMARYLANGID(LOWORD(userKeyboardLayout));
+			LCIDToLocaleName(userKeyboardLayoutID, KeyboardLayoutBuff, ARRAYSIZE(KeyboardLayoutBuff), 0);
+
+			Logging::Log() << "| KeyboardLayout: " << KeyboardLayoutBuff;
+
+			// UserDefaultLCID
+			wchar_t UserDefaultLCIDBuff[25];
+
+			LCIDToLocaleName(GetUserDefaultLCID(), UserDefaultLCIDBuff, ARRAYSIZE(UserDefaultLCIDBuff), 0);
+
+			Logging::Log() << "| UserDefaultLCID: " << UserDefaultLCIDBuff;
+
+			// SystemDefaultLCID
+			wchar_t SystemDefaultLCIDBuff[25];
+
+			LCIDToLocaleName(GetSystemDefaultLCID(), SystemDefaultLCIDBuff, ARRAYSIZE(SystemDefaultLCIDBuff), 0);
+
+			Logging::Log() << "| UserDefaultLCID: " << SystemDefaultLCIDBuff;
+
+			// UserDefaultUILanguage
+			wchar_t UserDefaultUILanguageBuf[100];
+
+			GetLocaleInfo(GetUserDefaultUILanguage(), LOCALE_SNAME, UserDefaultUILanguageBuf, 100);
+
+			Logging::Log() << "| UserDefaultUILanguage: " << UserDefaultUILanguageBuf;
+
+			// SystemDefaultUILanguage
+			wchar_t SystemDefaultUILanguageBuf[100];
+
+			GetLocaleInfo(GetSystemDefaultUILanguage(), LOCALE_SNAME, SystemDefaultUILanguageBuf, 100);
+
+			Logging::Log() << "| SystemDefaultUILanguage: " << SystemDefaultUILanguageBuf;
+
+			// UserDefaultLangID
+			wchar_t UserDefaultLangIDBuf[100];
+
+			GetLocaleInfo(GetUserDefaultLangID(), LOCALE_SNAME, UserDefaultLangIDBuf, 100);
+
+			Logging::Log() << "| UserDefaultLangID: " << UserDefaultLangIDBuf;
+
+			// SystemDefaultLangID
+			wchar_t SystemDefaultLangIDBuf[100];
+
+			GetLocaleInfo(GetSystemDefaultLangID(), LOCALE_SNAME, SystemDefaultLangIDBuf, 100);
+
+			Logging::Log() << "| SystemDefaultLangID: " << SystemDefaultLangIDBuf;
+
+			Logging::Log() << "+------------------+------------------+";
+		}
 	}
 }

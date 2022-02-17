@@ -244,6 +244,20 @@ void Init_Main()
 				con.AddLogChar("Device 0 name: %s", device.DeviceName);
 				#endif
 				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
+
+				// Log display modes for troubleshooting
+				if (cfg.bVerboseLog)
+				{
+					DEVMODE dm = { 0 };
+					dm.dmSize = sizeof(dm);
+					Logging::Log() << "+---------------+---------------+";
+					Logging::Log() << "| Display modes:                |";
+					for (int iModeNum = 0; EnumDisplaySettings(device.DeviceName, iModeNum, &dm) != 0; iModeNum++)
+					{
+						Logging::Log() << "| Mode #" << iModeNum << " = " << dm.dmPelsWidth << "x" << dm.dmPelsHeight << " " << dm.dmDisplayFrequency << "Hz";
+					}
+					Logging::Log() << "+---------------+---------------+";
+				}
 			}
 		}
 
@@ -251,7 +265,7 @@ void Init_Main()
 		con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
 		#endif
 
-		Logging::Log() << "FixDisplayMode > New refresh rate = " << g_UserRefreshRate;
+		Logging::Log() << "FixDisplayMode -> New refresh rate = " << g_UserRefreshRate;
 
 		pattern = hook::pattern("8B 45 ? 83 F8 ? 75 ? 8B 4D ? 8B 7D ? 3B 4D");
 		struct DisplayModeFix
