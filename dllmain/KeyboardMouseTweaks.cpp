@@ -212,6 +212,8 @@ void Init_KeyboardMouseTweaks()
 
 		if (cfg.bVerboseLog)
 		{
+			char logBuf[100];
+
 			Logging::Log() << "+------------------+------------------+";
 			Logging::Log() << "| Keyboard/locale info:               |";
 
@@ -222,49 +224,56 @@ void Init_KeyboardMouseTweaks()
 			int userKeyboardLayoutID = PRIMARYLANGID(LOWORD(userKeyboardLayout));
 			LCIDToLocaleName(userKeyboardLayoutID, KeyboardLayoutBuff, ARRAYSIZE(KeyboardLayoutBuff), 0);
 
-			Logging::Log() << "| KeyboardLayout: " << KeyboardLayoutBuff;
+			sprintf(logBuf, "%-28s%9ws", "| KeyboardLayout: ", KeyboardLayoutBuff);
+			Logging::Log() << logBuf << " |";
 
 			// UserDefaultLCID
 			wchar_t UserDefaultLCIDBuff[25];
 
 			LCIDToLocaleName(GetUserDefaultLCID(), UserDefaultLCIDBuff, ARRAYSIZE(UserDefaultLCIDBuff), 0);
 
-			Logging::Log() << "| UserDefaultLCID: " << UserDefaultLCIDBuff;
+			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLCID: ", UserDefaultLCIDBuff);
+			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultLCID
 			wchar_t SystemDefaultLCIDBuff[25];
 
 			LCIDToLocaleName(GetSystemDefaultLCID(), SystemDefaultLCIDBuff, ARRAYSIZE(SystemDefaultLCIDBuff), 0);
 
-			Logging::Log() << "| UserDefaultLCID: " << SystemDefaultLCIDBuff;
+			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLCID: ", SystemDefaultLCIDBuff);
+			Logging::Log() << logBuf << " |";
 
 			// UserDefaultUILanguage
 			wchar_t UserDefaultUILanguageBuf[100];
 
 			GetLocaleInfo(GetUserDefaultUILanguage(), LOCALE_SNAME, UserDefaultUILanguageBuf, 100);
 
-			Logging::Log() << "| UserDefaultUILanguage: " << UserDefaultUILanguageBuf;
+			sprintf(logBuf, "%-28s%9ws", "| UserDefaultUILanguage: ", UserDefaultUILanguageBuf);
+			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultUILanguage
 			wchar_t SystemDefaultUILanguageBuf[100];
 
 			GetLocaleInfo(GetSystemDefaultUILanguage(), LOCALE_SNAME, SystemDefaultUILanguageBuf, 100);
 
-			Logging::Log() << "| SystemDefaultUILanguage: " << SystemDefaultUILanguageBuf;
+			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultUILanguage: ", SystemDefaultUILanguageBuf);
+			Logging::Log() << logBuf << " |";
 
 			// UserDefaultLangID
 			wchar_t UserDefaultLangIDBuf[100];
 
 			GetLocaleInfo(GetUserDefaultLangID(), LOCALE_SNAME, UserDefaultLangIDBuf, 100);
 
-			Logging::Log() << "| UserDefaultLangID: " << UserDefaultLangIDBuf;
+			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLangID: ", UserDefaultLangIDBuf);
+			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultLangID
 			wchar_t SystemDefaultLangIDBuf[100];
 
 			GetLocaleInfo(GetSystemDefaultLangID(), LOCALE_SNAME, SystemDefaultLangIDBuf, 100);
 
-			Logging::Log() << "| SystemDefaultLangID: " << SystemDefaultLangIDBuf;
+			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLangID: ", SystemDefaultLangIDBuf);
+			Logging::Log() << logBuf << " |";
 
 			Logging::Log() << "+------------------+------------------+";
 		}

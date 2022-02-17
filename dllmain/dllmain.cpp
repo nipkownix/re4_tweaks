@@ -250,13 +250,17 @@ void Init_Main()
 				{
 					DEVMODE dm = { 0 };
 					dm.dmSize = sizeof(dm);
-					Logging::Log() << "+---------------+---------------+";
-					Logging::Log() << "| Display modes:                |";
+					Logging::Log() << "+-------------+-------------+";
+					Logging::Log() << "| Display modes:            |";
 					for (int iModeNum = 0; EnumDisplaySettings(device.DeviceName, iModeNum, &dm) != 0; iModeNum++)
 					{
-						Logging::Log() << "| Mode #" << iModeNum << " = " << dm.dmPelsWidth << "x" << dm.dmPelsHeight << " " << dm.dmDisplayFrequency << "Hz";
+						char resolution[100];
+
+						sprintf(resolution, "%4dx%-4d", dm.dmPelsWidth, dm.dmPelsHeight);
+
+						Logging::Log() << "| Mode " << std::setw(2) << iModeNum << " = " << resolution << " " << std::setw(3) << dm.dmDisplayFrequency << "Hz" << " |";
 					}
-					Logging::Log() << "+---------------+---------------+";
+					Logging::Log() << "+-------------+-------------+";
 				}
 			}
 		}
