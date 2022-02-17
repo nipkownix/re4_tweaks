@@ -3,6 +3,7 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
+#include "Logging/Logging.h"
 
 static uint32_t* ptrGameFrameRate;
 
@@ -47,4 +48,6 @@ void Init_60fpsFixes()
 				_asm {fmul vanillaMulti}
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+
+	Logging::Log() << __FUNCTION__ << " -> FPS fixes applied";
 }

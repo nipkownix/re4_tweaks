@@ -178,4 +178,11 @@ IgnoreFPSWarning = false
 ; Scale the font used in the configuration menu.
 ; Min 1.0, max 1.3.
 FontSize = 1.000
+
+; Disables the "Press key to open the configuration menu" tooltip.
+DisableMenuTip = false
+
+[LOG]
+; Logs extra information.
+VerboseLog = false
 )"""";

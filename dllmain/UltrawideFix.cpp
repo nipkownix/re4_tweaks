@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
+#include "Logging/Logging.h"
 
 double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
@@ -172,4 +173,6 @@ void Init_UltraWideFix()
 	// Radio names
 	pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 8A 1D ? ? ? ?");
 	injector::WriteMemory(pattern.get_first(2), &fNewRadioNamesPos, true);
+
+	Logging::Log() << __FUNCTION__ << " -> UltrawideFix applied";
 }

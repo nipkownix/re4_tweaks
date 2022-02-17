@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
+#include "Logging/Logging.h"
 
 uintptr_t* ptrSFDMovAddr;
 
@@ -129,4 +130,6 @@ void Init_sofdec()
 	injector::WriteMemory(pattern.get_first(12), &newMovNegX, true);
 	injector::WriteMemory(pattern.get_first(32), &newMovPosY, true);
 	injector::WriteMemory(pattern.get_first(22), &newMovNegY, true);
+
+	Logging::Log() << __FUNCTION__ << " -> AllowHighResolutionSFD enabled";
 }

@@ -19,6 +19,7 @@
 #include "ControllerTweaks.h"
 #include "input.hpp"
 #include "EndSceneHook.h"
+#include <Logging/Logging.h>
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -101,7 +102,6 @@ void Init_Main()
 	Logging::Open(logPath);
 
 	Logging::Log() << "Starting re4_tweaks";
-	Logging::Log() << logPath;
 
 	// Detect game version
 	auto pattern = hook::pattern("31 2E ? ? ? 00 00 00 6D 6F 76 69 65 2F 64 65 6D 6F 30 65 6E 67 2E 73 66 64");
@@ -128,20 +128,30 @@ void Init_Main()
 	con.AddConcatLog("Game version = ", game_version.data());
 	#endif
 
+	Logging::Log() << "Game version = " << game_version;
+
+	// Make sure steam_appid.txt exists
 	HandleAppID();
 	
+	// Install input-related hooks
 	input::Init_Input();
 
+	// Install a WndProc hook and register the resulting hWnd for input
 	Init_WndProcHook();
 
+	// Install a EndScene hook to display our own UI
 	Init_EndSceneHook();
 
+	// Increase some game limits
 	Init_HandleLimits();
 
+	// Fix broken effects
 	Init_FilterXXFixes();
 
+	// QTE-related changes
 	Init_QTEfixes();
 
+	// Fixes FPS-related issues
 	Init_60fpsFixes();
 
 	Init_KeyboardMouseTweaks();
@@ -181,6 +191,9 @@ void Init_Main()
 				*(int32_t*)(regs.esi + 0x4) = regs.ecx;
 			}
 		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		if (cfg.fFOVAdditional > 0.0f)
+			Logging::Log() << "FOV increased";
 	}
 	
 	// Force v-sync off
@@ -199,6 +212,8 @@ void Init_Main()
 				regs.eax = *(int32_t*)(regs.ebp - 0x808);
 			}
 		}; injector::MakeInline<WriteIniHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
+
+		Logging::Log() << "Vsync disabled";
 	}
 
 	// Game is hardcoded to only allow 60Hz display modes for some reason...
@@ -217,16 +232,17 @@ void Init_Main()
 			if (EnumDisplayDevices(NULL, 0, &device, 0) == false || 
 				EnumDisplaySettings(device.DeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode) == false)
 			{
-#ifdef VERBOSE
+				#ifdef VERBOSE
 				con.AddLogChar("Couldn't read the display refresh rate. Using fallback value.");
-#endif
+				#endif
+				Logging::Log() << "FixDisplayMode > Couldn't read the display refresh rate. Using fallback value.";
 				g_UserRefreshRate = 60; // Fallback value.
 			}
 			else
 			{
-#ifdef VERBOSE
+				#ifdef VERBOSE
 				con.AddLogChar("Device 0 name: %s", device.DeviceName);
-#endif
+				#endif
 				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
 			}
 		}
@@ -234,6 +250,8 @@ void Init_Main()
 		#ifdef VERBOSE
 		con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
 		#endif
+
+		Logging::Log() << "FixDisplayMode > New refresh rate = " << g_UserRefreshRate;
 
 		pattern = hook::pattern("8B 45 ? 83 F8 ? 75 ? 8B 4D ? 8B 7D ? 3B 4D");
 		struct DisplayModeFix
@@ -286,6 +304,8 @@ void Init_Main()
 
 		pattern = hook::pattern("8B 7D 18 75 ? 80 B8 ? ? ? ? 02 75 ? 6A ? 68");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(11), (uint8_t)-1, true); // Allow the correct animations to be used
+		
+		Logging::Log() << "AllowMafiaLeonCutscenes enabled";
 	}
 
 	// Silence armored Ashley
@@ -293,6 +313,8 @@ void Init_Main()
 	{
 		auto pattern = hook::pattern("75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(0), (uint8_t)0xEB, true); // jne -> jmp
+
+		Logging::Log() << "SilenceArmoredAshley enabled";
 	}
 
 	// Apply window changes
@@ -358,14 +380,8 @@ void Init_Main()
 			}
 		}; injector::MakeInline<ReadFPS>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
-
-	/* // Replace MemorySwap with memcpy
-	if (cfg.bUseMemcpy)
-	{
-		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 68 ? ? ? ? 50 E8 ? ? ? ? A1");
-		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), memcpy);
-	}
-	*/ // Unused for now since it is crashing the game. Maybe we could fix this in the future?
+	else
+		Logging::Log() << "User decided to ignore the FPS warning";
 
 	// Unlock JP-only classic camera angle during Ashley segment
 	static uint8_t* pSys = nullptr;
@@ -389,6 +405,9 @@ void Init_Main()
 
 	injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
+	if (cfg.bAshleyJPCameraAngles)
+		Logging::Log() << "AshleyJPCameraAngles enabled";
+
 	// Option to skip the intro logos when starting up the game
 	if (cfg.bSkipIntroLogos)
 	{
@@ -397,6 +416,8 @@ void Init_Main()
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(3), uint32_t(0), true);
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
+
+		Logging::Log() << "SkipIntroLogos enabled";
 	}
 
 	// Restore missing transparency in the item pickup screen by
@@ -407,6 +428,8 @@ void Init_Main()
 	injector::MakeNOP(pattern.get_first(0), 5);
 	injector::MakeJMP(pattern.get_first(0), ItemExamineHook, true);
 
+	if (cfg.bRestorePickupTransparency)
+		Logging::Log() << "RestorePickupTransparency enabled";
 
 	// Disable Filter03 for now, as we have yet to find a way to actually fix it
 	{
@@ -420,6 +443,8 @@ void Init_Main()
 					_asm {call ptrFilter03}
 			}
 		}; injector::MakeInline<DisableBrokenFilter03>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	
+		Logging::Log() << "DisableBrokenFilter03 applied";
 	}
 
 	// Fix a problem related to a vertex buffer that caused the image to be slightly blurred
@@ -448,6 +473,9 @@ void Init_Main()
 		// Second buffer
 		pattern = hook::pattern("D9 5D ? FF D0 D9 E8 A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 6A ? 51 D9 1C ? 68");
 		injector::MakeInline<BlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
+	
+		if (cfg.bFixBlurryImage)
+			Logging::Log() << "FixBlurryImage enabled";
 	}
 
 	// Disable film grain (Esp04)
@@ -456,6 +484,9 @@ void Init_Main()
 		ptrAfterEsp04TransHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
 		injector::MakeNOP(pattern.get_first(0), 6);
 		injector::MakeJMP(pattern.get_first(0), Esp04TransHook, true);
+
+		if (cfg.bDisableFilmGrain)
+			Logging::Log() << "DisableFilmGrain applied";
 	}
   
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
@@ -463,6 +494,8 @@ void Init_Main()
 	{
 		Init_ToolMenu();
 		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
+
+		Logging::Log() << "EnableDebugMenu applied";
 	}
 
 	// Add Handgun silencer to merchant sell list
@@ -490,6 +523,8 @@ void Init_Main()
 		pattern = hook::pattern("83 00 00 00 78 00 00 00");
 		uint32_t* g_item_price_tbl_num = pattern.count(1).get(0).get<uint32_t>(0);
 		*g_item_price_tbl_num += 1;
+
+		Logging::Log() << "AllowSellingHandgunSilencer enabled";
 	}
 
 	// Allow physics to apply to tactical vest outfit

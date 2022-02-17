@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "input.hpp"
+#include "Logging/Logging.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -70,6 +71,8 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 
 	HWND result = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, cfg.bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 	hWindow = result;
+
+	Logging::Log() << __FUNCTION__ << " -> Window created. Registering for input...";
 
 	// Register hWnd for input processing
 	_input = input::register_window(hWindow);

@@ -14,7 +14,6 @@
 #include "injector\utility.hpp"
 #include "Patterns.h"
 #include "MemoryMgr.h"
-#include "Logging/Logging.h"
 #include <filesystem>
 #include <string>
 #pragma warning(pop)

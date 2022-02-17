@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 #include "KeyboardMouseTweaks.h"
 #include "input.hpp"
+#include "Logging/Logging.h"
 
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -390,4 +391,7 @@ void Init_MouseTurning()
 				regs.eax = 0x8;
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	
+	if (cfg.bUseMouseTurning)
+		Logging::Log() << __FUNCTION__ << " -> MouseTurning enabled";
 }

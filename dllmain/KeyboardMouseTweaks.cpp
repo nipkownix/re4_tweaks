@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 #include "MouseTurning.h"
 #include "KeyboardMouseTweaks.h"
+#include "Logging/Logging.h"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -106,6 +107,8 @@ void Init_KeyboardMouseTweaks()
 		}
 	}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
+	Logging::Log() << __FUNCTION__ << " -> Keyboard inventory item flipping enabled";
+
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
 	{
 		// Get pointer for the state. Only reliable way I found to achieve this.
@@ -138,6 +141,9 @@ void Init_KeyboardMouseTweaks()
 				}
 			}
 		}; injector::MakeInline<MouseMenuSelector>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	
+		if (cfg.bFixRetryLoadMouseSelector)
+			Logging::Log() << __FUNCTION__ << " -> FixRetryLoadMouseSelector applied";
 	}
 
 	// Fix camera after zooming with the sniper
@@ -152,6 +158,9 @@ void Init_KeyboardMouseTweaks()
 					*(int32_t*)ptrRifleMovAddr = regs.eax;
 			}
 		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		if (cfg.bFixSniperZoom)
+			Logging::Log() << __FUNCTION__ << " -> FixSniperZoom applied";
 	}
 
 	// Fix the "focus animation" not looking as strong as when triggered with a controller
@@ -188,6 +197,8 @@ void Init_KeyboardMouseTweaks()
 		// This jl instruction makes the focus animation stop almost immediately when using the mouse. Noping it doesn't seem to affect the controller at all.
 		pattern = hook::pattern("7C ? C6 06 ? EB ? C7 46 ? ? ? ? ? EB ? DD D8 83 3D");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
+
+		Logging::Log() << __FUNCTION__ << " -> FixSniperFocus applied";
 	}
 
 	if (cfg.bFallbackToEnglishKeyIcons)
@@ -195,5 +206,7 @@ void Init_KeyboardMouseTweaks()
 		// Replace GetKeyboardLayout IAT to point to our GetKeyboardLayout_Hook
 		pattern = hook::pattern("68 FF 00 00 00 8D 85 ? ? ? ? 6A 00 50 C6 85 ? ? ? ? 00 E8 ? ? ? ? 8B 3D ? ? ? ?");
 		injector::WriteMemory(*pattern.count(1).get(0).get<uintptr_t>(0x1C), GetKeyboardLayout_Hook, true);
+
+		Logging::Log() << __FUNCTION__ << " -> FallbackToEnglishKeyIcons enabled";
 	}
 }

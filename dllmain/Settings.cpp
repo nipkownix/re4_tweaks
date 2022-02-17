@@ -375,10 +375,10 @@ void Settings::ReadSettings()
 	if (cfg.fFontSize > 1.3f)
 		cfg.fFontSize = 1.3f;
 
-	cfg.bDisableMenuTip = iniReader.ReadFloat("IMGUI", "DisableMenuTip", false);
+	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", false);
 
 	// LOG
-	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", true);
+	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", false);
 }
 
 void Settings::WriteSettings()

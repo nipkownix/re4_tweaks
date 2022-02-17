@@ -17,6 +17,7 @@
 #include "input.hpp"
 #include "EndSceneHook.h"
 #include "cfgMenu.h"
+#include "Logging/Logging.h"
 
 EndSceneHook esHook;
 
@@ -163,6 +164,7 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		// Check if the exe is LAA
 		if (!laa.GameIsLargeAddressAware())
 		{
+			Logging::Log() << "Non-LAA executable detected!";
 			laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
 		}
 	}
@@ -191,7 +193,7 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	#endif 
 
 	// Calls the LAA window if needed
-	if (laa.LAA_State != LAADialogState::NotShowing)
+	if (laa.LAA_State != LAADialogState::NotShowing && ((esHook._last_present_time - esHook._start_time) > std::chrono::seconds(10)))
 	{
 		// Make cursor visible
 		ImGui::GetIO().MouseDrawCursor = true;
@@ -217,8 +219,8 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	_input->block_mouse_input(bCfgMenuOpen);
-	_input->block_keyboard_input(bCfgMenuOpen);
+	_input->block_mouse_input(bCfgMenuOpen || laa.LAA_State == LAADialogState::Showing);
+	_input->block_keyboard_input(bCfgMenuOpen || laa.LAA_State == LAADialogState::Showing);
 
 	// Update _last_frame_duration and _last_present_time
 	const auto current_time = std::chrono::high_resolution_clock::now();
@@ -233,6 +235,9 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 void Init_EndSceneHook()
 {
+	// EndScene hook
+	Logging::Log() << "Hooking EndScene...";
+
 	auto pattern = hook::pattern("A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 50 FF D2 C6 05 ? ? ? ? ? A1");
 	ptrD3D9Device = *pattern.count(1).get(0).get<uint32_t*>(1);
 	struct EndScene_HookStruct
@@ -248,6 +253,8 @@ void Init_EndSceneHook()
 	}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Reset hook 1
+	Logging::Log() << "Hooking Reset(1)...";
+
 	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? 5E");
 	struct Reset_HookStruct
 	{
@@ -261,6 +268,8 @@ void Init_EndSceneHook()
 	}; injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Reset hook 2
+	Logging::Log() << "Hooking Reset(2)...";
+
 	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? EB");
 	injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 }

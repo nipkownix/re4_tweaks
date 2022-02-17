@@ -46,7 +46,7 @@ std::shared_ptr<input> input::register_window(window_handle window)
 
 	if (insert.second || insert.first->second.expired())
 	{
-		Logging::Log() << __FUNCTION__ << " > Starting input capture for window " << window << " ...";
+		Logging::Log() << __FUNCTION__ << " -> Starting input capture for window " << window << " ...";
 
 		const auto instance = std::make_shared<input>(window);
 
@@ -830,6 +830,8 @@ void InstallGetCursorPos_Hook()
 
 void input::Init_Input()
 {
+	Logging::Log() << "Hooking input-related APIs...";
+
 	InstallGetMessageA_Hook();
 	InstallGetMessageW_Hook();
 	InstallPeekMessageA_Hook();
