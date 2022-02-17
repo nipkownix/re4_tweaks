@@ -136,6 +136,9 @@ FixFallingItemsSpeed = true
 ; This fix makes QTEs that involve rapid button presses much more forgiving.
 FixQTE = true
 
+; Fixes difference between 30/60FPS on physics applied to Ashley.
+FixAshleyBustPhysics = true
+
 [MEMORY]
 ; Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.
 ; Not tested beyond 1920x1080.

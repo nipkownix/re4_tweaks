@@ -559,6 +559,14 @@ void MenuRender()
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
 				ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");
 				ImGui::TextWrapped("This fix makes QTEs that involve rapid button presses much more forgiving.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// AshleyBustPhysicsFix
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixAshleyBustPhysics", &cfg.bFixAshleyBustPhysics);
+				ImGui::TextWrapped("Fixes difference between 30/60FPS on physics applied to Ashley.");
 			}
 
 			// Memory tab
