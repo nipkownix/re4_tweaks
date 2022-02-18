@@ -40,6 +40,8 @@ bool bisDebugBuild;
 
 int g_UserRefreshRate;
 
+const char* game_lang;
+
 uintptr_t* ptrNonBlurryVertex;
 uintptr_t* ptrBlurryVertex;
 uintptr_t ptrGXCopyTex;
@@ -552,6 +554,63 @@ void Init_Main()
 		auto pattern = hook::pattern("80 B8 C9 4F 00 00 02 74");
 		injector::MakeNOP(pattern.count(2).get(0).get<uint8_t>(7), 2);
 		injector::MakeNOP(pattern.count(2).get(1).get<uint8_t>(7), 2);
+	}
+
+	// Log current game language
+	{
+		auto pattern = hook::pattern("88 81 ? ? ? ? C3 8B FF");
+		struct GameLangLog
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				*(uint8_t*)(regs.ecx + 0x4FA3) = (uint8_t)regs.eax;
+
+				switch ((uint8_t)regs.eax)
+				{
+				case 2:
+					game_lang = "English";
+					break;				
+				case 3:
+					game_lang = "German";
+					break;
+				case 4:
+					game_lang = "French";
+					break;
+				case 5:
+					game_lang = "Spanish";
+					break;
+				case 6:
+					game_lang = "Traditional Chinese";
+					break;
+				case 7:
+					game_lang = "Simplified Chinese";
+					break;
+				case 8:
+					game_lang = "Italian";
+					break;
+				default:
+					game_lang = "Unknown"; // We should never reach this.
+				}
+
+				#ifdef VERBOSE
+				con.AddConcatLog("Game language: ", game_lang);
+				#endif
+
+				Logging::Log() << "Game language: " << game_lang;
+			}
+		}; 
+		
+		// Japanese exe doesn't have the setLanguage function, so we end up hooking nothing
+		if (pattern.size() != 1)
+		{
+			#ifdef VERBOSE
+			con.AddLogChar("Game language: Japanese");
+			#endif
+
+			Logging::Log() << "Game language: Japanese";
+		}
+		else
+			injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 }
 
