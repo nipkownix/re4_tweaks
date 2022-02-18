@@ -43,9 +43,15 @@ void Init_UltraWideFix()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
+			char resolution[100];
+			sprintf(resolution, "%ix%i %iHz", (int)regs.eax, (int)regs.ecx, (int)regs.esi);
+
+			Logging::Log() << "Changing game resolution to: " << resolution;
+
 			#ifdef VERBOSE
 			con.AddConcatLog("ResX = ", (int)regs.eax);
 			con.AddConcatLog("ResY = ", (int)regs.ecx);
+			con.AddConcatLog("Refrash rate = ", (int)regs.esi);
 			#endif
 
 			double fGameWidth = regs.eax;
