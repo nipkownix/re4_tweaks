@@ -99,6 +99,7 @@
     <ClCompile Include="ControllerTweaks.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ExceptionHandler.cpp" />
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="ControllerTweaks.h" />
     <ClInclude Include="ExceptionHandler.h" />
     <ClInclude Include="FilterXXFixes.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="GameFlags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
