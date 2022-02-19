@@ -42,6 +42,7 @@ uintptr_t ptrAfterItemExamineHook;
 uintptr_t ptrAfterEsp04TransHook;
 
 static uint32_t* ptrGameFrameRate;
+uint8_t** ptrpG;
 
 BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
 {
@@ -111,6 +112,10 @@ void Init_Main()
 		game_version += "d";
 		bisDebugBuild = true;
 	}
+
+	// Grab pointer to pG (pointer to games Global struct)
+	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
+	ptrpG = *pattern.count(1).get(0).get<uint8_t**>(1);
 
 	#ifdef VERBOSE
 	con.AddConcatLog("Game version = ", game_version.data());
