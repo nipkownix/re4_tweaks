@@ -2,6 +2,8 @@
 #include "..\includes\stdafx.h"
 #include "GameFlags.h"
 
+extern uint8_t** ptrpG; // dllmain.cpp
+
 // tool_menu.cpp externs
 extern uint32_t* PadButtonStates;
 void MenuTask_Hook();
@@ -160,8 +162,6 @@ struct cFilter00Params2
 };
 #pragma pack(pop)
 
-uint32_t* ptrpG;
-
 cLightMgr* LightMgr;
 cFilter00Params* Filter00Params;
 cFilter00Params2* Filter00Params2;
@@ -176,7 +176,7 @@ void ToolMenu_LightToolMenu()
     int sizetest2 = sizeof(cLightMgr_EnvInfo);
 
     // Make sure game knows we're in a tool menu
-    uint8_t* Global = *(uint8_t**)ptrpG;
+    uint8_t* Global = *ptrpG;
     uint32_t* pFlags_DEBUG = (uint32_t*)(Global + 0x60);
     uint32_t* pFlags_STOP = (uint32_t*)(Global + 0x170);
     *pFlags_DEBUG |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
@@ -415,11 +415,7 @@ void ToolMenu_LightToolMenu()
 
 void LightTool_GetPointers()
 {
-    // pG (Globals) pointer
-    auto pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
-    ptrpG = *pattern.count(1).get(0).get<uint32_t*>(1);
-
-    pattern = hook::pattern("6A 00 53 6A 00 57 B9 ? ? ? ?");
+    auto pattern = hook::pattern("6A 00 53 6A 00 57 B9 ? ? ? ?");
     auto varPtr = pattern.count(1).get(0).get<uint32_t>(7);
     LightMgr = (cLightMgr*)*varPtr;
 

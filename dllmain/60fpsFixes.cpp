@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 
 static uint32_t* ptrGameFrameRate;
+extern uint8_t** ptrpG; // dllmain.cpp
 
 int intCurrentFrameRate()
 {
@@ -60,8 +61,7 @@ void Init_60fpsFixes()
 			{
 				if (cfg.bFixAshleyBustPhysics)
 				{
-					extern uint32_t* ptrpG;
-					uint8_t* Global = *(uint8_t**)ptrpG;
+					uint8_t* Global = *ptrpG;
 
 					// Update ebx to make use of delta-time from pG+0x70
 					float ebx = float(regs.ebx);
