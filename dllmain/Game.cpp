@@ -1,5 +1,7 @@
 #include "..\includes\stdafx.h"
+#include "dllmain.h"
 #include "Game.h"
+#include "ConsoleWnd.h"
 
 std::string gameVersion;
 bool gameIsDebugBuild = false;
@@ -66,9 +68,9 @@ bool Init_Game()
 		gameIsDebugBuild = true;
 	}
 
-#ifdef VERBOSE
-	con.AddConcatLog("Game version = ", game_version.data());
-#endif
+	#ifdef VERBOSE
+	con.AddConcatLog("Game version = ", GameVersion().data());
+	#endif
 
 	// Grab pointer to pG (pointer to games Global struct)
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
