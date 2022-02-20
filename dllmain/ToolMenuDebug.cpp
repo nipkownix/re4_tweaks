@@ -1,13 +1,12 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
 #include "ToolMenu.h"
-#include "GameFlags.h"
+#include "Game.h"
 #include "ConsoleWnd.h"
 
 // Fixes for debug-builds tool menu
 // (mainly just hooks for funcs that handle input for those menus, so we can slow down inputs to them)
 
-extern bool bisDebugBuild; // dllmain.cpp
 extern uint32_t* PadButtonStates; // tool_menu.cpp
 uint32_t Keyboard2Gamepad(); // tool_menu.cpp
 
@@ -147,7 +146,7 @@ void Init_ToolMenuDebug()
     injector::WriteMemory(&roomJump_funcs[1], &roomJumpMove_Hook, true);
 
     // tp funcs
-    if (bisDebugBuild)
+    if (GameVersionIsDebug())
     {
         pattern = hook::pattern("A1 ? ? ? ? C6 80 EA 04 00 00 00 C3");
         ToolOptionClass_ptr = *pattern.count(1).get(0).get<uint32_t*>(1);
