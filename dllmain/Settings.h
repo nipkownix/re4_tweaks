@@ -49,6 +49,7 @@ struct Settings
 	std::string sQTE_key_2;
 	bool bFixFallingItemsSpeed;
 	bool bFixQTE;
+	bool bFixAshleyBustPhysics;
 	bool bAllowHighResolutionSFD;
 	bool bRaiseVertexAlloc;
 	bool bRaiseInventoryAlloc;

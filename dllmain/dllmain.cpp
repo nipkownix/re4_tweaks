@@ -2,6 +2,7 @@
 #include <charconv>
 #include "..\includes\stdafx.h"
 #include "..\Wrappers\wrapper.h"
+#include "Game.h"
 #include "WndProcHook.h"
 #include "dllmain.h"
 #include "cfgMenu.h"
@@ -24,7 +25,6 @@
 std::string WrapperMode;
 std::string WrapperName;
 std::string rootPath;
-std::string game_version;
 
 std::ofstream LOG;
 
@@ -105,32 +105,10 @@ void Init_Main()
 
 	Logging::Log() << "Starting re4_tweaks";
 
-	// Detect game version
-	auto pattern = hook::pattern("31 2E ? ? ? 00 00 00 6D 6F 76 69 65 2F 64 65 6D 6F 30 65 6E 67 2E 73 66 64");
-	int ver = injector::ReadMemory<int>(pattern.count(1).get(0).get<uint32_t>(2));
-
-	if (ver == 0x362E30) {
-		game_version = "1.0.6";
-	} else if (ver == 0x302E31) {
-		game_version = "1.1.0";
-	} else {
-		MessageBoxA(NULL, "This version of RE4 is not supported.\nre4_tweaks will be disabled.", "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
+	if (!Init_Game())
 		return;
-	}
 
-	// Check for part of gameDebug function, if exists this must be a debug-enabled build
-	pattern = hook::pattern("6A 00 6A 00 6A 08 68 AE 01 00 00 6A 10 6A 0A");
-	if (pattern.size() > 0)
-	{
-		game_version += "d";
-		bisDebugBuild = true;
-	}
-
-	#ifdef VERBOSE
-	con.AddConcatLog("Game version = ", game_version.data());
-	#endif
-
-	Logging::Log() << "Game version = " << game_version;
+	Logging::Log() << "Game version = " << GameVersion();
 
 	// Make sure steam_appid.txt exists
 	HandleAppID();
@@ -163,7 +141,7 @@ void Init_Main()
 	Init_ExceptionHandler();
 
 	// Remove savegame SteamID checks, allows easier save transfers
-	pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
+	auto pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
 	Nop(pattern.count(1).get(0).get<uint8_t>(0x9), 6);
 	Nop(pattern.count(1).get(0).get<uint8_t>(0x18), 6);
 

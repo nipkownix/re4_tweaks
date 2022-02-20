@@ -1,5 +1,6 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
+#include "Game.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
@@ -48,6 +49,31 @@ void Init_60fpsFixes()
 				_asm {fmul vanillaMulti}
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+
+	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust
+	// Seems to make Ashley bust physics speed match between 30 & 60FPS
+	{
+		auto pattern = hook::pattern("57 E8 ? ? ? ? 8B 06 8B 50 0C 00 1D");
+
+		// Hook struct
+		struct AshleyBustFrametimeFix
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (cfg.bFixAshleyBustPhysics)
+				{
+					// Update ebx to make use of delta-time from pG+0x70
+					float ebx = float(regs.ebx);
+					ebx *= GlobalPtr()->deltaTime_70;
+					regs.ebx = uint32_t(ebx);
+				}
+
+				// Code that we overwrote
+				regs.eax = *(uint32_t*)regs.esi;
+				regs.edx = *(uint32_t*)(regs.eax + 0xC);
+			}
+		}; injector::MakeInline<AshleyBustFrametimeFix>(pattern.count(1).get(0).get<uint32_t>(6), pattern.count(1).get(0).get<uint32_t>(11));
+	}
 
 	Logging::Log() << __FUNCTION__ << " -> FPS fixes applied";
 }

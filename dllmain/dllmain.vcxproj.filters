@@ -88,6 +88,9 @@
     <ClCompile Include="ExceptionHandler.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
+      <Filter>includes\external\ImGui</Filter>
+    </ClCompile>
     <ClCompile Include="ControllerTweaks.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
@@ -95,6 +98,9 @@
       <Filter>external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="input.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="..\external\Hooking\Hook.cpp">
@@ -330,6 +336,9 @@
     <ClInclude Include="..\Wrappers\x3daudio1_7.h">
       <Filter>Wrappers</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_stdlib.h">
+      <Filter>includes\external\ImGui</Filter>
+    </ClInclude>
     <ClInclude Include="ControllerTweaks.h">
       <Filter>dllmain</Filter>
     </ClInclude>
@@ -337,6 +346,9 @@
       <Filter>external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="input.hpp">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="..\external\Hooking\Hook.h">

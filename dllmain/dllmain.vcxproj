@@ -105,6 +105,7 @@
     <ClCompile Include="EndSceneHook.cpp" />
     <ClCompile Include="ExceptionHandler.cpp" />
     <ClCompile Include="input.cpp" />
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="EndSceneHook.h" />
     <ClInclude Include="ExceptionHandler.h" />
     <ClInclude Include="FilterXXFixes.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="GameFlags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />

@@ -3,6 +3,7 @@
 #include "ToolMenu.h"
 #include "GameFlags.h"
 #include "dllmain.h"
+#include "Game.h"
 #include "ConsoleWnd.h"
 #include "Settings.h"
 #include "input.hpp"
@@ -24,9 +25,6 @@ void(__cdecl* CardSave)(uint8_t a1, char a2);
 void(__cdecl* SubScreenOpen)(int a1, int a2);
 void(*FlagEdit_die)();
 
-uintptr_t pG_ptr;
-uintptr_t pSys_ptr;
-uintptr_t pPL_ptr; // cPlayer*
 uintptr_t* ptrtitleInitMovAddr;
 
 uint32_t* DbgFontColorArray = nullptr;
@@ -95,23 +93,9 @@ void eprintf_Hook(int a1, int a2, int a3, int a4, char* Format, ...)
 	eprintf_ScreenDisp(eprintf_buffer, float(a1), float(a2 + 64), DbgFontColorArray[a3]);
 }
 
-#pragma pack(push, 1)
-struct cPlayer // unsure if correct name!
-{
-	/* 0x000 */ uint8_t unk0[0x94];
-	/* 0x094 */ float X;
-	/* 0x098 */ float Y;
-	/* 0x09C */ float Z;
-	/* 0x0A0 */ float unkA0;
-	/* 0x0A4 */ float Angle;
-	/* goes to 7F0+ */
-};
-#pragma pack(pop)
-
 bool IsInDebugMenu()
 {
-	uint8_t* pG = *(uint8_t**)pG_ptr;
-	return (*(uint32_t*)(pG + 0x60) & GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE))) != 0;
+	return (GlobalPtr()->flags_DEBUG_60[0] & GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE))) != 0;
 }
 
 uint32_t Keyboard2Gamepad()
@@ -194,7 +178,7 @@ void __cdecl gameDebug_recreation(void* a1)
 
 		if (ShowInfoDisplay)
 		{
-			cPlayer* pPL = *(cPlayer**)pPL_ptr;
+			cPlayer* pPL = PlayerPtr();
 			if (pPL)
 				eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->X, pPL->Y, pPL->Z, pPL->Angle);
 		}
@@ -206,10 +190,7 @@ void __cdecl gameDebug_recreation(void* a1)
 void(*MenuTask_Orig)();
 void MenuTask_Hook()
 {
-	uint8_t* pG = *(uint8_t**)pG_ptr;
-	uint32_t* pFlags_DEBUG = (uint32_t*)(pG + 0x60);
-
-	*pFlags_DEBUG |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
+	GlobalPtr()->flags_DEBUG_60[0] |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
 
 	MenuTask_Orig();
 }
@@ -271,11 +252,9 @@ void systemRestartInit_Hook()
 
 void ToolMenu_Exit()
 {
-	uint8_t* pG = *(uint8_t**)pG_ptr;
-
 	// Exit tool-menu state via FlagEdit_die
 	// FlagEdit_die overwrites pG+0x170 with contents of 0xC6D008, so we need to write that first...
-	*FlagEdit_Backup_pG = *(uint32_t*)(pG + 0x170);
+	*FlagEdit_Backup_pG = GlobalPtr()->flags_STOP_170;
 	FlagEdit_die();
 
 	// alternatively "TaskChain(MenuTask, 0);" should return us to tool-menu
@@ -284,16 +263,14 @@ void ToolMenu_Exit()
 
 void ToolMenu_GoldMax()
 {
-	uint8_t* pG = *(uint8_t**)pG_ptr;
-	*(uint32_t*)(pG + 0x4FA8) = 99999999;
+	GlobalPtr()->goldAmount_4FA8 = 99999999;
 
 	ToolMenu_Exit();
 }
 
 void ToolMenu_SecretOpen()
 {
-	uint8_t* pSys = *(uint8_t**)pSys_ptr;
-	uint32_t* flags_EXTRA = (uint32_t*)(pSys + 4);
+	uint32_t* flags_EXTRA = &SystemSavePtr()->flags_EXTRA_4;
 
 	// debug exe ORs these seperately, probably part of an enum or something
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_AIM_REVERSE));
@@ -318,8 +295,7 @@ void ToolMenu_SecretOpen()
 
 void ToolMenu_MercenariesAllOpen()
 {
-	uint8_t* pSys = *(uint8_t**)pSys_ptr;
-	uint32_t* flags_EXTRA = (uint32_t*)(pSys + 4);
+	uint32_t* flags_EXTRA = &SystemSavePtr()->flags_EXTRA_4;
 
 	// TODO: confirm whether these are what this option actually unlocks in the debug build
 	// (as these unlocks seem kinda strange)
@@ -343,12 +319,7 @@ void ToolMenu_ToggleInfoDisp()
 const char* ToolMenu_ToggleHUDName = "TOGGLE HUD";
 void ToolMenu_ToggleHUD()
 {
-	uint8_t* pG = *(uint8_t**)pG_ptr;
-	uint32_t* flags_DISP = (uint32_t*)(pG + 0x58);
-
-	uint32_t offset = 0;
-	int value = GetFlagValue(uint32_t(Flags_DISP::DPF_COCKPIT), offset);
-	flags_DISP[offset / 4] ^= value;
+	GlobalPtr()->flags_DISP0_58 ^= GetFlagValue(uint32_t(Flags_DISP::DPF_COCKPIT));
 
 	ToolMenu_Exit();
 }
@@ -408,7 +379,6 @@ void GetToolMenuPointers()
 
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
 	FlagEdit_die = (decltype(FlagEdit_die))pattern.count(1).get(0).get<uint8_t>(0);
-	pG_ptr = *(uintptr_t*)pattern.count(1).get(0).get<uint8_t>(1);
 	FlagEdit_Backup_pG = *(uint32_t**)pattern.count(1).get(0).get<uint8_t>(0x14);
 
 	pattern = hook::pattern("FF FF FF FF FF FF 00 00 FF 00");
@@ -426,16 +396,9 @@ void GetToolMenuPointers()
 	varPtr = pattern.count(1).get(0).get<uint32_t>(20);
 	roomInfoAddr = (uint32_t*)*varPtr;
 
-	pattern = hook::pattern("00 80 00 00 83 C4 ? E8 ? ? ? ? A1 ? ? ? ?");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(13);
-	pSys_ptr = (uintptr_t)*varPtr;
-
 	pattern = hook::pattern("53 56 33 C0 BE ? ? ? ? 8D A4 24 00 00 00 00");
 	varPtr = pattern.count(1).get(0).get<uint32_t>(5);
 	ToolMenuEntries = (ToolMenuEntry*)*varPtr;
-
-	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");
-	pPL_ptr = *pattern.count(1).get(0).get<uintptr_t>(1);
 
 	LightTool_GetPointers();
 }
@@ -573,7 +536,7 @@ void Init_ToolMenu()
 	}
 
 	// Allow RoomJump 1.1.0 to access stage 0 (test stages)
-	if (game_version == "1.1.0")
+	if (GameVersion() == "1.1.0")
 	{
 		pattern = hook::pattern("80 FB 05 7F ? 84 DB 7E ?");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(7), uint8_t(0x7C), true);

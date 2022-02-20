@@ -336,6 +336,7 @@ void Settings::ReadSettings()
 	// FRAME RATE
 	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", true);
 	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", true);
+	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", true);
 
 	// MEMORY
 	cfg.bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", true);
@@ -464,6 +465,7 @@ void Settings::WriteSettings()
 	// FRAME RATE
 	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
+	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
 
 	// MEMORY
 	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD);
