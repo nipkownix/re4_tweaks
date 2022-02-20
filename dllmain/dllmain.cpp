@@ -97,10 +97,8 @@ void HandleAppID()
 	}
 }
 
-void Init_Main()
+void Init_Logging()
 {
-	con.AddLogChar("Big ironic thanks to QLOC S.A.");
-
 	// Start logging
 	std::string logPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".log";
 	Logging::Open(logPath);
@@ -109,6 +107,17 @@ void Init_Main()
 	commit.resize(8);
 
 	Logging::Log() << "Starting re4_tweaks v" << APP_VERSION << "-" << commit << "-" << GIT_BRANCH;
+
+	Logging::LogComputerManufacturer();
+	Logging::LogOSVersion();
+	Logging::LogProcessNameAndPID();
+
+	Logging::Log() << "Running from: " << rootPath;
+}
+
+void Init_Main()
+{
+	con.AddLogChar("Big ironic thanks to QLOC S.A.");
 
 	if (!Init_Game())
 		return;
@@ -597,8 +606,9 @@ void Init_Main()
 	}
 }
 
-void LoadRealDLL(HMODULE hModule)
+void StorePath(HMODULE hModule)
 {
+	// Store wrapper name
 	char configname[MAX_PATH];
 	GetModuleFileNameA(hModule, configname, MAX_PATH);
 	WrapperName.assign(strrchr(configname, '\\') + 1);
@@ -607,7 +617,10 @@ void LoadRealDLL(HMODULE hModule)
 	// Store root path
 	std::string modulePath = configname;
 	rootPath = modulePath.substr(0, modulePath.rfind('\\') + 1);
+}
 
+void LoadRealDLL(HMODULE hModule)
+{
 	// Get wrapper mode
 	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());
 
@@ -634,9 +647,9 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 
 		g_module_handle = hModule;
 
-		#ifdef VERBOSE
-		con.AddLogChar("\n");
-		#endif
+		StorePath(hModule);
+
+		Init_Logging();
 
 		cfg.ReadSettings();
 

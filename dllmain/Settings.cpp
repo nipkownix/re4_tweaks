@@ -7,6 +7,7 @@
 #include "ToolMenu.h"
 #include "MouseTurning.h"
 #include "cfgMenu.h"
+#include <Logging/Logging.h>
 
 Settings cfg;
 
@@ -269,6 +270,185 @@ int Settings::KeyMap(const char* key, bool get_vk)
 	return key_map[key].dik;
 }
 
+bool started;
+void LogSettings()
+{
+	started = true;
+	char settingBuf[100];
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+	Logging::Log() << "| Setting                        | Value           |";
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// DISPLAY
+	Logging::Log() << "+ DISPLAY------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "FOVAdditional", cfg.fFOVAdditional);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableVsync", cfg.bDisableVsync ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixDisplayMode", cfg.bFixDisplayMode ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15i |", "CustomRefreshRate", cfg.iCustomRefreshRate);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RestorePickupTransparency", cfg.bRestorePickupTransparency ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03 ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixBlurryImage", cfg.bFixBlurryImage ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableFilmGrain", cfg.bDisableFilmGrain ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCBlur", cfg.bEnableGCBlur ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCScopeBlur", cfg.bEnableGCScopeBlur ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "WindowBorderless", cfg.bWindowBorderless ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionX", cfg.iWindowPositionX);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionY", cfg.iWindowPositionY);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RememberWindowPos", cfg.bRememberWindowPos ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// MISC
+	Logging::Log() << "+ MISC---------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "WrappedDllPath", cfg.sWrappedDllPath.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "SkipIntroLogos", cfg.bSkipIntroLogos ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableDebugMenu", cfg.bEnableDebugMenu ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// CONTROLLER
+	Logging::Log() << "+ CONTROLLER---------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "ControllerSensitivity", cfg.fControllerSensitivity);
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// MOUSE
+	Logging::Log() << "+ MOUSE--------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "UseMouseTurning", cfg.bUseMouseTurning ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "TurnSensitivity", cfg.fTurnSensitivity);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperZoom", cfg.bFixSniperZoom ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperFocus", cfg.bFixSniperFocus ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// FRAME RATE
+	Logging::Log() << "+ FRAME RATE---------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixQTE", cfg.bFixQTE ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// MEMORY
+	Logging::Log() << "+ MEMORY-------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// HOTKEYS
+	Logging::Log() << "+ HOTKEYS------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "ConfigMenu", cfg.sConfigMenuKeyCombo.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "Console", cfg.sConsoleKeyCombo.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DebugMenu", cfg.sDebugMenuKeyCombo.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "MouseTurningModifier", cfg.sMouseTurnModifierKeyCombo.data());
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// FPS WARNING
+	Logging::Log() << "+ WARNING------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "IgnoreFPSWarning", cfg.bIgnoreFPSWarning ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// IMGUI
+	Logging::Log() << "+ IMGUI--------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "FontSize", cfg.fFontSize);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableMenuTip", cfg.bDisableMenuTip ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+}
+
 void Settings::ReadSettings()
 {
 	CIniReader iniReader("");
@@ -380,6 +560,10 @@ void Settings::ReadSettings()
 
 	// LOG
 	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", false);
+
+	// Write settings into log file
+	if (!started)
+		LogSettings();
 }
 
 void Settings::WriteSettings()
@@ -413,6 +597,8 @@ void Settings::WriteSettings()
 			#ifdef VERBOSE
 			con.AddLogChar("Read-only ini file detected. Attempting to remove flag.");
 			#endif
+
+			Logging::Log() << __FUNCTION__ << " -> Read-only ini file detected. Attempting to remove flag.";
 
 			SetFileAttributesA(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
 		}
