@@ -10,4 +10,3 @@ extern bool bisDebugBuild;
 
 extern std::string WrapperName;
 extern std::string rootPath;
-extern std::string game_version;

@@ -1,8 +1,6 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
-#include "GameFlags.h"
-
-extern uint8_t** ptrpG; // dllmain.cpp
+#include "Game.h"
 
 // tool_menu.cpp externs
 extern uint32_t* PadButtonStates;
@@ -176,13 +174,11 @@ void ToolMenu_LightToolMenu()
     int sizetest2 = sizeof(cLightMgr_EnvInfo);
 
     // Make sure game knows we're in a tool menu
-    uint8_t* Global = *ptrpG;
-    uint32_t* pFlags_DEBUG = (uint32_t*)(Global + 0x60);
-    uint32_t* pFlags_STOP = (uint32_t*)(Global + 0x170);
-    *pFlags_DEBUG |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
+    GLOBALS* Global = GlobalPtr();
+    Global->flags_DEBUG_60[0] |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
 
-    uint32_t Flags_STOP_Orig = *pFlags_STOP;
-    *pFlags_STOP |= ~GetFlagValue(uint32_t(Flags_STOP::SPF_CINESCO)); // stops all except cinesco?
+    uint32_t Flags_STOP_Orig = Global->flags_STOP_170;
+    Global->flags_STOP_170 |= ~GetFlagValue(uint32_t(Flags_STOP::SPF_CINESCO)); // stops all except cinesco?
 
     int SelectedIdx = 0;
     int PrevButtons = 0;
@@ -207,7 +203,7 @@ void ToolMenu_LightToolMenu()
         if (buttonStates & (uint32_t(GamePadButton::A) | uint32_t(GamePadButton::B)))
             if (SelectedIdx == NumMenuItems || (buttonStates & uint32_t(GamePadButton::B)))
             {
-                *pFlags_STOP = Flags_STOP_Orig;
+                Global->flags_STOP_170 = Flags_STOP_Orig;
                 ToolMenu_Return();
                 break;
             }
