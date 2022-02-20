@@ -30,7 +30,6 @@ bool bCfgMenuOpen;
 bool bConsoleOpen;
 bool bShouldFlipX;
 bool bShouldFlipY;
-bool bisDebugBuild;
 
 int g_UserRefreshRate;
 
