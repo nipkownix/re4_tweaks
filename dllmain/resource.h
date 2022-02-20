@@ -1,15 +1,19 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by dllmain.rc
-//
+#pragma once
 
-// Next default values for new objects
-// 
-#ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        101
-#define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1001
-#define _APS_NEXT_SYMED_VALUE           101
-#endif
-#endif
+// Used by dllmain.rc
+
+#define APP_NAME				"re4_tweaks"
+#define APP_MAJOR				1
+#define APP_MINOR				7
+#define APP_BUILDNUMBER			4
+#define APP_REVISION			0
+#define APP_COMPANYNAME			"nipkow"
+#define APP_DESCRPTION			"Fixes and tweaks for the UHD port of Resident Evil 4"
+#define APP_COPYRIGHT			"Copyright (C) 2021-2022 nipkow"
+#define APP_ORIGINALVERSION		"dinput8.dll"
+#define APP_INTERNALNAME		"re4_tweaks"
+
+// Get APP_VERSION
+#define _TO_STRING_(x) #x
+#define _TO_STRING(x) _TO_STRING_(x)
+#define APP_VERSION _TO_STRING(APP_MAJOR) "." _TO_STRING(APP_MINOR) "." _TO_STRING(APP_BUILDNUMBER) "." _TO_STRING(APP_REVISION)

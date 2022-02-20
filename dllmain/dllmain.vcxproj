@@ -62,6 +62,14 @@
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --verify HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_CUR_COMMIT ^"%VAR%^" &gt;&gt;  gitparams.h
+echo: &gt;&gt; gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --abbrev-ref HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -81,6 +89,14 @@
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --verify HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_CUR_COMMIT ^"%VAR%^" &gt;&gt;  gitparams.h
+echo: &gt;&gt; gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --abbrev-ref HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\external\Hooking\Hook.cpp" />
@@ -190,6 +206,7 @@
     <ClInclude Include="GameFlags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
+    <ClInclude Include="gitparams.h" />
     <ClInclude Include="HandleLimits.h" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="KeyboardMouseTweaks.h" />

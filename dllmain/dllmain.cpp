@@ -21,6 +21,8 @@
 #include "input.hpp"
 #include "EndSceneHook.h"
 #include <Logging/Logging.h>
+#include "gitparams.h"
+#include "resource.h"
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -103,7 +105,10 @@ void Init_Main()
 	std::string logPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".log";
 	Logging::Open(logPath);
 
-	Logging::Log() << "Starting re4_tweaks";
+	std::string commit = GIT_CUR_COMMIT;
+	commit.resize(8);
+
+	Logging::Log() << "Starting re4_tweaks v" << APP_VERSION << "-" << commit << "-" << GIT_BRANCH;
 
 	if (!Init_Game())
 		return;
