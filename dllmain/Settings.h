@@ -37,6 +37,7 @@ struct Settings
 	bool bEnableControllerSens;
 	bool bUseMouseTurning;
 	float fTurnSensitivity;
+	bool bUseRawMouseInput;
 	bool bFallbackToEnglishKeyIcons;
 	bool bFixSniperZoom;
 	bool bFixSniperFocus;

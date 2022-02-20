@@ -64,6 +64,20 @@ public:
 	unsigned int mouse_position_x() const { return _mouse_position[0]; }
 	unsigned int mouse_position_y() const { return _mouse_position[1]; }
 
+	float raw_mouse_delta_x()
+	{ 
+		float delta = _raw_mouse_delta[0];
+		_raw_mouse_delta[0] = 0;
+		return delta;
+	}
+
+	float raw_mouse_delta_y() 
+	{
+		float delta = _raw_mouse_delta[1];
+		_raw_mouse_delta[1] = 0;
+		return delta;
+	}
+
 	/// <summary>
 	/// Returns the character input as captured by 'WM_CHAR' for the current frame.
 	/// </summary>
@@ -123,6 +137,10 @@ private:
 	short _mouse_wheel_delta = 0;
 	unsigned int _mouse_position[2] = {};
 	unsigned int _last_mouse_position[2] = {};
+	float _raw_mouse_delta[2] = {};
+	float _last_raw_mouse_delta[2] = {};
+	std::pair<float, float> position;
+
 	uint64_t _frame_count = 0; // Keep track of frame count to identify windows with a lot of rendering
 	std::wstring _text_input;
 };

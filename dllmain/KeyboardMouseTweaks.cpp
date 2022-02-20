@@ -7,6 +7,7 @@
 #include "KeyboardMouseTweaks.h"
 #include "Logging/Logging.h"
 #include "WndProcHook.h"
+#include "input.hpp"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -14,6 +15,8 @@ uintptr_t* ptrFocusAnimFldAddr;
 uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t* ptrLastUsedController;
+static uint32_t* ptrMouseSens;
+static uint32_t* ptrMouseAimMode;
 
 int iMinFocusTime;
 
@@ -37,6 +40,16 @@ LastDevice GetLastUsedDevice()
 	default:
 		return LastDevice::Keyboard;
 	}
+}
+
+int g_MOUSE_SENS()
+{
+	return *(int8_t*)(ptrMouseSens);
+}
+
+int intMouseAimingMode()
+{
+	return *(int8_t*)(ptrMouseAimMode);
 }
 
 uint8_t* g_KeyIconData = nullptr;
@@ -155,12 +168,84 @@ void InventoryFlipBindings(UINT uMsg, WPARAM wParam)
 	}
 }
 
+static uint32_t* ptrMouseDeltaX;
+static uint32_t* ptrMouseDeltaY;
+
 void Init_KeyboardMouseTweaks()
 {
 	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
 	ptrLastUsedController = *pattern.count(1).get(0).get<uint32_t*>(1);
 
+	// g_MOUSE_SENS pointer
+	pattern = hook::pattern("0F B6 05 ? ? ? ? 89 85 ? ? ? ? DB 85 ? ? ? ? DC 35");
+	ptrMouseSens = *pattern.count(1).get(0).get<uint32_t*>(3);
+
+	// Aiming mode pointer
+	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
+	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
+
 	Init_MouseTurning();
+
+	// X mouse delta adjustments
+	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
+	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct MouseDeltaX
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			if (cfg.bUseRawMouseInput)
+				*(int32_t*)(ptrMouseDeltaX) = (int32_t)((_input->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
+			else
+				*(int32_t*)(ptrMouseDeltaX) = (int32_t)regs.eax;
+		}
+	}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	// Y mouse delta adjustments
+	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? E8");
+	ptrMouseDeltaY = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct MouseDeltaY
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			if (cfg.bUseRawMouseInput)
+				// raw_mouse_delta_y has to be divided by around 7.5f instead if we don't use the PlWepLockCtrlHook below
+				*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 10.0f) * g_MOUSE_SENS());
+			else
+				*(int32_t*)(ptrMouseDeltaY) = (int32_t)regs.eax;
+		}
+	}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	if (cfg.bUseRawMouseInput)
+		Logging::Log() << __FUNCTION__ << " -> Raw mouse input enabled";
+
+	// Make the game think we're using a Wiimote when using raw mouse input.
+	// This disables a bunch of aiming acceleration stuff and makes aiming more precise.
+	// Also gets rid of the aiming "sway".
+	pattern = hook::pattern("BF ? ? ? ? 39 3D ? ? ? ? 75 ? 8B 45");
+	struct PlWepLockCtrlHook
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			{
+				if (cfg.bUseRawMouseInput)
+				{
+					con.AddLogChar("true?");
+					// Force aiming mode to "Modern". This seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
+					if (intMouseAimingMode() == 0x00)
+						*(int8_t*)(ptrMouseAimMode) = 0x01;
+
+					// 0 here means the game is checking if WPadMode is _off_ instead, reversing the original check
+					// We probably have to tweak this if we ever plan to use WPadMode for something else
+					regs.edi = 0;
+				}
+				else
+					regs.edi = 1;
+			}
+			else
+				regs.edi = 1;
+		}
+	}; injector::MakeInline<PlWepLockCtrlHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Inventory item flip binding
 	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");

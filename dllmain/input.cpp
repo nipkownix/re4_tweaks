@@ -12,6 +12,7 @@
 #include "ConsoleWnd.h"
 #include "Settings.h"
 #include <iomanip>
+#include "MouseTurning.h"
 
 std::shared_ptr<class input> _input;
 
@@ -145,6 +146,28 @@ bool input::handle_window_message(const void *message_data)
 
 			if (raw_input_window == s_raw_input_windows.end() || (raw_input_window->second & 0x2) == 0)
 				break; // Input is already handled (since legacy mouse messages are enabled), so nothing to do here
+
+			// Update raw mouse delta values
+			if (raw_data.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)
+			{
+				bool isVirtualDesktop = (raw_data.data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP) == MOUSE_VIRTUAL_DESKTOP;
+				float xChange = (raw_data.data.mouse.lLastX / 65535.0f) * GetSystemMetrics(isVirtualDesktop ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
+				float yChange = (raw_data.data.mouse.lLastY / 65535.0f) * GetSystemMetrics(isVirtualDesktop ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
+
+				input->_raw_mouse_delta[0] = input->_raw_mouse_delta[0] + raw_data.data.mouse.lLastX - input->position.first;
+				input->_raw_mouse_delta[1] = input->_raw_mouse_delta[1] + raw_data.data.mouse.lLastY - input->position.second;
+
+				input->position.first += xChange;
+				input->position.second += yChange;
+			}
+			else
+			{
+				input->_raw_mouse_delta[0] = input->_raw_mouse_delta[0] + raw_data.data.mouse.lLastX;
+				input->_raw_mouse_delta[1] = input->_raw_mouse_delta[1] + raw_data.data.mouse.lLastY;
+
+				input->position.first += raw_data.data.mouse.lLastX;
+				input->position.second += raw_data.data.mouse.lLastY;
+			}
 
 			if (raw_data.data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
 				input->_keys[VK_LBUTTON] = 0x88;
@@ -420,6 +443,8 @@ void input::next_frame()
 	_mouse_wheel_delta = 0;
 	_last_mouse_position[0] = _mouse_position[0];
 	_last_mouse_position[1] = _mouse_position[1];
+	_last_raw_mouse_delta[0] = _raw_mouse_delta[0];
+	_last_raw_mouse_delta[1] = _raw_mouse_delta[1];
 
 	// Update caps lock state
 	_keys[VK_CAPITAL] |= GetKeyState(VK_CAPITAL) & 0x1;

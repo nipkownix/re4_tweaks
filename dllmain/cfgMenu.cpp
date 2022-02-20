@@ -458,6 +458,16 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// UseRawMouseInput
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseRawMouseInput", &cfg.bUseRawMouseInput);
+				ImGui::TextWrapped("Makes the game use Raw Input for aiming and turning (if MouseTurning is enabled).");
+				ImGui::TextWrapped("Greatly improves mouse input by removing negative/positive accelerations that were being applied both by the game and by Direct Input.");
+				ImGui::TextWrapped("This option automatically enables the game's \"Modern\" aiming mode, and is incompatible with the \"Classic\" mode.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FixSniperZoom
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixSniperZoom", &cfg.bFixSniperZoom);
 				ImGui::TextWrapped("Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.");

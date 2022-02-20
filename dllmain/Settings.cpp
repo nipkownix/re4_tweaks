@@ -373,6 +373,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15f |", "TurnSensitivity", cfg.fTurnSensitivity);
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "UseRawMouseInput", cfg.bUseRawMouseInput ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperZoom", cfg.bFixSniperZoom ? "true" : "false");
 	Logging::Log() << settingBuf;
 
@@ -500,6 +503,7 @@ void Settings::ReadSettings()
 	// MOUSE
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
+	cfg.bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", true);
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
 	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", true);
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
@@ -635,6 +639,7 @@ void Settings::WriteSettings()
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
 	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
+	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", cfg.bUseRawMouseInput);
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
 	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", cfg.bFixSniperFocus);
 	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);

@@ -96,6 +96,11 @@ UseMouseTurning = true
 ; Min 0.5, max 2.0.
 TurnSensitivity = 1.0
 
+; Makes the game use Raw Input for aiming and turning (if MouseTurning is enabled).
+; Greatly improves mouse input by removing negative/positive accelerations that were being applied both by the game and by Direct Input.
+; This option automatically enables the game's "Modern" aiming mode, and is incompatible with the "Classic" mode.
+UseRawMouseInput = true
+
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.
 FixSniperZoom = true
 
