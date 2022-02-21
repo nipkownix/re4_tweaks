@@ -264,6 +264,54 @@ void Init_KeyboardMouseTweaks()
 	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(7));
 	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(7));
 
+	// Disable camera lock on "Modern" mouse setting
+	struct CameraLockCmp
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			int aimingMode = *(int8_t*)(ptrMouseAimMode);
+
+			// Mimic what CMP does, since we're overwriting it.
+			if (aimingMode > 0)
+			{
+				// Clear both flags
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+			else if (aimingMode < 0)
+			{
+				// ZF = 0, CF = 1
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef |= (1 << regs.carry_flag);
+			}
+			else if (aimingMode == 0)
+			{
+				// ZF = 1, CF = 0
+				regs.ef |= (1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+
+			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			{
+				if (cfg.bUnlockCameraFromAim)
+				{
+					// Make the game think the aiming mode is "Classic"
+					regs.ef |= (1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+			}
+		}
+	}; 
+
+	pattern = hook::pattern("80 3D ? ? ? ? ? D9 41 ? D9 5D ? 74");
+	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+	pattern = hook::pattern("80 3D ? ? ? ? ? 0F 84 ? ? ? ? A1 ? ? ? ? 85 C0 74");
+	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+	pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? D9 05");
+	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
 	// Inventory item flip binding
 	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
 	ptrInvMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);

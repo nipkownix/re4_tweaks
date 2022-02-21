@@ -101,6 +101,11 @@ TurnSensitivity = 1.0
 ; This option automatically enables the game's "Modern" aiming mode, and is incompatible with the "Classic" mode.
 UseRawMouseInput = true
 
+; When using the "Modern" mouse setting, the game locks the camera position to the aiming position, making both move together.
+; Although this is the expected behavior in most games, some people might prefer to keep the original camera behavior while also having the benefits from "Modern" aiming.
+; Enabling this will also restore the horizontal aiming sway that was lost when the devs implemented "Modern" aiming.
+UnlockCameraFromAim = false
+
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.
 FixSniperZoom = true
 
