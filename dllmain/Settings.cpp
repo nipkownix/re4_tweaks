@@ -321,7 +321,7 @@ void Settings::ReadSettings()
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
 	cfg.bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", true);
-	cfg.bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UnlockCameraFromAim", false);
+	cfg.bUnlockCameraFromAim = iniReader.ReadBoolean("MOUSE", "UnlockCameraFromAim", false);
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
 	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", true);
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
