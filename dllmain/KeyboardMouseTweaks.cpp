@@ -208,8 +208,7 @@ void Init_KeyboardMouseTweaks()
 		void operator()(injector::reg_pack& regs)
 		{
 			if (cfg.bUseRawMouseInput)
-				// raw_mouse_delta_y has to be divided by around 7.5f instead if we don't use the PlWepLockCtrlHook below
-				*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 10.0f) * g_MOUSE_SENS());
+				*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
 			else
 				*(int32_t*)(ptrMouseDeltaY) = (int32_t)regs.eax;
 		}
@@ -218,34 +217,52 @@ void Init_KeyboardMouseTweaks()
 	if (cfg.bUseRawMouseInput)
 		Logging::Log() << __FUNCTION__ << " -> Raw mouse input enabled";
 
-	// Make the game think we're using a Wiimote when using raw mouse input.
-	// This disables a bunch of aiming acceleration stuff and makes aiming more precise.
-	// Also gets rid of the aiming "sway".
-	pattern = hook::pattern("BF ? ? ? ? 39 3D ? ? ? ? 75 ? 8B 45");
+	// Prevent some negative mouse acceleration from being applied
+	pattern = hook::pattern("83 3D ? ? ? ? ? 75 ? 83 3D ? ? ? ? 00 75 0E 85 C0 75 ? D9 EE D9");
 	struct PlWepLockCtrlHook
 	{
 		void operator()(injector::reg_pack& regs)
 		{
+			int DeltaX = *(int32_t*)(ptrMouseDeltaX);
+
+			// Mimic what CMP does, since we're overwriting it.
+			if (DeltaX > 0)
+			{
+				// Clear both flags
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+			else if (DeltaX < 0)
+			{
+				// ZF = 0, CF = 1
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef |= (1 << regs.carry_flag);
+			}
+			else if (DeltaX == 0)
+			{
+				// ZF = 1, CF = 0
+				regs.ef |= (1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+
 			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
 			{
 				if (cfg.bUseRawMouseInput)
 				{
-					con.AddLogChar("true?");
 					// Force aiming mode to "Modern". This seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
 					if (intMouseAimingMode() == 0x00)
 						*(int8_t*)(ptrMouseAimMode) = 0x01;
 
-					// 0 here means the game is checking if WPadMode is _off_ instead, reversing the original check
-					// We probably have to tweak this if we ever plan to use WPadMode for something else
-					regs.edi = 0;
+					// Clear both flags so we skip the section that does the actual negative acceleration
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
 				}
-				else
-					regs.edi = 1;
 			}
-			else
-				regs.edi = 1;
 		}
-	}; injector::MakeInline<PlWepLockCtrlHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	};
+	
+	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(7));
+	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(7));
 
 	// Inventory item flip binding
 	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
