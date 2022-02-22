@@ -38,7 +38,6 @@ bool bCfgMenuOpen;
 bool bConsoleOpen;
 bool bShouldFlipX;
 bool bShouldFlipY;
-bool bisDebugBuild;
 
 int g_UserRefreshRate;
 
@@ -509,8 +508,8 @@ void Init_Main()
 	// Silence armored Ashley
 	if (cfg.bSilenceArmoredAshley)
 	{
-		auto pattern = hook::pattern("75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85");
-		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(0), (uint8_t)0xEB, true); // jne -> jmp
+		auto pattern = hook::pattern("CB 4F 00 00 02 75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(5), (uint8_t)0xEB, true); // jne -> jmp
 
 		Logging::Log() << "SilenceArmoredAshley enabled";
 	}

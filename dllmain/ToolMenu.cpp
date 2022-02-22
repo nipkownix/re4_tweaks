@@ -151,7 +151,7 @@ void __cdecl gameDebug_recreation(void* a1)
 			PadButtonStates[4] = PadButtonStates[3] = PadButtonStates[1] = PadButtonStates[0] = 0;
 	}
 
-	if (!bisDebugBuild)
+	if (!GameVersionIsDebug())
 	{
 		// Check for LT + LS buttons
 		// (make sure they're the only ones pressed - if player opens a UI at same time it'll likely cause a hang...)
@@ -432,7 +432,7 @@ void Init_ToolMenu()
 	pattern = hook::pattern("52 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D");
 	injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), &MenuTask_Hook, true);
 
-	if (bisDebugBuild)
+	if (GameVersionIsDebug())
 	{
 		// hook gameDebug so we can use the gamepad emulation stuff to add keyboard support
 		pattern = hook::pattern("EB 03 8D 49 00 E8 ? ? ? ? 53 E8 ? ? ? ?");
@@ -543,7 +543,7 @@ void Init_ToolMenu()
 	}
 
 	// Overwrite non-functional tool menu entries with replacements
-	if (!bisDebugBuild)
+	if (!GameVersionIsDebug())
 	{
 		ToolMenuEntries[1].FuncPtr = &ToolMenu_GoldMax;
 		ToolMenuEntries[15].FuncPtr = &ToolMenu_SecretOpen;
@@ -570,7 +570,7 @@ void Init_ToolMenu()
 		ToolMenuEntries[12].FuncPtr = &ToolMenu_ToggleInfoDisp;
 
 		// Clear non-functional options on non-debug builds
-		if (!bisDebugBuild)
+		if (!GameVersionIsDebug())
 		{
 			for (int i = 0; i < 32; i++)
 			{
