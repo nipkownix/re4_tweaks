@@ -18,10 +18,13 @@
 #include "EndSceneHook.h"
 #include "cfgMenu.h"
 #include "Logging/Logging.h"
+#include "resource.h"
 
 EndSceneHook esHook;
 
 uintptr_t* ptrD3D9Device;
+
+extern std::string cfgMenuTitle; // cfgMenu.cpp
 
 void ApplyImGuiTheme()
 {
@@ -167,6 +170,11 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 			Logging::Log() << "Non-LAA executable detected!";
 			laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
 		}
+
+		// Update cfgMenu window title
+		cfgMenuTitle.append(" v");
+		cfgMenuTitle.append(APP_VERSION);
+		cfgMenuTitle.append(" - Configuration");
 	}
 
 	ImGui_ImplDX9_NewFrame();

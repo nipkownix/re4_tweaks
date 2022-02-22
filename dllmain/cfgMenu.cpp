@@ -19,6 +19,8 @@ int Tab = 1;
 
 std::vector<uint32_t> cfgMenuCombo;
 
+std::string cfgMenuTitle = "re4_tweaks";
+
 bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 {
 	cfgMenuCombo.clear();
@@ -36,7 +38,8 @@ void cfgMenuRender()
 {
 	ImGui::SetNextWindowSize(ImVec2(910, 570), ImGuiCond_FirstUseEver);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(910, (570 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
-	if (ImGui::Begin("re4_tweaks - Configuration", 0))
+
+	if (ImGui::Begin(cfgMenuTitle.data(), 0))
 	{
 		// Left side
 		static int selected = 0;
