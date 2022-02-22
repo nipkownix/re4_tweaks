@@ -2,6 +2,7 @@
 #include "..\includes\stdafx.h"
 #include "dllmain.h"
 #include "Settings.h"
+#include "Logging/Logging.h"
 
 void Init_HandleLimits()
 {
@@ -29,6 +30,8 @@ void Init_HandleLimits()
 		// Make it so models don't disappear when a certain polygon limit is reached
 		pattern = hook::pattern("81 80 ? ? ? ? ? ? ? ? A1 ? ? ? ? 8B 90 ? ? ? ? 03 D2");
 		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(6), 0x00340000, true);
+
+		Logging::Log() << __FUNCTION__ << " -> RaiseVertexAlloc applied";
 	}
 
 	// Inventory screen mem
@@ -94,5 +97,7 @@ void Init_HandleLimits()
 		// (MessageControl::stageInit) Increase size given to mem_alloc for pG+0x3C buffer 
 		pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 00 AC 34 00");
 		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(9), SSNewSize, true); // 0x00719817
+
+		Logging::Log() << __FUNCTION__ << " -> RaiseInventoryAlloc applied";
 	}
 }

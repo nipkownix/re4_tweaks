@@ -10,3 +10,9 @@
 [submodule "external/ModUtils"]
 	path = external/ModUtils
 	url = https://github.com/CookiePLMonster/ModUtils.git
+[submodule "external/Hooking"]
+	path = external/Hooking
+	url = https://github.com/elishacloud/Hooking/
+[submodule "external/Logging"]
+	path = external/Logging
+	url = https://github.com/elishacloud/Logging

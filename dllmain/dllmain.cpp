@@ -18,13 +18,21 @@
 #include "KeyboardMouseTweaks.h"
 #include "ExceptionHandler.h"
 #include "ControllerTweaks.h"
+#include "input.hpp"
+#include "EndSceneHook.h"
+#include <Logging/Logging.h>
+#include "gitparams.h"
+#include "resource.h"
 
 std::string WrapperMode;
 std::string WrapperName;
 std::string rootPath;
 
+std::ofstream LOG;
+
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
+HMODULE g_module_handle = nullptr;
 
 bool bCfgMenuOpen;
 bool bConsoleOpen;
@@ -32,6 +40,8 @@ bool bShouldFlipX;
 bool bShouldFlipY;
 
 int g_UserRefreshRate;
+
+const char* game_lang;
 
 uintptr_t* ptrNonBlurryVertex;
 uintptr_t* ptrBlurryVertex;
@@ -75,6 +85,189 @@ void __declspec(naked) Esp04TransHook()
 		_asm {ret}
 }
 
+void LogSettings()
+{
+	char settingBuf[100];
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+	Logging::Log()<< "| Setting                        | Value           |";
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// DISPLAY
+	Logging::Log()<< "+ DISPLAY------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "FOVAdditional", cfg.fFOVAdditional);
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableVsync", cfg.bDisableVsync ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixDisplayMode", cfg.bFixDisplayMode ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15i |", "CustomRefreshRate", cfg.iCustomRefreshRate);
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RestorePickupTransparency", cfg.bRestorePickupTransparency ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03 ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixBlurryImage", cfg.bFixBlurryImage ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableFilmGrain", cfg.bDisableFilmGrain ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCBlur", cfg.bEnableGCBlur ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCScopeBlur", cfg.bEnableGCScopeBlur ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "WindowBorderless", cfg.bWindowBorderless ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionX", cfg.iWindowPositionX);
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionY", cfg.iWindowPositionY);
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RememberWindowPos", cfg.bRememberWindowPos ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// MISC
+	Logging::Log()<< "+ MISC---------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "WrappedDllPath", cfg.sWrappedDllPath.data());
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "SkipIntroLogos", cfg.bSkipIntroLogos ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableDebugMenu", cfg.bEnableDebugMenu ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// CONTROLLER
+	Logging::Log()<< "+ CONTROLLER---------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "ControllerSensitivity", cfg.fControllerSensitivity);
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// MOUSE
+	Logging::Log()<< "+ MOUSE--------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "UseMouseTurning", cfg.bUseMouseTurning ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "TurnSensitivity", cfg.fTurnSensitivity);
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "UseRawMouseInput", cfg.bUseRawMouseInput ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "UnlockCameraFromAim", cfg.bUnlockCameraFromAim ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperZoom", cfg.bFixSniperZoom ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperFocus", cfg.bFixSniperFocus ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// FRAME RATE
+	Logging::Log()<< "+ FRAME RATE---------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixQTE", cfg.bFixQTE ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// MEMORY
+	Logging::Log()<< "+ MEMORY-------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// HOTKEYS
+	Logging::Log()<< "+ HOTKEYS------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "ConfigMenu", cfg.sConfigMenuKeyCombo.data());
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "Console", cfg.sConsoleKeyCombo.data());
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DebugMenu", cfg.sDebugMenuKeyCombo.data());
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "MouseTurningModifier", cfg.sMouseTurnModifierKeyCombo.data());
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// FPS WARNING
+	Logging::Log()<< "+ WARNING------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "IgnoreFPSWarning", cfg.bIgnoreFPSWarning ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+
+	// IMGUI
+	Logging::Log()<< "+ IMGUI--------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "FontSize", cfg.fFontSize);
+	Logging::Log()<< settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableMenuTip", cfg.bDisableMenuTip ? "true" : "false");
+	Logging::Log()<< settingBuf;
+
+	Logging::Log()<< "+--------------------------------+-----------------+";
+}
+
 void HandleAppID()
 {
 	//Create missing steam_appid file
@@ -86,6 +279,24 @@ void HandleAppID()
 	}
 }
 
+void Init_Logging()
+{
+	// Start logging
+	std::string logPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".log";
+	Logging::Open(logPath);
+
+	std::string commit = GIT_CUR_COMMIT;
+	commit.resize(8);
+
+	Logging::Log() << "Starting re4_tweaks v" << APP_VERSION << "-" << commit << "-" << GIT_BRANCH;
+
+	Logging::LogComputerManufacturer();
+	Logging::LogOSVersion();
+	Logging::LogProcessNameAndPID();
+
+	Logging::Log() << "Running from: " << rootPath;
+}
+
 void Init_Main()
 {
 	con.AddLogChar("Big ironic thanks to QLOC S.A.");
@@ -93,20 +304,33 @@ void Init_Main()
 	if (!Init_Game())
 		return;
 
-	cfg.ReadSettings();
+	Logging::Log() << "Game version = " << GameVersion();
 
+	// Log re4_tweaks settings
+	LogSettings();
+
+	// Make sure steam_appid.txt exists
 	HandleAppID();
+	
+	// Install input-related hooks
+	input::Init_Input();
 
+	// Install a WndProc hook and register the resulting hWnd for input
 	Init_WndProcHook();
 
-	Init_cfgMenu();
+	// Install a EndScene hook to display our own UI
+	Init_EndSceneHook();
 
+	// Increase some game limits
 	Init_HandleLimits();
 
+	// Fix broken effects
 	Init_FilterXXFixes();
 
+	// QTE-related changes
 	Init_QTEfixes();
 
+	// Fixes FPS-related issues
 	Init_60fpsFixes();
 
 	Init_KeyboardMouseTweaks();
@@ -146,6 +370,9 @@ void Init_Main()
 				*(int32_t*)(regs.esi + 0x4) = regs.ecx;
 			}
 		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		if (cfg.fFOVAdditional > 0.0f)
+			Logging::Log() << "FOV increased";
 	}
 	
 	// Force v-sync off
@@ -164,6 +391,8 @@ void Init_Main()
 				regs.eax = *(int32_t*)(regs.ebp - 0x808);
 			}
 		}; injector::MakeInline<WriteIniHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
+
+		Logging::Log() << "Vsync disabled";
 	}
 
 	// Game is hardcoded to only allow 60Hz display modes for some reason...
@@ -182,23 +411,44 @@ void Init_Main()
 			if (EnumDisplayDevices(NULL, 0, &device, 0) == false || 
 				EnumDisplaySettings(device.DeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode) == false)
 			{
-#ifdef VERBOSE
+				#ifdef VERBOSE
 				con.AddLogChar("Couldn't read the display refresh rate. Using fallback value.");
-#endif
+				#endif
+				Logging::Log() << "FixDisplayMode > Couldn't read the display refresh rate. Using fallback value.";
 				g_UserRefreshRate = 60; // Fallback value.
 			}
 			else
 			{
-#ifdef VERBOSE
+				#ifdef VERBOSE
 				con.AddLogChar("Device 0 name: %s", device.DeviceName);
-#endif
+				#endif
 				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
+
+				// Log display modes for troubleshooting
+				if (cfg.bVerboseLog)
+				{
+					DEVMODE dm = { 0 };
+					dm.dmSize = sizeof(dm);
+					Logging::Log() << "+-------------+-------------+";
+					Logging::Log() << "| Display modes:            |";
+					for (int iModeNum = 0; EnumDisplaySettings(device.DeviceName, iModeNum, &dm) != 0; iModeNum++)
+					{
+						char resolution[100];
+
+						sprintf(resolution, "%4dx%-4d", dm.dmPelsWidth, dm.dmPelsHeight);
+
+						Logging::Log() << "| Mode " << std::setw(2) << iModeNum << " = " << resolution << " " << std::setw(3) << dm.dmDisplayFrequency << "Hz" << " |";
+					}
+					Logging::Log() << "+-------------+-------------+";
+				}
 			}
 		}
 
 		#ifdef VERBOSE
 		con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
 		#endif
+
+		Logging::Log() << "FixDisplayMode -> New refresh rate = " << g_UserRefreshRate;
 
 		pattern = hook::pattern("8B 45 ? 83 F8 ? 75 ? 8B 4D ? 8B 7D ? 3B 4D");
 		struct DisplayModeFix
@@ -251,6 +501,8 @@ void Init_Main()
 
 		pattern = hook::pattern("8B 7D 18 75 ? 80 B8 ? ? ? ? 02 75 ? 6A ? 68");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(11), (uint8_t)-1, true); // Allow the correct animations to be used
+		
+		Logging::Log() << "AllowMafiaLeonCutscenes enabled";
 	}
 
 	// Silence armored Ashley
@@ -258,6 +510,8 @@ void Init_Main()
 	{
 		auto pattern = hook::pattern("CB 4F 00 00 02 75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(5), (uint8_t)0xEB, true); // jne -> jmp
+
+		Logging::Log() << "SilenceArmoredAshley enabled";
 	}
 
 	// Apply window changes
@@ -323,14 +577,8 @@ void Init_Main()
 			}
 		}; injector::MakeInline<ReadFPS>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
-
-	/* // Replace MemorySwap with memcpy
-	if (cfg.bUseMemcpy)
-	{
-		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 68 ? ? ? ? 50 E8 ? ? ? ? A1");
-		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), memcpy);
-	}
-	*/ // Unused for now since it is crashing the game. Maybe we could fix this in the future?
+	else
+		Logging::Log() << "User decided to ignore the FPS warning";
 
 	// Unlock JP-only classic camera angle during Ashley segment
 	static uint8_t* pSys = nullptr;
@@ -354,6 +602,9 @@ void Init_Main()
 
 	injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
+	if (cfg.bAshleyJPCameraAngles)
+		Logging::Log() << "AshleyJPCameraAngles enabled";
+
 	// Option to skip the intro logos when starting up the game
 	if (cfg.bSkipIntroLogos)
 	{
@@ -362,6 +613,8 @@ void Init_Main()
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(3), uint32_t(0), true);
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
+
+		Logging::Log() << "SkipIntroLogos enabled";
 	}
 
 	// Restore missing transparency in the item pickup screen by
@@ -372,6 +625,8 @@ void Init_Main()
 	injector::MakeNOP(pattern.get_first(0), 5);
 	injector::MakeJMP(pattern.get_first(0), ItemExamineHook, true);
 
+	if (cfg.bRestorePickupTransparency)
+		Logging::Log() << "RestorePickupTransparency enabled";
 
 	// Disable Filter03 for now, as we have yet to find a way to actually fix it
 	{
@@ -385,6 +640,8 @@ void Init_Main()
 					_asm {call ptrFilter03}
 			}
 		}; injector::MakeInline<DisableBrokenFilter03>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	
+		Logging::Log() << "DisableBrokenFilter03 applied";
 	}
 
 	// Fix a problem related to a vertex buffer that caused the image to be slightly blurred
@@ -413,6 +670,9 @@ void Init_Main()
 		// Second buffer
 		pattern = hook::pattern("D9 5D ? FF D0 D9 E8 A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 6A ? 51 D9 1C ? 68");
 		injector::MakeInline<BlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
+	
+		if (cfg.bFixBlurryImage)
+			Logging::Log() << "FixBlurryImage enabled";
 	}
 
 	// Disable film grain (Esp04)
@@ -421,6 +681,9 @@ void Init_Main()
 		ptrAfterEsp04TransHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
 		injector::MakeNOP(pattern.get_first(0), 6);
 		injector::MakeJMP(pattern.get_first(0), Esp04TransHook, true);
+
+		if (cfg.bDisableFilmGrain)
+			Logging::Log() << "DisableFilmGrain applied";
 	}
   
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
@@ -428,6 +691,8 @@ void Init_Main()
 	{
 		Init_ToolMenu();
 		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
+
+		Logging::Log() << "EnableDebugMenu applied";
 	}
 
 	// Add Handgun silencer to merchant sell list
@@ -455,6 +720,8 @@ void Init_Main()
 		pattern = hook::pattern("83 00 00 00 78 00 00 00");
 		uint32_t* g_item_price_tbl_num = pattern.count(1).get(0).get<uint32_t>(0);
 		*g_item_price_tbl_num += 1;
+
+		Logging::Log() << "AllowSellingHandgunSilencer enabled";
 	}
 
 	// Allow physics to apply to tactical vest outfit
@@ -465,10 +732,68 @@ void Init_Main()
 		injector::MakeNOP(pattern.count(2).get(0).get<uint8_t>(7), 2);
 		injector::MakeNOP(pattern.count(2).get(1).get<uint8_t>(7), 2);
 	}
+
+	// Log current game language
+	{
+		auto pattern = hook::pattern("88 81 ? ? ? ? C3 8B FF");
+		struct GameLangLog
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				*(uint8_t*)(regs.ecx + 0x4FA3) = (uint8_t)regs.eax;
+
+				switch ((uint8_t)regs.eax)
+				{
+				case 2:
+					game_lang = "English";
+					break;				
+				case 3:
+					game_lang = "German";
+					break;
+				case 4:
+					game_lang = "French";
+					break;
+				case 5:
+					game_lang = "Spanish";
+					break;
+				case 6:
+					game_lang = "Traditional Chinese";
+					break;
+				case 7:
+					game_lang = "Simplified Chinese";
+					break;
+				case 8:
+					game_lang = "Italian";
+					break;
+				default:
+					game_lang = "Unknown"; // We should never reach this.
+				}
+
+				#ifdef VERBOSE
+				con.AddConcatLog("Game language: ", game_lang);
+				#endif
+
+				Logging::Log() << "Game language: " << game_lang;
+			}
+		}; 
+		
+		// Japanese exe doesn't have the setLanguage function, so we end up hooking nothing
+		if (pattern.size() != 1)
+		{
+			#ifdef VERBOSE
+			con.AddLogChar("Game language: Japanese");
+			#endif
+
+			Logging::Log() << "Game language: Japanese";
+		}
+		else
+			injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
 }
 
-void LoadRealDLL(HMODULE hModule)
+void StorePath(HMODULE hModule)
 {
+	// Store wrapper name
 	char configname[MAX_PATH];
 	GetModuleFileNameA(hModule, configname, MAX_PATH);
 	WrapperName.assign(strrchr(configname, '\\') + 1);
@@ -477,7 +802,10 @@ void LoadRealDLL(HMODULE hModule)
 	// Store root path
 	std::string modulePath = configname;
 	rootPath = modulePath.substr(0, modulePath.rfind('\\') + 1);
+}
 
+void LoadRealDLL(HMODULE hModule)
+{
 	// Get wrapper mode
 	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());
 
@@ -502,13 +830,17 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 
-		#ifdef VERBOSE
-		con.AddLogChar("\n");
-		#endif
+		g_module_handle = hModule;
 
-		Init_Main();
+		StorePath(hModule);
+
+		Init_Logging();
+
+		cfg.ReadSettings();
 
 		LoadRealDLL(hModule);
+
+		Init_Main();
 
 		break;
 	case DLL_PROCESS_DETACH:

@@ -5,127 +5,20 @@
 #include "WndProcHook.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
-#include "../external/imgui/imgui.h"
-#include "LAApatch.h"
-#include "MouseTurning.h"
-#include "KeyboardMouseTweaks.h"
+#include "input.hpp"
+#include "Logging/Logging.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
 
 static uint32_t* ptrMouseDeltaX;
 
-void processRawMouse(RAWMOUSE rawMouse)
-{
-	ImGuiIO& io = ImGui::GetIO();
-
-	switch (rawMouse.usButtonFlags)
-	{
-	case RI_MOUSE_LEFT_BUTTON_DOWN:
-		io.MouseDown[0] = true;
-		break;
-	case RI_MOUSE_RIGHT_BUTTON_DOWN:
-		io.MouseDown[1] = true;
-		break;
-	case RI_MOUSE_MIDDLE_BUTTON_DOWN:
-		io.MouseDown[2] = true;
-		break;
-	case RI_MOUSE_LEFT_BUTTON_UP:
-		io.MouseDown[0] = false;
-		break;
-	case RI_MOUSE_RIGHT_BUTTON_UP:
-		io.MouseDown[1] = false;
-		break;
-	case RI_MOUSE_MIDDLE_BUTTON_UP:
-		io.MouseDown[2] = false;
-		break;
-	case RI_MOUSE_WHEEL:
-		io.MouseWheel += (float)(short)rawMouse.usButtonData / (float)WHEEL_DELTA;
-		break;
-	case RI_MOUSE_HWHEEL:
-		io.MouseWheelH += (float)(short)rawMouse.usButtonData / (float)WHEEL_DELTA;
-		break;
-	default:
-		break;
-	}
-}
-
-std::vector<key_state> vk_states(0x100); // are there VKs with value higher than 0x100?
-
-key_state& GetVKState(int vk)
-{
-	if ((vk == VK_LBUTTON || vk == VK_RBUTTON || vk == VK_MBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2))
-	{
-		bool new_state = GetAsyncKeyState(vk);
-		
-		vk_states[vk].changed = vk_states[vk].pressed != new_state;
-		vk_states[vk].pressed = new_state;
-	}
-	
-	return vk_states[vk];
-}
-
-bool changed;
-bool IsComboKeyPressed(std::vector<uint32_t>* KeyVector)
-{
-	bool isComboPressed = KeyVector->size() > 0;
-	for (auto& key : *KeyVector)
-	{
-		if (!GetVKState(key).pressed)
-		{
-			isComboPressed = false;
-			break;
-		}
-	}
-
-	return isComboPressed;
-}
-
 // Our new hooked WndProc function
 int curPosX;
 int curPosY;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	// Send key events where necessary
-	if ((uMsg == WM_KEYDOWN) || (uMsg == WM_SYSKEYDOWN) || (uMsg == WM_KEYUP) || (uMsg == WM_SYSKEYUP))
-	{
-		// Key bindings for flipping inventory items on keyboard
-		InventoryFlipBindings(uMsg, wParam);
-
-		// Key binding for brining up the config menu
-		cfgMenuBinding(hWnd, lParam);
-
-		#ifdef VERBOSE
-		// Key binding for showing/hiding the console window
-		ConsoleBinding();
-		#endif
-	}
-
 	switch (uMsg) {
-		case WM_SYSKEYUP:
-		case WM_KEYUP:
-			// update key state map
-			{
-				bool new_state = false;
-				if (wParam >= vk_states.size())
-					vk_states.resize(wParam + 1);
-				vk_states[wParam].changed = vk_states[wParam].pressed != new_state;
-				vk_states[wParam].pressed = new_state;
-			}
-			break;
-
-		case WM_SYSKEYDOWN:
-		case WM_KEYDOWN:
-			// update key state map
-			{
-				bool new_state = true;
-				if (wParam >= vk_states.size())
-					vk_states.resize(wParam + 1);
-				vk_states[wParam].changed = vk_states[wParam].pressed != new_state;
-				vk_states[wParam].pressed = new_state;
-			}
-			break;
-
 		case WM_MOVE:
 			// Get current window position
 			curPosX = (int)(short)LOWORD(lParam);   // horizontal position 
@@ -159,56 +52,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_CLOSE:
 			ExitProcess(0);
 			break;
-
-		// Raw input stuff for ImGui
-		case WM_INPUT: {
-			HRAWINPUT rawInput = (HRAWINPUT)lParam;
-			UINT dwSize = 0;
-			if (GetRawInputData((HRAWINPUT)rawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER)) == -1) {
-				break;
-			}
-
-			LPBYTE lpb = new BYTE[dwSize];
-			if (lpb == nullptr) {
-				break;
-			}
-
-			if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
-				con.AddLogChar("GetRawInputData returned an incorrect size");
-			}
-
-			RAWINPUT* raw = (RAWINPUT*)lpb;
-
-			if (raw->header.dwType == RIM_TYPEMOUSE) {
-				if (raw->data.mouse.usButtonFlags)
-					processRawMouse(raw->data.mouse);
-			}
-
-			delete[]lpb;
-			break;
-		}
 	}
 
-	if (bCfgMenuOpen) {
-		// Use raw mouse input because this game is weird and won't let me use window messages properly.
-		RAWINPUTDEVICE rid[1];
-
-		rid[0].usUsagePage = 0x01;
-		rid[0].usUsage = 0x02;
-		rid[0].dwFlags = RIDEV_INPUTSINK;
-		rid[0].hwndTarget = hWindow;
-
-		if (!RegisterRawInputDevices(rid, 1, sizeof(*rid)))
-			con.AddLogChar("Failed to register for raw input!");
-
+	if (bCfgMenuOpen)
+	{
 		// Clear the mouse delta value if the cfg menu is open
 		*(int32_t*)(ptrMouseDeltaX) = 0;
+	}
 
-		return ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
-	}
-	else {
-		return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
-	}
+	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 }
 
 // CreateWindowExA hook to get the hWindow and set up the WndProc hook
@@ -219,6 +71,11 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 
 	HWND result = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, cfg.bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 	hWindow = result;
+
+	Logging::Log() << __FUNCTION__ << " -> Window created. Registering for input...";
+
+	// Register hWnd for input processing
+	_input = input::register_window(hWindow);
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);
 

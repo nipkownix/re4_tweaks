@@ -4,6 +4,7 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
+#include "Logging/Logging.h"
 
 static uint32_t* ptrGameFrameRate;
 
@@ -73,4 +74,6 @@ void Init_60fpsFixes()
 			}
 		}; injector::MakeInline<AshleyBustFrametimeFix>(pattern.count(1).get(0).get<uint32_t>(6), pattern.count(1).get(0).get<uint32_t>(11));
 	}
+
+	Logging::Log() << __FUNCTION__ << " -> FPS fixes applied";
 }

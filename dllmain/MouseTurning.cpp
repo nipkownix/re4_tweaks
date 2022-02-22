@@ -4,7 +4,8 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "KeyboardMouseTweaks.h"
-#include "WndProcHook.h"
+#include "input.hpp"
+#include "Logging/Logging.h"
 
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -17,7 +18,6 @@ uintptr_t ptrAfterMotionMoveHook2;
 
 static uint32_t* ptrMouseDeltaX;
 static uint32_t* ptrMovInputState;
-static uint32_t* ptrMouseAimMode;
 
 uint32_t* ptrCharRotationBase;
 uint32_t* ptrCamXPosAddr;
@@ -31,7 +31,7 @@ DWORD _ESP;
 int intMouseDeltaX()
 {
 	// TODO: Maybe we'd get smoother results if we calculated the delta ourselves instead of using what the game provides.
-    return *(int32_t*)(ptrMouseDeltaX);
+	return *(int32_t*)(ptrMouseDeltaX);
 }
 
 int intMovInputState()
@@ -53,7 +53,7 @@ bool bMouseTurnStateChanged = false;
 
 bool isMouseTurnEnabled()
 {
-	bool modifierPressed = IsComboKeyPressed(&mouseTurnModifierCombo);
+	bool modifierPressed = _input->is_combo_down(&mouseTurnModifierCombo);
 
 	bool state = cfg.bUseMouseTurning;
 
@@ -220,7 +220,7 @@ void MouseTurn()
 	float SpeedMulti = 900;
 
 	// "Classic" aiming mode (0x00) needs lower sensitivity here.
-	if (*(int8_t*)(ptrMouseAimMode) == 0x00)
+	if (intMouseAimingMode() == 0x00)
 		SpeedMulti = 1300;
 
 	*(float*)(*ptrCharRotationBase + 0xA4) += (-intMouseDeltaX() / SpeedMulti) * cfg.fTurnSensitivity;
@@ -236,9 +236,6 @@ void GetMouseTurnPointers()
 
 	pattern = hook::pattern("A1 ? ? ? ? 25 ? ? ? ? 33 C9 0B C1 74 ? B8 ? ? ? ? C3");
 	ptrMovInputState = *pattern.count(1).get(0).get<uint32_t*>(1);
-
-	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
-	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
 
 	pattern = hook::pattern("A1 ? ? ? ? D9 80 ? ? ? ? 51 8D 90 ? ? ? ? D9 1C ? E8 ? ? ? ? 83 C4 ? 84 C0 0F 85 ? ? ? ? 8B 45 ? 8B 7D");
 	ptrCharRotationBase = *pattern.count(1).get(0).get<uint32_t*>(1);
@@ -390,4 +387,7 @@ void Init_MouseTurning()
 				regs.eax = 0x8;
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	
+	if (cfg.bUseMouseTurning)
+		Logging::Log() << __FUNCTION__ << " -> MouseTurning enabled";
 }

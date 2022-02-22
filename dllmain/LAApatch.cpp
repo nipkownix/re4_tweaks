@@ -41,17 +41,7 @@ LAADialogState LAA_State = LAADialogState::NotShowing;
 int LAA_ErrorNum = 0;
 void LAApatch::LAARender()
 {
-	// Use simple input watcher instead of raw input.
-	// Looks like it was causing problems with GeForce Experience Overlay (but not in the cfgMenu for some reason?)
 	ImGuiIO& io = ImGui::GetIO();
-	POINT mPos;
-	GetCursorPos(&mPos);
-	ScreenToClient(hWindow, &mPos);
-	io.MousePos.x = static_cast<float>(mPos.x);
-	io.MousePos.y = static_cast<float>(mPos.y);
-	io.MouseDown[0] = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-	io.MouseDown[1] = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
-	io.MouseDown[2] = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
 
 	if (GameIsLargeAddressAware())
 	{

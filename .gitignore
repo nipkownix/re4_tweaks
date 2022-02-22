@@ -26,3 +26,6 @@ ipch/
 *.opensdf
 *.sdf
 *.aps
+
+# Generated on compilation
+dllmain/gitparams.h

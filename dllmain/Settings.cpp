@@ -320,6 +320,8 @@ void Settings::ReadSettings()
 	// MOUSE
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
+	cfg.bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", true);
+	cfg.bUnlockCameraFromAim = iniReader.ReadBoolean("MOUSE", "UnlockCameraFromAim", false);
 	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
 	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", true);
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
@@ -375,6 +377,11 @@ void Settings::ReadSettings()
 
 	if (cfg.fFontSize > 1.3f)
 		cfg.fFontSize = 1.3f;
+
+	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", false);
+
+	// LOG
+	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", false);
 }
 
 void Settings::WriteSettings()
@@ -408,6 +415,8 @@ void Settings::WriteSettings()
 			#ifdef VERBOSE
 			con.AddLogChar("Read-only ini file detected. Attempting to remove flag.");
 			#endif
+
+			//Logging::Log() << __FUNCTION__ << " -> Read-only ini file detected. Attempting to remove flag.";
 
 			SetFileAttributesA(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
 		}
@@ -444,6 +453,8 @@ void Settings::WriteSettings()
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
 	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
+	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", cfg.bUseRawMouseInput);
+	iniReader.WriteBoolean("MOUSE", "UnlockCameraFromAim", cfg.bUnlockCameraFromAim);
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
 	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", cfg.bFixSniperFocus);
 	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);

@@ -51,7 +51,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -62,13 +62,21 @@
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --verify HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_CUR_COMMIT ^"%VAR%^" &gt;&gt;  gitparams.h
+echo: &gt;&gt; gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --abbrev-ref HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external\logging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -81,8 +89,19 @@
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --verify HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_CUR_COMMIT ^"%VAR%^" &gt;&gt;  gitparams.h
+echo: &gt;&gt; gitparams.h
+FOR /F "tokens=*" %%g IN ('git rev-parse --abbrev-ref HEAD') do (SET VAR=%%g)
+echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\external\Hooking\Hook.cpp" />
+    <ClCompile Include="..\external\Hooking\HotPatch.cpp" />
+    <ClCompile Include="..\external\Hooking\IATPatch.cpp" />
     <ClCompile Include="..\external\imgui\imgui.cpp" />
     <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
@@ -91,6 +110,7 @@
     <ClCompile Include="..\external\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\external\Logging\Logging.cpp" />
     <ClCompile Include="..\external\ModUtils\Patterns.cpp" />
     <ClCompile Include="..\includes\stdafx.cpp" />
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
@@ -98,7 +118,9 @@
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="ControllerTweaks.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="EndSceneHook.cpp" />
     <ClCompile Include="ExceptionHandler.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
@@ -117,6 +139,7 @@
     <ClCompile Include="ToolMenuLights.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\external\Hooking\Hook.h" />
     <ClInclude Include="..\external\imgui\imconfig.h" />
     <ClInclude Include="..\external\imgui\imgui.h" />
     <ClInclude Include="..\external\imgui\imgui_impl_dx9.h" />
@@ -133,6 +156,7 @@
     <ClInclude Include="..\external\injector\include\injector\hooking.hpp" />
     <ClInclude Include="..\external\injector\include\injector\injector.hpp" />
     <ClInclude Include="..\external\injector\include\injector\utility.hpp" />
+    <ClInclude Include="..\external\Logging\Logging.h" />
     <ClInclude Include="..\external\ModUtils\DelimStringReader.h" />
     <ClInclude Include="..\external\ModUtils\HookInit.hpp" />
     <ClInclude Include="..\external\ModUtils\LateStaticInit.h" />
@@ -175,13 +199,16 @@
     <ClInclude Include="60fpsFixes.h" />
     <ClInclude Include="ConsoleWnd.h" />
     <ClInclude Include="ControllerTweaks.h" />
+    <ClInclude Include="EndSceneHook.h" />
     <ClInclude Include="ExceptionHandler.h" />
     <ClInclude Include="FilterXXFixes.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameFlags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
+    <ClInclude Include="gitparams.h" />
     <ClInclude Include="HandleLimits.h" />
+    <ClInclude Include="input.hpp" />
     <ClInclude Include="KeyboardMouseTweaks.h" />
     <ClInclude Include="LAApatch.h" />
     <ClInclude Include="MouseTurning.h" />

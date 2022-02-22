@@ -4,6 +4,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "QTEFixes.h"
+#include "Logging/Logging.h"
 
 uint32_t* ptrKEY_1_icon1;
 uint32_t* ptrKEY_1_icon2;
@@ -166,6 +167,8 @@ void Init_QTEfixes()
 	injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(6));
 	injector::MakeInline<StatueClimbQTE>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
 
+	Logging::Log() << __FUNCTION__ << " -> QTE speed changes applied";
+
 	// QTE bindings and icons
 	//
 	// KEY_1 binding hook
@@ -232,4 +235,6 @@ void Init_QTEfixes()
 	injector::MakeNOP(ptrKEY_2_icon4, 8, true);
 	injector::MakeJMP(ptrKEY_2_icon4, KEY_2_icon4, true);
 	jmpAddrKEY_2_icon4 = (uintptr_t)pattern.count(4).get(3).get<uint32_t>(6);
+
+	Logging::Log() << __FUNCTION__ << " -> Keyboard QTE bindings applied";
 }
