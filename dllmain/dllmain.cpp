@@ -735,14 +735,18 @@ void Init_Main()
 
 	// Log current game language
 	{
-		auto pattern = hook::pattern("88 81 ? ? ? ? C3 8B FF");
+		auto pattern = hook::pattern("8A ? 08 8B ? ? ? ? ? 88 ? ? ? ? ? C3 8B FF");
 		struct GameLangLog
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				*(uint8_t*)(regs.ecx + 0x4FA3) = (uint8_t)regs.eax;
+				if (GameVersion() == "1.1.0")
+					*(uint8_t*)(regs.ecx + 0x4FA3) = (uint8_t)regs.eax;
+				else
+					*(uint8_t*)(regs.edx + 0x4FA3) = (uint8_t)regs.ecx;
+					
 
-				switch ((uint8_t)regs.eax)
+				switch (GameVersion() == "1.1.0" ? (uint8_t)regs.eax : (uint8_t)regs.ecx)
 				{
 				case 2:
 					game_lang = "English";
@@ -757,7 +761,7 @@ void Init_Main()
 					game_lang = "Spanish";
 					break;
 				case 6:
-					game_lang = "Traditional Chinese";
+					game_lang = GameVersion() == "1.1.0" ? "Traditional Chinese" : "Italian";
 					break;
 				case 7:
 					game_lang = "Simplified Chinese";
@@ -787,7 +791,7 @@ void Init_Main()
 			Logging::Log() << "Game language: Japanese";
 		}
 		else
-			injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+			injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
 	}
 }
 
