@@ -37,6 +37,8 @@ struct Settings
 	bool bEnableControllerSens;
 	bool bUseMouseTurning;
 	float fTurnSensitivity;
+	bool bUseRawMouseInput;
+	bool bUnlockCameraFromAim;
 	bool bFallbackToEnglishKeyIcons;
 	bool bFixSniperZoom;
 	bool bFixSniperFocus;
@@ -60,6 +62,8 @@ struct Settings
 	std::string sMouseTurnModifierKeyCombo;
 	bool bIgnoreFPSWarning;
 	float fFontSize;
+	bool bDisableMenuTip;
+	bool bVerboseLog;
 
 	bool HasUnsavedChanges;
 

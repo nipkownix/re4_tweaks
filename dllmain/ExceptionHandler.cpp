@@ -1,6 +1,7 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
 #include "dllmain.h"
+#include "Game.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include <exception.hpp>
@@ -62,7 +63,7 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
             {
                 // Add some info of our own. Only game version for now.
                 std::stringstream re4ti;
-                re4ti << "bio4.exe version: " << game_version << std::endl;
+                re4ti << "bio4.exe version: " << GameVersion() << std::endl;
                 strcat(buffer, re4ti.str().data());
 
                 // Write log file

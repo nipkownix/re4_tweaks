@@ -96,6 +96,16 @@ UseMouseTurning = true
 ; Min 0.5, max 2.0.
 TurnSensitivity = 1.0
 
+; Makes the game use Raw Input for aiming and turning (if MouseTurning is enabled).
+; Greatly improves mouse input by removing negative/positive accelerations that were being applied both by the game and by Direct Input.
+; This option automatically enables the game's "Modern" aiming mode, and is incompatible with the "Classic" mode.
+UseRawMouseInput = true
+
+; When using the "Modern" mouse setting, the game locks the camera position to the aiming position, making both move together.
+; Although this is the expected behavior in most games, some people might prefer to keep the original camera behavior while also having the benefits from "Modern" aiming.
+; Enabling this will also restore the horizontal aiming sway that was lost when the devs implemented "Modern" aiming.
+UnlockCameraFromAim = false
+
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.
 FixSniperZoom = true
 
@@ -184,4 +194,11 @@ IgnoreFPSWarning = false
 ; Scale the font used in the configuration menu.
 ; Min 1.0, max 1.3.
 FontSize = 1.000
+
+; Disables the "Press key to open the configuration menu" tooltip.
+DisableMenuTip = false
+
+[LOG]
+; Logs extra information.
+VerboseLog = false
 )"""";

@@ -67,14 +67,14 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "nipkow"
-            VALUE "FileDescription", "re4_tweaks"
-            VALUE "FileVersion", "1.7.4.0"
-            VALUE "InternalName", "dinput8.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2021-2022 nipkow"
-            VALUE "OriginalFilename", "dinput8.dll"
-            VALUE "ProductName", "re4_tweaks"
-            VALUE "ProductVersion", "1.7.4.0"
+			VALUE "CompanyName", APP_COMPANYNAME
+			VALUE "FileDescription", APP_DESCRPTION
+			VALUE "FileVersion", APP_VERSION
+			VALUE "InternalName", APP_INTERNALNAME
+			VALUE "LegalCopyright", APP_COPYRIGHT
+			VALUE "OriginalFilename", APP_ORIGINALVERSION
+			VALUE "ProductName", APP_NAME
+			VALUE "ProductVersion", APP_VERSION
         END
     END
     BLOCK "VarFileInfo"

@@ -4,6 +4,7 @@
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "KeyboardMouseTweaks.h"
+#include "Logging/Logging.h"
 
 uintptr_t* ptrAimSpeedFldAddr;
 
@@ -30,4 +31,7 @@ void Init_ControllerTweaks()
 
 	pattern = hook::pattern("DD 05 ? ? ? ? DC F9 DD 05 ? ? ? ? DC FA D9 01");
 	injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+	if (cfg.fControllerSensitivity != 1.0f)
+		Logging::Log() << __FUNCTION__ << " -> Controller sensitivity changes applied";
 }

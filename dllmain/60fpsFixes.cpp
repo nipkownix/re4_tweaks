@@ -1,9 +1,11 @@
 #include <iostream>
 #include "..\includes\stdafx.h"
+#include "Game.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "KeyboardMouseTweaks.h"
+#include "Logging/Logging.h"
 
 static uint32_t* ptrGameFrameRate;
 static uint32_t* ptrMouseDeltaX;
@@ -79,40 +81,6 @@ void Init_60fpsFixes()
 				_asm {fmul vanillaMulti}
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
-
-	// Try to make mouse delta values consistent
-	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
-	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(1);
-	struct MouseDeltaX
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			int delta_factor = (intCurrentFrameRate() / 30);
-			int cur_delta = regs.eax;
-
-			if (cfg.bFixAimingSpeed)
-				*(int32_t*)(ptrMouseDeltaX) = cur_delta * delta_factor;
-			else
-				*(int32_t*)(ptrMouseDeltaX) = cur_delta;
-		}
-	}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-	// Same as above, but for the Y delta
-	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85");
-	ptrMouseDeltaY = *pattern.count(1).get(0).get<uint32_t*>(1);
-	struct MouseDeltaY
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			int delta_factor = (intCurrentFrameRate() / 30);
-			int cur_delta = regs.eax;
-
-			if (cfg.bFixAimingSpeed)
-				*(int32_t*)(ptrMouseDeltaY) = cur_delta * delta_factor;
-			else
-				*(int32_t*)(ptrMouseDeltaY) = cur_delta;
-		}
-	}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// Fix games framelimiter to improve support for framerates greater than 60
 	pattern = hook::pattern("00 00 00 20 11 11 91 3F"); // default is 0.1666666..., luckily only one instance of it in the game EXE
@@ -195,12 +163,9 @@ void Init_60fpsFixes()
 			{
 				if (cfg.bFixAshleyBustPhysics)
 				{
-					extern uint32_t* ptrpG;
-					uint8_t* Global = *(uint8_t**)ptrpG;
-
 					// Update ebx to make use of delta-time from pG+0x70
 					float ebx = float(regs.ebx);
-					ebx *= *(float*)(Global + 0x70);
+					ebx *= GlobalPtr()->deltaTime_70;
 					regs.ebx = uint32_t(ebx);
 				}
 
@@ -210,4 +175,6 @@ void Init_60fpsFixes()
 			}
 		}; injector::MakeInline<AshleyBustFrametimeFix>(pattern.count(1).get(0).get<uint32_t>(6), pattern.count(1).get(0).get<uint32_t>(11));
 	}
+
+	Logging::Log() << __FUNCTION__ << " -> FPS fixes applied";
 }

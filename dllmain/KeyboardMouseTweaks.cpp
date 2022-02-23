@@ -6,6 +6,9 @@
 #include "MouseTurning.h"
 #include "KeyboardMouseTweaks.h"
 #include "60fpsFixes.h"
+#include "Logging/Logging.h"
+#include "WndProcHook.h"
+#include "input.hpp"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -13,6 +16,8 @@ uintptr_t* ptrFocusAnimFldAddr;
 uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t* ptrLastUsedController;
+static uint32_t* ptrMouseSens;
+static uint32_t* ptrMouseAimMode;
 
 int iMinFocusTime;
 
@@ -36,6 +41,16 @@ LastDevice GetLastUsedDevice()
 	default:
 		return LastDevice::Keyboard;
 	}
+}
+
+int g_MOUSE_SENS()
+{
+	return *(int8_t*)(ptrMouseSens);
+}
+
+int intMouseAimingMode()
+{
+	return *(int8_t*)(ptrMouseAimMode);
 }
 
 uint8_t* g_KeyIconData = nullptr;
@@ -154,12 +169,173 @@ void InventoryFlipBindings(UINT uMsg, WPARAM wParam)
 	}
 }
 
+static uint32_t* ptrMouseDeltaX;
+static uint32_t* ptrMouseDeltaY;
+
 void Init_KeyboardMouseTweaks()
 {
 	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
 	ptrLastUsedController = *pattern.count(1).get(0).get<uint32_t*>(1);
 
+	// g_MOUSE_SENS pointer
+	pattern = hook::pattern("0F B6 05 ? ? ? ? 89 85 ? ? ? ? DB 85 ? ? ? ? DC 35");
+	ptrMouseSens = *pattern.count(1).get(0).get<uint32_t*>(3);
+
+	// Aiming mode pointer
+	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
+	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
+
 	Init_MouseTurning();
+
+	// X mouse delta adjustments
+	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
+	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct MouseDeltaX
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			int delta_factor = (intCurrentFrameRate() / 30);
+			int cur_delta = regs.eax;
+
+			if (cfg.bUseRawMouseInput)
+			{
+				*(int32_t*)(ptrMouseDeltaX) = (int32_t)((_input->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
+
+				if (cfg.bFixAimingSpeed)
+					*(int32_t*)(ptrMouseDeltaX) *= delta_factor;
+			}
+			else if (cfg.bFixAimingSpeed)
+			{
+				*(int32_t*)(ptrMouseDeltaX) = cur_delta * delta_factor;
+			}
+			else
+				*(int32_t*)(ptrMouseDeltaX) = cur_delta;
+		}
+	}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	// Y mouse delta adjustments
+	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? E8");
+	ptrMouseDeltaY = *pattern.count(1).get(0).get<uint32_t*>(1);
+	struct MouseDeltaY
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			int delta_factor = (intCurrentFrameRate() / 30);
+			int cur_delta = regs.eax;
+
+			if (cfg.bUseRawMouseInput)
+			{
+				*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
+
+				if (cfg.bFixAimingSpeed) 
+					*(int32_t*)(ptrMouseDeltaY) *= delta_factor;
+			}
+			else if (cfg.bFixAimingSpeed)
+			{
+				*(int32_t*)(ptrMouseDeltaY) = cur_delta * delta_factor;
+			}
+			else
+				*(int32_t*)(ptrMouseDeltaY) = cur_delta;
+		}
+	}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	if (cfg.bUseRawMouseInput)
+		Logging::Log() << __FUNCTION__ << " -> Raw mouse input enabled";
+
+	// Prevent some negative mouse acceleration from being applied
+	pattern = hook::pattern("83 3D ? ? ? ? ? 75 ? 83 3D ? ? ? ? 00 75 0E 85 C0 75 ? D9 EE D9");
+	struct PlWepLockCtrlHook
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			int DeltaX = *(int32_t*)(ptrMouseDeltaX);
+
+			// Mimic what CMP does, since we're overwriting it.
+			if (DeltaX > 0)
+			{
+				// Clear both flags
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+			else if (DeltaX < 0)
+			{
+				// ZF = 0, CF = 1
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef |= (1 << regs.carry_flag);
+			}
+			else if (DeltaX == 0)
+			{
+				// ZF = 1, CF = 0
+				regs.ef |= (1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+
+			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			{
+				if (cfg.bUseRawMouseInput)
+				{
+					// Force aiming mode to "Modern". This seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
+					if (intMouseAimingMode() == 0x00)
+						*(int8_t*)(ptrMouseAimMode) = 0x01;
+
+					// Clear both flags so we skip the section that does the actual negative acceleration
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+			}
+		}
+	};
+	
+	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(7));
+	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(7));
+
+	// Disable camera lock on "Modern" mouse setting
+	struct CameraLockCmp
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			int aimingMode = *(int8_t*)(ptrMouseAimMode);
+
+			// Mimic what CMP does, since we're overwriting it.
+			if (aimingMode > 0)
+			{
+				// Clear both flags
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+			else if (aimingMode < 0)
+			{
+				// ZF = 0, CF = 1
+				regs.ef &= ~(1 << regs.zero_flag);
+				regs.ef |= (1 << regs.carry_flag);
+			}
+			else if (aimingMode == 0)
+			{
+				// ZF = 1, CF = 0
+				regs.ef |= (1 << regs.zero_flag);
+				regs.ef &= ~(1 << regs.carry_flag);
+			}
+
+			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			{
+				if (cfg.bUnlockCameraFromAim)
+				{
+					// Make the game think the aiming mode is "Classic"
+					regs.ef |= (1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+			}
+		}
+	}; 
+
+	pattern = hook::pattern("80 3D ? ? ? ? ? D9 41 ? D9 5D ? 74");
+	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+	pattern = hook::pattern("80 3D ? ? ? ? ? 0F 84 ? ? ? ? A1 ? ? ? ? 85 C0 74");
+	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+	pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? D9 05");
+	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 	// Inventory item flip binding
 	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
@@ -183,6 +359,8 @@ void Init_KeyboardMouseTweaks()
 			}
 		}
 	}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	Logging::Log() << __FUNCTION__ << " -> Keyboard inventory item flipping enabled";
 
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
 	{
@@ -216,6 +394,9 @@ void Init_KeyboardMouseTweaks()
 				}
 			}
 		}; injector::MakeInline<MouseMenuSelector>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	
+		if (cfg.bFixRetryLoadMouseSelector)
+			Logging::Log() << __FUNCTION__ << " -> FixRetryLoadMouseSelector applied";
 	}
 
 	// Fix camera after zooming with the sniper
@@ -230,6 +411,9 @@ void Init_KeyboardMouseTweaks()
 					*(int32_t*)ptrRifleMovAddr = regs.eax;
 			}
 		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		if (cfg.bFixSniperZoom)
+			Logging::Log() << __FUNCTION__ << " -> FixSniperZoom applied";
 	}
 
 	// Fix the "focus animation" not looking as strong as when triggered with a controller
@@ -266,6 +450,8 @@ void Init_KeyboardMouseTweaks()
 		// This jl instruction makes the focus animation stop almost immediately when using the mouse. Noping it doesn't seem to affect the controller at all.
 		pattern = hook::pattern("7C ? C6 06 ? EB ? C7 46 ? ? ? ? ? EB ? DD D8 83 3D");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
+
+		Logging::Log() << __FUNCTION__ << " -> FixSniperFocus applied";
 	}
 
 	if (cfg.bFallbackToEnglishKeyIcons)
@@ -281,5 +467,75 @@ void Init_KeyboardMouseTweaks()
 
 		ReadCall(jmp_Init_KeyIconMapping, Init_KeyIconMapping);
 		InjectHook(jmp_Init_KeyIconMapping, Init_KeyIconMapping_Hook);
+
+		Logging::Log() << __FUNCTION__ << " -> FallbackToEnglishKeyIcons enabled";
+
+		if (cfg.bVerboseLog)
+		{
+			char logBuf[100];
+
+			Logging::Log() << "+------------------+------------------+";
+			Logging::Log() << "| Keyboard/locale info:               |";
+
+			// KeyboardLayout
+			wchar_t KeyboardLayoutBuff[25];
+
+			HKL userKeyboardLayout = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));
+			int userKeyboardLayoutID = PRIMARYLANGID(LOWORD(userKeyboardLayout));
+			LCIDToLocaleName(userKeyboardLayoutID, KeyboardLayoutBuff, ARRAYSIZE(KeyboardLayoutBuff), 0);
+
+			sprintf(logBuf, "%-28s%9ws", "| KeyboardLayout: ", KeyboardLayoutBuff);
+			Logging::Log() << logBuf << " |";
+
+			// UserDefaultLCID
+			wchar_t UserDefaultLCIDBuff[25];
+
+			LCIDToLocaleName(GetUserDefaultLCID(), UserDefaultLCIDBuff, ARRAYSIZE(UserDefaultLCIDBuff), 0);
+
+			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLCID: ", UserDefaultLCIDBuff);
+			Logging::Log() << logBuf << " |";
+
+			// SystemDefaultLCID
+			wchar_t SystemDefaultLCIDBuff[25];
+
+			LCIDToLocaleName(GetSystemDefaultLCID(), SystemDefaultLCIDBuff, ARRAYSIZE(SystemDefaultLCIDBuff), 0);
+
+			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLCID: ", SystemDefaultLCIDBuff);
+			Logging::Log() << logBuf << " |";
+
+			// UserDefaultUILanguage
+			wchar_t UserDefaultUILanguageBuf[100];
+
+			GetLocaleInfo(GetUserDefaultUILanguage(), LOCALE_SNAME, UserDefaultUILanguageBuf, 100);
+
+			sprintf(logBuf, "%-28s%9ws", "| UserDefaultUILanguage: ", UserDefaultUILanguageBuf);
+			Logging::Log() << logBuf << " |";
+
+			// SystemDefaultUILanguage
+			wchar_t SystemDefaultUILanguageBuf[100];
+
+			GetLocaleInfo(GetSystemDefaultUILanguage(), LOCALE_SNAME, SystemDefaultUILanguageBuf, 100);
+
+			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultUILanguage: ", SystemDefaultUILanguageBuf);
+			Logging::Log() << logBuf << " |";
+
+			// UserDefaultLangID
+			wchar_t UserDefaultLangIDBuf[100];
+
+			GetLocaleInfo(GetUserDefaultLangID(), LOCALE_SNAME, UserDefaultLangIDBuf, 100);
+
+			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLangID: ", UserDefaultLangIDBuf);
+			Logging::Log() << logBuf << " |";
+
+			// SystemDefaultLangID
+			wchar_t SystemDefaultLangIDBuf[100];
+
+			GetLocaleInfo(GetSystemDefaultLangID(), LOCALE_SNAME, SystemDefaultLangIDBuf, 100);
+
+			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLangID: ", SystemDefaultLangIDBuf);
+			Logging::Log() << logBuf << " |";
+
+			Logging::Log() << "+------------------+------------------+";
+		}
 	}
 }
