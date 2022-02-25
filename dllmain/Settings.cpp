@@ -337,8 +337,9 @@ void Settings::ReadSettings()
 	cfg.sQTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
 
 	// FRAME RATE
-	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", true);
 	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", true);
+	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", true);
+	cfg.bFixAimingSpeed = iniReader.ReadBoolean("FRAME RATE", "FixAimingSpeed", true);
 	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", true);
 
 	// MEMORY
@@ -471,8 +472,9 @@ void Settings::WriteSettings()
 	iniReader.WriteString("KEYBOARD", "QTE_key_2", " " + cfg.sQTE_key_2);
 
 	// FRAME RATE
-	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
+	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
+	iniReader.WriteBoolean("FRAME RATE", "FixAimingSpeed", cfg.bFixAimingSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
 
 	// MEMORY

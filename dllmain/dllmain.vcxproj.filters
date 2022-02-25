@@ -89,13 +89,10 @@
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
-      <Filter>includes\external\ImGui</Filter>
+      <Filter>external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ControllerTweaks.cpp">
       <Filter>dllmain</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
-      <Filter>external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="input.cpp">
       <Filter>dllmain</Filter>
@@ -118,7 +115,9 @@
     <ClCompile Include="EndSceneHook.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
+      <Filter>includes\external\ImGui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -338,12 +337,6 @@
       <Filter>Wrappers</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imgui_stdlib.h">
-      <Filter>includes\external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="ControllerTweaks.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_stdlib.h">
       <Filter>external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="input.hpp">
@@ -361,8 +354,10 @@
     <ClInclude Include="EndSceneHook.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_stdlib.h" />
     <ClInclude Include="gitparams.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="ControllerTweaks.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>

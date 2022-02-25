@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 #include "MouseTurning.h"
 #include "KeyboardMouseTweaks.h"
+#include "60fpsFixes.h"
 #include "Logging/Logging.h"
 #include "WndProcHook.h"
 #include "input.hpp"
@@ -193,10 +194,22 @@ void Init_KeyboardMouseTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
+			int delta_factor = (intCurrentFrameRate() / 30);
+			int cur_delta = regs.eax;
+
 			if (cfg.bUseRawMouseInput)
+			{
 				*(int32_t*)(ptrMouseDeltaX) = (int32_t)((_input->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
+
+				if (cfg.bFixAimingSpeed)
+					*(int32_t*)(ptrMouseDeltaX) *= delta_factor;
+			}
+			else if (cfg.bFixAimingSpeed)
+			{
+				*(int32_t*)(ptrMouseDeltaX) = cur_delta * delta_factor;
+			}
 			else
-				*(int32_t*)(ptrMouseDeltaX) = (int32_t)regs.eax;
+				*(int32_t*)(ptrMouseDeltaX) = cur_delta;
 		}
 	}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
@@ -207,10 +220,22 @@ void Init_KeyboardMouseTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
+			int delta_factor = (intCurrentFrameRate() / 30);
+			int cur_delta = regs.eax;
+
 			if (cfg.bUseRawMouseInput)
+			{
 				*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
+
+				if (cfg.bFixAimingSpeed) 
+					*(int32_t*)(ptrMouseDeltaY) *= delta_factor;
+			}
+			else if (cfg.bFixAimingSpeed)
+			{
+				*(int32_t*)(ptrMouseDeltaY) = cur_delta * delta_factor;
+			}
 			else
-				*(int32_t*)(ptrMouseDeltaY) = (int32_t)regs.eax;
+				*(int32_t*)(ptrMouseDeltaY) = cur_delta;
 		}
 	}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
@@ -407,7 +432,7 @@ void Init_KeyboardMouseTweaks()
 				{
 					if (regs.ecx == 1)
 					{
-						iMinFocusTime = 5;
+						iMinFocusTime = intCurrentFrameRate() / 12;
 					}
 					else if (regs.ecx == 0)
 					{

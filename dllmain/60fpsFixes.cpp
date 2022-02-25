@@ -4,14 +4,46 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
+#include "KeyboardMouseTweaks.h"
 #include "Logging/Logging.h"
 
 static uint32_t* ptrGameFrameRate;
+static uint32_t* ptrMouseDeltaX;
+static uint32_t* ptrMouseDeltaY;
 
 int intCurrentFrameRate()
 {
 	return *(int32_t*)(ptrGameFrameRate);
 }
+
+double* ptrMaxFrameTime = nullptr;
+
+int32_t g_supportedFrameRates[] = { 30, 60, 90, 120, 144, 0 }; // last item will be filled with users custom refresh rate, if set
+uint32_t g_maxSupportedFrameRates = sizeof(g_supportedFrameRates) / sizeof(int32_t);
+uint32_t g_numSupportedFrameRates = g_maxSupportedFrameRates - 1; // will be increased by 1 if user has custom refresh rate
+
+struct INIConfig
+{
+	int resolutionWidth;
+	int resolutionHeight;
+	int resolutionRefreshRate;
+	int vsync;
+	int fullscreen;
+	int adapter;
+	int shadowQuality;
+	int motionblurEnabled;
+	int ppEnabled;
+	int useHDTexture;
+	int antialiasing;
+	int anisotropy;
+	int variableframerate;
+	int subtitle;
+	int laserR;
+	int laserG;
+	int laserB;
+	int laserA;
+};
+void(_cdecl* ConfigReadINI)(INIConfig* config);
 
 void Init_60fpsFixes()
 {
@@ -49,6 +81,75 @@ void Init_60fpsFixes()
 				_asm {fmul vanillaMulti}
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+
+	// Fix games framelimiter to improve support for framerates greater than 60
+	pattern = hook::pattern("00 00 00 20 11 11 91 3F"); // default is 0.1666666..., luckily only one instance of it in the game EXE
+	ptrMaxFrameTime = pattern.count(1).get(0).get<double>();
+
+	// Hook call to ConfigReadINI so we can update frametime after INI has been read from
+	pattern = hook::pattern("89 95 ? ? ? ? 89 85 ? ? ? ? E8 ? ? ? ? 83 C4 04 6A 00");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(12)).as_int(), ConfigReadINI);
+	ConfigReadINI = ConfigReadINI;
+	struct MaxFrameTime
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			INIConfig* config = (INIConfig*)regs.ecx;
+			ConfigReadINI(config);
+
+			if (config->variableframerate > 60)
+				injector::WriteMemory(ptrMaxFrameTime, (double)1 / (double)config->variableframerate, true);
+		}
+	}; injector::MakeInline<MaxFrameTime>(pattern.count(1).get(0).get<uint32_t>(12));
+
+	// Patch graphics menu to show our custom framerate list
+	pattern = hook::pattern("33 F6 E8 ? ? ? ? 39 05 ? ? ? ? 74 ? 4E");
+	auto ptrFramerateList1 = pattern.count(1).get(0).get<intptr_t>(9); // 0x0074655e
+	auto ptrAndEsi1 = pattern.count(1).get(0).get<uint8_t>(0xF); // 0x00746565
+	auto ptrAndEsi1_end = pattern.count(1).get(0).get<uint8_t>(0x18); // 0x0074656d
+	auto ptrFramerateList2 = pattern.count(1).get(0).get<intptr_t>(0x1B); // 0x00746570
+
+	pattern = hook::pattern("83 E6 01 8B 04 B5 ? ? ? ? 50 E8 ? ? ? ? 83 C4 04 E9 ? ? ? ?");
+	auto ptrAndEsi2 = pattern.count(1).get(0).get<uint8_t>(0); // 0x007465bb
+	auto ptrAndEsi2_end = pattern.count(1).get(0).get<uint8_t>(0x10); // 0x007465cb
+
+	// Change framerate list pointers to point to our list
+	injector::WriteMemory(ptrFramerateList1, &g_supportedFrameRates, true);
+	injector::WriteMemory(ptrFramerateList2, &g_supportedFrameRates, true);
+
+	// Update "AND ESI, 1" insns to use a modulo of framerate list count instead
+	struct MakeEsiInFramerateListBounds
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			if (regs.esi + 1 >= g_numSupportedFrameRates && g_numSupportedFrameRates != g_maxSupportedFrameRates)
+			{
+				// game searched through the whole refresh rate list
+				// must be a custom refresh rate, update our list with it
+				g_supportedFrameRates[g_numSupportedFrameRates] = intCurrentFrameRate();
+				g_numSupportedFrameRates++;
+			}
+
+			regs.esi = (regs.esi + 1) % g_numSupportedFrameRates;
+			regs.eax = intCurrentFrameRate();
+		}
+	}; injector::MakeInline<MakeEsiInFramerateListBounds>(ptrAndEsi1, ptrAndEsi1_end);
+
+	struct UpdateFramerate
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			if (int32_t(regs.esi) < 0)
+				regs.esi = g_numSupportedFrameRates - 1;
+
+			int newFramerate = g_supportedFrameRates[regs.esi % g_numSupportedFrameRates];
+			*ptrGameFrameRate = newFramerate;
+
+			// Also update frametime here, saves us needing to hook ConfigWriteINI
+			if (newFramerate > 60)
+				injector::WriteMemory(ptrMaxFrameTime, (double)1 / (double)newFramerate, true);
+		}
+	}; injector::MakeInline<UpdateFramerate>(ptrAndEsi2, ptrAndEsi2_end);
 
 	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust
 	// Seems to make Ashley bust physics speed match between 30 & 60FPS
