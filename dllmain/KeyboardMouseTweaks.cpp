@@ -429,6 +429,35 @@ void Init_KeyboardMouseTweaks()
 		Logging::Log() << __FUNCTION__ << " -> FixSniperFocus applied";
 	}
 
+	// Hooks to allow toggling sprint instead of needing to hold it
+	{
+		// pl_R1_Run first KEY_RUN check
+		pattern = hook::pattern("83 E0 01 33 D2 0B C2 74 ? 8B C1 83 E0 40"); // 7639EB
+		struct SprintToggleHook1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.eax &= 1; // Code we overwrote
+
+				if (!cfg.bUseSprintToggle)
+					regs.edx ^= regs.edx;
+			}
+		}; injector::MakeInline<SprintToggleHook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		// pl_R1_Run second KEY_RUN check
+		pattern = hook::pattern("8B C1 83 E0 ? 33 D2 0B C2 74 ? 8B C1 83 E0 ? 0B C2 74 ? 8B CE"); // 763AE8
+		struct SprintToggleHook2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.eax = regs.ecx; // Code we overwrote
+
+				if (!cfg.bUseSprintToggle)
+					regs.eax &= 0x40;
+			}
+		}; injector::MakeInline<SprintToggleHook2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
+
 	if (cfg.bFallbackToEnglishKeyIcons)
 	{
 		// Get pointer to key icon data buffer

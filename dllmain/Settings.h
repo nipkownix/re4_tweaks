@@ -39,6 +39,7 @@ struct Settings
 	float fTurnSensitivity;
 	bool bUseRawMouseInput;
 	bool bUnlockCameraFromAim;
+	bool bUseSprintToggle;
 	bool bFallbackToEnglishKeyIcons;
 	bool bFixSniperZoom;
 	bool bFixSniperFocus;
