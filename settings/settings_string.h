@@ -132,6 +132,9 @@ FlipItemRight = PAGEUP
 QTE_key_1 = D
 QTE_key_2 = A
 
+; Changes sprint key to act like a toggle instead of needing to be held.
+UseSprintToggle = false
+
 ; Game will turn keys invisible for certain unsupported keyboard languages
 ; Enabling this should make game use English keys for unsupported ones instead
 ; (if game supports your current language it should still use it however)

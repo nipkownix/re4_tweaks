@@ -546,8 +546,19 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &cfg.bUseSprintToggle);
+				ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// English key icons
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("FallbackToEnglishKeyIcons", &cfg.bFallbackToEnglishKeyIcons);
+				if (ImGui::Checkbox("FallbackToEnglishKeyIcons", &cfg.bFallbackToEnglishKeyIcons))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
 				ImGui::TextWrapped("Game will turn keys invisible for certain unsupported keyboard languages, enabling this should make game use English keys for unsupported ones instead (requires game restart)");
 			}
 

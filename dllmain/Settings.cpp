@@ -327,6 +327,7 @@ void Settings::ReadSettings()
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
 
 	// KEYBOARD
+	cfg.bUseSprintToggle = iniReader.ReadBoolean("KEYBOARD", "UseSprintToggle", false);
 	cfg.bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", true);
 	cfg.sFlipItemUp = iniReader.ReadString("KEYBOARD", "FlipItemUp", "HOME");
 	cfg.sFlipItemDown = iniReader.ReadString("KEYBOARD", "FlipItemDown", "END");
@@ -460,6 +461,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
+	iniReader.WriteBoolean("KEYBOARD", "UseSprintToggle", cfg.bUseSprintToggle);
 	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
 	iniReader.WriteString("KEYBOARD", "FlipItemUp", " " + cfg.sFlipItemUp);
 	iniReader.WriteString("KEYBOARD", "FlipItemDown", " " + cfg.sFlipItemDown);
