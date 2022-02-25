@@ -1,5 +1,5 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "Game.h"
 #include "dllmain.h"
 #include "Settings.h"

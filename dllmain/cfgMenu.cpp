@@ -1,25 +1,25 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "LAApatch.h"
-#include "ToolMenu.h"
-#include "..\external\imgui\imgui.h"
-#include "..\external\imgui\imgui_stdlib.h"
+#include "imgui\imgui.h"
+#include "imgui\imgui_stdlib.h"
 #include "MouseTurning.h"
 #include "input.hpp"
 #include "EndSceneHook.h"
+#include "Patches.h"
 
+bool bCfgMenuOpen;
 bool NeedsToRestart;
 
 int MenuTipTimer = 500; // cfgMenu tooltip timer
-
 int Tab = 1;
 
-std::vector<uint32_t> cfgMenuCombo;
-
 std::string cfgMenuTitle = "re4_tweaks";
+
+std::vector<uint32_t> cfgMenuCombo;
 
 bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 {
@@ -55,27 +55,27 @@ void cfgMenuRender()
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 2 ? active : inactive);
-			if (ImGui::Button(ICON_FA_COG " Misc", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_LOCATION_ARROW " Mouse", ImVec2(230 - 15, 41)))
 				Tab = 2;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 3 ? active : inactive);
-			if (ImGui::Button(ICON_FA_JOYSTICK " Controller", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_KEYBOARD " Keyboard", ImVec2(230 - 15, 41)))
 				Tab = 3;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 4 ? active : inactive);
-			if (ImGui::Button(ICON_FA_LOCATION_ARROW " Mouse", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_JOYSTICK " Controller", ImVec2(230 - 15, 41)))
 				Tab = 4;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 5 ? active : inactive);
-			if (ImGui::Button(ICON_FA_KEYBOARD " Keyboard", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_CHESS_CLOCK " Frame rate", ImVec2(230 - 15, 41)))
 				Tab = 5;
 
 			ImGui::Spacing();
 			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 6 ? active : inactive);
-			if (ImGui::Button(ICON_FA_CHESS_CLOCK " Frame rate", ImVec2(230 - 15, 41)))
+			if (ImGui::Button(ICON_FA_COG " Misc", ImVec2(230 - 15, 41)))
 				Tab = 6;
 
 			ImGui::Spacing();
@@ -335,104 +335,8 @@ void cfgMenuRender()
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &cfg.bRememberWindowPos);
 			}
 
-			// Misc tab
-			if (Tab == 2)
-			{
-				// AshleyJPCameraAngles
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &cfg.bAshleyJPCameraAngles);
-				ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				// AllowSellingHandgunSilencer
-				if (ImGui::Checkbox("AllowSellingHandgunSilencer", &cfg.bAllowSellingHandgunSilencer))
-				{
-					cfg.HasUnsavedChanges = true;
-					NeedsToRestart = true;
-				}
-				ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				// AllowMafiaLeonCutscenes
-				if (ImGui::Checkbox("AllowMafiaLeonCutscenes", &cfg.bAllowMafiaLeonCutscenes))
-				{
-					cfg.HasUnsavedChanges = true;
-					NeedsToRestart = true;
-				}
-				ImGui::TextWrapped("Allows the game to display Leon's mafia outfit (\"Special 2\") on cutscenes.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				// SilenceArmoredAshley
-				if (ImGui::Checkbox("SilenceArmoredAshley", &cfg.bSilenceArmoredAshley))
-				{
-					cfg.HasUnsavedChanges = true;
-					NeedsToRestart = true;
-				}
-				ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
-				ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				// SkipIntroLogos
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
-				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				// EnableDebugMenu
-				if (ImGui::Checkbox("EnableDebugMenu", &cfg.bEnableDebugMenu))
-				{
-					cfg.HasUnsavedChanges = true;
-					NeedsToRestart = true;
-				}
-				ImGui::TextWrapped("Enables the \"tool menu\" debug menu, present inside the game but unused, and adds a few custom menu entries (\"SAVE GAME\", \"DOF / BLUR MENU\", etc).");
-				ImGui::TextWrapped("Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard by default).");
-				ImGui::TextWrapped("If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.");
-				ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
-			}
-
-			// Controller tab
-			if (Tab == 3)
-			{
-				// ControllerSensitivity
-				if (ImGui::BeginTable("CSensTable", 2, TableFlags))
-				{
-					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 340.0f);
-					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
-
-					ImGui::TableNextColumn();
-					if (ImGui::Checkbox("Controller Sensitivity", &cfg.bEnableControllerSens))
-					{
-						cfg.HasUnsavedChanges = true;
-					}
-					ImGui::TextWrapped("Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.");
-
-					ImGui::TableNextColumn();
-					ImGui::Dummy(ImVec2(0.0f, 20.0f));
-					ImGui::PushItemWidth(170);
-					if (!cfg.bEnableControllerSens)
-						cfg.fControllerSensitivity = 1.0f;
-					ImGui::SliderFloat("Sensitivity Slider", &cfg.fControllerSensitivity, 0.50f, 4.0f, "%.2f");
-					ImGui::PopItemWidth();
-
-					ImGui::EndTable();
-				}
-			}
-
 			// Mouse tab
-			if (Tab == 4)
+			if (Tab == 2)
 			{
 				if (ImGui::BeginTable("FOVTable", 2, TableFlags))
 				{
@@ -510,7 +414,7 @@ void cfgMenuRender()
 			}
 
 			// Keyboard tab
-			if (Tab == 5)
+			if (Tab == 3)
 			{
 				// Inv flip key bindings
 				ImGui::TextWrapped("Key bindings for flipping items in the inventory screen when using keyboard and mouse.");
@@ -546,13 +450,6 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &cfg.bUseSprintToggle);
-				ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
 				// English key icons
 				if (ImGui::Checkbox("FallbackToEnglishKeyIcons", &cfg.bFallbackToEnglishKeyIcons))
 				{
@@ -562,8 +459,36 @@ void cfgMenuRender()
 				ImGui::TextWrapped("Game will turn keys invisible for certain unsupported keyboard languages, enabling this should make game use English keys for unsupported ones instead (requires game restart)");
 			}
 
+			// Controller tab
+			if (Tab == 4)
+			{
+				// ControllerSensitivity
+				if (ImGui::BeginTable("CSensTable", 2, TableFlags))
+				{
+					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 340.0f);
+					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
+
+					ImGui::TableNextColumn();
+					if (ImGui::Checkbox("Controller Sensitivity", &cfg.bEnableControllerSens))
+					{
+						cfg.HasUnsavedChanges = true;
+					}
+					ImGui::TextWrapped("Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.");
+
+					ImGui::TableNextColumn();
+					ImGui::Dummy(ImVec2(0.0f, 20.0f));
+					ImGui::PushItemWidth(170);
+					if (!cfg.bEnableControllerSens)
+						cfg.fControllerSensitivity = 1.0f;
+					ImGui::SliderFloat("Sensitivity Slider", &cfg.fControllerSensitivity, 0.50f, 4.0f, "%.2f");
+					ImGui::PopItemWidth();
+
+					ImGui::EndTable();
+				}
+			}
+
 			// Frame rate tab
-			if (Tab == 6)
+			if (Tab == 5)
 			{
 				// FixFallingItemsSpeed
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &cfg.bFixFallingItemsSpeed);
@@ -585,6 +510,82 @@ void cfgMenuRender()
 				// AshleyBustPhysicsFix
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixAshleyBustPhysics", &cfg.bFixAshleyBustPhysics);
 				ImGui::TextWrapped("Fixes difference between 30/60FPS on physics applied to Ashley.");
+			}
+
+			// Misc tab
+			if (Tab == 6)
+			{
+				// AshleyJPCameraAngles
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &cfg.bAshleyJPCameraAngles);
+				ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// AllowSellingHandgunSilencer
+				if (ImGui::Checkbox("AllowSellingHandgunSilencer", &cfg.bAllowSellingHandgunSilencer))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// AllowMafiaLeonCutscenes
+				if (ImGui::Checkbox("AllowMafiaLeonCutscenes", &cfg.bAllowMafiaLeonCutscenes))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Allows the game to display Leon's mafia outfit (\"Special 2\") on cutscenes.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// SilenceArmoredAshley
+				if (ImGui::Checkbox("SilenceArmoredAshley", &cfg.bSilenceArmoredAshley))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
+				ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// UseSprintToggle
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &cfg.bUseSprintToggle);
+				ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// SkipIntroLogos
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
+				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// EnableDebugMenu
+				if (ImGui::Checkbox("EnableDebugMenu", &cfg.bEnableDebugMenu))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Enables the \"tool menu\" debug menu, present inside the game but unused, and adds a few custom menu entries (\"SAVE GAME\", \"DOF / BLUR MENU\", etc).");
+				ImGui::TextWrapped("Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard by default).");
+				ImGui::TextWrapped("If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.");
+				ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
 			}
 
 			// Memory tab

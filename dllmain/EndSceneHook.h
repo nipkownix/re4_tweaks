@@ -1,7 +1,7 @@
 #pragma once
-#include "..\includes\stdafx.h"
-#include "../external/imgui/imgui.h"
-#include "../external/imgui/imgui_internal.h"
+#include "stdafx.h"
+#include "imgui\imgui.h"
+#include "imgui\imgui_internal.h"
 #include <hashes.h>
 #include <sffont.hpp>
 
@@ -15,5 +15,3 @@ struct EndSceneHook
 };
 
 extern EndSceneHook esHook;
-
-void Init_EndSceneHook();

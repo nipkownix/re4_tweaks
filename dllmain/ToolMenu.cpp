@@ -1,6 +1,5 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
-#include "ToolMenu.h"
+#include "stdafx.h"
 #include "GameFlags.h"
 #include "dllmain.h"
 #include "Game.h"

@@ -2,14 +2,11 @@
 #include <iostream>
 #include <vector>
 
-// Globals
 struct Settings
 {
-	int Tab = 0;
-
 	int KeyMap(const char* key, bool get_vk);
 
-	// Those save
+	// DISPLAY
 	float fFOVAdditional;
 	bool bEnableFOV;
 	bool bFixUltraWideAspectRatio;
@@ -22,45 +19,63 @@ struct Settings
 	bool bDisableFilmGrain;
 	bool bEnableGCBlur;
 	bool bEnableGCScopeBlur;
-	bool bAshleyJPCameraAngles;
 	bool bWindowBorderless;
 	int iWindowPositionX;
 	int iWindowPositionY;
 	bool bRememberWindowPos;
-	std::string sWrappedDllPath;
-	bool bSkipIntroLogos;
-	bool bAllowMafiaLeonCutscenes;
-	bool bSilenceArmoredAshley;
-	bool bEnableDebugMenu;
-	bool bAllowSellingHandgunSilencer;
-	float fControllerSensitivity;
-	bool bEnableControllerSens;
+
+	// MOUSE
 	bool bUseMouseTurning;
 	float fTurnSensitivity;
 	bool bUseRawMouseInput;
 	bool bUnlockCameraFromAim;
-	bool bUseSprintToggle;
-	bool bFallbackToEnglishKeyIcons;
 	bool bFixSniperZoom;
 	bool bFixSniperFocus;
 	bool bFixRetryLoadMouseSelector;
+
+	// KEYBOARD
+	bool bUseSprintToggle;
+	bool bFallbackToEnglishKeyIcons;
 	std::string sFlipItemUp;
 	std::string sFlipItemDown;
 	std::string sFlipItemLeft;
 	std::string sFlipItemRight;
 	std::string sQTE_key_1;
 	std::string sQTE_key_2;
+
+	// CONTROLLER
+	float fControllerSensitivity;
+	bool bEnableControllerSens;
+
+	// FRAME RATE
 	bool bFixFallingItemsSpeed;
 	bool bFixQTE;
 	bool bFixAshleyBustPhysics;
+
+	// MISC
+	std::string sWrappedDllPath;
+	bool bAshleyJPCameraAngles;
+	bool bAllowSellingHandgunSilencer;
+	bool bAllowMafiaLeonCutscenes;
+	bool bSilenceArmoredAshley;
+	bool bSkipIntroLogos;
+	bool bEnableDebugMenu;
+
+	// MEMORY
 	bool bAllowHighResolutionSFD;
 	bool bRaiseVertexAlloc;
 	bool bRaiseInventoryAlloc;
+
+	// HOTKEYS
 	std::string sConfigMenuKeyCombo;
 	std::string sConsoleKeyCombo;
 	std::string sDebugMenuKeyCombo;
 	std::string sMouseTurnModifierKeyCombo;
+
+	// WARNING
 	bool bIgnoreFPSWarning;
+
+	// IMGUI
 	float fFontSize;
 	bool bDisableMenuTip;
 	bool bVerboseLog;

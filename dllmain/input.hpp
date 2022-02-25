@@ -124,9 +124,6 @@ public:
 	/// <returns><c>true</c> if the called should ignore this message, or <c>false</c> if it should pass it on to the application.</returns>
 	static bool handle_window_message(const void *message_data);
 
-	// Installs all input-related hooks
-	static void Init_Input();
-
 private:
 	std::shared_mutex _mutex;
 	window_handle _window;

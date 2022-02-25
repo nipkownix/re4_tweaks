@@ -51,7 +51,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\ModUtils;..\external\injector\include;..\external\inireader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -76,7 +76,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\icons;..\includes;..\external\ModUtils;..\external\injector\include;..\external\inireader;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\ModUtils;..\external\injector\include;..\external\inireader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -117,6 +117,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="ControllerTweaks.cpp" />
+    <ClCompile Include="DisplayTweaks.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EndSceneHook.cpp" />
     <ClCompile Include="ExceptionHandler.cpp" />
@@ -124,6 +125,8 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
+    <ClCompile Include="LoggingInit.cpp" />
+    <ClCompile Include="Misc.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
     <ClCompile Include="QTEFixes.cpp" />
     <ClCompile Include="RoomInfo.cpp" />
@@ -196,27 +199,20 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\Wrappers\wsock32.h" />
     <ClInclude Include="..\Wrappers\x3daudio1_7.h" />
     <ClInclude Include="..\Wrappers\xinput1_3.h" />
-    <ClInclude Include="60fpsFixes.h" />
     <ClInclude Include="ConsoleWnd.h" />
-    <ClInclude Include="ControllerTweaks.h" />
     <ClInclude Include="EndSceneHook.h" />
-    <ClInclude Include="ExceptionHandler.h" />
-    <ClInclude Include="FilterXXFixes.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameFlags.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="gitparams.h" />
-    <ClInclude Include="HandleLimits.h" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="KeyboardMouseTweaks.h" />
     <ClInclude Include="LAApatch.h" />
+    <ClInclude Include="LoggingInit.h" />
     <ClInclude Include="MouseTurning.h" />
-    <ClInclude Include="QTEFixes.h" />
+    <ClInclude Include="Patches.h" />
     <ClInclude Include="Settings.h" />
-    <ClInclude Include="Sofdec.h" />
-    <ClInclude Include="ToolMenu.h" />
-    <ClInclude Include="UltrawideFix.h" />
     <ClInclude Include="WndProcHook.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

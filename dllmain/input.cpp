@@ -853,7 +853,7 @@ void InstallGetCursorPos_Hook()
 	GetCursorPos_orig = (decltype(GetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetCursorPos, nullptr, nullptr);
 }
 
-void input::Init_Input()
+void Init_Input()
 {
 	Logging::Log() << "Hooking input-related APIs...";
 

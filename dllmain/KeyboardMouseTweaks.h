@@ -8,7 +8,6 @@ enum class LastDevice
 	DinputController
 };
 
-void Init_KeyboardMouseTweaks();
 void InventoryFlipBindings(UINT uMsg, WPARAM wParam);
 int intMouseAimingMode();
 

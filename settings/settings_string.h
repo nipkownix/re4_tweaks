@@ -53,40 +53,6 @@ WindowPositionY = -1
 ; Remember the last window position. This automatically updates the "WindowPositionX" and "WindowPositionY" values.
 RememberWindowPos = false
 
-[MISC]
-; Path to DLL to wrap, comment or leave empty to wrap system DLL
-; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)
-;WrappedDLLPath = 
-
-; Unlocks the JP-only classic camera angles during Ashley's segment.
-AshleyJPCameraAngles = false
-
-; Allows selling the (normally unused) handgun silencer to the merchant.
-; If you use a mod that changes the merchant price tables you might want to disable this
-; But if you're only using RE4HD you can leave this enabled
-AllowSellingHandgunSilencer = true
-
-; Allows the game to display Leon's mafia outfit ("Special 2") on cutscenes.
-AllowMafiaLeonCutscenes = true
-
-; Silence Ashley's armored outfit ("Special 2").
-; For those who also hate the constant "Clank Clank Clank".
-SilenceArmoredAshley = false
-
-; Whether to skip the Capcom etc intro logos when starting the game.
-SkipIntroLogos = false
-
-; Enables the "tool menu" debug menu, present inside the game but unused, and adds a few custom menu entries ("SAVE GAME", "DOF/BLUR MENU", etc).
-; Can be opened with the LT+LS button combination (or CTRL+F3 by default on keyboard).
-; If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.
-; (may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)
-EnableDebugMenu = false
-
-[CONTROLLER]
-; Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.
-; Min 0.5, max 4.0.
-ControllerSensitivity = 1.0
-
 [MOUSE]
 ; Makes it so the mouse turns the character instead of controlling the camera.
 ; "Modern" aiming mode in the game's settings is recomended.
@@ -140,6 +106,11 @@ UseSprintToggle = false
 ; (if game supports your current language it should still use it however)
 FallbackToEnglishKeyIcons = true
 
+[CONTROLLER]
+; Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.
+; Min 0.5, max 4.0.
+ControllerSensitivity = 1.0
+
 [FRAME RATE]
 ; Fixes the speed of falling items in 60 FPS, making them not fall at double speed.
 FixFallingItemsSpeed = true
@@ -151,6 +122,35 @@ FixQTE = true
 
 ; Fixes difference between 30/60FPS on physics applied to Ashley.
 FixAshleyBustPhysics = true
+
+[MISC]
+; Path to DLL to wrap, comment or leave empty to wrap system DLL
+; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)
+;WrappedDLLPath = 
+
+; Unlocks the JP-only classic camera angles during Ashley's segment.
+AshleyJPCameraAngles = false
+
+; Allows selling the (normally unused) handgun silencer to the merchant.
+; If you use a mod that changes the merchant price tables you might want to disable this
+; But if you're only using RE4HD you can leave this enabled
+AllowSellingHandgunSilencer = true
+
+; Allows the game to display Leon's mafia outfit ("Special 2") on cutscenes.
+AllowMafiaLeonCutscenes = true
+
+; Silence Ashley's armored outfit ("Special 2").
+; For those who also hate the constant "Clank Clank Clank".
+SilenceArmoredAshley = false
+
+; Whether to skip the Capcom etc intro logos when starting the game.
+SkipIntroLogos = false
+
+; Enables the "tool menu" debug menu, present inside the game but unused, and adds a few custom menu entries ("SAVE GAME", "DOF/BLUR MENU", etc).
+; Can be opened with the LT+LS button combination (or CTRL+F3 by default on keyboard).
+; If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.
+; (may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)
+EnableDebugMenu = false
 
 [MEMORY]
 ; Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.

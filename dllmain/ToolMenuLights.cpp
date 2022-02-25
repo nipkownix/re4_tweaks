@@ -1,5 +1,5 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "Game.h"
 
 // tool_menu.cpp externs

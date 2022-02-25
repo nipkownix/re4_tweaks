@@ -1,9 +1,8 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
-#include "QTEFixes.h"
 #include "Logging/Logging.h"
 
 uint32_t* ptrKEY_1_icon1;

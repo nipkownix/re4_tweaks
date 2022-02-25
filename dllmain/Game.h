@@ -333,5 +333,3 @@ bool GameVersionIsDebug();
 GLOBALS* GlobalPtr();
 SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
-
-bool Init_Game();

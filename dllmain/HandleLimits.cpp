@@ -1,11 +1,16 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "Logging/Logging.h"
+#include "Patches.h"
 
 void Init_HandleLimits()
 {
+	// SFD size
+	if (cfg.bAllowHighResolutionSFD)
+		Init_sofdec();
+
 	// vertex buffers
 	if (cfg.bRaiseVertexAlloc)
 	{

@@ -89,13 +89,10 @@
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
-      <Filter>includes\external\ImGui</Filter>
+      <Filter>external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ControllerTweaks.cpp">
       <Filter>dllmain</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
-      <Filter>external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="input.cpp">
       <Filter>dllmain</Filter>
@@ -118,7 +115,18 @@
     <ClCompile Include="EndSceneHook.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
+      <Filter>includes\external\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Misc.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayTweaks.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="LoggingInit.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -253,21 +261,6 @@
     <ClInclude Include="cfgMenu.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="HandleLimits.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="Sofdec.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="FilterXXFixes.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="UltrawideFix.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="ToolMenu.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="Settings.h">
       <Filter>dllmain</Filter>
     </ClInclude>
@@ -301,12 +294,6 @@
     <ClInclude Include="ConsoleWnd.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="QTEFixes.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="60fpsFixes.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="KeyboardMouseTweaks.h">
       <Filter>dllmain</Filter>
     </ClInclude>
@@ -328,20 +315,11 @@
     <ClInclude Include="..\includes\exception.hpp">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="ExceptionHandler.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="..\Wrappers\xinput1_3.h">
       <Filter>Wrappers</Filter>
     </ClInclude>
     <ClInclude Include="..\Wrappers\x3daudio1_7.h">
       <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_stdlib.h">
-      <Filter>includes\external\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="ControllerTweaks.h">
-      <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="..\external\imgui\imgui_stdlib.h">
       <Filter>external\ImGui</Filter>
@@ -361,8 +339,13 @@
     <ClInclude Include="EndSceneHook.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_stdlib.h" />
     <ClInclude Include="gitparams.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="LoggingInit.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="Patches.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>

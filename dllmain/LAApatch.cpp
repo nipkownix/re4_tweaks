@@ -1,14 +1,14 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include <d3d9.h>
 #include <shellapi.h>
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "LAApatch.h"
-#include "..\external\imgui\imgui.h"
-#include "..\external\imgui\imgui_impl_win32.h"
-#include "..\external\imgui\imgui_impl_dx9.h"
+#include "imgui\imgui.h"
+#include "imgui\imgui_impl_win32.h"
+#include "imgui\imgui_impl_dx9.h"
 #include "WndProcHook.h"
 
 LAApatch laa;

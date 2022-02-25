@@ -1,12 +1,12 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
 #include "Settings.h"
 #include "settings_string.h"
-#include "ToolMenu.h"
 #include "MouseTurning.h"
 #include "cfgMenu.h"
+#include "Patches.h"
 
 Settings cfg;
 
@@ -301,22 +301,6 @@ void Settings::ReadSettings()
 	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
 
-	// MISC
-	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
-	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
-	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", true);
-	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", true);
-	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", false);
-	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
-	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
-	
-	// CONTROLLER
-	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", 1.0f);
-	if (cfg.fControllerSensitivity != 1.0f)
-		cfg.bEnableControllerSens = true;
-	else
-		cfg.bEnableControllerSens = false;
-
 	// MOUSE
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
@@ -336,10 +320,26 @@ void Settings::ReadSettings()
 	cfg.sQTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
 	cfg.sQTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
 
+	// CONTROLLER
+	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", 1.0f);
+	if (cfg.fControllerSensitivity != 1.0f)
+		cfg.bEnableControllerSens = true;
+	else
+		cfg.bEnableControllerSens = false;
+
 	// FRAME RATE
 	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", true);
 	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", true);
 	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", true);
+
+	// MISC
+	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
+	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
+	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", true);
+	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", true);
+	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", false);
+	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
+	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
 
 	// MEMORY
 	cfg.bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", true);
@@ -440,17 +440,6 @@ void Settings::WriteSettings()
 	iniReader.WriteInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
 	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
 
-	// MISC
-	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
-	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);
-	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
-	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
-	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
-	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
-
-	// CONTROLLER
-	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
-
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
 	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
@@ -470,10 +459,21 @@ void Settings::WriteSettings()
 	iniReader.WriteString("KEYBOARD", "QTE_key_1", " " + cfg.sQTE_key_1);
 	iniReader.WriteString("KEYBOARD", "QTE_key_2", " " + cfg.sQTE_key_2);
 
+	// CONTROLLER
+	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
+
 	// FRAME RATE
 	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
+
+	// MISC
+	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
+	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);
+	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
+	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
+	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
+	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
 
 	// MEMORY
 	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD);

@@ -1,17 +1,16 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include <d3d9.h>
 #include "WndProcHook.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "LAApatch.h"
-#include "ToolMenu.h"
-#include "..\external\imgui\imgui.h"
-#include "..\external\imgui\imgui_internal.h"
-#include "..\external\imgui\imgui_impl_win32.h"
-#include "..\external\imgui\imgui_impl_dx9.h"
-#include "..\external\imgui\imgui_stdlib.h"
+#include "imgui\imgui.h"
+#include "imgui\imgui_internal.h"
+#include "imgui\imgui_impl_win32.h"
+#include "imgui\imgui_impl_dx9.h"
+#include "imgui\imgui_stdlib.h"
 #include <faprolight.hpp>
 #include "MouseTurning.h"
 #include "input.hpp"
@@ -19,6 +18,7 @@
 #include "cfgMenu.h"
 #include "Logging/Logging.h"
 #include "resource.h"
+#include "Patches.h"
 
 EndSceneHook esHook;
 

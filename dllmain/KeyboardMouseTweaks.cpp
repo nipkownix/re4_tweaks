@@ -1,5 +1,5 @@
 #include <iostream>
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "ConsoleWnd.h"
@@ -17,6 +17,9 @@ uintptr_t ptrRetryLoadDLGstate;
 static uint32_t* ptrLastUsedController;
 static uint32_t* ptrMouseSens;
 static uint32_t* ptrMouseAimMode;
+
+bool bShouldFlipX;
+bool bShouldFlipY;
 
 int iMinFocusTime;
 

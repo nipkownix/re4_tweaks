@@ -1,4 +1,4 @@
-#include "..\includes\stdafx.h"
+#include "stdafx.h"
 #include "dllmain.h"
 #include "Game.h"
 #include "ConsoleWnd.h"

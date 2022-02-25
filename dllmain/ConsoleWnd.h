@@ -15,7 +15,5 @@ struct ConsoleOutput
 	void Clear();
 };
 
-void ConsoleBinding();
-bool ParseConsoleKeyCombo(std::string_view in_combo);
-
 extern ConsoleOutput con;
+extern bool bConsoleOpen;
