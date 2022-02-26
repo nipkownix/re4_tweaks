@@ -14,12 +14,11 @@ uintptr_t* ptrInvMovAddr;
 uintptr_t* ptrFocusAnimFldAddr;
 uintptr_t ptrRetryLoadDLGstate;
 
+static uint32_t* ptrMouseDeltaX;
+static uint32_t* ptrMouseDeltaY;
 static uint32_t* ptrLastUsedController;
 static uint32_t* ptrMouseSens;
 static uint32_t* ptrMouseAimMode;
-
-bool bShouldFlipX;
-bool bShouldFlipY;
 
 int iMinFocusTime;
 
@@ -152,30 +151,11 @@ void Init_KeyIconMapping_Hook()
 	memcpy(g_KeyIconData, KeyIconData_US, sizeof(KeyIconData_US));
 }
 
-void InventoryFlipBindings(UINT uMsg, WPARAM wParam)
-{
-	switch (uMsg) {
-	case WM_KEYDOWN:
-		if (wParam == cfg.KeyMap(cfg.sFlipItemLeft.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemRight.data(), true))
-			bShouldFlipX = true;
-		else if (wParam == cfg.KeyMap(cfg.sFlipItemUp.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemDown.data(), true))
-			bShouldFlipY = true;
-		break;
-
-	case WM_KEYUP:
-		if (wParam == cfg.KeyMap(cfg.sFlipItemLeft.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemRight.data(), true))
-			bShouldFlipX = false;
-		else if (wParam == cfg.KeyMap(cfg.sFlipItemUp.data(), true) || wParam == cfg.KeyMap(cfg.sFlipItemDown.data(), true))
-			bShouldFlipY = false;
-		break;
-	}
-}
-
-static uint32_t* ptrMouseDeltaX;
-static uint32_t* ptrMouseDeltaY;
-
 void Init_KeyboardMouseTweaks()
 {
+	Init_MouseTurning();
+
+	// LastUsedController pointer
 	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
 	ptrLastUsedController = *pattern.count(1).get(0).get<uint32_t*>(1);
 
@@ -324,17 +304,11 @@ void Init_KeyboardMouseTweaks()
 		{
 			regs.eax = *(int32_t*)ptrInvMovAddr;
 
-			if (bShouldFlipX)
-			{
+				if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemLeft.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemRight.data(), true)))
 				regs.eax = 0x00300000;
-				bShouldFlipX = false;
-			}
 
-			if (bShouldFlipY)
-			{
+				else if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemUp.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemDown.data(), true)))
 				regs.eax = 0x00C00000;
-				bShouldFlipY = false;
-			}
 		}
 	}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
