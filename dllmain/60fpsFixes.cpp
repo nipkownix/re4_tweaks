@@ -50,6 +50,77 @@ void Init_60fpsFixes()
 		}
 	}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
 
+	// Fix character backwards turning speed
+	{
+		struct TurnSpeedSubtract
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
+				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
+
+				if (cfg.bFixTurningSpeed)
+					_asm {fsub newTurnSpeed}
+				else
+					_asm {fsub cPlayer__SPEED_WALK_TURN}
+			}
+		};
+
+		pattern = hook::pattern("D8 25 ? ? ? ? D9 ? A4 00 00 00");
+
+		// 0x7636d9 - pl_R1_Back
+		// 0x766069 - pl_R1_Crouch
+		// 0x7660b6 - pl_R1_Crouch
+		// 0x766167 - pl_R1_Crouch
+		// 0x7661b4 - pl_R1_Crouch
+		// 0x9001a3 - pl_R1_KlauserAttack
+		for (int i = 0; i < 6; i++)
+			injector::MakeInline<TurnSpeedSubtract>(pattern.count(6).get(i).get<uint32_t>(0), pattern.count(6).get(i).get<uint32_t>(6));
+
+		struct TurnSpeedAdd
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
+				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
+
+				if (cfg.bFixTurningSpeed)
+					_asm {fadd newTurnSpeed}
+				else
+					_asm {fadd cPlayer__SPEED_WALK_TURN}
+			}
+		};
+
+		pattern = hook::pattern("D8 05 ? ? ? ? D9 ? A4 00 00 00");
+
+		// 0x7636fa - pl_R1_Back
+		// 0x76607b - pl_R1_Crouch
+		// 0x7660a4 - pl_R1_Crouch
+		// 0x766179 - pl_R1_Crouch
+		// 0x7661a2 - pl_R1_Crouch
+		for (int i = 0; i < 5; i++)
+			injector::MakeInline<TurnSpeedAdd>(pattern.count(5).get(i).get<uint32_t>(0), pattern.count(5).get(i).get<uint32_t>(6));
+
+		struct TurnSpeedLoad
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
+				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
+
+				if (cfg.bFixTurningSpeed)
+					_asm {fld newTurnSpeed}
+				else
+					_asm {fld cPlayer__SPEED_WALK_TURN}
+			}
+		};
+
+		pattern = hook::pattern("D9 05 ? ? ? ? D8 86 A4 00 00 00 D9 9E A4 00 00 00");
+
+		// 0x9001C0 - pl_R1_KlauserAttack
+		injector::MakeInline<TurnSpeedLoad>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
 	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust
 	// Seems to make Ashley bust physics speed match between 30 & 60FPS
 	{

@@ -104,6 +104,17 @@ void LogSettings()
 
 	Logging::Log() << "+--------------------------------+-----------------+";
 
+	// KEYBOARD
+	Logging::Log() << "+ KEYBOARD-----------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "UseSprintToggle", cfg.bUseSprintToggle ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
 	// MOUSE
 	Logging::Log() << "+ MOUSE--------------------------+-----------------+";
 
@@ -134,6 +145,9 @@ void LogSettings()
 	Logging::Log() << "+ FRAME RATE---------------------+-----------------+";
 
 	sprintf(settingBuf, "| %-30s | %15s |", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FixTurningSpeed", cfg.bFixTurningSpeed ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	sprintf(settingBuf, "| %-30s | %15s |", "FixQTE", cfg.bFixQTE ? "true" : "false");
