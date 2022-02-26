@@ -66,6 +66,7 @@ bool isMouseTurnEnabled()
 
 	bMouseTurnStateChanged = bPrevMouseTurnState != state;
 
+	// Reset camera position if modifier is pressed
 	if (bMouseTurnStateChanged)
 	{
 		*(float*)(ptrCamXPosAddr) = 0.0f;

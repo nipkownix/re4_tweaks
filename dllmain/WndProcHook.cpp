@@ -11,11 +11,10 @@
 WNDPROC oWndProc;
 HWND hWindow;
 
-static uint32_t* ptrMouseDeltaX;
-
-// Our new hooked WndProc function
 int curPosX;
 int curPosY;
+
+// Our new hooked WndProc function
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
@@ -44,20 +43,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
-		case WM_KILLFOCUS:
-			// Clear the mouse delta value if we lose focus
-			*(int32_t*)(ptrMouseDeltaX) = 0;
-			break;
-
 		case WM_CLOSE:
 			ExitProcess(0);
 			break;
-	}
-
-	if (bCfgMenuOpen)
-	{
-		// Clear the mouse delta value if the cfg menu is open
-		*(int32_t*)(ptrMouseDeltaX) = 0;
 	}
 
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
@@ -84,11 +72,8 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 
 void Init_WndProcHook()
 {
-	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
-	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
-
 	// CreateWindowEx hook
-	pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
+	auto pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
 	injector::MakeNOP(pattern.get_first(0x12), 6);
 	injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
 }

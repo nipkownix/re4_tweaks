@@ -12,10 +12,10 @@
 ConsoleOutput con;
 
 bool bConsoleOpen;
+bool AutoScroll = true;  // Keep scrolling if already at the bottom.
 
-ImGuiTextBuffer     Buf;
-ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
-bool                AutoScroll = true;  // Keep scrolling if already at the bottom.
+ImGuiTextBuffer Buf;
+ImVector<int> LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
 
 std::string TitleCombo;
 

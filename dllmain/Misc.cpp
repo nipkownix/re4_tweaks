@@ -12,9 +12,11 @@ static uint32_t* ptrGameFrameRate;
 void Init_Misc()
 {
 	// Remove savegame SteamID checks, allows easier save transfers
-	auto pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
-	Nop(pattern.count(1).get(0).get<uint8_t>(0x9), 6);
-	Nop(pattern.count(1).get(0).get<uint8_t>(0x18), 6);
+	{
+		auto pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
+		Nop(pattern.count(1).get(0).get<uint8_t>(0x9), 6);
+		Nop(pattern.count(1).get(0).get<uint8_t>(0x18), 6);
+	}
 
 	// Mafia Leon on cutscenes
 	if (cfg.bAllowMafiaLeonCutscenes)
@@ -36,7 +38,6 @@ void Init_Misc()
 
 		Logging::Log() << "SilenceArmoredAshley enabled";
 	}
-
 
 	// Check if the game is running at a valid frame rate
 	if (!cfg.bIgnoreFPSWarning)
@@ -85,34 +86,36 @@ void Init_Misc()
 		Logging::Log() << "User decided to ignore the FPS warning";
 
 	// Unlock JP-only classic camera angle during Ashley segment
-	static uint8_t* pSys = nullptr;
-	struct UnlockAshleyJPCameraAngles
 	{
-		void operator()(injector::reg_pack& regs)
+		static uint8_t* pSys = nullptr;
+		struct UnlockAshleyJPCameraAngles
 		{
-			bool unlock = *(uint32_t*)(pSys + 8) == 0 // pSys->language_8
-				|| cfg.bAshleyJPCameraAngles;
+			void operator()(injector::reg_pack& regs)
+			{
+				bool unlock = *(uint32_t*)(pSys + 8) == 0 // pSys->language_8
+					|| cfg.bAshleyJPCameraAngles;
 
-			// set zero-flag if we're unlocking the camera, for the jz game uses after this hook
-			if (unlock)
-				regs.ef |= (1 << regs.zero_flag);
-			else
-				regs.ef &= ~(1 << regs.zero_flag); // clear zero_flag if unlock is false, in case it was set by something previously
-		}
-	};
+				// set zero-flag if we're unlocking the camera, for the jz game uses after this hook
+				if (unlock)
+					regs.ef |= (1 << regs.zero_flag);
+				else
+					regs.ef &= ~(1 << regs.zero_flag); // clear zero_flag if unlock is false, in case it was set by something previously
+			}
+		};
 
-	pattern = hook::pattern("8B 0D ? ? ? ? 80 79 08 00 75 ? 8A 80 A3 4F 00 00");
-	pSys = *pattern.count(1).get(0).get<uint8_t*>(2);
+		auto pattern = hook::pattern("8B 0D ? ? ? ? 80 79 08 00 75 ? 8A 80 A3 4F 00 00");
+		pSys = *pattern.count(1).get(0).get<uint8_t*>(2);
 
-	injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
+		injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
-	if (cfg.bAshleyJPCameraAngles)
-		Logging::Log() << "AshleyJPCameraAngles enabled";
+		if (cfg.bAshleyJPCameraAngles)
+			Logging::Log() << "AshleyJPCameraAngles enabled";
+	}
 
 	// Option to skip the intro logos when starting up the game
 	if (cfg.bSkipIntroLogos)
 	{
-		pattern = hook::pattern("81 7E 24 E6 00 00 00");
+		auto pattern = hook::pattern("81 7E 24 E6 00 00 00");
 		// Overwrite some kind of timer check to check for 0 seconds instead
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(3), uint32_t(0), true);
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
@@ -120,7 +123,6 @@ void Init_Misc()
 
 		Logging::Log() << "SkipIntroLogos enabled";
 	}
-
 
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
 	if (cfg.bEnableDebugMenu)

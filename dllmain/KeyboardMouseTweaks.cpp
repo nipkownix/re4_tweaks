@@ -167,152 +167,166 @@ void Init_KeyboardMouseTweaks()
 	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
 	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
 
-	Init_MouseTurning();
-
 	// X mouse delta adjustments
-	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
-	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(1);
-	struct MouseDeltaX
 	{
-		void operator()(injector::reg_pack& regs)
+		pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
+		ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(1);
+		struct MouseDeltaX
 		{
-			if (cfg.bUseRawMouseInput)
-				*(int32_t*)(ptrMouseDeltaX) = (int32_t)((_input->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
-			else
-				*(int32_t*)(ptrMouseDeltaX) = (int32_t)regs.eax;
-		}
-	}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-	// Y mouse delta adjustments
-	pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? E8");
-	ptrMouseDeltaY = *pattern.count(1).get(0).get<uint32_t*>(1);
-	struct MouseDeltaY
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			if (cfg.bUseRawMouseInput)
-				*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
-			else
-				*(int32_t*)(ptrMouseDeltaY) = (int32_t)regs.eax;
-		}
-	}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-	if (cfg.bUseRawMouseInput)
-		Logging::Log() << __FUNCTION__ << " -> Raw mouse input enabled";
-
-	// Prevent some negative mouse acceleration from being applied
-	pattern = hook::pattern("83 3D ? ? ? ? ? 75 ? 83 3D ? ? ? ? 00 75 0E 85 C0 75 ? D9 EE D9");
-	struct PlWepLockCtrlHook
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			int DeltaX = *(int32_t*)(ptrMouseDeltaX);
-
-			// Mimic what CMP does, since we're overwriting it.
-			if (DeltaX > 0)
-			{
-				// Clear both flags
-				regs.ef &= ~(1 << regs.zero_flag);
-				regs.ef &= ~(1 << regs.carry_flag);
-			}
-			else if (DeltaX < 0)
-			{
-				// ZF = 0, CF = 1
-				regs.ef &= ~(1 << regs.zero_flag);
-				regs.ef |= (1 << regs.carry_flag);
-			}
-			else if (DeltaX == 0)
-			{
-				// ZF = 1, CF = 0
-				regs.ef |= (1 << regs.zero_flag);
-				regs.ef &= ~(1 << regs.carry_flag);
-			}
-
-			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+			void operator()(injector::reg_pack& regs)
 			{
 				if (cfg.bUseRawMouseInput)
-				{
-					// Force aiming mode to "Modern". This seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
-					if (intMouseAimingMode() == 0x00)
-						*(int8_t*)(ptrMouseAimMode) = 0x01;
+					*(int32_t*)(ptrMouseDeltaX) = (int32_t)((_input->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
+				else
+					*(int32_t*)(ptrMouseDeltaX) = (int32_t)regs.eax;
+			}
+		}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
 
-					// Clear both flags so we skip the section that does the actual negative acceleration
+	// Y mouse delta adjustments
+	{
+		pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? E8");
+		ptrMouseDeltaY = *pattern.count(1).get(0).get<uint32_t*>(1);
+		struct MouseDeltaY
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (cfg.bUseRawMouseInput)
+					*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
+				else
+					*(int32_t*)(ptrMouseDeltaY) = (int32_t)regs.eax;
+			}
+		}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		if (cfg.bUseRawMouseInput)
+			Logging::Log() << __FUNCTION__ << " -> Raw mouse input enabled";
+	}
+
+	// Prevent some negative mouse acceleration from being applied
+	{
+		struct PlWepLockCtrlHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int DeltaX = *(int32_t*)(ptrMouseDeltaX);
+
+				// Mimic what CMP does, since we're overwriting it.
+				if (DeltaX > 0)
+				{
+					// Clear both flags
 					regs.ef &= ~(1 << regs.zero_flag);
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
-			}
-		}
-	};
-	
-	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(7));
-	injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(7));
-
-	// Disable camera lock on "Modern" mouse setting
-	struct CameraLockCmp
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			int aimingMode = *(int8_t*)(ptrMouseAimMode);
-
-			// Mimic what CMP does, since we're overwriting it.
-			if (aimingMode > 0)
-			{
-				// Clear both flags
-				regs.ef &= ~(1 << regs.zero_flag);
-				regs.ef &= ~(1 << regs.carry_flag);
-			}
-			else if (aimingMode < 0)
-			{
-				// ZF = 0, CF = 1
-				regs.ef &= ~(1 << regs.zero_flag);
-				regs.ef |= (1 << regs.carry_flag);
-			}
-			else if (aimingMode == 0)
-			{
-				// ZF = 1, CF = 0
-				regs.ef |= (1 << regs.zero_flag);
-				regs.ef &= ~(1 << regs.carry_flag);
-			}
-
-			if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
-			{
-				if (cfg.bUnlockCameraFromAim)
+				else if (DeltaX < 0)
 				{
-					// Make the game think the aiming mode is "Classic"
+					// ZF = 0, CF = 1
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.carry_flag);
+				}
+				else if (DeltaX == 0)
+				{
+					// ZF = 1, CF = 0
 					regs.ef |= (1 << regs.zero_flag);
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
+
+				if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+				{
+					if (cfg.bUseRawMouseInput)
+					{
+						// Force aiming mode to "Modern". This seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
+						if (intMouseAimingMode() == 0x00)
+							*(int8_t*)(ptrMouseAimMode) = 0x01;
+
+						// Clear both flags so we skip the section that does the actual negative acceleration
+						regs.ef &= ~(1 << regs.zero_flag);
+						regs.ef &= ~(1 << regs.carry_flag);
+					}
+				}
 			}
-		}
-	}; 
+		};
 
-	pattern = hook::pattern("80 3D ? ? ? ? ? D9 41 ? D9 5D ? 74");
-	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+		auto pattern = hook::pattern("83 3D ? ? ? ? ? 75 ? 83 3D ? ? ? ? 00 75 0E 85 C0 75 ? D9 EE D9");
 
-	pattern = hook::pattern("80 3D ? ? ? ? ? 0F 84 ? ? ? ? A1 ? ? ? ? 85 C0 74");
-	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+		injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(0).get<uint32_t>(0), pattern.count(2).get(0).get<uint32_t>(7));
+		injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(7));
+	}
 
-	pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? D9 05");
-	injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+	// Disable camera lock on "Modern" mouse setting
+	{
+		struct CameraLockCmp
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int aimingMode = *(int8_t*)(ptrMouseAimMode);
+
+				// Mimic what CMP does, since we're overwriting it.
+				if (aimingMode > 0)
+				{
+					// Clear both flags
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+				else if (aimingMode < 0)
+				{
+					// ZF = 0, CF = 1
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.carry_flag);
+				}
+				else if (aimingMode == 0)
+				{
+					// ZF = 1, CF = 0
+					regs.ef |= (1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+
+				if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+				{
+					if (cfg.bUnlockCameraFromAim)
+					{
+						// Make the game think the aiming mode is "Classic"
+						regs.ef |= (1 << regs.zero_flag);
+						regs.ef &= ~(1 << regs.carry_flag);
+					}
+				}
+			}
+		};
+
+		pattern = hook::pattern("80 3D ? ? ? ? ? D9 41 ? D9 5D ? 74");
+		injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		pattern = hook::pattern("80 3D ? ? ? ? ? 0F 84 ? ? ? ? A1 ? ? ? ? 85 C0 74");
+		injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? D9 05");
+		injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		if (cfg.bUnlockCameraFromAim)
+			Logging::Log() << __FUNCTION__ << " -> Camera lock released";
+	}
+
 
 	// Inventory item flip binding
-	pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
-	ptrInvMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
-	struct InvFlip
 	{
-		void operator()(injector::reg_pack& regs)
+		auto pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
+		ptrInvMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
+		struct InvFlip
 		{
-			regs.eax = *(int32_t*)ptrInvMovAddr;
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.eax = *(int32_t*)ptrInvMovAddr;
 
 				if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemLeft.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemRight.data(), true)))
-				regs.eax = 0x00300000;
+					regs.eax = 0x00300000;
 
 				else if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemUp.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemDown.data(), true)))
-				regs.eax = 0x00C00000;
-		}
-	}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+					regs.eax = 0x00C00000;
+			}
+		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-	Logging::Log() << __FUNCTION__ << " -> Keyboard inventory item flipping enabled";
+		Logging::Log() << __FUNCTION__ << " -> Keyboard inventory item flipping enabled";
+	}
 
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
 	{
