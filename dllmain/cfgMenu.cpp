@@ -485,6 +485,46 @@ void cfgMenuRender()
 
 					ImGui::EndTable();
 				}
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// RemoveExtraXinputDeadzone
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("RemoveExtraXinputDeadzone", &cfg.bRemoveExtraXinputDeadzone);
+				ImGui::TextWrapped("Removes unnecessary deadzones that were added for Xinput controllers.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// XinputDeadzone
+				if (ImGui::BeginTable("CDzoneTable", 2, TableFlags))
+				{
+					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 340.0f);
+					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
+
+					ImGui::TableNextColumn();
+
+					ImGui::TextWrapped("Change the Xinput controller deadzone.");
+					ImGui::TextWrapped("The game's default is 1, but that seems unnecessarily large, so we default to 0.4 instead.");
+
+					ImGui::TableNextColumn();
+					ImGui::Dummy(ImVec2(0.0f, 12.0f));
+					ImGui::PushItemWidth(170);
+					ImGui::SliderFloat("Deadzone Slider", &cfg.fXinputDeadzone, 0.0f, 3.5f, "%.2f");
+					ImGui::PopItemWidth();
+
+					if (ImGui::IsItemEdited())
+					{
+						cfg.HasUnsavedChanges = true;
+						*g_XInputDeadzone_LS = (int)(cfg.fXinputDeadzone * 7849);
+						*g_XInputDeadzone_RS = (int)(cfg.fXinputDeadzone * 8689);
+					}
+
+					ImGui::EndTable();
+				}
+
 			}
 
 			// Frame rate tab

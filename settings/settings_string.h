@@ -111,6 +111,14 @@ FallbackToEnglishKeyIcons = true
 ; Min 0.5, max 4.0.
 ControllerSensitivity = 1.0
 
+; Removes unnecessary deadzones that were added for Xinput controllers.
+RemoveExtraXinputDeadzone = true
+
+; Change the Xinput controller deadzone.
+; The game's default is 1, but that seems unnecessarily large, so we default to 0.4 instead.
+; Min 0.0, max 3.5.
+XinputDeadzone = 0.4
+
 [FRAME RATE]
 ; Fixes the speed of falling items in 60 FPS, making them not fall at double speed.
 FixFallingItemsSpeed = true

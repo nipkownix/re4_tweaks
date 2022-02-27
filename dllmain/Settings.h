@@ -46,6 +46,8 @@ struct Settings
 	// CONTROLLER
 	float fControllerSensitivity;
 	bool bEnableControllerSens;
+	bool bRemoveExtraXinputDeadzone;
+	float fXinputDeadzone;
 
 	// FRAME RATE
 	bool bFixFallingItemsSpeed;
