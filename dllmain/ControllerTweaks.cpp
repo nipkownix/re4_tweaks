@@ -27,13 +27,7 @@ void Init_ControllerTweaks()
 				if ((GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
 					aim_spd_val /= cfg.fControllerSensitivity;
 
-				con.AddLogInt(*g_XInputDeadzone_RS);
-				con.AddLogInt(*g_XInputDeadzone_LS);
-
-				_asm
-				{
-					fld aim_spd_val
-				}
+				_asm {fld aim_spd_val}
 			}
 		}; injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
