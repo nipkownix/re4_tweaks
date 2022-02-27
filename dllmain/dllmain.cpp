@@ -45,6 +45,10 @@ void Init_Main()
 	// Various display-related tweaks
 	Init_DisplayTweaks();
 
+	Init_KeyboardMouseTweaks();
+
+	Init_ControllerTweaks();
+
 	// Install input-related hooks
 	Init_Input();
 
@@ -61,10 +65,6 @@ void Init_Main()
 	Init_60fpsFixes();
 
 	Init_Misc();
-
-	Init_KeyboardMouseTweaks();
-
-	Init_ControllerTweaks();
 
 	Init_ExceptionHandler();
 }

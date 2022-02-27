@@ -8,7 +8,6 @@ enum class LastDevice
 	DinputController
 };
 
-void InventoryFlipBindings(UINT uMsg, WPARAM wParam);
 int intMouseAimingMode();
 
 LastDevice GetLastUsedDevice();

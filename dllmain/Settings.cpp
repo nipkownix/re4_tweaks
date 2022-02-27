@@ -327,6 +327,15 @@ void Settings::ReadSettings()
 	else
 		cfg.bEnableControllerSens = false;
 
+	cfg.bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", true);
+
+	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", 0.4f);
+	if (cfg.fXinputDeadzone < 0.0f)
+		cfg.fXinputDeadzone = 0.0f;
+
+	if (cfg.fXinputDeadzone > 3.0f)
+		cfg.fXinputDeadzone = 3.5f;
+
 	// FRAME RATE
 	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", true);
 	cfg.bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", true);
@@ -462,6 +471,8 @@ void Settings::WriteSettings()
 
 	// CONTROLLER
 	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
+	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
+	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
 
 	// FRAME RATE
 	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);

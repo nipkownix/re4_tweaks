@@ -13,9 +13,10 @@ HWND hWindow;
 
 static uint32_t* ptrMouseDeltaX;
 
-// Our new hooked WndProc function
 int curPosX;
 int curPosY;
+
+// Our new hooked WndProc function
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {

@@ -244,40 +244,43 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 void Init_EndSceneHook()
 {
 	// EndScene hook
-	Logging::Log() << "Hooking EndScene...";
-
-	auto pattern = hook::pattern("A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 50 FF D2 C6 05 ? ? ? ? ? A1");
-	ptrD3D9Device = *pattern.count(1).get(0).get<uint32_t*>(1);
-	struct EndScene_HookStruct
 	{
-		void operator()(injector::reg_pack& regs)
+		Logging::Log() << "Hooking EndScene...";
+
+		auto pattern = hook::pattern("A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 50 FF D2 C6 05 ? ? ? ? ? A1");
+		ptrD3D9Device = *pattern.count(1).get(0).get<uint32_t*>(1);
+		struct EndScene_HookStruct
 		{
-			auto pDevice = *(LPDIRECT3DDEVICE9*)(ptrD3D9Device);
+			void operator()(injector::reg_pack& regs)
+			{
+				auto pDevice = *(LPDIRECT3DDEVICE9*)(ptrD3D9Device);
 
-			regs.eax = (uint32_t)pDevice;
+				regs.eax = (uint32_t)pDevice;
 
-			EndScene_hook(pDevice);
-		}
-	}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+				EndScene_hook(pDevice);
+			}
+		}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
 
-	// Reset hook 1
-	Logging::Log() << "Hooking Reset(1)...";
-
-	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? 5E");
-	struct Reset_HookStruct
+	// Reset hook
 	{
-		void operator()(injector::reg_pack& regs)
+		Logging::Log() << "Hooking Reset(1)...";
+
+		auto pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? 5E");
+		struct Reset_HookStruct
 		{
-			regs.ecx = *(int32_t*)(regs.eax);
-			regs.edx = *(int32_t*)(regs.ecx + 0x40);
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.ecx = *(int32_t*)(regs.eax);
+				regs.edx = *(int32_t*)(regs.ecx + 0x40);
 
-			ImGui_ImplDX9_InvalidateDeviceObjects();
-		}
-	}; injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+				ImGui_ImplDX9_InvalidateDeviceObjects();
+			}
+		}; injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-	// Reset hook 2
-	Logging::Log() << "Hooking Reset(2)...";
+		Logging::Log() << "Hooking Reset(2)...";
 
-	pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? EB");
-	injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+		pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? EB");
+		injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
 }
