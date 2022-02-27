@@ -538,6 +538,14 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// FixTurningSpeed
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixTurningSpeed", &cfg.bFixTurningSpeed);
+				ImGui::TextWrapped("Fixes speed of backwards turning when using framerates other than 30FPS.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FixQTE
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
 				ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");

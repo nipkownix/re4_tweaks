@@ -51,6 +51,7 @@ struct Settings
 
 	// FRAME RATE
 	bool bFixFallingItemsSpeed;
+	bool bFixTurningSpeed;
 	bool bFixQTE;
 	bool bFixAshleyBustPhysics;
 

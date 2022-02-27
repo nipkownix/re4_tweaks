@@ -123,6 +123,9 @@ XinputDeadzone = 0.4
 ; Fixes the speed of falling items in 60 FPS, making them not fall at double speed.
 FixFallingItemsSpeed = true
 
+; Fixes speed of backwards turning when using framerates other than 30FPS.
+FixTurningSpeed = true
+
 ; When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty,
 ; making it seem almost impossible to survive the minecart and the statue bridge QTEs.
 ; This fix makes QTEs that involve rapid button presses much more forgiving.
