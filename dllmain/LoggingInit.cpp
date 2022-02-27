@@ -70,40 +70,6 @@ void LogSettings()
 
 	Logging::Log() << "+--------------------------------+-----------------+";
 
-	// MISC
-	Logging::Log() << "+ MISC---------------------------+-----------------+";
-
-	sprintf(settingBuf, "| %-30s | %15s |", "WrappedDllPath", cfg.sWrappedDllPath.data());
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles ? "true" : "false");
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer ? "true" : "false");
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes ? "true" : "false");
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley ? "true" : "false");
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "SkipIntroLogos", cfg.bSkipIntroLogos ? "true" : "false");
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "EnableDebugMenu", cfg.bEnableDebugMenu ? "true" : "false");
-	Logging::Log() << settingBuf;
-
-	Logging::Log() << "+--------------------------------+-----------------+";
-
-	// CONTROLLER
-	Logging::Log() << "+ CONTROLLER---------------------+-----------------+";
-
-	sprintf(settingBuf, "| %-30s | %15f |", "ControllerSensitivity", cfg.fControllerSensitivity);
-	Logging::Log() << settingBuf;
-
-	Logging::Log() << "+--------------------------------+-----------------+";
-
 	// MOUSE
 	Logging::Log() << "+ MOUSE--------------------------+-----------------+";
 
@@ -130,6 +96,49 @@ void LogSettings()
 
 	Logging::Log() << "+--------------------------------+-----------------+";
 
+	// KEYBOARD
+	Logging::Log() << "+ KEYBOARD-----------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "UseSprintToggle", cfg.bUseSprintToggle ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemUp", cfg.sFlipItemUp.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemDown", cfg.sFlipItemDown.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemLeft", cfg.sFlipItemLeft.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemRight", cfg.sFlipItemRight.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_1", cfg.sQTE_key_1.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_2", cfg.sQTE_key_2.data());
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// CONTROLLER
+	Logging::Log() << "+ CONTROLLER---------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "ControllerSensitivity", cfg.fControllerSensitivity);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "XinputDeadzone", cfg.fXinputDeadzone);
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
 	// FRAME RATE
 	Logging::Log() << "+ FRAME RATE---------------------+-----------------+";
 
@@ -140,6 +149,32 @@ void LogSettings()
 	Logging::Log() << settingBuf;
 
 	sprintf(settingBuf, "| %-30s | %15s |", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
+	// MISC
+	Logging::Log() << "+ MISC---------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "WrappedDllPath", cfg.sWrappedDllPath.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "SkipIntroLogos", cfg.bSkipIntroLogos ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableDebugMenu", cfg.bEnableDebugMenu ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
