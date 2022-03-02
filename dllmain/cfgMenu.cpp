@@ -616,6 +616,22 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// DisableQTE
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &cfg.bDisableQTE);
+				ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// AutomaticMashingQTE
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &cfg.bAutomaticMashingQTE);
+				ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// SkipIntroLogos
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
 				ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");

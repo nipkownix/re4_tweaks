@@ -61,6 +61,8 @@ struct Settings
 	bool bAllowSellingHandgunSilencer;
 	bool bAllowMafiaLeonCutscenes;
 	bool bSilenceArmoredAshley;
+	bool bDisableQTE;
+	bool bAutomaticMashingQTE;
 	bool bSkipIntroLogos;
 	bool bEnableDebugMenu;
 

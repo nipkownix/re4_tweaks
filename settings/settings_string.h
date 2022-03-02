@@ -154,6 +154,12 @@ AllowMafiaLeonCutscenes = true
 ; For those who also hate the constant "Clank Clank Clank".
 SilenceArmoredAshley = false
 
+; Disables most of the QTEs, making them pass automatically.
+DisableQTE = false
+
+; Unlike the previous option, this only automates the "mashing" QTEs, making them pass automatically. Prompts are still shown!
+AutomaticMashingQTE = false
+
 ; Whether to skip the Capcom etc intro logos when starting the game.
 SkipIntroLogos = false
 

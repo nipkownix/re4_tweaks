@@ -174,6 +174,12 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableQTE", cfg.bDisableQTE ? "true" : "false");
+	Logging::Log() << settingBuf;
+	
+	sprintf(settingBuf, "| %-30s | %15s |", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "SkipIntroLogos", cfg.bSkipIntroLogos ? "true" : "false");
 	Logging::Log() << settingBuf;
 

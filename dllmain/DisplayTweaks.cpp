@@ -51,7 +51,6 @@ BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, 
 	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
 }
 
-
 void Init_DisplayTweaks()
 {
 	// Fix broken effects
@@ -225,7 +224,6 @@ void Init_DisplayTweaks()
 		}
 	}
 
-
 	// Restore missing transparency in the item pickup screen by
 	// removing a call to GXCopyTex inside ItemExamine::gxDraw
 	{
@@ -238,7 +236,6 @@ void Init_DisplayTweaks()
 		if (cfg.bRestorePickupTransparency)
 			Logging::Log() << "RestorePickupTransparency enabled";
 	}
-
 
 	// Disable Filter03 for now, as we have yet to find a way to actually fix it
 	{
