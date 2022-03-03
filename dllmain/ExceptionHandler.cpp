@@ -90,6 +90,20 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
         CloseHandle(hFile);
     }
 
+    // Dump the games save file, if it's loaded in
+    // (minidump unfortunately doesn't contain this as gamesave memory is dynamic allocated for some reason)
+    auto* p_GameSave_BufPtr = GameSavePtr();
+    if (p_GameSave_BufPtr)
+    {
+      swprintf_s(filename, L"%s\\%s\\%s.%s.save", modulename, L"CrashDumps", modulenameptr, timestamp);
+      FILE* save_file;
+      if (_wfopen_s(&save_file, filename, L"wb") == 0 && save_file)
+      {
+        fwrite(p_GameSave_BufPtr, 1, GAMESAVE_LENGTH, save_file);
+        fclose(save_file);
+      }
+    }
+
     // Exit the application
     ShowCursor(TRUE);
     hWnd = FindWindowW(0, L"");

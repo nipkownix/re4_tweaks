@@ -34,13 +34,22 @@ SYSTEM_SAVE* SystemSavePtr()
 	return *pSys_ptr;
 }
 
-cPlayer** pPL_ptr = 0;
+cPlayer** pPL_ptr = nullptr;
 cPlayer* PlayerPtr()
 {
 	if (!pPL_ptr)
 		return nullptr;
 
 	return *pPL_ptr;
+}
+
+uint8_t** g_GameSave_BufPtr = nullptr;
+uint8_t* GameSavePtr()
+{
+	if (!g_GameSave_BufPtr)
+		return nullptr;
+
+	return *g_GameSave_BufPtr;
 }
 
 bool Init_Game()
@@ -83,6 +92,10 @@ bool Init_Game()
 	// pPL pointer
 	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");
 	pPL_ptr = *pattern.count(1).get(0).get<cPlayer**>(1);
+
+	// g_GameSave_BufPtr pointer (not actual name)
+	pattern = hook::pattern("89 15 ? ? ? ? C7 05 ? ? ? ? A0 FA 0F 00");
+	g_GameSave_BufPtr = *pattern.count(1).get(0).get<uint8_t**>(2);
 
 	return true;
 }

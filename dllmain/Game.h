@@ -394,3 +394,7 @@ bool GameVersionIsDebug();
 GLOBALS* GlobalPtr();
 SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
+uint8_t* GameSavePtr();
+
+// TODO: confirm gamesave length is always 0xFFAA0 in all builds
+#define GAMESAVE_LENGTH 0xFFAA0
