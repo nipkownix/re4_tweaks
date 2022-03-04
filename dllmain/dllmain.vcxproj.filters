@@ -127,6 +127,9 @@
     <ClCompile Include="LoggingInit.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\miniz\miniz.c">
+      <Filter>external\miniz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -348,6 +351,9 @@
     <ClInclude Include="Patches.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\miniz\miniz.h">
+      <Filter>external\miniz</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -385,6 +391,9 @@
     </Filter>
     <Filter Include="external\Logging">
       <UniqueIdentifier>{3655761d-1436-4c7c-a4e9-91cc9ba19b7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\miniz">
+      <UniqueIdentifier>{f29fc87e-d8bd-43de-a3ca-d1bd4402fcdf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
