@@ -1,0 +1,30 @@
+name: Bug report
+description: Let us know about bugs found with the game / tweaks
+labels: bug
+body:
+  - id: disclaimer
+    type: markdown
+    attributes:
+      value: |
+        This is the issues page for re4_tweaks, if your issue is related to the RE4 HD Project (eg. texture/modelling problem) please post to the [re4hd.com website](https://www.re4hd.com) instead - your comment is much more likely to be noticed by Albert or Cris there.
+        
+        Though feel free to post any crashing/performance/other bugs in the game here, but please follow the validation checklist below.
+        
+        **If your issue is crashing related**: please try creating a `CrashDumps` folder next to your bio4.exe file, and try getting the crash to happen again - after that you should hopefully have a ZIP file inside the CrashDumps folder, please attach that ZIP with your post!
+
+        If you can, make sure to mention your game version in the report (should be displayed on bottom right of main menu), and also if you use a non-English OS language (or non-Windows OS)
+  - id: validation
+    type: checkboxes
+    attributes:
+      label: Validation
+      options:
+      - label: "Game has been updated to the latest RE4HD release (v1.0.1: https://www.re4hd.com/?p=9471)"
+        required: true
+      - label: "Data has been [validated with SFV](https://www.re4hd.com/?p=9454) (a guide to using QuickSFV is available at that link, use that with this 1.0.1 SFV: [BIO4-HDProject1.0.1-SFV.zip](https://github.com/nipkownix/re4_tweaks/files/8057899/BIO4-HDProject1.0.1-SFV.zip))"
+        required: true
+  - id: problem
+    type: textarea
+    attributes:
+      label: Describe your issue here (drag+drop ZIP to attach it)
+    validations:
+      required: true
