@@ -51,6 +51,13 @@ BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, 
 	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
 }
 
+BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
+{
+	int windowX = cfg.iWindowPositionX < 0 ? 0 : cfg.iWindowPositionX;
+	int windowY = cfg.iWindowPositionY < 0 ? 0 : cfg.iWindowPositionY;
+	return MoveWindow(hWnd, windowX, windowY, nWidth, nHeight, bRepaint);
+}
+
 void Init_DisplayTweaks()
 {
 	// Fix broken effects
@@ -207,13 +214,14 @@ void Init_DisplayTweaks()
 	if (cfg.bWindowBorderless || cfg.iWindowPositionX > -1 || cfg.iWindowPositionY > -1)
 	{
 		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
-		auto pattern = hook::pattern("BE 00 01 04 00 BF 00 00 C8 00");
-		injector::MakeNOP(pattern.get_first(0xA), 6);
-		injector::MakeCALL(pattern.get_first(0xA), SetWindowPos_Hook, true);
+		auto pattern = hook::pattern("FF 15 ? ? ? ? 56 53 57 8D 45 EC 50 FF 15 ? ? ? ? 8B");
+		injector::MakeNOP(pattern.get_first(0), 6);
+		InjectHook(pattern.get_first(0), SetWindowPos_Hook, PATCH_CALL);
 
-		// nop MoveWindow
-		pattern = hook::pattern("53 51 52 53 53 50");
-		injector::MakeNOP(pattern.get_first(6), 6);
+		// hook MoveWindow. Also can't nop this one as it seems to set up the correct window size on startup
+		pattern = hook::pattern("FF 15 ? ? ? ? 8B 0D ? ? ? ? 6A 01");
+		injector::MakeNOP(pattern.get_first(0), 6);
+		InjectHook(pattern.get_first(0), MoveWindow_Hook, PATCH_CALL);
 
 		if (cfg.bWindowBorderless)
 		{
