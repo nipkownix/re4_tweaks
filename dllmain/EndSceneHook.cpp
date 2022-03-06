@@ -1,6 +1,5 @@
 #include <iostream>
 #include "stdafx.h"
-#include <d3d9.h>
 #include "WndProcHook.h"
 #include "dllmain.h"
 #include "Settings.h"
@@ -21,8 +20,6 @@
 #include "Patches.h"
 
 EndSceneHook esHook;
-
-uintptr_t* ptrD3D9Device;
 
 extern std::string cfgMenuTitle; // cfgMenu.cpp
 
@@ -111,71 +108,73 @@ void ImGui_InputUpdate()
 		io.AddInputCharacter(c);
 }
 
-// Add our new code right before the game calls EndScene
-HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
+static bool didInit = false;
+void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 {
-	static bool didInit = false;
+	didInit = true;
 
+	esHook._start_time = std::chrono::high_resolution_clock::now();
+	esHook._last_present_time = std::chrono::high_resolution_clock::now();
+	esHook._last_frame_duration = std::chrono::milliseconds(1);
+
+	esHook._imgui_context = ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.IniFilename = nullptr;
+
+	static const ImWchar ranges[] =
+	{
+		0x0020, 0x00FF, // Basic Latin + Latin Supplement
+		0x2000, 0x206F, // General Punctuation
+		0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
+		0x31F0, 0x31FF, // Katakana Phonetic Extensions
+		0xFF00, 0xFFEF, // Half-width characters
+		0x4e00, 0x9FAF, // CJK Ideograms
+		0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
+		0x2DE0, 0x2DFF, // Cyrillic Extended-A
+		0xA640, 0xA69F, // Cyrillic Extended-B
+		0,
+	};
+
+	ImFontConfig ImCustomFont;
+	ImCustomFont.FontDataOwnedByAtlas = false;
+
+	io.Fonts->AddFontFromMemoryCompressedTTF(sfpro_compressed_data, sfpro_compressed_size, 24, &ImCustomFont, ranges);
+
+	static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+
+	ImFontConfig ImCustomIcons;
+	ImCustomIcons.MergeMode = true;
+	ImCustomIcons.PixelSnapH = true;
+
+	io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 24, &ImCustomIcons, icon_ranges);
+
+	io.FontGlobalScale = cfg.fFontSize - 0.35f;
+
+	ApplyImGuiTheme();
+
+	ImGui_ImplWin32_Init(hWindow);
+	ImGui_ImplDX9_Init(pDevice);
+
+	// Check if the exe is LAA
+	if (!laa.GameIsLargeAddressAware())
+	{
+		Logging::Log() << "Non-LAA executable detected!";
+		laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
+	}
+
+	// Update cfgMenu window title
+	cfgMenuTitle.append(" v");
+	cfgMenuTitle.append(APP_VERSION);
+	cfgMenuTitle.append(" - Configuration");
+}
+
+// Add our new code right before the game calls EndScene
+void EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
+{
 	// Init ImGui
 	if (!didInit)
-	{
-		didInit = true;
-
-		esHook._start_time = std::chrono::high_resolution_clock::now();
-		esHook._last_present_time = std::chrono::high_resolution_clock::now();
-		esHook._last_frame_duration = std::chrono::milliseconds(1);
-
-		esHook._imgui_context = ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO();
-
-		io.IniFilename = nullptr;
-
-		static const ImWchar ranges[] =
-		{
-			0x0020, 0x00FF, // Basic Latin + Latin Supplement
-			0x2000, 0x206F, // General Punctuation
-			0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
-			0x31F0, 0x31FF, // Katakana Phonetic Extensions
-			0xFF00, 0xFFEF, // Half-width characters
-			0x4e00, 0x9FAF, // CJK Ideograms
-			0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
-			0x2DE0, 0x2DFF, // Cyrillic Extended-A
-			0xA640, 0xA69F, // Cyrillic Extended-B
-			0,
-		};
-
-		ImFontConfig ImCustomFont;
-		ImCustomFont.FontDataOwnedByAtlas = false;
-
-		io.Fonts->AddFontFromMemoryCompressedTTF(sfpro_compressed_data, sfpro_compressed_size, 24, &ImCustomFont, ranges);
-
-		static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
-
-		ImFontConfig ImCustomIcons;
-		ImCustomIcons.MergeMode = true;
-		ImCustomIcons.PixelSnapH = true;
-
-		io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 24, &ImCustomIcons, icon_ranges);
-
-		io.FontGlobalScale = cfg.fFontSize - 0.35f;
-
-		ApplyImGuiTheme();
-
-		ImGui_ImplWin32_Init(hWindow);
-		ImGui_ImplDX9_Init(pDevice);
-
-		// Check if the exe is LAA
-		if (!laa.GameIsLargeAddressAware())
-		{
-			Logging::Log() << "Non-LAA executable detected!";
-			laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
-		}
-
-		// Update cfgMenu window title
-		cfgMenuTitle.append(" v");
-		cfgMenuTitle.append(APP_VERSION);
-		cfgMenuTitle.append(" - Configuration");
-	}
+		Init_ImGui(pDevice);
 
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -238,49 +237,5 @@ HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	// Reset input status
 	_input->next_frame();
 
-	return S_OK;
-}
-
-void Init_EndSceneHook()
-{
-	// EndScene hook
-	{
-		Logging::Log() << "Hooking EndScene...";
-
-		auto pattern = hook::pattern("A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 50 FF D2 C6 05 ? ? ? ? ? A1");
-		ptrD3D9Device = *pattern.count(1).get(0).get<uint32_t*>(1);
-		struct EndScene_HookStruct
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				auto pDevice = *(LPDIRECT3DDEVICE9*)(ptrD3D9Device);
-
-				regs.eax = (uint32_t)pDevice;
-
-				EndScene_hook(pDevice);
-			}
-		}; injector::MakeInline<EndScene_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-	}
-
-	// Reset hook
-	{
-		Logging::Log() << "Hooking Reset(1)...";
-
-		auto pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? 5E");
-		struct Reset_HookStruct
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				regs.ecx = *(int32_t*)(regs.eax);
-				regs.edx = *(int32_t*)(regs.ecx + 0x40);
-
-				ImGui_ImplDX9_InvalidateDeviceObjects();
-			}
-		}; injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-		Logging::Log() << "Hooking Reset(2)...";
-
-		pattern = hook::pattern("8B 08 8B 51 ? 68 ? ? ? ? 50 FF D2 85 C0 79 ? 89 35 ? ? ? ? EB");
-		injector::MakeInline<Reset_HookStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-	}
+	return;
 }

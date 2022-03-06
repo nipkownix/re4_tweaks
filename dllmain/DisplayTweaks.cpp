@@ -63,8 +63,8 @@ void Init_DisplayTweaks()
 	// Fix broken effects
 	Init_FilterXXFixes();
 
-	// Install a EndScene hook to display our own UI
-	Init_EndSceneHook();
+	// Install a D3D9 hook
+	Init_D3D9Hook();
 
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
 	if (cfg.bFixUltraWideAspectRatio)
@@ -95,10 +95,9 @@ void Init_DisplayTweaks()
 	// Force v-sync off
 	if (cfg.bDisableVsync)
 	{
-		auto pattern = hook::pattern("C7 07 ? ? ? ? E9 ? ? ? ? 8D 4E ? 51 8D 95 ? ? ? ? 52");
-		injector::WriteMemory(pattern.get_first(2), uint32_t(0x0), true);
+		// See D3D9Hook.cpp -> hook_Direct3D9::CreateDevice and hook_Direct3D9::Reset
 
-		pattern = hook::pattern("8B 56 ? 8B 85 ? ? ? ? 83 C4 ? 52 68 ? ? ? ? 50");
+		auto pattern = hook::pattern("8B 56 ? 8B 85 ? ? ? ? 83 C4 ? 52 68 ? ? ? ? 50");
 		struct WriteIniHook
 		{
 			void operator()(injector::reg_pack& regs)

@@ -3,8 +3,8 @@
 // Init functions
 void Init_60fpsFixes();
 void Init_ControllerTweaks();
+void Init_D3D9Hook();
 void Init_DisplayTweaks();
-void Init_EndSceneHook();
 void Init_ExceptionHandler();
 void Init_FilterXXFixes();
 bool Init_Game();

@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include <d3d9.h>
 #include "imgui\imgui.h"
 #include "imgui\imgui_internal.h"
 #include <hashes.h>
@@ -15,3 +16,5 @@ struct EndSceneHook
 };
 
 extern EndSceneHook esHook;
+
+void EndScene_hook(LPDIRECT3DDEVICE9 pDevice);

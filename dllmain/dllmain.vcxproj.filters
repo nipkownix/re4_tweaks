@@ -130,6 +130,9 @@
     <ClCompile Include="..\external\miniz\miniz.c">
       <Filter>external\miniz</Filter>
     </ClCompile>
+    <ClCompile Include="D3D9hook.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
@@ -353,6 +356,9 @@
     </ClInclude>
     <ClInclude Include="..\external\miniz\miniz.h">
       <Filter>external\miniz</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9hook.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
