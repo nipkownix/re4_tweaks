@@ -349,7 +349,7 @@ struct SYSTEM_SAVE
   uint32_t flags_CONFIG_0;
   uint32_t flags_EXTRA_4;
   uint8_t languageId_8;
-  uint8_t field_9;
+  uint8_t violenceLevel_9;
   uint8_t field_A;
   uint8_t field_B;
   uint8_t soundMode_C;

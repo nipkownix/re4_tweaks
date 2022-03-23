@@ -571,6 +571,21 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// ViolenceLevelOverride
+				ImGui::PushItemWidth(150);
+				if (ImGui::InputInt("Violence Level Override", &cfg.iViolenceLevelOverride))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true; // unfortunately required as game only reads pSys from savegame during first loading screen...
+				}
+				ImGui::PopItemWidth();
+				ImGui::TextWrapped("Allows overriding the level of violence in the game.");
+				ImGui::TextWrapped("Use -1 to leave as games default, 0 for low-violence mode (as used in JP/GER version), or 2 for full violence.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// AllowSellingHandgunSilencer
 				if (ImGui::Checkbox("AllowSellingHandgunSilencer", &cfg.bAllowSellingHandgunSilencer))
 				{

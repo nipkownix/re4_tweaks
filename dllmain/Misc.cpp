@@ -9,6 +9,33 @@
 
 static uint32_t* ptrGameFrameRate;
 
+void(__stdcall* setLanguage_Orig)();
+void __stdcall setLanguage_Hook()
+{
+	// Update violence level on game launch / new game
+	setLanguage_Orig();
+	if (cfg.iViolenceLevelOverride >= 0)
+	{
+		auto* SystemSave = SystemSavePtr();
+		if (SystemSave)
+			SystemSave->violenceLevel_9 = uint8_t(cfg.iViolenceLevelOverride);
+	}
+}
+
+typedef void(__fastcall* cCard__firstCheck10_Fn)(void* thisptr, void* unused);
+cCard__firstCheck10_Fn cCard__firstCheck10_Orig;
+void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
+{
+	// pSys gets overwritten with data from gamesave during first loading screen, so update violence level after reading it
+	cCard__firstCheck10_Orig(thisptr, unused);
+	if (cfg.iViolenceLevelOverride >= 0)
+	{
+		auto* SystemSave = SystemSavePtr();
+		if (SystemSave)
+			SystemSave->violenceLevel_9 = uint8_t(cfg.iViolenceLevelOverride);
+	}
+}
+
 void Init_Misc()
 {
 	// Remove savegame SteamID checks, allows easier save transfers
@@ -110,6 +137,39 @@ void Init_Misc()
 
 		if (cfg.bAshleyJPCameraAngles)
 			Logging::Log() << "AshleyJPCameraAngles enabled";
+	}
+
+	// Allow changing games level of violence to users choice
+	{
+		// find cCard functbl (tbl.1654)
+		auto pattern = hook::pattern("0F B6 46 04 8D 14 47 03 D0 8B 04 95 ? ? ? ?");
+		uint8_t** tbl_1654 = *pattern.count(1).get(0).get<uint8_t**>(12);
+
+		// Update cCard::firstCheck10 entry to use our hook instead
+		cCard__firstCheck10_Orig = (cCard__firstCheck10_Fn)tbl_1654[5];
+		injector::WriteMemory(&tbl_1654[5], &cCard__firstCheck10_Hook, true);
+
+		// Hook setLanguage func
+		pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? A9 00 00 00 F0");
+		if (!pattern.empty())
+		{
+			ReadCall(pattern.count(1).get(0).get<uint32_t>(15), setLanguage_Orig);
+			InjectHook(pattern.count(1).get(0).get<uint32_t>(15), setLanguage_Hook);
+		}
+		else
+		{
+			// JP build is missing whole setLanguage func, hook systemStartInit instead
+			pattern = hook::pattern("53 57 E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 8B 35");
+			ReadCall(pattern.count(1).get(0).get<uint32_t>(7), setLanguage_Orig);
+			InjectHook(pattern.count(1).get(0).get<uint32_t>(7), setLanguage_Hook);
+		}
+
+		// Remove stupid check of EXE violence level against savegame
+		// (might not be in all versions?)
+		// Without this, game decides not to read in savegames for some reason
+		pattern = hook::pattern("3A 4A 09 74");
+		if (!pattern.empty())
+			injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(3), uint8_t(0xeb), true);
 	}
 
 	// Option to skip the intro logos when starting up the game
