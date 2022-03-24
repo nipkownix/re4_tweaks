@@ -58,6 +58,7 @@ struct Settings
 	// MISC
 	std::string sWrappedDllPath;
 	bool bAshleyJPCameraAngles;
+	int iViolenceLevelOverride;
 	bool bAllowSellingHandgunSilencer;
 	bool bAllowMafiaLeonCutscenes;
 	bool bSilenceArmoredAshley;

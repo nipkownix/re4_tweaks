@@ -142,6 +142,10 @@ FixAshleyBustPhysics = true
 ; Unlocks the JP-only classic camera angles during Ashley's segment.
 AshleyJPCameraAngles = false
 
+; Allows overriding the level of violence in the game.
+; Use -1 to leave as your game EXEs default, 0 for low-violence mode (as used in JP/GER version), or 2 for full violence.
+ViolenceLevelOverride = -1
+
 ; Allows selling the (normally unused) handgun silencer to the merchant.
 ; If you use a mod that changes the merchant price tables you might want to disable this
 ; But if you're only using RE4HD you can leave this enabled
