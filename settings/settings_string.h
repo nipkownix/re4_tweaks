@@ -203,6 +203,9 @@ DebugMenu = CTRL+F3
 ; MouseTurning camera modifier. When holding this key combination, MouseTurning is temporarily activated/deactivated.
 MouseTurningModifier = ALT
 
+; Key combo for jump tricks during Jet-ski sequence (normally RT+LT on controller)
+JetSkiTricks = LMOUSE+RMOUSE
+
 [WARNING]
 ; This version of RE4 only works properly if played at 30 or 60 FPS. Anything else can and will cause numerous amounts of
 ; different bugs, most of which aren't even documented. By default, re4_tweaks will warn you about these issues and change

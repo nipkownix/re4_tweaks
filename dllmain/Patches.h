@@ -27,6 +27,7 @@ bool ParseConsoleKeyCombo(std::string_view in_combo);
 bool ParseConfigMenuKeyCombo(std::string_view in_combo);
 bool ParseMouseTurnModifierCombo(std::string_view in_combo);
 bool ParseToolMenuKeyCombo(std::string_view in_combo);
+bool ParseJetSkiTrickCombo(std::string_view in_combo);
 
 // Deadzone pointers
 extern int* g_XInputDeadzone_LS;

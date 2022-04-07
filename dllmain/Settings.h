@@ -77,6 +77,7 @@ struct Settings
 	std::string sConsoleKeyCombo;
 	std::string sDebugMenuKeyCombo;
 	std::string sMouseTurnModifierKeyCombo;
+	std::string sJetSkiTrickCombo;
 
 	// WARNING
 	bool bIgnoreFPSWarning;
