@@ -165,6 +165,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15d |", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer ? "true" : "false");
 	Logging::Log() << settingBuf;
 
@@ -215,6 +218,9 @@ void LogSettings()
 	Logging::Log() << settingBuf;
 
 	sprintf(settingBuf, "| %-30s | %15s |", "MouseTurningModifier", cfg.sMouseTurnModifierKeyCombo.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "JetSkiTricks", cfg.sJetSkiTrickCombo.data());
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";

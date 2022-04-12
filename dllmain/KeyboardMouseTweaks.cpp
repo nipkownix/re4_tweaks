@@ -22,6 +22,15 @@ static uint32_t* ptrMouseAimMode;
 
 int iMinFocusTime;
 
+std::vector<uint32_t> jetSkiTrickCombo;
+
+bool ParseJetSkiTrickCombo(std::string_view in_combo)
+{
+	jetSkiTrickCombo.clear();
+	jetSkiTrickCombo = ParseKeyCombo(in_combo);
+	return jetSkiTrickCombo.size() > 0;
+}
+
 LastDevice GetLastUsedDevice()
 {
 	// 0 = Keyboard?
@@ -447,6 +456,28 @@ void Init_KeyboardMouseTweaks()
 					regs.eax &= 0x40;
 			}
 		}; injector::MakeInline<SprintToggleHook2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
+
+	// Hook pl0e_R1_Jump to allow jet-ski tricks to be performed with keyboard+mouse combos
+	{
+		pattern = hook::pattern("FE 86 0E 05 00 00 33 DB");
+		struct JetSkiTrickHook1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				uint8_t* esiUpdate = ((uint8_t*)regs.esi) + 0x50E;
+				*esiUpdate = *esiUpdate + 1; // code we patched over
+
+				if (_input->is_combo_down(&jetSkiTrickCombo))
+				{
+					// Jet-ski combo pressed - skip the RT/LT checks when we return
+					// TODO: find better method of skipping these checks, changing return addr for MakeInline like this seems hacky
+
+					uint32_t* retAddr = (uint32_t*)(regs.esp - 4);
+					*retAddr += 0x28; // seems to always be 0x28 bytes of opcodes in every release
+				}
+			}
+		}; injector::MakeInline<JetSkiTrickHook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	if (cfg.bFallbackToEnglishKeyIcons)

@@ -123,6 +123,7 @@ void cfgMenuRender()
 				ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
 				ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
 				ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
+				ParseJetSkiTrickCombo(cfg.sJetSkiTrickCombo);
 
 				// Update console title
 				con.TitleKeyCombo = cfg.sConsoleKeyCombo;
@@ -768,6 +769,20 @@ void cfgMenuRender()
 
 				ImGui::PushItemWidth(100);
 				ImGui::InputText("MouseTurning modifier", &cfg.sMouseTurnModifierKeyCombo, ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth();
+
+				if (ImGui::IsItemEdited())
+					cfg.HasUnsavedChanges = true;
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// JetSkiTricks bindings
+				ImGui::TextWrapped("Key combo for jump tricks during Jet-ski sequence (normally RT+LT on controller)");
+
+				ImGui::PushItemWidth(100);
+				ImGui::InputText("Trick while riding Jet-ski", &cfg.sJetSkiTrickCombo, ImGuiInputTextFlags_CharsUppercase);
 				ImGui::PopItemWidth();
 
 				if (ImGui::IsItemEdited())

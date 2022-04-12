@@ -381,6 +381,10 @@ void Settings::ReadSettings()
 	if (cfg.sMouseTurnModifierKeyCombo.length())
 		ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 
+	cfg.sJetSkiTrickCombo = iniReader.ReadString("HOTKEYS", "JetSkiTricks", "LMOUSE+RMOUSE");
+	if (cfg.sJetSkiTrickCombo.length())
+		ParseJetSkiTrickCombo(cfg.sJetSkiTrickCombo);
+
 	// FPS WARNING
 	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", false);
 	
@@ -504,6 +508,7 @@ void Settings::WriteSettings()
 	iniReader.WriteString("HOTKEYS", "Console", " " + cfg.sConsoleKeyCombo);
 	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + cfg.sDebugMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + cfg.sMouseTurnModifierKeyCombo);
+	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + cfg.sJetSkiTrickCombo);
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);
