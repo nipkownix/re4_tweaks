@@ -7,7 +7,7 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **Increase FOV** - Increases the default FOV. Useful to prevent motion sickness in some people.
 
- * **Fix ultrawide aspect ratio** - Fixes the incorrect aspect ratio when playing in ultrawide resolutions, preventing the image from being cut off and the HUD appearing off-screen. Only tested in 21:9.
+ * **Fix ultrawide aspect ratio** - Fixes the incorrect aspect ratio when playing in ultrawide resolutions, preventing the image from being cut off and the HUD appearing off-screen. 21:9 and 32:9 are supported. (Minor visual bugs may occur in 32:9).
 
  * **Disable V-Sync** - Forces V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
 
@@ -38,8 +38,22 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
  * **60 FPS fixes** - Tries to fix some issues left by the people who created the 60 FPS mode in this port. Currently, it changes the following:
     * Fixes the speed of falling items, making them not fall at double speed. This issue was one of the first issues people noticed (when this port was still being teased in trailers), but Q-LOC never fixed it, even after releasing 6 patches.
 	* When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs. This fix makes QTEs that involve rapid button presses much more forgiving.
+	* Makes Ashley's bust physics consistent between 30 and 60FPS
+	* Makes backwards-turn speed consistent between 30 and 60FPS
 
  * **Ashley's fixed camera angles** - Unlocks the JP-only classic camera angles during Ashley's segment.
+
+ * **Leon's mafia outfit in cutscenes** - Allows the game to properly display Leon's mafia outfit ("Special 2") in cutscenes.
+
+ * **ViolenceLevelOverride** - Allows overriding the level of violence, making it possible to censor/uncensor the game.
+
+ * **Silent armored Ashley** - Silence Ashley's armored outfit ("Special 2"). For those who also hate the constant "Clank Clank Clank".
+
+ * **Sprint toggle** - Changes sprint key to act like a toggle instead of needing to be held.
+
+ * **DisableQTE** - Disables most of the QTEs, making them pass automatically.
+
+ * **AutomaticMashingQTE** - Unlike the previous option, this only automates the "mashing" QTEs, making them pass automatically. Prompts are still shown!
 
  * **Skip intro logos** - Whether to skip the beginning Capcom etc intro logos when starting up the game.
 
@@ -48,7 +62,13 @@ More info in the .ini file.
 
  * **Change controller sensitivity** - For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.
 
+ * **Xinput deadzone changes** - Allows tweaking and removing some unnecessary deadzones that were added for Xinput controllers, making camera movement feel more like it did on the original GameCube version of the game.
+
  * **Mouse turning** - Makes the mouse turn the character instead of controlling the camera, similar to Resident Evil 5.
+
+ * **Raw mouse input** - Makes the game use Raw Input for aiming and turning. Greatly improves mouse input by removing negative/positive accelerations that were being applied both by the game and by Direct Input.
+
+ * **UnlockCameraFromAim** - When using the "Modern" mouse setting, the game locks the camera position to the aiming position, making both move together. Although this is the expected behavior in most games, some people might prefer to keep the original camera behavior while also having the benefits from "Modern" aiming. Enabling this will also restore the horizontal aiming sway that was lost when the devs implemented "Modern" aiming.
 
  * **Fix sniper zoom** - When playing with keyboard and mouse, this fixes an annoying bug which would cause your camera to be off-center after you zoomed in with a sniper rifle.
 
@@ -62,6 +82,8 @@ More info in the .ini file.
 		 * Flip down: End
 		 * Flip left: Insert
 		 * Flip right: Page Up
+
+ * **Jet Ski tricks using keyboard/mouse** - Although a relatively unknown feature, you can do tricks while riding the Jet Ski in the very last section of the game if playing with a controller. This mod adds keyboard/mouse bindings for this, as the devs apparently forgot to do so.
 
  * **Rebind keyboard QTE keys** - The vanilla game doesn't allow the user to change the main QTE keys, being "X" and "C". Changing them via an .ini file is possible, but the on screen prompts don't change to match the new keys, leading to confusion. This mod changes the default QTE keys to be "A" and "D", both customizable and with proper on screen prompt support.
 
