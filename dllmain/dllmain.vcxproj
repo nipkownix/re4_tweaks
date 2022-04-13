@@ -60,7 +60,7 @@
       <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
+      <Command>copy /Y "$(TargetDir)$(TargetFileName)" "E:\SteamLibrary\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>del gitparams.h
@@ -87,7 +87,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       </AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
+      <Command>copy /Y "$(TargetDir)$(TargetFileName)" "E:\SteamLibrary\steamapps\common\Resident Evil 4\Bin32\$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>del gitparams.h

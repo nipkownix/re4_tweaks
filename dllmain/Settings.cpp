@@ -345,7 +345,14 @@ void Settings::ReadSettings()
 	// MISC
 	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
 	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
+
 	cfg.iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", -1);
+	if (cfg.iViolenceLevelOverride < -1)
+		cfg.iViolenceLevelOverride = -1;
+
+	if (cfg.iViolenceLevelOverride > 2)
+		cfg.iViolenceLevelOverride = 2;
+
 	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", true);
 	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", true);
 	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", false);

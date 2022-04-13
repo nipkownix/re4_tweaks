@@ -576,6 +576,12 @@ void cfgMenuRender()
 				ImGui::PushItemWidth(150);
 				if (ImGui::InputInt("Violence Level Override", &cfg.iViolenceLevelOverride))
 				{
+					if (cfg.iViolenceLevelOverride < -1)
+						cfg.iViolenceLevelOverride = -1;
+
+					if (cfg.iViolenceLevelOverride > 2)
+						cfg.iViolenceLevelOverride = 2;
+
 					cfg.HasUnsavedChanges = true;
 					NeedsToRestart = true; // unfortunately required as game only reads pSys from savegame during first loading screen...
 				}
