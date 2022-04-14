@@ -53,6 +53,10 @@ BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, 
 
 BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
 {
+	// Early return if bWindowBorderless is set to true, as this call changes the window size to include borders.
+	if (cfg.bWindowBorderless)
+		return true;
+
 	int windowX = cfg.iWindowPositionX < 0 ? 0 : cfg.iWindowPositionX;
 	int windowY = cfg.iWindowPositionY < 0 ? 0 : cfg.iWindowPositionY;
 	return MoveWindow(hWnd, windowX, windowY, nWidth, nHeight, bRepaint);
