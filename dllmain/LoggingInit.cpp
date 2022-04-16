@@ -177,6 +177,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowAshleySuplex", cfg.bAllowAshleySuplex ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "DisableQTE", cfg.bDisableQTE ? "true" : "false");
 	Logging::Log() << settingBuf;
 	
