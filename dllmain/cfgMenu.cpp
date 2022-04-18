@@ -630,6 +630,15 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// AllowAshleySuplex
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &cfg.bAllowAshleySuplex);
+				ImGui::TextWrapped("Allows Ashley to Suplex enemies in very specific situations.");
+				ImGui::TextWrapped("(previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// UseSprintToggle
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &cfg.bUseSprintToggle);
 				ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");

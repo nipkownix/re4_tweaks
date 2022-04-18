@@ -158,6 +158,10 @@ AllowMafiaLeonCutscenes = true
 ; For those who also hate the constant "Clank Clank Clank".
 SilenceArmoredAshley = false
 
+; Allows Ashley to Suplex enemies in very specific situations.
+; (previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)
+AllowAshleySuplex = false
+
 ; Disables most of the QTEs, making them pass automatically.
 DisableQTE = false
 

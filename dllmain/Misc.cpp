@@ -230,4 +230,37 @@ void Init_Misc()
 		injector::MakeNOP(pattern.count(2).get(0).get<uint8_t>(7), 2);
 		injector::MakeNOP(pattern.count(2).get(1).get<uint8_t>(7), 2);
 	}
+
+	// Patch Ashley suplex glitch back into the game
+	// They originally fixed this by adding a check for Ashley player-type inside em10ActEvtSetFS
+	// However, the caller of that function (em10_R1_Dm_Small) already has player-type checking inside it, which will demote the suplex to a Kick for certain characters
+	// Because of the way they patched it, enemies that are put into Suplex-state won't have any actions at all while playing as Ashley, while other chars are able to Kick
+	// So we'll fix this by first removing the patch they added inside em10ActEvtSetFS, then add checks inside em10_R1_Dm_Small instead so that Ashley can Kick
+	// (or if user wants we'll leave it with patch removed, so that they can play with the Ashley suplex :)
+	// TODO: some reason the below doesn't actually let Ashley use SetKick, might be player-type checks inside it, so right now this just disables Suplex if bAllowAshleySuplex isn't set
+	{
+		// Remove player-type check from em10ActEvtSetFS
+		auto pattern = hook::pattern("0F 8E ? ? ? ? A1 ? ? ? ? 80 B8 C8 4F 00 00 01 0F 84");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0x12), 6, true);
+
+		pattern = hook::pattern("0F B6 81 C8 4F 00 00 83 C0 FE 83 F8 03 77");
+		struct SuplexCheckPlayerAshley
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int playerType = *(uint8_t*)(regs.ecx + 0x4FC8);
+
+				// code we patched over
+				regs.eax = playerType;
+				regs.eax = regs.eax - 2;
+
+				// Add Ashley player-type check, make it use Ada/Hunk/Wesker case which calls SetKick
+				// TODO: some reason SetKick doesn't work for Ashley? might be player-type checks inside it, so right now this just disables Suplex if bAllowAshleySuplex isn't set
+				if (!cfg.bAllowAshleySuplex && playerType == 1)
+				{
+					regs.eax = 0;
+				}
+			}
+		}; injector::MakeInline<SuplexCheckPlayerAshley>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
+	}
 }
