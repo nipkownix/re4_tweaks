@@ -249,6 +249,7 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 	ImFontConfig ImCustomIcons;
 	ImCustomIcons.MergeMode = true;
 	ImCustomIcons.PixelSnapH = true;
+	ImCustomIcons.FontDataOwnedByAtlas = false;
 
 	io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 24, &ImCustomIcons, icon_ranges);
 
