@@ -374,8 +374,8 @@ struct SYSTEM_SAVE
 };
 static_assert(sizeof(SYSTEM_SAVE) == 0xA0, "sizeof(SYSTEM_SAVE)"); // TODO: find if this size is correct
 
-#pragma pack(push, 1)
-struct cPlayer // unsure if correct name!
+//#pragma pack(push, 1)
+struct __declspec(align(4)) cPlayer // unsure if correct name!
 {
   /* 0x000 */ uint8_t unk0[0x94];
   /* 0x094 */ float X;
@@ -383,10 +383,23 @@ struct cPlayer // unsure if correct name!
   /* 0x09C */ float Z;
   /* 0x0A0 */ float unkA0;
   /* 0x0A4 */ float Angle;
-  /* goes to 7F0+ */
+  /* 0x294 */ uint8_t unkA8[0x1EC];
+  /* 0x298 */ float speed; 
+  /* 0x320 */ uint8_t unk1[0x88];
+  /* 0x324 */ int health; /* low than 2400 */
+  /* 0x328 */ int reserv;  
+  /* 0x32C */ int invincibletime; /* -1 is well */
+  /* 0x7B0 */ uint8_t unk7B0[0x484];
+  /* 0x7B4 */ float burntime; 
+  /* 0x7B8 */ uint8_t unk7B8[0x2C];
+  /* 0x7E4 */ float modelptr; 
+  /* 0x7E8 */ uint8_t unk7E8[0x8];
+  /* 0x7F0 */ int eliteflag; /* like chain man = 04 */
+  /* 0x7B8 */ uint8_t unk7B8[0x618];
+  /* goes to E08 */
 };
-#pragma pack(pop)
-static_assert(sizeof(cPlayer) == 0xA8, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
+//#pragma pack(pop)
+static_assert(sizeof(cPlayer) == 0xE08, "sizeof(cPlayer)"); // TODO: find if this size is correct
 
 std::string GameVersion();
 bool GameVersionIsDebug();
