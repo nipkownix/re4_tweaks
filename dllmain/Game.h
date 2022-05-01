@@ -151,7 +151,6 @@ struct EM_LIST
 };
 static_assert(sizeof(EM_LIST) == 0x20, "sizeof(EM_LIST)"); // TODO: find if this size is correct
 
-
 struct __declspec(align(4)) GLOBALS
 {
   uint8_t field_0;
@@ -301,7 +300,7 @@ struct __declspec(align(4)) GLOBALS
   uint8_t gap5300[12];
   int field_530C;
   uint32_t freeData_5310[64];
-  EM_LIST emList_5410[256]; 
+  EM_LIST emList_5410[256];
   uint8_t gap7410[4100];
   uint8_t field_8414;
   uint32_t field_8418[3];
@@ -341,7 +340,6 @@ struct __declspec(align(4)) GLOBALS
   uint8_t adasReportNo_869D;
 };
 static_assert(sizeof(GLOBALS) == 0x86A0, "sizeof(GLOBALS)"); // TODO: find if this size is correct
-
 
 struct SYSTEM_SAVE
 {
