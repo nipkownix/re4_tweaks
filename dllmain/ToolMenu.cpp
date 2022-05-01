@@ -262,7 +262,7 @@ void ToolMenu_Exit()
 
 void ToolMenu_GoldMax()
 {
-	GlobalPtr()->goldAmount_4FA8 = 99999999;
+	GlobalPtr()->money_4FA8 = 99999999;
 
 	ToolMenu_Exit();
 }
