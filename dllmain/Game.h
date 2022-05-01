@@ -151,6 +151,7 @@ struct EM_LIST
 };
 static_assert(sizeof(EM_LIST) == 0x20, "sizeof(EM_LIST)"); // TODO: find if this size is correct
 
+
 struct __declspec(align(4)) GLOBALS
 {
   uint8_t field_0;
@@ -171,7 +172,7 @@ struct __declspec(align(4)) GLOBALS
   uint32_t field_18;
   uint32_t field_1C;
   uint8_t field_20;
-  uint8_t field_21;
+  bool escflag_21; // pause game flag
   uint8_t field_22;
   uint8_t field_23;
   void* field_24;
@@ -239,29 +240,26 @@ struct __declspec(align(4)) GLOBALS
   uint32_t field_4F8C;
   uint32_t field_globalSaveDataStartsHere_4F90;
   int field_4F94;
-  uint8_t field_4F98;
-  uint8_t field_4F99;
-  uint8_t field_4F9A;
-  uint8_t field_4F9B;
+  uint32_t lucky_drop_4F98;
   uint16_t field_4F9C;
   uint16_t field_4F9E;
   uint16_t field_4FA0;
   uint8_t field_4FA2;
   uint8_t languageId_4FA3;
-  int field_4FA4;
-  int goldAmount_4FA8;
+  uint32_t playtime_4FA4;
+  uint32_t money_4FA8;
   uint16_t curRoomId_4FAC;
   uint8_t field_4FAE;
   uint8_t field_4FAF;
   uint16_t prevRoomId_4FB0;
   uint8_t field_4FB2;
   uint8_t field_4FB3;
-  int16_t field_4FB4;
-  uint16_t field_4FB6;
-  int16_t field_4FB8;
-  uint16_t field_4FBA;
+  uint16_t playerHp_4FB4;
+  uint16_t playerHpFull_4FB6;
+  int16_t ashleyHp_4FB8;
+  uint16_t ashleyHpFull_4FBA;
   uint32_t field_4FBC;
-  uint8_t field_4FC0;
+  uint8_t curWepid_4FC0;
   uint8_t field_4FC1;
   uint8_t field_4FC2;
   uint8_t field_4FC3;
@@ -303,7 +301,7 @@ struct __declspec(align(4)) GLOBALS
   uint8_t gap5300[12];
   int field_530C;
   uint32_t freeData_5310[64];
-  EM_LIST emList_5410[256];
+  EM_LIST emList_5410[256]; 
   uint8_t gap7410[4100];
   uint8_t field_8414;
   uint32_t field_8418[3];
@@ -313,15 +311,15 @@ struct __declspec(align(4)) GLOBALS
   uint32_t field_8454;
   uint32_t field_8458;
   uint32_t field_845C;
-  uint16_t field_8460;
-  uint16_t field_8462;
-  uint32_t field_8464;
-  uint32_t field_8468;
-  uint32_t field_846C;
-  uint32_t field_8470;
-  uint32_t field_8474;
-  uint32_t field_8478;
-  uint8_t field_847C;
+  uint16_t chapterDead_8460;
+  uint16_t totalDead_8462;
+  uint32_t chapterKill_8464;
+  uint32_t totalKill_8468;
+  uint32_t chapterShot_8468C;
+  uint32_t totalShot_8470;
+  uint32_t chapterHit_8474;
+  uint32_t totalHit_8478;
+  uint8_t curMode_847C; // Dynamic max 6 in pro 
   uint8_t field_847D;
   uint8_t field_847E;
   uint8_t field_847F;
@@ -343,6 +341,7 @@ struct __declspec(align(4)) GLOBALS
   uint8_t adasReportNo_869D;
 };
 static_assert(sizeof(GLOBALS) == 0x86A0, "sizeof(GLOBALS)"); // TODO: find if this size is correct
+
 
 struct SYSTEM_SAVE
 {
