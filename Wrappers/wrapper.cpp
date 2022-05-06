@@ -94,8 +94,13 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0
 			} \
 			if (!dll) \
 			{ \
-				std::cout << "Loading '" << Name << "' from System32..." << std::endl; \
-				GetSystemDirectoryA(path, MAX_PATH); \
+				IsWow64Process(INVALID_HANDLE_VALUE, &isWow64Process);\
+				std::cout << "Loading '" << Name << "' from "; \
+				if(!isWow64Process) {std::cout <<"System32"<<std::endl;}\
+				else {std::cout <<"SystemWow64"<<std::endl;}\
+					isWow64Process \
+					? GetSystemWow64DirectoryA(path, MAX_PATH)\
+					: GetSystemDirectoryA(path, MAX_PATH); \
 				strcat_s(path, MAX_PATH, "\\"); \
 				strcat_s(path, MAX_PATH, Name); \
 				dll = LoadLibraryA(path); \

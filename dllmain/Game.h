@@ -314,7 +314,7 @@ struct __declspec(align(4)) GLOBALS
   uint16_t totalDead_8462;
   uint32_t chapterKill_8464;
   uint32_t totalKill_8468;
-  uint32_t chapterShot_8468C;
+  uint32_t chapterShot_846C;
   uint32_t totalShot_8470;
   uint32_t chapterHit_8474;
   uint32_t totalHit_8478;
