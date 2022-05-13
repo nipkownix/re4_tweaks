@@ -36,8 +36,227 @@ void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
 	}
 }
 
+struct FileMapping
+{
+	std::string datPath;
+	void* data;
+	HANDLE hFile;
+	HANDLE hMap;
+};
+
+struct DatTblEntry
+{
+	char name_0[48];
+	uint8_t flags_30;
+	uint8_t unk_31;
+	uint16_t unk_32;
+	uint8_t* data_34;
+	void* unk_38;
+};
+
+struct DatTbl
+{
+	int count_0;
+	DatTblEntry* entries_4;
+};
+
+std::unordered_map<DatTbl*, std::unordered_map<std::string, FileMapping>> mappedFiles; // key = DatTbl ptr, value = map of paths -> mem-mapped addr
+std::unordered_map<std::string, bool> nonExistentFiles; // files that we know aren't on FS, cheaper to keep track of them instead of querying OS each time
+
+bool TryMapFile(DatTbl* datTbl, const char* filePath, void** dataPtr)
+{
+	std::string path = filePath;
+
+	if (nonExistentFiles.count(path))
+		return true; // we know it's non-existent, so lets get outta here
+
+	// Check if file exists at some common paths
+	if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
+	{
+		path = "BIO4\\" + path;
+		if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
+		{
+			path = "..\\" + std::string(filePath);
+			if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
+			{
+				path = "..\\BIO4\\" + std::string(filePath);
+				if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
+				{
+					nonExistentFiles[filePath] = true;
+					return true; // file doesn't seem to exist on filesystem, return whatever DatTbl has
+				}
+			}
+		}
+	}
+
+	// file exists locally/loosely - map it into memory if we need to, and return ptr to it
+
+	char fullPath[4096];
+	GetFullPathNameA(path.c_str(), 4096, fullPath, nullptr);
+	path = fullPath;
+
+	if (mappedFiles.count(datTbl) <= 0)
+		mappedFiles[datTbl] = std::unordered_map<std::string, FileMapping>();
+
+	if (mappedFiles[datTbl].count(path))
+	{
+		// File is already mapped in, return ptr to it
+		*dataPtr = mappedFiles[datTbl][path].data;
+		return true;
+	}
+
+	FileMapping mapping;
+
+	mapping.hFile = ::CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (!mapping.hFile)
+		return true;
+
+	mapping.hMap = ::CreateFileMapping(mapping.hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+	if (!mapping.hMap)
+	{
+		::CloseHandle(mapping.hFile);
+		return true;
+	}
+
+	mapping.data = ::MapViewOfFile(mapping.hMap, FILE_MAP_READ, 0, 0, 0);
+	if (!mapping.data)
+	{
+		::CloseHandle(mapping.hMap);
+		::CloseHandle(mapping.hFile);
+		return true;
+	}
+
+	mapping.datPath = filePath;
+
+	mappedFiles[datTbl][path] = mapping;
+	*dataPtr = mapping.data;
+	return true;
+}
+
+void TryUnmapFile(DatTbl* datTbl, const char* filePath)
+{
+	if (!mappedFiles.count(datTbl))
+		return;
+
+	std::string path = filePath;
+
+	std::string fileKey;
+	auto& map = mappedFiles[datTbl];
+	for (auto& kvp : map)
+	{
+		if (kvp.second.datPath != path)
+			continue;
+
+		fileKey = kvp.first;
+
+		::UnmapViewOfFile(kvp.second.data);
+		::CloseHandle(kvp.second.hMap);
+		::CloseHandle(kvp.second.hFile);
+	}
+
+	if (!fileKey.empty())
+		map.erase(fileKey);
+}
+
+bool(__fastcall* DatTbl__GetDat)(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, const char* filePath, uint32_t* work_no_out);
+bool __fastcall DatTbl__GetDat_Hook(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, const char* filePath, uint32_t* work_no_out)
+{
+	// Get the dat file normally first - so a3/work_no_out/etc will be set properly
+	if (!DatTbl__GetDat(thisptr, unused, dataPtr, a3, filePath, work_no_out))
+		return false; // doesn't exist in DAT, possibly corrupt game, return false...
+
+	return TryMapFile(thisptr, filePath, dataPtr);
+}
+
+bool(__fastcall* DatTbl__GetDatWkNo)(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, int work_no);
+bool __fastcall DatTbl__GetDatWkNo_Hook(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, int work_no)
+{
+	// Get the dat file normally first - so a3 etc will be set properly
+	auto ret = DatTbl__GetDatWkNo(thisptr, unused, dataPtr, a3, work_no);
+	if (!ret)
+		return false; // doesn't exist in DAT, possibly corrupt game, return false...
+
+	if (work_no >= thisptr->count_0)
+		return false;
+
+	auto& entry = thisptr->entries_4[work_no];
+
+	return TryMapFile(thisptr, entry.name_0, dataPtr);
+}
+
+bool(__fastcall* DatTbl__DelDat)(DatTbl* thisptr, void* unused, const char* filePath);
+bool __fastcall DatTbl__DelDat_Hook(DatTbl* thisptr, void* unused, const char* filePath)
+{
+	TryUnmapFile(thisptr, filePath);
+
+	// Only call DatTbl__DelDatWkNo once we're finished with entry, as that func will clear it...
+	return DatTbl__DelDat(thisptr, unused, filePath);
+}
+
+bool(__fastcall* DatTbl__DelDatWkNo)(DatTbl* thisptr, void* unused, int work_no);
+bool __fastcall DatTbl__DelDatWkNo_Hook(DatTbl* thisptr, void* unused, int work_no)
+{
+	if (work_no < thisptr->count_0)
+	{
+		auto& entry = thisptr->entries_4[work_no];
+		TryUnmapFile(thisptr, entry.name_0);
+	}
+
+	// Only call DatTbl__DelDatWkNo once we're finished with entry, as that func will clear it...
+	return DatTbl__DelDatWkNo(thisptr, unused, work_no);
+}
+
+bool(__fastcall* DatTbl__DelAll)(DatTbl* thisptr, void* unused, bool a2);
+bool __fastcall DatTbl__DelAll_Hook(DatTbl* thisptr, void* unused, bool a2)
+{
+	auto ret = DatTbl__DelAll(thisptr, unused, a2);
+
+	if (!mappedFiles.count(thisptr))
+		return ret;
+
+	auto& map = mappedFiles[thisptr];
+	for (auto& kvp : map)
+	{
+		::UnmapViewOfFile(kvp.second.data);
+		::CloseHandle(kvp.second.hMap);
+		::CloseHandle(kvp.second.hFile);
+	}
+	map.clear();
+	mappedFiles.erase(thisptr);
+
+	return ret;
+}
+
 void Init_Misc()
 {
+	// Hook DatTbl funcs, to allow side-loading loose files instead
+	{
+		// DatTbl::GetDat retrieves data pointer from the DAT file - hook it so we can search & read from the local filesystem too
+		auto pattern = hook::pattern("52 8D 45 ? 50 83 C1 48 E8 ? ? ? ? 84 C0 75 ? 53");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(8)).as_int(), DatTbl__GetDat);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(8)).as_int(), DatTbl__GetDat_Hook);
+
+		// DatTbl::GetDatWkNo retrieves pointer via DAT table index instead of a file path
+		pattern = hook::pattern("52 8D 45 ? 8D 71 48 50 8B CE E8 ? ? ? ? 84 C0 0F");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(10)).as_int(), DatTbl__GetDatWkNo);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(10)).as_int(), DatTbl__GetDatWkNo_Hook);
+
+		// DatTbl::DelDat seems to release the data buffer for a file inside the DAT, hook it so we can release the memory-mapping if needed too
+		pattern = hook::pattern("50 83 C1 48 E8 ? ? ? ? 84 C0 75 ? 68");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(4)).as_int(), DatTbl__DelDat);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(4)).as_int(), DatTbl__DelDat_Hook);
+
+		// DatTbl::DelDatWkNo release memory-map by index...
+		pattern = hook::pattern("8D 73 48 57 8B CE E8 ? ? ? ? 47 3B 7D");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelDatWkNo);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelDatWkNo_Hook);
+
+		// DatTbl::DelAll is called when the game is finished with this DAT, hook it so we can release any memory-mappings we made
+		pattern = hook::pattern("32 C0 5E C3 6A 01 E8 ? ? ? ? 8B 46 04 50 E8");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelAll);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelAll_Hook);
+	}
+
 	// Remove savegame SteamID checks, allows easier save transfers
 	{
 		auto pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
