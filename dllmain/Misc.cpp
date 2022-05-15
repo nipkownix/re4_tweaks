@@ -244,7 +244,6 @@ void Init_Misc()
 	// Allow subtitles when using English language
 	// (but only if we find a replacement for the placeholder English subs in the game folder)
 	{
-		auto pattern = hook::pattern("8A 40 08 3C 02 74 ? 3C 01");
 		bool hasSubs =
 			GetFileAttributesA("BIO4\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
 			GetFileAttributesA("event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
@@ -253,7 +252,18 @@ void Init_Misc()
 
 		if (hasSubs)
 		{
+			// patch Event::MesSet to allow English subs to be drawn
+			auto pattern = hook::pattern("8A 40 08 3C 02 74 ? 3C 01");
 			injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(5), 2, true);
+
+			// Patch graphics_menu to enable subtitle option
+			pattern = hook::pattern("E8 ? ? ? ? B1 01 3A C1 0F");
+			injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(9), uint16_t(0xE990), true);
+
+			// Patch second language check inside graphics_menu, unsure what it's doing...
+			pattern = hook::pattern("C7 85 ? ? ? ? FF FF FF FF E8 ? ? ? ? 33 D2 3C 01");
+			uint8_t xorEax[] = {0x31, 0xC0, 0x90, 0x90, 0x90};
+			injector::WriteMemoryRaw(pattern.count(1).get(0).get<uint8_t>(0xA), xorEax, 5, true);
 		}
 	}
 
