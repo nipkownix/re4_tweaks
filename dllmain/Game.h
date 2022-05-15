@@ -300,7 +300,7 @@ struct __declspec(align(4)) GLOBALS
   uint8_t gap5300[12];
   int field_530C;
   uint32_t freeData_5310[64];
-  EM_LIST emList_5410[256];
+  EM_LIST emList_5410[256]; 
   uint8_t gap7410[4100];
   uint8_t field_8414;
   uint32_t field_8418[3];
@@ -341,6 +341,18 @@ struct __declspec(align(4)) GLOBALS
 };
 static_assert(sizeof(GLOBALS) == 0x86A0, "sizeof(GLOBALS)"); // TODO: find if this size is correct
 
+
+struct __declspec(align(4)) DAMAGE {
+	uint8_t unk0[0x40];
+	uint32_t knife40; // 200 
+	uint32_t unk44;
+	uint32_t unk48;
+	uint32_t unk4C;
+	uint32_t kick50; // 200
+	// unknown 
+};
+static_assert(sizeof(DAMAGE) == 0x54, "sizeof(ATTACK_VALUE)");
+
 struct SYSTEM_SAVE
 {
   uint32_t flags_CONFIG_0;
@@ -370,7 +382,7 @@ struct SYSTEM_SAVE
   uint8_t gap94[12];
 };
 static_assert(sizeof(SYSTEM_SAVE) == 0xA0, "sizeof(SYSTEM_SAVE)"); // TODO: find if this size is correct
-
+ 
 //#pragma pack(push, 1)
 struct __declspec(align(4)) cPlayer // unsure if correct name!
 {
@@ -380,30 +392,40 @@ struct __declspec(align(4)) cPlayer // unsure if correct name!
 	/* 0x09C */ float Z;
 	/* 0x0A0 */ float unkA0;
 	/* 0x0A4 */ float Angle;
-	/* 0x294 */ uint8_t unkA8[0x1EC];
+	/* 0x0A8 */ uint8_t unkA8[0x54];
+	/* 0x0FC */ uint8_t actid0FC;
+	/* 0x0FD */ uint8_t actid0FD;
+	/* 0x0FE */ uint8_t actid0FE;
+	/* 0x0FF */ uint8_t actid0FF;
+	/* 0x100 */ uint8_t unk100[0x198];
 	/* 0x298 */ float speed;
-	/* 0x320 */ uint8_t unk1[0x88];
-	/* 0x324 */ int health; /* low than 2400 */
-	/* 0x328 */ int reserv;
-	/* 0x32C */ int invincibletime; /* -1 is well */
-	/* 0x7B0 */ uint8_t unk7B0[0x484];
-	/* 0x7B4 */ float burntime;
-	/* 0x7B8 */ uint8_t unk7B8[0x2C];
-	/* 0x7E4 */ float modelptr;
-	/* 0x7E8 */ uint8_t unk7E8[0x8];
+	/* 0x320  */ uint8_t unk1[0x88];
+	/* 0x324 */ int32_t health; /* low than 2400 */
+	/* 0x328 */ int32_t reserv; /* reserve */
+	/* 0x32C */ int32_t invtime; /* 0x8000 is well */  
+	/* 0x330  */ uint8_t unk330[0x90];
+	/* 0x3C0  */ int32_t actobjptr; 
+	/* 0x7B0  */ uint8_t unk7B0[0x3F0];
+	/* 0x7B4  */ float burntime;
+	/* 0x7B8  */uint8_t unk7B8[0x2C]; // 7B8+2C=7E4 Calc
+	/* 0x7E4  */ float modelptr;
+	/* 0x7E8  */ uint8_t unk7E8[0x8];
 	/* 0x7F0 */ int eliteflag; /* like chain man = 04 */
-	/* 0x7F4 */ uint8_t unk7F4[0x618];
+	/* 0x7F4  */uint8_t unk7F4[0x614];
 	/* goes to E08 */
 };
 //#pragma pack(pop)
+// int a = sizeof(cPlayer);
 static_assert(sizeof(cPlayer) == 0xE08, "sizeof(cPlayer)"); // TODO: find if this size is correct
 
 std::string GameVersion();
 bool GameVersionIsDebug();
 
 GLOBALS* GlobalPtr();
+DAMAGE* DamagePtr();
 SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
+cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 
 // Length seems to always be 0xFFAA0 across all builds
