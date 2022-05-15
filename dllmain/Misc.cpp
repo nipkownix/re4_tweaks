@@ -264,6 +264,12 @@ void Init_Misc()
 			pattern = hook::pattern("C7 85 ? ? ? ? FF FF FF FF E8 ? ? ? ? 33 D2 3C 01");
 			uint8_t xorEax[] = {0x31, 0xC0, 0x90, 0x90, 0x90};
 			injector::WriteMemoryRaw(pattern.count(1).get(0).get<uint8_t>(0xA), xorEax, 5, true);
+
+			// Fix R245EventS00/R22EEventS00 accidentally calling EvtReadExec with a do-not-free-after-use (0x40) flag
+			// (without this fix, those cutscenes will leak memory whenever they're played...)
+			pattern = hook::pattern("6A 50 53 68 ? ? ? ? B9 ? ? ? ? E8");
+			injector::WriteMemory(pattern.count(2).get(0).get<uint8_t>(1), uint8_t(0x10), true);
+			injector::WriteMemory(pattern.count(2).get(1).get<uint8_t>(1), uint8_t(0x10), true);
 		}
 	}
 
