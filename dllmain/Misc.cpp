@@ -44,22 +44,6 @@ struct FileMapping
 	HANDLE hMap;
 };
 
-struct DatTblEntry
-{
-	char name_0[48];
-	uint8_t flags_30;
-	uint8_t unk_31;
-	uint16_t unk_32;
-	uint8_t* data_34;
-	void* unk_38;
-};
-
-struct DatTbl
-{
-	int count_0;
-	DatTblEntry* entries_4;
-};
-
 std::unordered_map<DatTbl*, std::unordered_map<std::string, FileMapping>> mappedFiles; // key = DatTbl ptr, value = map of paths -> mem-mapped addr
 std::unordered_map<std::string, bool> nonExistentFiles; // files that we know aren't on FS, cheaper to keep track of them instead of querying OS each time
 
@@ -255,6 +239,22 @@ void Init_Misc()
 		pattern = hook::pattern("32 C0 5E C3 6A 01 E8 ? ? ? ? 8B 46 04 50 E8");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelAll);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelAll_Hook);
+	}
+
+	// Allow subtitles when using English language
+	// (but only if we find a replacement for the placeholder English subs in the game folder)
+	{
+		auto pattern = hook::pattern("8A 40 08 3C 02 74 ? 3C 01");
+		bool hasSubs =
+			GetFileAttributesA("BIO4\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
+			GetFileAttributesA("event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
+			GetFileAttributesA("..\\BIO4\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
+			GetFileAttributesA("..\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF;
+
+		if (hasSubs)
+		{
+			injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(5), 2, true);
+		}
 	}
 
 	// Remove savegame SteamID checks, allows easier save transfers
