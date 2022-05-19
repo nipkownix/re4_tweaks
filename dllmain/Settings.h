@@ -54,6 +54,7 @@ struct Settings
 	bool bFixTurningSpeed;
 	bool bFixQTE;
 	bool bFixAshleyBustPhysics;
+	bool bEnableReimplementedCloth;
 
 	// MISC
 	std::string sWrappedDllPath;

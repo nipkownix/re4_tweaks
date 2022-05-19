@@ -154,6 +154,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableReimplementedCloth", cfg.bEnableReimplementedCloth ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	Logging::Log() << "+--------------------------------+-----------------+";
 
 	// MISC

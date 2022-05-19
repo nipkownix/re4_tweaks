@@ -134,6 +134,11 @@ FixQTE = true
 ; Fixes difference between 30/60FPS on physics applied to Ashley.
 FixAshleyBustPhysics = true
 
+; Reimplements certain cloth-physics functions to vastly improve framerate in certain areas.
+; Experimental, but mostly seems to work fine.
+; (if you notice any breakage from it feel free to disable it here, and please let us know about it!)
+EnableReimplementedCloth = true
+
 [MISC]
 ; Path to DLL to wrap, comment or leave empty to wrap system DLL
 ; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)
