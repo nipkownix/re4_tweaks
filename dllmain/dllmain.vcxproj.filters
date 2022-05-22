@@ -133,6 +133,9 @@
     <ClCompile Include="D3D9hook.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="MathReimpl.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">

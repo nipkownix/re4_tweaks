@@ -134,10 +134,14 @@ FixQTE = true
 ; Fixes difference between 30/60FPS on physics applied to Ashley.
 FixAshleyBustPhysics = true
 
+; Replaces older math functions in the game with much more optimized equivalents.
+; Experimental, can hopefully improve framerate in some areas that had dips.
+EnableFastMath = true
+
 ; Reimplements certain cloth-physics functions to vastly improve framerate in certain areas.
 ; Experimental, but mostly seems to work fine.
 ; (if you notice any breakage from it feel free to disable it here, and please let us know about it!)
-EnableReimplementedCloth = true
+EnableReimplementedCloth = false
 
 [MISC]
 ; Path to DLL to wrap, comment or leave empty to wrap system DLL

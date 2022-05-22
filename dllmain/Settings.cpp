@@ -341,7 +341,8 @@ void Settings::ReadSettings()
 	cfg.bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", true);
 	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", true);
 	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", true);
-	cfg.bEnableReimplementedCloth = iniReader.ReadBoolean("FRAME RATE", "EnableReimplementedCloth", true);
+	cfg.bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", true);
+	cfg.bEnableReimplementedCloth = iniReader.ReadBoolean("FRAME RATE", "EnableReimplementedCloth", false);
 
 	// MISC
 	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
@@ -495,6 +496,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", cfg.bFixTurningSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
+	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", cfg.bEnableFastMath);
 	iniReader.WriteBoolean("FRAME RATE", "EnableReimplementedCloth", cfg.bEnableReimplementedCloth);
 
 	// MISC

@@ -564,6 +564,19 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// EnableFastMath
+				if (ImGui::Checkbox("EnableFastMath", &cfg.bEnableFastMath))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Replaces older math functions in the game with much more optimized equivalents.");
+				ImGui::TextWrapped("Experimental, can hopefully improve framerate in some areas that had dips.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// EnableReimplementedCloth
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("EnableReimplementedCloth", &cfg.bEnableReimplementedCloth);
 				ImGui::TextWrapped("Reimplements certain cloth-physics functions to vastly improve framerate in certain areas.");

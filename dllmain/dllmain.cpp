@@ -66,6 +66,8 @@ void Init_Main()
 
 	Init_Misc();
 
+	Init_MathReimpl();
+
 	Init_ExceptionHandler();
 }
 
