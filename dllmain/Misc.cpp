@@ -36,23 +36,66 @@ void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
 	}
 }
 
-struct FileMapping
+struct FileData
 {
-	std::string datPath;
+	std::string filePath;
 	void* data;
 	HANDLE hFile;
-	HANDLE hMap;
+
+	FileData& operator=(FileData&& o)
+	{
+		filePath = std::move(o.filePath);
+
+		// transfer ownership of data/hFile
+		data = o.data;
+		hFile = o.hFile;
+
+		o.data = nullptr;
+		o.hFile = NULL;
+
+		return *this;
+	}
+
+	~FileData()
+	{
+		if (data)
+			free(data);
+		if (hFile)
+			CloseHandle(hFile);
+		data = nullptr;
+		hFile = NULL;
+	}
+
+	bool load(std::string_view path)
+	{
+		hFile = ::CreateFileA(path.data(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (!hFile)
+			return false;
+
+		DWORD high = 0;
+		auto size = GetFileSize(hFile, &high);
+		data = malloc(size);
+		if (!data)
+			return false;
+
+		DWORD read = 0;
+		bool status = ReadFile(hFile, data, size, &read, nullptr);
+		if (!status || read != size)
+			return false;
+
+		filePath = path;
+		return true;
+	}
 };
 
-std::unordered_map<DatTbl*, std::unordered_map<std::string, FileMapping>> mappedFiles; // key = DatTbl ptr, value = map of paths -> mem-mapped addr
+std::unordered_map<DatTbl*, std::unordered_map<std::string, FileData>> loadedFiles; // key = DatTbl ptr, value = local-path:data
 std::unordered_map<std::string, bool> nonExistentFiles; // files that we know aren't on FS, cheaper to keep track of them instead of querying OS each time
 
-bool TryMapFile(DatTbl* datTbl, const char* filePath, void** dataPtr)
+std::string looseFilePath(std::string filePath)
 {
 	std::string path = filePath;
-
 	if (nonExistentFiles.count(path))
-		return true; // we know it's non-existent, so lets get outta here
+		return ""; // we know it's non-existent, so lets get outta here
 
 	// Check if file exists at some common paths
 	if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
@@ -67,75 +110,60 @@ bool TryMapFile(DatTbl* datTbl, const char* filePath, void** dataPtr)
 				if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 				{
 					nonExistentFiles[filePath] = true;
-					return true; // file doesn't seem to exist on filesystem, return whatever DatTbl has
+					return "";
 				}
 			}
 		}
 	}
 
-	// file exists locally/loosely - map it into memory if we need to, and return ptr to it
-
 	char fullPath[4096];
 	GetFullPathNameA(path.c_str(), 4096, fullPath, nullptr);
-	path = fullPath;
 
-	if (mappedFiles.count(datTbl) <= 0)
-		mappedFiles[datTbl] = std::unordered_map<std::string, FileMapping>();
+	return fullPath;
+}
 
-	if (mappedFiles[datTbl].count(path))
+bool DatTbl_TryLoadFile(DatTbl* datTbl, const char* filePath, void** dataPtr)
+{
+	std::string path = looseFilePath(filePath);
+
+	if (path.empty())
+		return true; // not found in any loose paths...
+
+	// file exists locally/loosely - load it into memory if we need to, and return ptr to it
+
+	if (loadedFiles.count(datTbl) <= 0)
+		loadedFiles[datTbl] = std::unordered_map<std::string, FileData>();
+
+	if (!loadedFiles[datTbl].count(path))
 	{
-		// File is already mapped in, return ptr to it
-		*dataPtr = mappedFiles[datTbl][path].data;
-		return true;
+		// File isn't loaded in yet
+		FileData file;
+
+		if (!file.load(path))
+			return true;
+
+		loadedFiles[datTbl][path] = std::move(file);
 	}
 
-	FileMapping mapping;
-
-	mapping.hFile = ::CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (!mapping.hFile)
-		return true;
-
-	mapping.hMap = ::CreateFileMapping(mapping.hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-	if (!mapping.hMap)
-	{
-		::CloseHandle(mapping.hFile);
-		return true;
-	}
-
-	mapping.data = ::MapViewOfFile(mapping.hMap, FILE_MAP_READ, 0, 0, 0);
-	if (!mapping.data)
-	{
-		::CloseHandle(mapping.hMap);
-		::CloseHandle(mapping.hFile);
-		return true;
-	}
-
-	mapping.datPath = filePath;
-
-	mappedFiles[datTbl][path] = mapping;
-	*dataPtr = mapping.data;
+	*dataPtr = loadedFiles[datTbl][path].data;
 	return true;
 }
 
-void TryUnmapFile(DatTbl* datTbl, const char* filePath)
+void DatTbl_TryUnloadFile(DatTbl* datTbl, const char* filePath)
 {
-	if (!mappedFiles.count(datTbl))
+	if (!loadedFiles.count(datTbl))
 		return;
 
 	std::string path = filePath;
 
 	std::string fileKey;
-	auto& map = mappedFiles[datTbl];
+	auto& map = loadedFiles[datTbl];
 	for (auto& kvp : map)
 	{
-		if (kvp.second.datPath != path)
+		if (kvp.second.filePath != path)
 			continue;
 
 		fileKey = kvp.first;
-
-		::UnmapViewOfFile(kvp.second.data);
-		::CloseHandle(kvp.second.hMap);
-		::CloseHandle(kvp.second.hFile);
 	}
 
 	if (!fileKey.empty())
@@ -149,7 +177,7 @@ bool __fastcall DatTbl__GetDat_Hook(DatTbl* thisptr, void* unused, void** dataPt
 	if (!DatTbl__GetDat(thisptr, unused, dataPtr, a3, filePath, work_no_out))
 		return false; // doesn't exist in DAT, possibly corrupt game, return false...
 
-	return TryMapFile(thisptr, filePath, dataPtr);
+	return DatTbl_TryLoadFile(thisptr, filePath, dataPtr);
 }
 
 bool(__fastcall* DatTbl__GetDatWkNo)(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, int work_no);
@@ -165,13 +193,13 @@ bool __fastcall DatTbl__GetDatWkNo_Hook(DatTbl* thisptr, void* unused, void** da
 
 	auto& entry = thisptr->entries_4[work_no];
 
-	return TryMapFile(thisptr, entry.name_0, dataPtr);
+	return DatTbl_TryLoadFile(thisptr, entry.name_0, dataPtr);
 }
 
 bool(__fastcall* DatTbl__DelDat)(DatTbl* thisptr, void* unused, const char* filePath);
 bool __fastcall DatTbl__DelDat_Hook(DatTbl* thisptr, void* unused, const char* filePath)
 {
-	TryUnmapFile(thisptr, filePath);
+	DatTbl_TryUnloadFile(thisptr, filePath);
 
 	// Only call DatTbl__DelDatWkNo once we're finished with entry, as that func will clear it...
 	return DatTbl__DelDat(thisptr, unused, filePath);
@@ -183,7 +211,7 @@ bool __fastcall DatTbl__DelDatWkNo_Hook(DatTbl* thisptr, void* unused, int work_
 	if (work_no < thisptr->count_0)
 	{
 		auto& entry = thisptr->entries_4[work_no];
-		TryUnmapFile(thisptr, entry.name_0);
+		DatTbl_TryUnloadFile(thisptr, entry.name_0);
 	}
 
 	// Only call DatTbl__DelDatWkNo once we're finished with entry, as that func will clear it...
@@ -195,24 +223,90 @@ bool __fastcall DatTbl__DelAll_Hook(DatTbl* thisptr, void* unused, bool a2)
 {
 	auto ret = DatTbl__DelAll(thisptr, unused, a2);
 
-	if (!mappedFiles.count(thisptr))
+	if (!loadedFiles.count(thisptr))
 		return ret;
 
-	auto& map = mappedFiles[thisptr];
-	for (auto& kvp : map)
-	{
-		::UnmapViewOfFile(kvp.second.data);
-		::CloseHandle(kvp.second.hMap);
-		::CloseHandle(kvp.second.hFile);
-	}
+	auto& map = loadedFiles[thisptr];
 	map.clear();
-	mappedFiles.erase(thisptr);
+	loadedFiles.erase(thisptr);
 
 	return ret;
 }
 
+std::unordered_map<int, FileData> SsTermMain_files;
+void** SsTermMain_MdtPtr = nullptr; // set by SsTermMain::OpeMdtSetNo, seems to be the actual mdt data ptr...
+
+void(__fastcall* SsTermMain__OpeMdtSetNo)(uint8_t* thisptr, void* unused, int mdtSetNo);
+void __fastcall SsTermMain__OpeMdtSetNo_Hook(uint8_t* thisptr, void* unused, int mdtSetNo)
+{
+	SsTermMain__OpeMdtSetNo(thisptr, unused, mdtSetNo);
+
+	// Check if we can override/side-load the requested MDT with a loose version
+	if (mdtSetNo >= 0x18)
+		return; // invalid
+
+	if (!SsTermMain_files.count(mdtSetNo))
+	{
+		// gotta load it
+		int chapter = (GlobalPtr()->curRoomId_4FAC >> 8) & 0xF;
+
+		int realSetNo = mdtSetNo;
+
+		const int MessageCount_op01 = 13;
+		const int MessageCount_op02 = 6;
+		const int MessageCount_op03 = 5;
+
+		// fixups for chapters 2/3 (game code is only really setup to read op01, looks like they hacked in support for op02/op03)
+		if (chapter == 2 && realSetNo >= MessageCount_op01)
+			realSetNo -= MessageCount_op01;
+		else if (chapter == 3 && realSetNo >= (MessageCount_op01 + MessageCount_op02))
+			realSetNo -= (MessageCount_op01 + MessageCount_op02);
+
+		// std::stringstream is broken by Logging.h line 424, weird
+		char pathBuf[4096];
+		sprintf_s(pathBuf, "op\\unpacked\\op%02d_%02d.mdt", chapter, realSetNo);
+
+		std::string path = looseFilePath(pathBuf);
+		if (path.empty())
+			return; // no loose file to load...
+
+		FileData data;
+		if (!data.load(path))
+			return;
+
+		SsTermMain_files[mdtSetNo] = std::move(data);
+	}
+
+	*(void**)(thisptr + 0x44) = SsTermMain_files[mdtSetNo].data;
+	*SsTermMain_MdtPtr = SsTermMain_files[mdtSetNo].data;
+}
+
+void(__cdecl* SndCall)(void* a1, void* a2, void* a3, void* a4, void* a5);
+void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void* a5)
+{
+	// called once game is finished with the MDT, now we can unload it
+	// have to hook the SndCall call inside SsTermMain::quit because it was only accessible by vftable
+	// and all the stack manipulating opcodes broke MakeInline...
+	SndCall(a1, a2, a3, a4, a5);
+
+	SsTermMain_files.clear();
+}
+
 void Init_Misc()
 {
+	// Hook SsTermMain MDT reading functions so we can load loose file instead
+	{
+		auto pattern = hook::pattern("8B 41 44 A3");
+		SsTermMain_MdtPtr = *pattern.count(2).get(0).get<void**>(4);
+
+		pattern = hook::pattern("50 8B CB E8 ? ? ? ? 5F 5E 5B 5D C2");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), SsTermMain__OpeMdtSetNo);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), SsTermMain__OpeMdtSetNo_Hook);
+
+		pattern = hook::pattern("6A 00 6A 00 6A 00 6A 15 6A 00 E8");
+		ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), SndCall);
+		InjectHook(pattern.count(1).get(0).get<uint8_t>(0xA), SsTermMain__quit_SndCall_hook);
+	}
 	// Hook DatTbl funcs, to allow side-loading loose files instead
 	{
 		// DatTbl::GetDat retrieves data pointer from the DAT file - hook it so we can search & read from the local filesystem too
