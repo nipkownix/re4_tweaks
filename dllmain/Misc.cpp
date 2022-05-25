@@ -40,18 +40,15 @@ struct FileData
 {
 	std::string filePath;
 	void* data;
-	HANDLE hFile;
 
 	FileData& operator=(FileData&& o)
 	{
 		filePath = std::move(o.filePath);
 
-		// transfer ownership of data/hFile
+		// transfer ownership of data
 		data = o.data;
-		hFile = o.hFile;
 
 		o.data = nullptr;
-		o.hFile = NULL;
 
 		return *this;
 	}
@@ -60,15 +57,12 @@ struct FileData
 	{
 		if (data)
 			free(data);
-		if (hFile)
-			CloseHandle(hFile);
 		data = nullptr;
-		hFile = NULL;
 	}
 
 	bool load(std::string_view path)
 	{
-		hFile = ::CreateFileA(path.data(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		HANDLE hFile = ::CreateFileA(path.data(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (!hFile)
 			return false;
 
@@ -79,46 +73,44 @@ struct FileData
 			return false;
 
 		DWORD read = 0;
-		bool status = ReadFile(hFile, data, size, &read, nullptr);
-		if (!status || read != size)
-			return false;
+		bool success = ReadFile(hFile, data, size, &read, nullptr) 
+			&& read == size;
 
-		filePath = path;
-		return true;
+		if (success)
+			filePath = path;
+
+		CloseHandle(hFile);
+		return success;
 	}
 };
 
 std::unordered_map<DatTbl*, std::unordered_map<std::string, FileData>> loadedFiles; // key = DatTbl ptr, value = local-path:data
 std::unordered_map<std::string, bool> nonExistentFiles; // files that we know aren't on FS, cheaper to keep track of them instead of querying OS each time
 
-std::string looseFilePath(std::string filePath)
+std::string looseFilePath(const char* filePath)
 {
 	std::string path = filePath;
 	if (nonExistentFiles.count(path))
-		return ""; // we know it's non-existent, so lets get outta here
+		return ""; // we know it's non-existent already, no need to check again
 
 	// Check if file exists at some common paths
+	std::string origPath = path;
 	if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 	{
-		path = "BIO4\\" + path;
+		path = "Bin32\\re4_tweaks\\sideload\\" + origPath;
 		if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 		{
-			path = "..\\" + std::string(filePath);
+			path = "..\\Bin32\\re4_tweaks\\sideload\\" + origPath;
 			if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 			{
-				path = "..\\BIO4\\" + std::string(filePath);
-				if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
-				{
-					nonExistentFiles[filePath] = true;
-					return "";
-				}
+				nonExistentFiles[origPath] = true;
+				return "";
 			}
 		}
 	}
 
 	char fullPath[4096];
 	GetFullPathNameA(path.c_str(), 4096, fullPath, nullptr);
-
 	return fullPath;
 }
 
@@ -339,31 +331,34 @@ void Init_Misc()
 	// (but only if we find a replacement for the placeholder English subs in the game folder)
 	{
 		bool hasSubs =
-			GetFileAttributesA("BIO4\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
-			GetFileAttributesA("event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
-			GetFileAttributesA("..\\BIO4\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
-			GetFileAttributesA("..\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF;
+			GetFileAttributesA("..\\Bin32\\re4_tweaks\\sideload\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
+			GetFileAttributesA("Bin32\\re4_tweaks\\sideload\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF;
 
 		if (hasSubs)
 		{
-			// patch Event::MesSet to allow English subs to be drawn
-			auto pattern = hook::pattern("8A 40 08 3C 02 74 ? 3C 01");
-			injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(5), 2, true);
-
 			// Patch graphics_menu to enable subtitle option
-			pattern = hook::pattern("E8 ? ? ? ? B1 01 3A C1 0F");
-			injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(9), uint16_t(0xE990), true);
+			auto pattern = hook::pattern("E8 ? ? ? ? B1 01 3A C1 0F");
+			if (pattern.size() > 0) // JP exe doesn't contain code for english lang...
+			{
+				injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(9), uint16_t(0xE990), true);
 
-			// Patch second language check inside graphics_menu, unsure what it's doing...
-			pattern = hook::pattern("C7 85 ? ? ? ? FF FF FF FF E8 ? ? ? ? 33 D2 3C 01");
-			uint8_t xorEax[] = {0x31, 0xC0, 0x90, 0x90, 0x90};
-			injector::WriteMemoryRaw(pattern.count(1).get(0).get<uint8_t>(0xA), xorEax, 5, true);
+				// patch Event::MesSet to allow English subs to be drawn
+				pattern = hook::pattern("8A 40 08 3C 02 74 ? 3C 01");
+				injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(5), 2, true);
 
-			// Fix R245EventS00/R22EEventS00 accidentally calling EvtReadExec with a do-not-free-after-use (0x40) flag
-			// (without this fix, those cutscenes will leak memory whenever they're played...)
-			pattern = hook::pattern("6A 50 53 68 ? ? ? ? B9 ? ? ? ? E8");
-			injector::WriteMemory(pattern.count(2).get(0).get<uint8_t>(1), uint8_t(0x10), true);
-			injector::WriteMemory(pattern.count(2).get(1).get<uint8_t>(1), uint8_t(0x10), true);
+				// Patch second language check inside graphics_menu, unsure what it's doing...
+				pattern = hook::pattern("C7 85 ? ? ? ? FF FF FF FF E8 ? ? ? ? 33 D2 3C 01");
+				uint8_t xorEax[] = { 0x31, 0xC0, 0x90, 0x90, 0x90 };
+				injector::WriteMemoryRaw(pattern.count(1).get(0).get<uint8_t>(0xA), xorEax, 5, true);
+
+				// Fix R245EventS00/R22EEventS00 accidentally calling EvtReadExec with a do-not-free-after-use (0x40) flag
+				// (without this fix, those cutscenes will leak memory whenever they're played...)
+				pattern = hook::pattern("6A 50 53 68 ? ? ? ? B9 ? ? ? ? E8");
+				injector::WriteMemory(pattern.count(2).get(0).get<uint8_t>(1), uint8_t(0x10), true);
+				injector::WriteMemory(pattern.count(2).get(1).get<uint8_t>(1), uint8_t(0x10), true);
+
+				Logging::Log() << __FUNCTION__ << " -> English subtitles unlocked";
+			}
 		}
 	}
 
