@@ -508,8 +508,6 @@ void MTXTranspose(const Mtx a, Mtx out)
 	_mm_storeu_ps(out[2], col2);
 }
 
-#if 0
-
 void (*PSMTXScale)(Mtx m, float x, float y, float z);
 void MTXScale(Mtx m, float x, float y, float z)
 {
@@ -689,70 +687,6 @@ void MTXRotAxisRad(Mtx m, const Vec* axis, float rad)
 	m[2][2] = (unit.z * unit.z) * invCosA + cosA;
 	m[2][3] = 0;
 }
-
-long long total_dur;
-long long avg;
-#pragma optimize( "", off )
-void speedtest()
-{
-	Mtx m;
-	m[0][0] = 55667.6666;
-	m[0][1] = 324.125;
-	m[0][2] = 9898.4211;
-	m[0][3] = 43344.4345;
-
-	m[1][0] = 55667.6666;
-	m[1][1] = 324.125;
-	m[1][2] = 9898.4211;
-	m[1][3] = 43344.4345;
-
-	m[2][0] = 55667.6666;
-	m[2][1] = 324.125;
-	m[2][2] = 9898.4211;
-	m[2][3] = 43344.4345;
-
-	Vec v1;
-	v1.x = 100;
-	v1.y = 200;
-	v1.z = 300;
-
-	Vec v2;
-	v2.x = 300;
-	v2.y = 400;
-	v2.z = 500;
-	Vec out;
-	Vec out2;
-	float scale = 123;
-	LARGE_INTEGER start;
-	LARGE_INTEGER end;
-	total_dur = 0;
-	for (int i = 0; i < 1000; i++)
-	{
-		QueryPerformanceCounter(&start);
-		for (int z = 0; z < 10000000; z++)
-		{
-			scale = SQRTF_new((float)z);
-			//MTXMultVecSR(m, &v1, &out); // 8601118.00
-			//scale = GetDistance_new(&v1, &v2);
-			//MTXMultVec(m, &v1, &out);
-			//scale = GetDistance3_SSE1(&v1, &v2);
-			//scale = GetDistance_new(&v1, &v2);
-			//VECSubtract(&v1, &v2, &out);
-			//scale = SQRTF_new((float)i);
-			//MTXMultVec(m, &v1, &out);
-		}
-		QueryPerformanceCounter(&end);
-		auto dur = end.QuadPart - start.QuadPart;
-		total_dur += dur;
-	}
-	avg = total_dur / 1000;
-
-	long long avg2 = avg * 2;
-	long long avg3 = avg2 / avg;
-	avg = avg;
-}
-#pragma optimize( "", on )
-#endif
 
 void Init_MathReimpl()
 {
