@@ -56,6 +56,7 @@ struct Settings
 	bool bFixAshleyBustPhysics;
 	bool bEnableFastMath;
 	bool bEnableReimplementedCloth;
+	bool bPrecacheModels;
 
 	// MISC
 	std::string sWrappedDllPath;

@@ -301,7 +301,7 @@ struct __declspec(align(4)) GLOBALS
   uint32_t field_52E8;
   uint32_t flags_KEY_LOCK_52EC[5];
   uint8_t gap5300[12];
-  int field_530C;
+  uint32_t frameCounter_530C;
   uint32_t freeData_5310[64];
   EM_LIST emList_5410[256];
   uint8_t gap7410[4100];

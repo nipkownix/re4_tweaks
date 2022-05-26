@@ -343,6 +343,7 @@ void Settings::ReadSettings()
 	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", true);
 	cfg.bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", true);
 	cfg.bEnableReimplementedCloth = iniReader.ReadBoolean("FRAME RATE", "EnableReimplementedCloth", false);
+	cfg.bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", false);
 
 	// MISC
 	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
@@ -498,6 +499,7 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
 	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", cfg.bEnableFastMath);
 	iniReader.WriteBoolean("FRAME RATE", "EnableReimplementedCloth", cfg.bEnableReimplementedCloth);
+	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", cfg.bPrecacheModels);
 
 	// MISC
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
