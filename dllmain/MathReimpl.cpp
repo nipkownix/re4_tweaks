@@ -527,6 +527,36 @@ void MTXScale(Mtx m, float x, float y, float z)
 	m[2][3] = 0.0f;
 }
 
+void (*PSMTXScaleApply)(const Mtx src, Mtx dst, float xS, float yS, float zS);
+void MTXScaleApply(const Mtx src, Mtx dst, float xS, float yS, float zS)
+{
+	dst[0][0] = src[0][0] * xS;
+	dst[0][1] = src[0][1] * xS;
+	dst[0][2] = src[0][2] * xS;
+	dst[0][3] = src[0][3] * xS;
+
+	dst[1][0] = src[1][0] * yS;
+	dst[1][1] = src[1][1] * yS;
+	dst[1][2] = src[1][2] * yS;
+	dst[1][3] = src[1][3] * yS;
+
+	dst[2][0] = src[2][0] * zS;
+	dst[2][1] = src[2][1] * zS;
+	dst[2][2] = src[2][2] * zS;
+	dst[2][3] = src[2][3] * zS;
+}
+
+void MTXScaleApply_SSE(const Mtx src, Mtx dst, float xS, float yS, float zS)
+{
+	const __m128 row0 = _mm_loadu_ps(src[0]);
+	const __m128 row1 = _mm_loadu_ps(src[1]);
+	const __m128 row2 = _mm_loadu_ps(src[2]);
+
+	_mm_storeu_ps(dst[0], _mm_mul_ps(row0, _mm_set_ps1(xS)));
+	_mm_storeu_ps(dst[1], _mm_mul_ps(row1, _mm_set_ps1(yS)));
+	_mm_storeu_ps(dst[2], _mm_mul_ps(row2, _mm_set_ps1(zS)));
+}
+
 void (*PSMTXIdentity)(Mtx m);
 void MTXIdentity(Mtx m)
 {
@@ -542,6 +572,122 @@ void MTXIdentity(Mtx m)
 	m[2][1] = 0.0f;
 	m[2][2] = 1.0f;
 	m[2][3] = 0.0f;
+}
+
+void (*PSMTXRotTrig)(Mtx m, char axis, float sinA, float cosA);
+void MTXRotTrig(Mtx m, char axis, float sinA, float cosA)
+{
+	switch (axis)
+	{
+	case 'X':
+	case 'x':
+		_mm_storeu_ps(m[0], _mm_set_ps(0, 0, 0, 1.0f));
+		_mm_storeu_ps(m[1], _mm_set_ps(0, -sinA, cosA, 0));
+		_mm_storeu_ps(m[2], _mm_set_ps(0, cosA, sinA, 0));
+		break;
+	case 'Y':
+	case 'y':
+		_mm_storeu_ps(m[0], _mm_set_ps(0, sinA, 0, cosA));
+		_mm_storeu_ps(m[1], _mm_set_ps(0, 0, 1.0f, 0));
+		_mm_storeu_ps(m[2], _mm_set_ps(0, cosA, 0, -sinA));
+		break;
+	case 'Z':
+	case 'z':
+		_mm_storeu_ps(m[0], _mm_set_ps(0, 0, -sinA, cosA));
+		_mm_storeu_ps(m[1], _mm_set_ps(0, 0, cosA, sinA));
+		_mm_storeu_ps(m[2], _mm_set_ps(0, 1.0f, 0, 0));
+		break;
+	}
+}
+
+void (*PSMTXRotRad)(Mtx m, char axis, float rad);
+void MTXRotRad(Mtx m, char axis, float rad)
+{
+	float sinA = sin(rad);
+	float cosA = cos(rad);
+	switch (axis)
+	{
+	case 'X':
+	case 'x':
+		_mm_storeu_ps(m[0], _mm_set_ps(0, 0, 0, 1.0f));
+		_mm_storeu_ps(m[1], _mm_set_ps(0, -sinA, cosA, 0));
+		_mm_storeu_ps(m[2], _mm_set_ps(0, cosA, sinA, 0));
+		break;
+	case 'Y':
+	case 'y':
+		_mm_storeu_ps(m[0], _mm_set_ps(0, sinA, 0, cosA));
+		_mm_storeu_ps(m[1], _mm_set_ps(0, 0, 1.0f, 0));
+		_mm_storeu_ps(m[2], _mm_set_ps(0, cosA, 0, -sinA));
+		break;
+	case 'Z':
+	case 'z':
+		_mm_storeu_ps(m[0], _mm_set_ps(0, 0, -sinA, cosA));
+		_mm_storeu_ps(m[1], _mm_set_ps(0, 0, cosA, sinA));
+		_mm_storeu_ps(m[2], _mm_set_ps(0, 1.0f, 0, 0));
+		break;
+	}
+}
+
+void (*PSMTXCopy)(const Mtx src, Mtx dst);
+void MTXCopy_SSE(const Mtx src, Mtx dst)
+{
+	if (src == dst)
+		return;
+	_mm_storeu_ps(dst[0], _mm_loadu_ps(src[0]));
+	_mm_storeu_ps(dst[1], _mm_loadu_ps(src[1]));
+	_mm_storeu_ps(dst[2], _mm_loadu_ps(src[2]));
+}
+
+void MTXCopy(const Mtx src, Mtx dst)
+{
+	if (src == dst)
+		return;
+	dst[0][0] = src[0][0];
+	dst[0][1] = src[0][1];
+	dst[0][2] = src[0][2];
+	dst[0][3] = src[0][3];
+	dst[1][0] = src[1][0];
+	dst[1][1] = src[1][1];
+	dst[1][2] = src[1][2];
+	dst[1][3] = src[1][3];
+	dst[2][0] = src[2][0];
+	dst[2][1] = src[2][1];
+	dst[2][2] = src[2][2];
+	dst[2][3] = src[2][3];
+}
+
+void (*PSMTXRotAxisRad)(Mtx m, const Vec* axis, float rad);
+void MTXRotAxisRad(Mtx m, const Vec* axis, float rad)
+{
+	float sinA = sin(rad);
+	float cosA = cos(rad);
+	float invCosA = 1.0f - cosA;
+
+	Vec unit;
+	VECNormalize_SSE1(axis, &unit);
+
+	float x_sinA = (unit.x * sinA);
+	float y_sinA = (unit.y * sinA);
+	float z_sinA = (unit.z * sinA);
+
+	float y_mult = (unit.y * (unit.x * invCosA));
+	float y_mult2 = (unit.y * invCosA * unit.z);
+	float x_mult = (unit.x * invCosA * unit.z);
+
+	m[0][0] = (unit.x * unit.x) * invCosA + cosA;
+	m[0][1] = y_mult - z_sinA;
+	m[0][2] = y_sinA + x_mult;
+	m[0][3] = 0;
+
+	m[1][0] = z_sinA + y_mult;
+	m[1][1] = (unit.y * unit.y) * invCosA + cosA;
+	m[1][2] = y_mult2 - x_sinA;
+	m[1][3] = 0;
+
+	m[2][0] = x_mult - y_sinA;
+	m[2][1] = y_mult2 + x_sinA;
+	m[2][2] = (unit.z * unit.z) * invCosA + cosA;
+	m[2][3] = 0;
 }
 
 long long total_dur;
@@ -838,6 +984,17 @@ void Init_MathReimpl()
 				InjectHook(caller, MTXScale, PATCH_JUMP);
 		}
 
+		// MTXScaleApply
+		{
+			auto pattern = hook::pattern("D9 00 8B 45 ? D9 1C ? 50 50 E8 ? ? ? ? 83 C4 14");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xA)).as_int();
+			ReadCall(caller, PSMTXScaleApply);
+			if (sse1)
+				InjectHook(caller, MTXScaleApply_SSE, PATCH_JUMP);
+			else
+				InjectHook(caller, MTXScaleApply, PATCH_JUMP);
+		}
+
 		// MTXIdentity
 		{
 			auto pattern = hook::pattern("38 86 FD 00 00 00 75 ? 8D 45 ? 50 E8 ? ? ? ? D9 E8");
@@ -852,6 +1009,44 @@ void Init_MathReimpl()
 				InjectHook(caller, MTXIdentity, PATCH_JUMP);
 				InjectHook(caller_0, MTXIdentity, PATCH_JUMP);
 			}
+		}
+
+		// MTXRotTrig
+		{
+			auto pattern = hook::pattern("51 8B 4D ? D9 1C ? 50 51 E8 ? ? ? ? 83 C4 10");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
+			ReadCall(caller, PSMTXRotTrig);
+			if (sse1)
+				InjectHook(caller, MTXRotTrig, PATCH_JUMP);
+		}
+
+		// MTXRotRad
+		{
+			auto pattern = hook::pattern("6A 79 51 E8 ? ? ? ? 8D 55");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(3)).as_int();
+			ReadCall(caller, PSMTXRotRad);
+			if (sse1)
+				InjectHook(caller, MTXRotRad, PATCH_JUMP);
+		}
+
+		// MTXRotAxisRad
+		{
+			auto pattern = hook::pattern("83 C4 08 8D 4D ? D9 1C ? 51 8D 55 ? 52 E8 ? ? ? ?");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xE)).as_int();
+			ReadCall(caller, PSMTXRotAxisRad);
+			if (sse1) // calls into VECNormalize_SSE1
+				InjectHook(caller, MTXRotAxisRad, PATCH_JUMP);
+		}
+
+		// MTXCopy
+		{
+			auto pattern = hook::pattern("50 8D 4E 0C 51 E8 ? ? ? ? 83 C7 70");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(5)).as_int();
+			ReadCall(caller, PSMTXCopy);
+			if (sse1)
+				InjectHook(caller, MTXCopy_SSE, PATCH_JUMP);
+			else
+				InjectHook(caller, MTXCopy, PATCH_JUMP);
 		}
 	}
 
