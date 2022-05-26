@@ -453,7 +453,97 @@ double SQRTF_new(float in)
 	return 0.0f;
 }
 
+void (*PSMTXConcat)(const Mtx a, const Mtx b, Mtx out);
+void MTXConcat(const Mtx a, const Mtx b, Mtx out)
+{
+	const __m128 row0 = _mm_loadu_ps(b[0]);
+	const __m128 row1 = _mm_loadu_ps(b[1]);
+	const __m128 row2 = _mm_loadu_ps(b[2]);
+	const __m128 row3 = _mm_set_ps(1, 0, 0, 0);
+
+	__m128 newRow0 = _mm_mul_ps(row0, _mm_set_ps1(a[0][0]));
+	newRow0 = _mm_add_ps(newRow0, _mm_mul_ps(row1, _mm_set_ps1(a[0][1])));
+	newRow0 = _mm_add_ps(newRow0, _mm_mul_ps(row2, _mm_set_ps1(a[0][2])));
+	newRow0 = _mm_add_ps(newRow0, _mm_mul_ps(row3, _mm_set_ps1(a[0][3])));
+
+	__m128 newRow1 = _mm_mul_ps(row0, _mm_set_ps1(a[1][0]));
+	newRow1 = _mm_add_ps(newRow1, _mm_mul_ps(row1, _mm_set_ps1(a[1][1])));
+	newRow1 = _mm_add_ps(newRow1, _mm_mul_ps(row2, _mm_set_ps1(a[1][2])));
+	newRow1 = _mm_add_ps(newRow1, _mm_mul_ps(row3, _mm_set_ps1(a[1][3])));
+
+	__m128 newRow2 = _mm_mul_ps(row0, _mm_set_ps1(a[2][0]));
+	newRow2 = _mm_add_ps(newRow2, _mm_mul_ps(row1, _mm_set_ps1(a[2][1])));
+	newRow2 = _mm_add_ps(newRow2, _mm_mul_ps(row2, _mm_set_ps1(a[2][2])));
+	newRow2 = _mm_add_ps(newRow2, _mm_mul_ps(row3, _mm_set_ps1(a[2][3])));
+
+	__m128 newRow3 = _mm_mul_ps(row0, _mm_set_ps1(row3.m128_f32[0]));
+	newRow3 = _mm_add_ps(newRow3, _mm_mul_ps(row1, _mm_set_ps1(row3.m128_f32[1])));
+	newRow3 = _mm_add_ps(newRow3, _mm_mul_ps(row2, _mm_set_ps1(row3.m128_f32[2])));
+	newRow3 = _mm_add_ps(newRow3, _mm_mul_ps(row3, _mm_set_ps1(row3.m128_f32[3])));
+
+	_mm_storeu_ps(out[0], newRow0);
+	_mm_storeu_ps(out[1], newRow1);
+	_mm_storeu_ps(out[2], newRow2);
+}
+
+void (*PSMTXTranspose)(const Mtx a, Mtx out);
+void MTXTranspose(const Mtx a, Mtx out)
+{
+	const __m128 row0 = _mm_loadu_ps(a[0]);
+	const __m128 row1 = _mm_loadu_ps(a[1]);
+	const __m128 row2 = _mm_loadu_ps(a[2]);
+	const __m128 row3 = _mm_set_ps(0, 0, 0, 0);
+
+	const __m128 tmp0 = _mm_unpacklo_ps(row0, row1);
+	const __m128 tmp2 = _mm_unpacklo_ps(row2, row3);
+	const __m128 tmp1 = _mm_unpackhi_ps(row0, row1);
+	const __m128 tmp3 = _mm_unpackhi_ps(row2, row3);
+
+	const __m128 col0 = _mm_movelh_ps(tmp0, tmp2);
+	const __m128 col1 = _mm_movehl_ps(tmp2, tmp0);
+	const __m128 col2 = _mm_movelh_ps(tmp1, tmp3);
+
+	_mm_storeu_ps(out[0], col0);
+	_mm_storeu_ps(out[1], col1);
+	_mm_storeu_ps(out[2], col2);
+}
+
 #if 0
+
+void (*PSMTXScale)(Mtx m, float x, float y, float z);
+void MTXScale(Mtx m, float x, float y, float z)
+{
+	m[0][0] = x;
+	m[0][1] = 0.0f;
+	m[0][2] = 0.0f;
+	m[0][3] = 0.0f;
+	m[1][0] = 0.0f;
+	m[1][1] = y;
+	m[1][2] = 0.0f;
+	m[1][3] = 0.0f;
+	m[2][0] = 0.0f;
+	m[2][1] = 0.0f;
+	m[2][2] = z;
+	m[2][3] = 0.0f;
+}
+
+void (*PSMTXIdentity)(Mtx m);
+void MTXIdentity(Mtx m)
+{
+	m[0][0] = 1.0f;
+	m[0][1] = 0.0f;
+	m[0][2] = 0.0f;
+	m[0][3] = 0.0f;
+	m[1][0] = 0.0f;
+	m[1][1] = 1.0f;
+	m[1][2] = 0.0f;
+	m[1][3] = 0.0f;
+	m[2][0] = 0.0f;
+	m[2][1] = 0.0f;
+	m[2][2] = 1.0f;
+	m[2][3] = 0.0f;
+}
+
 long long total_dur;
 long long avg;
 #pragma optimize( "", off )
@@ -539,186 +629,229 @@ void Init_MathReimpl()
 		// VECAdd
 		{
 			auto pattern = hook::pattern("A1 ? ? ? ? 8D 4D ? 51 8B D1 52 05 94 00 00 00 50 E8");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0x12);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECAdd);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0x12)).as_int();
+			ReadCall(caller, PSVECAdd);
 			// alternate version
 			pattern = hook::pattern("56 8D 55 ? 52 56 E8 ? ? ? ? 8B 4D ? 83 C4 ? 5F");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(6);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(6)).as_int();
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), VECAdd, PATCH_JUMP);
-			InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECAdd, PATCH_JUMP);
+			InjectHook(caller, VECAdd, PATCH_JUMP);
+			InjectHook(caller_0, VECAdd, PATCH_JUMP);
 		}
 
 		// VECSubtract
 		{
 			auto pattern = hook::pattern("51 8D 55 ? 52 E8 ? ? ? ? D9 45 ? D8 65 ?");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(5);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECSubtract);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(5)).as_int();
+			ReadCall(caller, PSVECSubtract);
 			// alternate version
 			pattern = hook::pattern("8D 0C 40 8D 14 8B 57 52 E8 ? ? ? ? 8D 45");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(8);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(8)).as_int();
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), VECSubtract, PATCH_JUMP);
-			InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECSubtract, PATCH_JUMP);
+			InjectHook(caller, VECSubtract, PATCH_JUMP);
+			InjectHook(caller_0, VECSubtract, PATCH_JUMP);
 		}
 
 		// VECScale
 		{
 			auto pattern = hook::pattern("83 C4 08 8D 55 ? D9 1C ? 52 8B C2 50 E8");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0xD);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECScale);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xD)).as_int();
+			ReadCall(caller, PSVECScale);
 			// alternate version
 			pattern = hook::pattern("8B 7D ? 51 8D 4D ? D9 1C ? 51 50 E8");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(0xC);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), VECScale, PATCH_JUMP);
-			InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECScale, PATCH_JUMP);
+			InjectHook(caller, VECScale, PATCH_JUMP);
+			InjectHook(caller_0, VECScale, PATCH_JUMP);
 		}
 
 		// VECNormalize
 		{
 			auto pattern = hook::pattern("8D 45 ? 50 8D 4D ? 51 E8 ? ? ? ? D9 45 ? D9 45 ? 83 C4 04 D9 45 ?");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(8);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECNormalize);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(8)).as_int();
+			ReadCall(caller, PSVECNormalize);
 
 			if (sse1)
-				InjectHook(injector::GetBranchDestination(caller).as_int(), VECNormalize_SSE1, PATCH_JUMP);
+				InjectHook(caller, VECNormalize_SSE1, PATCH_JUMP);
 			else
-				InjectHook(injector::GetBranchDestination(caller).as_int(), VECNormalize, PATCH_JUMP);
+				InjectHook(caller, VECNormalize, PATCH_JUMP);
 		}
 
 		// VECDotProduct
 		{
 			auto pattern = hook::pattern("8B B5 ? ? ? ? 8D 4D ? 56 51 E8 ? ? ? ? D9 9D ? ? ? ? D9 85");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0xB);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECDotProduct);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xB)).as_int();
+			ReadCall(caller, PSVECDotProduct);
 			// alternate version
 			pattern = hook::pattern("8D 55 ? 52 8D 45 ? 50 E8 ? ? ? ? D8 1D");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(8);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(8)).as_int();
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), VECDotProduct, PATCH_JUMP);
-			InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECDotProduct, PATCH_JUMP);
+			InjectHook(caller, VECDotProduct, PATCH_JUMP);
+			InjectHook(caller_0, VECDotProduct, PATCH_JUMP);
 		}
 
 		// VECCrossProduct
 		{
 			auto pattern = hook::pattern("DD D9 8D 45 ? DD D8 56 50 E8");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(9);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECCrossProduct);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
+			ReadCall(caller, PSVECCrossProduct);
 			// alternate version
 			pattern = hook::pattern("8D 55 ? 52 8D 45 ? 50 8D 4D ? 51 E8 ? ? ? ? 8D 55 ? 52 8D 45 ? 50 E8");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(0xC);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
 
 			if (sse1)
 			{
-				InjectHook(injector::GetBranchDestination(caller).as_int(), VECCrossProduct_SSE1, PATCH_JUMP);
-				InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECCrossProduct_SSE1, PATCH_JUMP);
+				InjectHook(caller, VECCrossProduct_SSE1, PATCH_JUMP);
+				InjectHook(caller_0, VECCrossProduct_SSE1, PATCH_JUMP);
 			}
 			else
 			{
-				InjectHook(injector::GetBranchDestination(caller).as_int(), VECCrossProduct, PATCH_JUMP);
-				InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECCrossProduct, PATCH_JUMP);
+				InjectHook(caller, VECCrossProduct, PATCH_JUMP);
+				InjectHook(caller_0, VECCrossProduct, PATCH_JUMP);
 			}
 		}
 
 		// VECMag
 		{
 			auto pattern = hook::pattern("E8 ? ? ? ? 8D 55 ? 52 E8 ? ? ? ? D9 5D ? D9 45 ?");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(9);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECMag);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
+			ReadCall(caller, PSVECMag);
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), VECMag, PATCH_JUMP);
+			InjectHook(caller, VECMag, PATCH_JUMP);
 		}
 
 		// VECSquareDistance
 		{
 			auto pattern = hook::pattern("51 8D 95 ? ? ? ? 52 DD 9D ? ? ? ? E8");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0xE);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECSquareDistance);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xE)).as_int();
+			ReadCall(caller, PSVECSquareDistance);
 			// alternate version
 			pattern = hook::pattern("D9 45 ? 8B 55 ? DD 5D ? 8D 4D ? 51 52 E8");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(0xE);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xE)).as_int();
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), VECSquareDistance, PATCH_JUMP);
-			InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECSquareDistance, PATCH_JUMP);
+			InjectHook(caller, VECSquareDistance, PATCH_JUMP);
+			InjectHook(caller_0, VECSquareDistance, PATCH_JUMP);
 		}
 
 		// GetDistance (VECSquareDistance with reversed params...)
 		{
 			auto pattern = hook::pattern("D9 5D ? 8B 18 8D 45 ? 50 E8 ? ? ? ? 0F AF DB");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0x9);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), GetDistance);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0x9)).as_int();
+			ReadCall(caller, GetDistance);
 
 			// alternate version
 			pattern = hook::pattern("D9 5D ? D9 5D ? D9 5D ? D9 5D ? E8 ? ? ? ? D9 45 ? 83 C4 08");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(0xC);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), GetDistance_new, PATCH_JUMP);
-			InjectHook(injector::GetBranchDestination(caller_0).as_int(), GetDistance_new, PATCH_JUMP);
+			InjectHook(caller, GetDistance_new, PATCH_JUMP);
+			InjectHook(caller_0, GetDistance_new, PATCH_JUMP);
 		}
 
 		// VECSquareMag
 		{
 			auto pattern = hook::pattern("E8 ? ? ? ? D9 9D ? ? ? ? 8D 45 ? 83 C4 40 50 E8");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0x12);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECSquareMag);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0x12)).as_int();
+			ReadCall(caller, PSVECSquareMag);
 			// alt ver
 			pattern = hook::pattern("E8 ? ? ? ? 8D 45 ? 50 E8 ? ? ? ? D9 5D ? 8D 4D ? 51 8D 55");
-			auto caller_0 = pattern.count(1).get(0).get<uint8_t>(9);
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), VECSquareMag, PATCH_JUMP);
-			InjectHook(injector::GetBranchDestination(caller_0).as_int(), VECSquareMag, PATCH_JUMP);
+			InjectHook(caller, VECSquareMag, PATCH_JUMP);
+			InjectHook(caller_0, VECSquareMag, PATCH_JUMP);
 		}
 
 		// VECDistance
 		{
 			auto pattern = hook::pattern("8D 55 ? 52 8D 85 ? ? ? ? 50 E8 ? ? ? ? DD 5D ? 8D 4D ?");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0xB);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSVECDistance);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xB)).as_int();
+			ReadCall(caller, PSVECDistance);
 
 			if (sse1)
-				InjectHook(injector::GetBranchDestination(caller).as_int(), VECDistance_SSE1, PATCH_JUMP);
+				InjectHook(caller, VECDistance_SSE1, PATCH_JUMP);
 			else
-				InjectHook(injector::GetBranchDestination(caller).as_int(), VECDistance, PATCH_JUMP);
+				InjectHook(caller, VECDistance, PATCH_JUMP);
 		}
 
 		// GetDistance3 (VECDistance with reversed params...)
 		{
 			auto pattern = hook::pattern("81 C1 94 00 00 00 51 8D 96 ? ? ? ? 52 E8 ? ? ? ? DC 25");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0xE);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), GetDistance3);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xE)).as_int();
+			ReadCall(caller, GetDistance3);
 
 			if (sse1)
-				InjectHook(injector::GetBranchDestination(caller).as_int(), GetDistance3_SSE1, PATCH_JUMP);
+				InjectHook(caller, GetDistance3_SSE1, PATCH_JUMP);
 			else
-				InjectHook(injector::GetBranchDestination(caller).as_int(), GetDistance3_new, PATCH_JUMP);
+				InjectHook(caller, GetDistance3_new, PATCH_JUMP);
 		}
 
 		// MTXMultVec
 		{
 			auto pattern = hook::pattern("DD D8 51 8D 55 ? 52 8D 7E ? 57 E8 ? ? ? ? 8D 45");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0xB);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSMTXMultVec);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xB)).as_int();
+			ReadCall(caller, PSMTXMultVec);
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), MTXMultVec, PATCH_JUMP);
+			InjectHook(caller, MTXMultVec, PATCH_JUMP);
 		}
 
 		// MTXMultVecSR
 		{
 			auto pattern = hook::pattern("D9 96 54 07 00 00 D9 5D ? D9 55 ? D9 5D ? E8");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(0xF);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), PSMTXMultVecSR);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xF)).as_int();
+			ReadCall(caller, PSMTXMultVecSR);
 
-			InjectHook(injector::GetBranchDestination(caller).as_int(), MTXMultVecSR, PATCH_JUMP);
+			InjectHook(caller, MTXMultVecSR, PATCH_JUMP);
 		}
 
 		// SQRTF - replacing this seems to fix the low-fps r104s00 cutscene issue?
 		{
 			auto pattern = hook::pattern("D9 46 ? DD 5D ? D9 1C ? E8 ? ? ? ? DC 6D ? 83 C4 04");
-			auto caller = pattern.count(1).get(0).get<uint8_t>(9);
-			ReadCall(injector::GetBranchDestination(caller).as_int(), SQRTF);
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
+			ReadCall(caller, SQRTF);
 			if (sse1)
-				InjectHook(injector::GetBranchDestination(caller).as_int(), SQRTF_new, PATCH_JUMP);
+				InjectHook(caller, SQRTF_new, PATCH_JUMP);
+		}
+
+		// MTXConcat
+		{
+			auto pattern = hook::pattern("8D 47 3C 50 8D 55 ? 52 50 E8 ? ? ? ? 83 C4 18");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
+			ReadCall(caller, PSMTXConcat);
+			if (sse1)
+				InjectHook(caller, MTXConcat, PATCH_JUMP);
+		}
+
+		// MTXTranspose
+		{
+			auto pattern = hook::pattern("8D 45 ? 50 8D 4D ? 51 E8 ? ? ? ? 83 C4 40 8D 55");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(8)).as_int();
+			ReadCall(caller, PSMTXTranspose);
+			if (sse1)
+				InjectHook(caller, MTXTranspose, PATCH_JUMP);
+		}
+
+		// MTXScale
+		{
+			auto pattern = hook::pattern("D9 5C 24 ? D9 46 0C D9 1C ? 52 E8 ? ? ? ? 8D 45");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xB)).as_int();
+			ReadCall(caller, PSMTXScale);
+			if (sse1)
+				InjectHook(caller, MTXScale, PATCH_JUMP);
+		}
+
+		// MTXIdentity
+		{
+			auto pattern = hook::pattern("38 86 FD 00 00 00 75 ? 8D 45 ? 50 E8 ? ? ? ? D9 E8");
+			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
+			ReadCall(caller, PSMTXIdentity);
+			// alt ver
+			pattern = hook::pattern("8D 45 ? 50 E8 ? ? ? ? 8D 8E A0 00 00 00 51 8D 55");
+			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(4)).as_int();
+
+			if (sse1)
+			{
+				InjectHook(caller, MTXIdentity, PATCH_JUMP);
+				InjectHook(caller_0, MTXIdentity, PATCH_JUMP);
+			}
 		}
 	}
 
