@@ -388,6 +388,22 @@ struct cPlayer // unsure if correct name!
 #pragma pack(pop)
 static_assert(sizeof(cPlayer) == 0xA8, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
 
+struct DatTblEntry
+{
+  /* 0x00 */ char name_0[48];
+  /* 0x30 */ uint32_t flags_30;
+  /* 0x34 */ uint8_t* data_34;
+  /* 0x38 */ void* unk_38;
+};
+static_assert(sizeof(DatTblEntry) == 0x3C, "sizeof(DatTblEntry)");
+
+struct DatTbl
+{
+  /* 0x00 */ int count_0;
+  /* 0x04 */ DatTblEntry* entries_4;
+};
+static_assert(sizeof(DatTbl) == 8, "sizeof(DatTbl)");
+
 std::string GameVersion();
 bool GameVersionIsDebug();
 

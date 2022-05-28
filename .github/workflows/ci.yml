@@ -42,12 +42,21 @@ jobs:
         shell: bash
         run: |
           head -n -1 settings/settings_string.h | tail -n +3 > dinput8.ini
+          
+
+      - name: Copy english subtitle data files
+        shell: bash
+        run: |
+          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Debug/re4_tweaks/
+          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Release/re4_tweaks/
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
           path: |
             Debug/dinput8.dll
+            Debug/re4_tweaks/
             Release/dinput8.dll
+            Release/re4_tweaks/
             dinput8.ini
           name: re4_tweaks_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}

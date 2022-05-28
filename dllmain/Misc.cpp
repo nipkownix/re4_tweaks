@@ -36,8 +36,332 @@ void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
 	}
 }
 
+struct FileData
+{
+	std::string filePath;
+	void* data;
+
+	FileData& operator=(FileData&& o)
+	{
+		filePath = std::move(o.filePath);
+
+		// transfer ownership of data
+		data = o.data;
+
+		o.data = nullptr;
+
+		return *this;
+	}
+
+	~FileData()
+	{
+		if (data)
+			free(data);
+		data = nullptr;
+	}
+
+	bool load(std::string_view path)
+	{
+		HANDLE hFile = ::CreateFileA(path.data(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (!hFile)
+			return false;
+
+		DWORD high = 0;
+		auto size = GetFileSize(hFile, &high);
+		data = malloc(size);
+		if (!data)
+			return false;
+
+		DWORD read = 0;
+		bool success = ReadFile(hFile, data, size, &read, nullptr) 
+			&& read == size;
+
+		if (success)
+			filePath = path;
+
+		CloseHandle(hFile);
+		return success;
+	}
+};
+
+std::unordered_map<DatTbl*, std::unordered_map<std::string, FileData>> loadedFiles; // key = DatTbl ptr, value = local-path:data
+std::unordered_map<std::string, bool> nonExistentFiles; // files that we know aren't on FS, cheaper to keep track of them instead of querying OS each time
+
+std::string looseFilePath(const char* filePath)
+{
+	std::string path = filePath;
+	if (nonExistentFiles.count(path))
+		return ""; // we know it's non-existent already, no need to check again
+
+	// Check if file exists at some common paths
+	std::string origPath = path;
+	if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
+	{
+		path = "Bin32\\re4_tweaks\\sideload\\" + origPath;
+		if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
+		{
+			path = "..\\Bin32\\re4_tweaks\\sideload\\" + origPath;
+			if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
+			{
+				nonExistentFiles[origPath] = true;
+				return "";
+			}
+		}
+	}
+
+	char fullPath[4096];
+	GetFullPathNameA(path.c_str(), 4096, fullPath, nullptr);
+	return fullPath;
+}
+
+bool DatTbl_TryLoadFile(DatTbl* datTbl, const char* filePath, void** dataPtr)
+{
+	std::string path = looseFilePath(filePath);
+
+	if (path.empty())
+		return true; // not found in any loose paths...
+
+	// file exists locally/loosely - load it into memory if we need to, and return ptr to it
+
+	if (loadedFiles.count(datTbl) <= 0)
+		loadedFiles[datTbl] = std::unordered_map<std::string, FileData>();
+
+	if (!loadedFiles[datTbl].count(path))
+	{
+		// File isn't loaded in yet
+		FileData file;
+
+		if (!file.load(path))
+			return true;
+
+		loadedFiles[datTbl][path] = std::move(file);
+	}
+
+	*dataPtr = loadedFiles[datTbl][path].data;
+	return true;
+}
+
+void DatTbl_TryUnloadFile(DatTbl* datTbl, const char* filePath)
+{
+	if (!loadedFiles.count(datTbl))
+		return;
+
+	std::string path = filePath;
+
+	std::string fileKey;
+	auto& map = loadedFiles[datTbl];
+	for (auto& kvp : map)
+	{
+		if (kvp.second.filePath != path)
+			continue;
+
+		fileKey = kvp.first;
+	}
+
+	if (!fileKey.empty())
+		map.erase(fileKey);
+}
+
+bool(__fastcall* DatTbl__GetDat)(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, const char* filePath, uint32_t* work_no_out);
+bool __fastcall DatTbl__GetDat_Hook(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, const char* filePath, uint32_t* work_no_out)
+{
+	// Get the dat file normally first - so a3/work_no_out/etc will be set properly
+	if (!DatTbl__GetDat(thisptr, unused, dataPtr, a3, filePath, work_no_out))
+		return false; // doesn't exist in DAT, possibly corrupt game, return false...
+
+	return DatTbl_TryLoadFile(thisptr, filePath, dataPtr);
+}
+
+bool(__fastcall* DatTbl__GetDatWkNo)(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, int work_no);
+bool __fastcall DatTbl__GetDatWkNo_Hook(DatTbl* thisptr, void* unused, void** dataPtr, uint8_t* a3, int work_no)
+{
+	// Get the dat file normally first - so a3 etc will be set properly
+	auto ret = DatTbl__GetDatWkNo(thisptr, unused, dataPtr, a3, work_no);
+	if (!ret)
+		return false; // doesn't exist in DAT, possibly corrupt game, return false...
+
+	if (work_no >= thisptr->count_0)
+		return false;
+
+	auto& entry = thisptr->entries_4[work_no];
+
+	return DatTbl_TryLoadFile(thisptr, entry.name_0, dataPtr);
+}
+
+bool(__fastcall* DatTbl__DelDat)(DatTbl* thisptr, void* unused, const char* filePath);
+bool __fastcall DatTbl__DelDat_Hook(DatTbl* thisptr, void* unused, const char* filePath)
+{
+	DatTbl_TryUnloadFile(thisptr, filePath);
+
+	// Only call DatTbl__DelDatWkNo once we're finished with entry, as that func will clear it...
+	return DatTbl__DelDat(thisptr, unused, filePath);
+}
+
+bool(__fastcall* DatTbl__DelDatWkNo)(DatTbl* thisptr, void* unused, int work_no);
+bool __fastcall DatTbl__DelDatWkNo_Hook(DatTbl* thisptr, void* unused, int work_no)
+{
+	if (work_no < thisptr->count_0)
+	{
+		auto& entry = thisptr->entries_4[work_no];
+		DatTbl_TryUnloadFile(thisptr, entry.name_0);
+	}
+
+	// Only call DatTbl__DelDatWkNo once we're finished with entry, as that func will clear it...
+	return DatTbl__DelDatWkNo(thisptr, unused, work_no);
+}
+
+bool(__fastcall* DatTbl__DelAll)(DatTbl* thisptr, void* unused, bool a2);
+bool __fastcall DatTbl__DelAll_Hook(DatTbl* thisptr, void* unused, bool a2)
+{
+	auto ret = DatTbl__DelAll(thisptr, unused, a2);
+
+	if (!loadedFiles.count(thisptr))
+		return ret;
+
+	auto& map = loadedFiles[thisptr];
+	map.clear();
+	loadedFiles.erase(thisptr);
+
+	return ret;
+}
+
+std::unordered_map<int, FileData> SsTermMain_files;
+void** SsTermMain_MdtPtr = nullptr; // set by SsTermMain::OpeMdtSetNo, seems to be the actual mdt data ptr...
+
+void(__fastcall* SsTermMain__OpeMdtSetNo)(uint8_t* thisptr, void* unused, int mdtSetNo);
+void __fastcall SsTermMain__OpeMdtSetNo_Hook(uint8_t* thisptr, void* unused, int mdtSetNo)
+{
+	SsTermMain__OpeMdtSetNo(thisptr, unused, mdtSetNo);
+
+	// Check if we can override/side-load the requested MDT with a loose version
+	if (mdtSetNo >= 0x18)
+		return; // invalid
+
+	if (!SsTermMain_files.count(mdtSetNo))
+	{
+		// gotta load it
+		int chapter = (GlobalPtr()->curRoomId_4FAC >> 8) & 0xF;
+
+		int realSetNo = mdtSetNo;
+
+		const int MessageCount_op01 = 13;
+		const int MessageCount_op02 = 6;
+		const int MessageCount_op03 = 5;
+
+		// fixups for chapters 2/3 (game code is only really setup to read op01, looks like they hacked in support for op02/op03)
+		if (chapter == 2 && realSetNo >= MessageCount_op01)
+			realSetNo -= MessageCount_op01;
+		else if (chapter == 3 && realSetNo >= (MessageCount_op01 + MessageCount_op02))
+			realSetNo -= (MessageCount_op01 + MessageCount_op02);
+
+		// std::stringstream is broken by Logging.h line 424, weird
+		char pathBuf[4096];
+		sprintf_s(pathBuf, "op\\unpacked\\op%02d_%02d.mdt", chapter, realSetNo);
+
+		std::string path = looseFilePath(pathBuf);
+		if (path.empty())
+			return; // no loose file to load...
+
+		FileData data;
+		if (!data.load(path))
+			return;
+
+		SsTermMain_files[mdtSetNo] = std::move(data);
+	}
+
+	*(void**)(thisptr + 0x44) = SsTermMain_files[mdtSetNo].data;
+	*SsTermMain_MdtPtr = SsTermMain_files[mdtSetNo].data;
+}
+
+void(__cdecl* SndCall)(void* a1, void* a2, void* a3, void* a4, void* a5);
+void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void* a5)
+{
+	// called once game is finished with the MDT, now we can unload it
+	// have to hook the SndCall call inside SsTermMain::quit because it was only accessible by vftable
+	// and all the stack manipulating opcodes broke MakeInline...
+	SndCall(a1, a2, a3, a4, a5);
+
+	SsTermMain_files.clear();
+}
+
 void Init_Misc()
 {
+	// Hook SsTermMain MDT reading functions so we can load loose file instead
+	{
+		auto pattern = hook::pattern("8B 41 44 A3");
+		SsTermMain_MdtPtr = *pattern.count(2).get(0).get<void**>(4);
+
+		pattern = hook::pattern("50 8B CB E8 ? ? ? ? 5F 5E 5B 5D C2");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), SsTermMain__OpeMdtSetNo);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), SsTermMain__OpeMdtSetNo_Hook);
+
+		pattern = hook::pattern("6A 00 6A 00 6A 00 6A 15 6A 00 E8");
+		ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), SndCall);
+		InjectHook(pattern.count(1).get(0).get<uint8_t>(0xA), SsTermMain__quit_SndCall_hook);
+	}
+	// Hook DatTbl funcs, to allow side-loading loose files instead
+	{
+		// DatTbl::GetDat retrieves data pointer from the DAT file - hook it so we can search & read from the local filesystem too
+		auto pattern = hook::pattern("52 8D 45 ? 50 83 C1 48 E8 ? ? ? ? 84 C0 75 ? 53");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(8)).as_int(), DatTbl__GetDat);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(8)).as_int(), DatTbl__GetDat_Hook);
+
+		// DatTbl::GetDatWkNo retrieves pointer via DAT table index instead of a file path
+		pattern = hook::pattern("52 8D 45 ? 8D 71 48 50 8B CE E8 ? ? ? ? 84 C0 0F");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(10)).as_int(), DatTbl__GetDatWkNo);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(10)).as_int(), DatTbl__GetDatWkNo_Hook);
+
+		// DatTbl::DelDat seems to release the data buffer for a file inside the DAT, hook it so we can release the memory-mapping if needed too
+		pattern = hook::pattern("50 83 C1 48 E8 ? ? ? ? 84 C0 75 ? 68");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(4)).as_int(), DatTbl__DelDat);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(4)).as_int(), DatTbl__DelDat_Hook);
+
+		// DatTbl::DelDatWkNo release memory-map by index...
+		pattern = hook::pattern("8D 73 48 57 8B CE E8 ? ? ? ? 47 3B 7D");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelDatWkNo);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelDatWkNo_Hook);
+
+		// DatTbl::DelAll is called when the game is finished with this DAT, hook it so we can release any memory-mappings we made
+		pattern = hook::pattern("32 C0 5E C3 6A 01 E8 ? ? ? ? 8B 46 04 50 E8");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelAll);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), DatTbl__DelAll_Hook);
+	}
+
+	// Allow subtitles when using English language
+	// (but only if we find a replacement for the placeholder English subs in the game folder)
+	{
+		bool hasSubs =
+			GetFileAttributesA("..\\Bin32\\re4_tweaks\\sideload\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
+			GetFileAttributesA("Bin32\\re4_tweaks\\sideload\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF;
+
+		if (hasSubs)
+		{
+			// Patch graphics_menu to enable subtitle option
+			auto pattern = hook::pattern("E8 ? ? ? ? B1 01 3A C1 0F");
+			if (pattern.size() > 0) // JP exe doesn't contain code for english lang...
+			{
+				injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(9), uint16_t(0xE990), true);
+
+				// patch Event::MesSet to allow English subs to be drawn
+				pattern = hook::pattern("8A 40 08 3C 02 74 ? 3C 01");
+				injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(5), 2, true);
+
+				// Patch second language check inside graphics_menu, unsure what it's doing...
+				pattern = hook::pattern("C7 85 ? ? ? ? FF FF FF FF E8 ? ? ? ? 33 D2 3C 01");
+				uint8_t xorEax[] = { 0x31, 0xC0, 0x90, 0x90, 0x90 };
+				injector::WriteMemoryRaw(pattern.count(1).get(0).get<uint8_t>(0xA), xorEax, 5, true);
+
+				// Fix R245EventS00/R22EEventS00 accidentally calling EvtReadExec with a do-not-free-after-use (0x40) flag
+				// (without this fix, those cutscenes will leak memory whenever they're played...)
+				pattern = hook::pattern("6A 50 53 68 ? ? ? ? B9 ? ? ? ? E8");
+				injector::WriteMemory(pattern.count(2).get(0).get<uint8_t>(1), uint8_t(0x10), true);
+				injector::WriteMemory(pattern.count(2).get(1).get<uint8_t>(1), uint8_t(0x10), true);
+
+				Logging::Log() << __FUNCTION__ << " -> English subtitles unlocked";
+			}
+		}
+	}
+
 	// Remove savegame SteamID checks, allows easier save transfers
 	{
 		auto pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
