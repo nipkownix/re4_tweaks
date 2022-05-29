@@ -288,7 +288,7 @@ BYTE(__stdcall *j_PlSetCostume_Orig)();
 BYTE __stdcall j_PlSetCostume_Hook()
 {
 	BYTE val = j_PlSetCostume_Orig();
-	
+
 	if (!cfg.bOverrideCostumes)
 		return val;
 
@@ -464,12 +464,44 @@ void Init_Misc()
 	}
 
 	// Silence armored Ashley
-	if (cfg.bSilenceArmoredAshley)
 	{
-		auto pattern = hook::pattern("CB 4F 00 00 02 75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85");
-		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(5), (uint8_t)0xEB, true); // jne -> jmp
+		auto pattern = hook::pattern("83 C4 ? 80 BA ? ? ? ? 02 75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85 ? ? ? ? BE");
+		struct ClankClanklHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int AshleyCostumeID = GlobalPtr()->Costume_subchar_4FCB;
 
-		Logging::Log() << "SilenceArmoredAshley enabled";
+				// Mimic what CMP does, since we're overwriting it.
+				if (AshleyCostumeID > 2)
+				{
+					// Clear both flags
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+				else if (AshleyCostumeID < 2)
+				{
+					// ZF = 0, CF = 1
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.carry_flag);
+				}
+				else if (AshleyCostumeID == 2)
+				{
+					// ZF = 1, CF = 0
+					regs.ef |= (1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+
+				if (cfg.bSilenceArmoredAshley)
+				{
+					// Make the game think Ashley isn't using the clanky costume
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.carry_flag);
+				}
+			}
+		}; injector::MakeInline<ClankClanklHook>(pattern.count(1).get(0).get<uint32_t>(3), pattern.count(1).get(0).get<uint32_t>(10));
+
+		Logging::Log() << "SilenceArmoredAshley applied";
 	}
 
 	// Check if the game is running at a valid frame rate

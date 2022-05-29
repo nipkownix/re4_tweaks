@@ -654,11 +654,7 @@ void cfgMenuRender()
 				ImGui::Spacing();
 
 				// SilenceArmoredAshley
-				if (ImGui::Checkbox("SilenceArmoredAshley", &cfg.bSilenceArmoredAshley))
-				{
-					cfg.HasUnsavedChanges = true;
-					NeedsToRestart = true;
-				}
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &cfg.bSilenceArmoredAshley);
 				ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
 				ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
 
