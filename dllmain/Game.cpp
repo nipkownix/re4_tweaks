@@ -52,6 +52,44 @@ uint8_t* GameSavePtr()
 	return *g_GameSave_BufPtr;
 }
 
+CharacterID CharacterFromPlTypeId(std::uint8_t id)
+{
+	CharacterID result;
+
+	switch (id)
+	{
+	case 0:
+		result = CharacterID::Leon;
+		break;
+
+	case 1:
+		result = CharacterID::Ashley;
+		break;
+
+	case 2:
+		result = CharacterID::Ada;
+		break;
+
+	case 3:
+		result = CharacterID::HUNK;
+		break;
+
+	case 4:
+		result = CharacterID::Krauser;
+		break;
+
+	case 5:
+		result = CharacterID::Wesker;
+		break;
+
+	default:
+		result = CharacterID::Leon;
+		break;
+	}
+
+	return result;
+}
+
 bool Init_Game()
 {
 	// Detect game version

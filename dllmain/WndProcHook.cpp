@@ -7,6 +7,7 @@
 #include "ConsoleWnd.h"
 #include "input.hpp"
 #include "Logging/Logging.h"
+#include "Game.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -20,6 +21,15 @@ int curPosY;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
+		case WM_KEYDOWN:
+			#ifdef VERBOSE
+			if (wParam == VK_NUMPAD3)
+			{
+				con.AddLogChar("Sono me... dare no me?");
+			}
+			#endif
+			break;
+
 		case WM_MOVE:
 			// Get current window position
 			curPosX = (int)(short)LOWORD(lParam);   // horizontal position 

@@ -284,6 +284,48 @@ void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void*
 	SsTermMain_files.clear();
 }
 
+BYTE(__stdcall *j_PlSetCostume_Orig)();
+BYTE __stdcall j_PlSetCostume_Hook()
+{
+	BYTE val = j_PlSetCostume_Orig();
+	
+	#ifdef VERBOSE
+	con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
+	con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+	con.AddConcatLog("Subchar costume: ", GlobalPtr()->Costume_subchar_4FCB);
+	#endif
+
+	if (!cfg.bOverrideCostumes)
+		return val;
+
+	CharacterID curPlType = CharacterFromPlTypeId(GlobalPtr()->curPlType_4FC8);
+
+	switch (curPlType)
+	{
+	case CharacterID::Leon:
+		GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Leon;
+		GlobalPtr()->Costume_subchar_4FCB = (uint8_t)cfg.CostumeOverride.Ashley;
+		break;
+	case CharacterID::Ashley:
+		GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Ashley;
+		break;
+	case CharacterID::Ada:
+	{
+		// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
+		uint8_t costumeID = (uint8_t)cfg.CostumeOverride.Ada;
+		if (costumeID == 2)
+			costumeID++;
+
+		GlobalPtr()->plCostume_4FC9 = costumeID;
+		break;
+	}
+	default:
+		break; // HUNK, Krauser and Wesker only have one costume
+	}
+
+	return val;
+}
+
 void Init_Misc()
 {
 	// Hook SsTermMain MDT reading functions so we can load loose file instead
@@ -367,6 +409,14 @@ void Init_Misc()
 		auto pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
 		Nop(pattern.count(1).get(0).get<uint8_t>(0x9), 6);
 		Nop(pattern.count(1).get(0).get<uint8_t>(0x18), 6);
+	}
+
+	// Hook PlSetCostume to allow custom costume combos
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 66 83 88 ? ? ? ? ? 5B");
+		ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), j_PlSetCostume_Orig);
+		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), j_PlSetCostume_Hook);
+
 	}
 
 	// Mafia Leon on cutscenes

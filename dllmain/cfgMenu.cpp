@@ -16,6 +16,9 @@ bool NeedsToRestart;
 
 int MenuTipTimer = 500; // cfgMenu tooltip timer
 int Tab = 1;
+int iCostumeComboLeon;
+int iCostumeComboAshley;
+int iCostumeComboAda;
 
 std::string cfgMenuTitle = "re4_tweaks";
 
@@ -564,6 +567,39 @@ void cfgMenuRender()
 			// Misc tab
 			if (Tab == 6)
 			{
+				// OverrideCostumes
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &cfg.bOverrideCostumes);
+				ImGui::TextWrapped("Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.");
+
+				ImGui::BeginDisabled(!cfg.bOverrideCostumes);
+				ImGui::PushItemWidth(150);
+				ImGui::Combo("Leon", &iCostumeComboLeon, sLeonCostumeNames, IM_ARRAYSIZE(sLeonCostumeNames));
+				if (ImGui::IsItemEdited())
+				{
+					cfg.HasUnsavedChanges = true;
+					cfg.CostumeOverride.Leon = (LeonCostumes)iCostumeComboLeon;
+				}
+
+				ImGui::Combo("Ashley", &iCostumeComboAshley, sAshleyCostumeNames, IM_ARRAYSIZE(sAshleyCostumeNames));
+				if (ImGui::IsItemEdited())
+				{
+					cfg.HasUnsavedChanges = true;
+					cfg.CostumeOverride.Ashley = (AshleyCostumes)iCostumeComboAshley;
+				}
+
+				ImGui::Combo("Ada", &iCostumeComboAda, sAdaCostumeNames, IM_ARRAYSIZE(sAdaCostumeNames));
+				if (ImGui::IsItemEdited())
+				{
+					cfg.HasUnsavedChanges = true;
+					cfg.CostumeOverride.Ada = (AdaCostumes)iCostumeComboAda;
+				}
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// AshleyJPCameraAngles
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &cfg.bAshleyJPCameraAngles);
 				ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");

@@ -10,6 +10,10 @@
 
 Settings cfg;
 
+const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
+const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
+const char* sAdaCostumeNames[] = {"RE2", "Spy", "Normal"};
+
 struct key_type {
 	int vk;
 	int dik;
@@ -344,6 +348,39 @@ void Settings::ReadSettings()
 
 	// MISC
 	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
+
+	cfg.bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", false);
+
+	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
+	if (!buf.empty())
+	{
+		if (buf == "Jacket") cfg.CostumeOverride.Leon = LeonCostumes::Jacket;
+		if (buf == "Normal") cfg.CostumeOverride.Leon = LeonCostumes::Normal;
+		if (buf == "Vest") cfg.CostumeOverride.Leon = LeonCostumes::Vest;
+		if (buf == "RPD") cfg.CostumeOverride.Leon = LeonCostumes::RPD;
+		if (buf == "Mafia") cfg.CostumeOverride.Leon = LeonCostumes::Mafia;
+	}
+
+	buf = iniReader.ReadString("MISC", "AshleyCostume", "");
+	if (!buf.empty())
+	{
+		if (buf == "Normal") cfg.CostumeOverride.Ashley = AshleyCostumes::Normal;
+		if (buf == "Popstar") cfg.CostumeOverride.Ashley = AshleyCostumes::Popstar;
+		if (buf == "Armor") cfg.CostumeOverride.Ashley = AshleyCostumes::Armor;
+	}
+
+	buf = iniReader.ReadString("MISC", "AdaCostume", "");
+	if (!buf.empty())
+	{
+		if (buf == "RE2") cfg.CostumeOverride.Ada = AdaCostumes::RE2;
+		if (buf == "Spy") cfg.CostumeOverride.Ada = AdaCostumes::Spy;
+		if (buf == "Normal") cfg.CostumeOverride.Ada = AdaCostumes::Normal;
+	}
+
+	iCostumeComboLeon = (int)cfg.CostumeOverride.Leon;
+	iCostumeComboAshley = (int)cfg.CostumeOverride.Ashley;
+	iCostumeComboAda = (int)cfg.CostumeOverride.Ada;
+
 	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
 
 	cfg.iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", -1);
@@ -496,6 +533,9 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
 
 	// MISC
+	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[(int)cfg.CostumeOverride.Leon]));
+	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[(int)cfg.CostumeOverride.Ashley]));
+	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[(int)cfg.CostumeOverride.Ada]));
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
 	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);

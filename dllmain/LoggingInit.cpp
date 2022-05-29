@@ -162,6 +162,18 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "WrappedDllPath", cfg.sWrappedDllPath.data());
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideCostumes", cfg.bOverrideCostumes ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "LeonCostume", sLeonCostumeNames[(int)cfg.CostumeOverride.Leon]);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AshleyCostume", sAshleyCostumeNames[(int)cfg.CostumeOverride.Ashley]);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "AdaCostume", sAdaCostumeNames[(int)cfg.CostumeOverride.Ada]);
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles ? "true" : "false");
 	Logging::Log() << settingBuf;
 

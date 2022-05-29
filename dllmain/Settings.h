@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include "Game.h"
 
 struct Settings
 {
@@ -57,6 +58,15 @@ struct Settings
 
 	// MISC
 	std::string sWrappedDllPath;
+	bool bOverrideCostumes;
+
+	struct CostumeOverrideList
+	{
+		LeonCostumes Leon;
+		AshleyCostumes Ashley;
+		AdaCostumes Ada;
+	} CostumeOverride;
+
 	bool bAshleyJPCameraAngles;
 	int iViolenceLevelOverride;
 	bool bAllowSellingHandgunSilencer;
@@ -95,6 +105,10 @@ struct Settings
 };
 
 extern Settings cfg;
+
+extern const char* sLeonCostumeNames[5];
+extern const char* sAshleyCostumeNames[3];
+extern const char* sAdaCostumeNames[3];
 
 // Parses an key combination string into a vector of VKs
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);
