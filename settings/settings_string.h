@@ -153,6 +153,17 @@ PrecacheModels = false
 ; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)
 ;WrappedDLLPath = 
 
+; Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.
+OverrideCostumes = false
+
+; Possible costume values:
+; Leon: Jacket, Normal, Vest, RPD, Mafia
+; Ashley: Normal, Popstar, Armor
+; Ada: RE2, Spy, Normal
+LeonCostume = Jacket
+AshleyCostume = Normal
+AdaCostume = Normal
+
 ; Unlocks the JP-only classic camera angles during Ashley's segment.
 AshleyJPCameraAngles = false
 

@@ -2,6 +2,39 @@
 #include <cstdint>
 #include "GameFlags.h"
 
+enum class CharacterID : std::uint8_t
+{
+	Leon,
+	Ashley,
+	Ada,
+	HUNK,
+	Krauser,
+	Wesker
+};
+
+enum class LeonCostumes
+{
+	Jacket,
+	Normal,
+	Vest,
+	RPD,
+	Mafia
+};
+
+enum class AshleyCostumes
+{
+	Normal,
+	Popstar,
+	Armor
+};
+
+enum class AdaCostumes
+{
+	RE2,
+	Spy,
+	Normal
+};
+
 // From GC SDK?
 typedef struct tagVec // PS2 seems to refer to these via the tag names
 {
@@ -269,10 +302,10 @@ struct __declspec(align(4)) GLOBALS
   uint8_t field_4FC5;
   uint8_t field_4FC6;
   uint8_t field_4FC7;
-  uint8_t curPlType_4FC8;
-  uint8_t field_4FC9;
+  uint8_t curPlType_4FC8; // 0: Leon; 1: Ashley; 2: Ada; 3: HUNK; 4: Krauser; 5: Wesker
+  uint8_t plCostume_4FC9; // Leon {0: Jacket, 1: Normal, 2: Vest, 3: RPD, 4: Mafia } || Ashley {0: Normal, 1: Popstar, 2: Armor} || Ada { 0:RE2, 1:Spy, 2:RE2 again?, 3:Normal } || HUNK { 0:Normal } | Krauser { 0:Normal } | Wesker { 0:Normal }
   uint8_t field_4FCA;
-  uint8_t field_4FCB;
+  uint8_t Costume_subchar_4FCB; // Ashley {0: Normal, 1: Popstar, 2: Armor}
   uint16_t field_4FCC;
   uint16_t field_4FCE;
   float field_4FD0;
@@ -409,6 +442,22 @@ struct PenClothAtTable
 };
 static_assert(sizeof(PenClothAtTable) == 0x8C, "sizeof(PenClothAtTable)");
 
+struct DatTblEntry
+{
+  /* 0x00 */ char name_0[48];
+  /* 0x30 */ uint32_t flags_30;
+  /* 0x34 */ uint8_t* data_34;
+  /* 0x38 */ void* unk_38;
+};
+static_assert(sizeof(DatTblEntry) == 0x3C, "sizeof(DatTblEntry)");
+
+struct DatTbl
+{
+  /* 0x00 */ int count_0;
+  /* 0x04 */ DatTblEntry* entries_4;
+};
+static_assert(sizeof(DatTbl) == 8, "sizeof(DatTbl)");
+
 std::string GameVersion();
 bool GameVersionIsDebug();
 
@@ -416,6 +465,8 @@ GLOBALS* GlobalPtr();
 SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
 uint8_t* GameSavePtr();
+
+CharacterID CharacterFromPlTypeId(std::uint8_t id);
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0
