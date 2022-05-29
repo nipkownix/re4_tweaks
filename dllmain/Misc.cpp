@@ -289,12 +289,6 @@ BYTE __stdcall j_PlSetCostume_Hook()
 {
 	BYTE val = j_PlSetCostume_Orig();
 	
-	#ifdef VERBOSE
-	con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
-	con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
-	con.AddConcatLog("Subchar costume: ", GlobalPtr()->Costume_subchar_4FCB);
-	#endif
-
 	if (!cfg.bOverrideCostumes)
 		return val;
 
@@ -322,6 +316,12 @@ BYTE __stdcall j_PlSetCostume_Hook()
 	default:
 		break; // HUNK, Krauser and Wesker only have one costume
 	}
+
+	#ifdef VERBOSE
+	con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
+	con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+	con.AddConcatLog("Subchar costume: ", GlobalPtr()->Costume_subchar_4FCB);
+	#endif
 
 	return val;
 }
@@ -417,6 +417,38 @@ void Init_Misc()
 		ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), j_PlSetCostume_Orig);
 		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), j_PlSetCostume_Hook);
 
+		// Fix instructions that are checking for Ashley's armor costume instead of Leon's mafia costume, which can a bunch of issues
+		//
+		// PlClothSetLeon -- Issue: Would not apply jacket physics if Ashley isn't armored
+		pattern = hook::pattern("80 B8 ? ? ? ? 02 75 ? 6A ? 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 66 85 ? 75 ? A1");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+
+		// Chicago Typewriter -- Issue: if Ashley is armored, Leon's Chicago Typewriter reload animation would always be the special Mafia one, regardless of Leon's costume
+		auto pattern_wep11_r2_reload = hook::pattern("80 B8 ? ? ? ? ? D9 EE 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 8B 86");
+		auto pattern_wep11_r2_reload_2 = hook::pattern("80 B8 ? ? ? ? ? 75 ? 38 98 ? ? ? ? 75 ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 0F B6 88");
+		auto pattern_ReadWepData = hook::pattern("80 B9 ? ? ? ? ? 75 ? BB ? ? ? ? EB ? BB ? ? ? ? 8D 3C DD");
+		auto pattern_cObjTompson__setMotion = hook::pattern("80 B8 ? ? ? ? ? 75 ? 38 88 ? ? ? ? 75 ? 8B 96 ? ? ? ? 89 8A ? ? ? ? 8B 86 ? ? ? ? 89");
+		auto pattern_cPlayer__seqSeCtrl = hook::pattern("80 B8 ? ? ? ? ? 75 ? 80 B8 ? ? ? ? ? 75 ? 83 FB ? 77 ? 0F B6 8B ? ? ? ? FF 24 8D");
+		auto pattern_cObjTompson__moveReload = hook::pattern("80 B9 ? ? ? ? ? 75 ? 80 B9 ? ? ? ? ? 0F 84 ? ? ? ? 80 BE ? ? ? ? ? 0F B6 81");
+	
+		injector::WriteMemory(pattern_wep11_r2_reload.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+		injector::WriteMemory(pattern_wep11_r2_reload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+
+		injector::WriteMemory(pattern_wep11_r2_reload_2.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+		injector::WriteMemory(pattern_wep11_r2_reload_2.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+
+		injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+		injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+
+		injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+		injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+
+		injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+		injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+
+		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
 	}
 
 	// Mafia Leon on cutscenes
