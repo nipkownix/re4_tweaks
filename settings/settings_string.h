@@ -140,12 +140,11 @@ FixAshleyBustPhysics = true
 ;WrappedDLLPath = 
 
 ; Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.
-OverrideCostumes = false
-
 ; Possible costume values:
 ; Leon: Jacket, Normal, Vest, RPD, Mafia
 ; Ashley: Normal, Popstar, Armor
 ; Ada: RE2, Spy, Normal
+OverrideCostumes = false
 LeonCostume = Jacket
 AshleyCostume = Normal
 AdaCostume = Normal
