@@ -10,12 +10,27 @@
 #include "input.hpp"
 #include "EndSceneHook.h"
 #include "Patches.h"
+#include "AudioTweaks.h"
 
 bool bCfgMenuOpen;
 bool NeedsToRestart;
 
+enum class MenuTab
+{
+	Display,
+	Audio,
+	Mouse,
+	Keyboard,
+	Controller,
+	Framerate,
+	Misc,
+	Memory,
+	Hotkeys,
+	NumTabs,
+};
+
 int MenuTipTimer = 500; // cfgMenu tooltip timer
-int Tab = 1;
+MenuTab Tab = MenuTab::Display;
 int iCostumeComboLeon;
 int iCostumeComboAshley;
 int iCostumeComboAda;
@@ -39,7 +54,7 @@ void cfgMenuBinding()
 
 void cfgMenuRender()
 {
-	ImGui::SetNextWindowSize(ImVec2(910, 570), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(910, 630), ImGuiCond_FirstUseEver);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(910, (570 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
 
 	if (ImGui::Begin(cfgMenuTitle.data(), 0))
@@ -52,46 +67,51 @@ void cfgMenuRender()
 			static ImVec4 active = ImVec4(41.0f / 255.0f, 40.0f / 255.0f, 41.0f / 255.0f, 255.0f / 255.0f);
 			static ImVec4 inactive = ImVec4(31.0f / 255.0f, 30.0f / 255.0f, 31.0f / 255.0f, 255.0f / 255.0f);
 
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 1 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Display ? active : inactive);
 			if (ImGui::Button(ICON_FA_DESKTOP " Display", ImVec2(230 - 15, 41)))
-				Tab = 1;
+				Tab = MenuTab::Display;
 
 			ImGui::Spacing();
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 2 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Audio ? active : inactive);
+			if (ImGui::Button(ICON_FA_HEADPHONES " Audio", ImVec2(230 - 15, 41)))
+				Tab = MenuTab::Audio;
+
+			ImGui::Spacing();
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Mouse ? active : inactive);
 			if (ImGui::Button(ICON_FA_LOCATION_ARROW " Mouse", ImVec2(230 - 15, 41)))
-				Tab = 2;
+				Tab = MenuTab::Mouse;
 
 			ImGui::Spacing();
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 3 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Keyboard ? active : inactive);
 			if (ImGui::Button(ICON_FA_KEYBOARD " Keyboard", ImVec2(230 - 15, 41)))
-				Tab = 3;
+				Tab = MenuTab::Keyboard;
 
 			ImGui::Spacing();
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 4 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Controller ? active : inactive);
 			if (ImGui::Button(ICON_FA_JOYSTICK " Controller", ImVec2(230 - 15, 41)))
-				Tab = 4;
+				Tab = MenuTab::Controller;
 
 			ImGui::Spacing();
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 5 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Framerate ? active : inactive);
 			if (ImGui::Button(ICON_FA_CHESS_CLOCK " Frame rate", ImVec2(230 - 15, 41)))
-				Tab = 5;
+				Tab = MenuTab::Framerate;
 
 			ImGui::Spacing();
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 6 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Misc ? active : inactive);
 			if (ImGui::Button(ICON_FA_COG " Misc", ImVec2(230 - 15, 41)))
-				Tab = 6;
+				Tab = MenuTab::Misc;
 
 			ImGui::Spacing();
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 7 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Memory ? active : inactive);
 			if (ImGui::Button(ICON_FA_CALCULATOR " Memory", ImVec2(230 - 15, 41)))
-				Tab = 7;
+				Tab = MenuTab::Memory;
 
 			ImGui::Spacing();
-			ImGui::PushStyleColor(ImGuiCol_Button, Tab == 8 ? active : inactive);
+			ImGui::PushStyleColor(ImGuiCol_Button, Tab == MenuTab::Hotkeys ? active : inactive);
 			if (ImGui::Button(ICON_FA_LAMBDA " Hotkeys", ImVec2(230 - 15, 41)))
-				Tab = 8;
+				Tab = MenuTab::Hotkeys;
 
-			ImGui::PopStyleColor(8);
+			ImGui::PopStyleColor(int(MenuTab::NumTabs));
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
@@ -148,7 +168,7 @@ void cfgMenuRender()
 			static ImGuiTableFlags TableFlags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ContextMenuInBody;
 
 			// Display tab
-			if (Tab == 1)
+			if (Tab == MenuTab::Display)
 			{
 				// Config menu font size
 				if (ImGui::Button("-"))
@@ -339,8 +359,26 @@ void cfgMenuRender()
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &cfg.bRememberWindowPos);
 			}
 
+			// Audio tab
+			if (Tab == MenuTab::Audio)
+			{
+				bool changed = ImGui::SliderFloat("Music/FMV Volume", &cfg.fVolumeBGM, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+				changed |= ImGui::SliderFloat("Effect Volume", &cfg.fVolumeSE, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+				if (changed)
+				{
+					cfg.HasUnsavedChanges = true;
+					AudioTweaks_UpdateVolume();
+				}
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				ImGui::TextWrapped("Any currently playing audio usually won't be affected until the audio track has been reloaded (eg. by reloading the level)");
+			}
+
 			// Mouse tab
-			if (Tab == 2)
+			if (Tab == MenuTab::Mouse)
 			{
 				if (ImGui::BeginTable("FOVTable", 2, TableFlags))
 				{
@@ -418,7 +456,7 @@ void cfgMenuRender()
 			}
 
 			// Keyboard tab
-			if (Tab == 3)
+			if (Tab == MenuTab::Keyboard)
 			{
 				// Inv flip key bindings
 				ImGui::TextWrapped("Key bindings for flipping items in the inventory screen when using keyboard and mouse.");
@@ -464,7 +502,7 @@ void cfgMenuRender()
 			}
 
 			// Controller tab
-			if (Tab == 4)
+			if (Tab == MenuTab::Controller)
 			{
 				// ControllerSensitivity
 				if (ImGui::BeginTable("CSensTable", 2, TableFlags))
@@ -532,7 +570,7 @@ void cfgMenuRender()
 			}
 
 			// Frame rate tab
-			if (Tab == 5)
+			if (Tab == MenuTab::Framerate)
 			{
 				// FixFallingItemsSpeed
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &cfg.bFixFallingItemsSpeed);
@@ -565,7 +603,7 @@ void cfgMenuRender()
 			}
 
 			// Misc tab
-			if (Tab == 6)
+			if (Tab == MenuTab::Misc)
 			{
 				// OverrideCostumes
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &cfg.bOverrideCostumes);
@@ -716,7 +754,7 @@ void cfgMenuRender()
 			}
 
 			// Memory tab
-			if (Tab == 7)
+			if (Tab == MenuTab::Memory)
 			{
 				// AllowHighResolutionSFD
 				if (ImGui::Checkbox("AllowHighResolutionSFD", &cfg.bAllowHighResolutionSFD))
@@ -754,7 +792,7 @@ void cfgMenuRender()
 			}
 
 			// Hotkeys tab
-			if (Tab == 8)
+			if (Tab == MenuTab::Hotkeys)
 			{
 				ImGui::TextWrapped("All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names.");
 				ImGui::TextWrapped("(Press \"Save\" for changes to take effect.)");

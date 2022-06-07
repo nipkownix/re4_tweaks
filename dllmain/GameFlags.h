@@ -534,11 +534,16 @@ struct FlagCategoryInfo
 constexpr uint32_t GetFlagValue(uint32_t flagIndex, uint32_t& offset)
 {
 	offset = (flagIndex / 32) * 4;
-	return 0x80000000 >> (flagIndex & 0x1F);
+	return 0x80000000 >> (flagIndex & 31);
 }
 
 // Only use this on flags with less than 32 values
 constexpr uint32_t GetFlagValue(uint32_t flagIndex)
 {
-	return 0x80000000 >> (flagIndex & 0x1F);
+	return 0x80000000 >> (flagIndex & 31);
+}
+
+inline bool FlagIsSet(uint32_t* flagValues, uint32_t flagIndex)
+{
+	return flagValues[(flagIndex / 32)] & (0x80000000 >> (flagIndex & 31));
 }

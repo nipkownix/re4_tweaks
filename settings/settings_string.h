@@ -53,6 +53,12 @@ WindowPositionY = -1
 ; Remember the last window position. This automatically updates the "WindowPositionX" and "WindowPositionY" values.
 RememberWindowPos = false
 
+[AUDIO]
+; Allows seperate adjustment of background music/FMV & sound effect volume
+; 1.0 is 100%, 0.5 is 50%, range is 0.0 to 1.0
+VolumeBGM = 1.0
+VolumeSE = 1.0
+
 [MOUSE]
 ; Makes it so the mouse turns the character instead of controlling the camera.
 ; "Modern" aiming mode in the game's settings is recomended.

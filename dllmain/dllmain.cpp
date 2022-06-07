@@ -45,6 +45,8 @@ void Init_Main()
 	// Various display-related tweaks
 	Init_DisplayTweaks();
 
+	Init_AudioTweaks();
+
 	Init_KeyboardMouseTweaks();
 
 	Init_ControllerTweaks();

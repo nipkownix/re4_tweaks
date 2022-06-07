@@ -25,6 +25,10 @@ struct Settings
 	int iWindowPositionY;
 	bool bRememberWindowPos;
 
+	// AUDIO
+	float fVolumeBGM;
+	float fVolumeSE;
+
 	// MOUSE
 	bool bUseMouseTurning;
 	float fTurnSensitivity;

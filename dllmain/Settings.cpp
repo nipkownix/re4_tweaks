@@ -305,6 +305,13 @@ void Settings::ReadSettings()
 	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
 
+	// AUDIO
+	cfg.fVolumeBGM = iniReader.ReadFloat("AUDIO", "VolumeBGM", 1.0f);
+	cfg.fVolumeBGM = fmin(fmax(cfg.fVolumeBGM, 0.0f), 1.0f); // limit between 0.0 - 1.0
+
+	cfg.fVolumeSE = iniReader.ReadFloat("AUDIO", "VolumeSE", 1.0f);
+	cfg.fVolumeSE = fmin(fmax(cfg.fVolumeSE, 0.0f), 1.0f); // limit between 0.0 - 1.0
+
 	// MOUSE
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
@@ -501,6 +508,10 @@ void Settings::WriteSettings()
 	iniReader.WriteInteger("DISPLAY", "WindowPositionX", cfg.iWindowPositionX);
 	iniReader.WriteInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
 	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
+
+	// AUDIO
+	iniReader.WriteFloat("AUDIO", "VolumeBGM", cfg.fVolumeBGM);
+	iniReader.WriteFloat("AUDIO", "VolumeSE", cfg.fVolumeSE);
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
