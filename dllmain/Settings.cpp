@@ -312,6 +312,9 @@ void Settings::ReadSettings()
 	cfg.fVolumeSE = iniReader.ReadFloat("AUDIO", "VolumeSE", 1.0f);
 	cfg.fVolumeSE = fmin(fmax(cfg.fVolumeSE, 0.0f), 1.0f); // limit between 0.0 - 1.0
 
+	cfg.fVolumeCutscene = iniReader.ReadFloat("AUDIO", "VolumeCutscene", 1.0f);
+	cfg.fVolumeCutscene = fmin(fmax(cfg.fVolumeCutscene, 0.0f), 1.0f); // limit between 0.0 - 1.0
+
 	// MOUSE
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
 	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
@@ -512,6 +515,7 @@ void Settings::WriteSettings()
 	// AUDIO
 	iniReader.WriteFloat("AUDIO", "VolumeBGM", cfg.fVolumeBGM);
 	iniReader.WriteFloat("AUDIO", "VolumeSE", cfg.fVolumeSE);
+	iniReader.WriteFloat("AUDIO", "VolumeCutscene", cfg.fVolumeCutscene);
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);

@@ -362,8 +362,9 @@ void cfgMenuRender()
 			// Audio tab
 			if (Tab == MenuTab::Audio)
 			{
-				bool changed = ImGui::SliderFloat("Music/FMV Volume", &cfg.fVolumeBGM, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+				bool changed = ImGui::SliderFloat("Music Volume", &cfg.fVolumeBGM, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 				changed |= ImGui::SliderFloat("Effect Volume", &cfg.fVolumeSE, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+				changed |= ImGui::SliderFloat("Cutscene Volume", &cfg.fVolumeCutscene, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 				if (changed)
 				{
 					cfg.HasUnsavedChanges = true;
@@ -375,6 +376,7 @@ void cfgMenuRender()
 				ImGui::Spacing();
 
 				ImGui::TextWrapped("Any currently playing audio usually won't be affected until the audio track has been reloaded (eg. by reloading the level)");
+				ImGui::TextWrapped("Cutscene Volume will also affect volume of merchant screen dialogue, as that seems to be handled the same way as cutscenes.");
 			}
 
 			// Mouse tab

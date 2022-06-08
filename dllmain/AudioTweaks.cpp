@@ -57,8 +57,8 @@ void __cdecl mwPlySetOutVol_Hook(void* mwply, int vol)
 	// volume of 0 would cause divide by zero (which doesn't crash, but does make volume extremely loud)
 	// -960 seems to be minimum volume allowed by Criware, so we'll set to that (not completely sure if it's muted or not though)
 	int new_vol = -960;
-	if(cfg.fVolumeBGM > 0)
-		new_vol = int(float(vol) / cfg.fVolumeBGM);
+	if(cfg.fVolumeCutscene > 0)
+		new_vol = int(float(vol) / cfg.fVolumeCutscene);
 
 	mwPlySetOutVol(mwply, new_vol);
 }
@@ -69,8 +69,9 @@ void AudioTweaks_UpdateVolume()
 		return;
 
 	// shift value left by 8, as done by Snd_set_system_vol
-	g_Snd_sys_vol->str_bgm = g_Snd_sys_vol->iss_bgm = g_Snd_sys_vol->str_se = (int16_t(prev_vol_bgm * cfg.fVolumeBGM) << 8);
-	g_Snd_sys_vol->iss_se = (int16_t(prev_vol_se * cfg.fVolumeSE) << 8); // str_se treated as bgm, since it's mainly used by cutscenes (which usually have BGM, unsure if baked in)
+	g_Snd_sys_vol->str_bgm = g_Snd_sys_vol->iss_bgm = (int16_t(prev_vol_bgm * cfg.fVolumeBGM) << 8);
+	g_Snd_sys_vol->iss_se = (int16_t(prev_vol_se * cfg.fVolumeSE) << 8); 
+	g_Snd_sys_vol->str_se = (int16_t(prev_vol_se * cfg.fVolumeCutscene) << 8); // str_se seems to mostly get used by cutscenes / merchant dialogue
 
 	if (g_mwply && (
 		FlagIsSet(GlobalPtr()->flags_STATUS_501C, uint32_t(Flags_STATUS::STA_MOVIE_ON)) ||

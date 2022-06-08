@@ -28,6 +28,7 @@ struct Settings
 	// AUDIO
 	float fVolumeBGM;
 	float fVolumeSE;
+	float fVolumeCutscene;
 
 	// MOUSE
 	bool bUseMouseTurning;
