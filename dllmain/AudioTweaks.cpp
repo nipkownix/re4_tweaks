@@ -85,7 +85,11 @@ void __cdecl mwPlySetOutVol_Hook(void* mwply, int vol)
 
 SND_STR* str_work = nullptr; // 0x127B6B8 in 1.1.0
 void(__cdecl* Snd_str_work_calc_ax_vol)(void* str); // 0x979E70 in 1.1.0
-int16_t(__cdecl* sub_97AC10)(uint32_t a1, uint32_t a2, uint16_t a3, float a4); // 0x97AC10, related to GC vers SYNSetMasterVolume fn
+void(__cdecl* SYNSetMasterVolume)(uint32_t a1, uint16_t a2, float a3); // 0x97AB90 in 1.1.0, GC vers names it SYNSetMasterVolume, likely different name on PC
+
+uint8_t* (__cdecl* Snd_search_seq_work_seq_no)(int seq_no); // 0x978070 in 1.1.0, guessed name
+void(__cdecl* Snd_seq_work_calc_ax_vol)(void* a1); // 0x978150 in 1.1.0
+
 
 void AudioTweaks_UpdateVolume()
 {
@@ -104,18 +108,32 @@ void AudioTweaks_UpdateVolume()
 		mwPlySetOutVol_Hook(g_mwply, -100); // -100 comes from cSofdec::startApp, hook will adjust it for us
 	}
 
-	// Update volume of any currently playing sounds (str_* only?)
+	// Update volume of any playing str sounds
 	for (int i = 0; i < 4; i++)
 	{
-		auto* cur_str = &str_work[i];
+		SND_STR* cur_str = &str_work[i];
 		if (cur_str->field_C != 1)
 			continue;
 
 		// Use Snd_str_work_calc_ax_vol to update volume of the SND_STR
 		Snd_str_work_calc_ax_vol(cur_str);
 
-		// Then call sub_97AC10 to actually update XAudio volume of this sound
-		sub_97AC10(cur_str->field_0, cur_str->field_8, cur_str->str_type_50 /* gets truncated to uint16 for some reason? */, float(cur_str->vol_decibels_3C));
+		// Use SYNSetMasterVolume to update XAudio volume of the sound
+		SYNSetMasterVolume(cur_str->field_0, cur_str->str_type_50 /* gets truncated to uint16 for some reason? */, float(cur_str->vol_decibels_3C));
+	}
+
+	// Update volume of any playing seq sounds
+	for (int i = 0; i < 8; i++)
+	{
+		uint8_t* cur_seq = Snd_search_seq_work_seq_no(i);
+		if ((cur_seq[0x4C] & 0x10) == 0)
+			continue;
+
+		// Update volume of the seq with our updated values
+		Snd_seq_work_calc_ax_vol(cur_seq);
+
+		// Use SYNSetMasterVolume to update XAudio volume of the sound
+		SYNSetMasterVolume(*(uint32_t*)cur_seq, *(uint16_t*)(cur_seq + 0x14), float(*(int*)(cur_seq + 0x64)));
 	}
 }
 
@@ -143,7 +161,15 @@ void Init_AudioTweaks()
 	pattern = hook::pattern("8A 46 4C A8 01 74 ? A8 04 75 ? 56 E8 ? ? ? ? 83 C4 04");
 	ReadCall(pattern.count(1).get(0).get<uint32_t>(0xC), Snd_str_work_calc_ax_vol);
 
-	// Find sub_97AC10 so we can tell XAudio to update volume
-	pattern = hook::pattern("D9 1C ? 50 51 52 E8 ? ? ? ? 83 C4 10 5F B8 01 00 00 00");
-	ReadCall(pattern.count(1).get(0).get<uint32_t>(0x6), sub_97AC10);
+	// Find SYNSetMasterVolume so we can tell XAudio to update volume
+	pattern = hook::pattern("D9 1C ? 52 50 E8 ? ? ? ? 8B 07 83 C4 ? 5F");
+	ReadCall(pattern.count(1).get(0).get<uint32_t>(0x5), SYNSetMasterVolume);
+
+	// Find Snd_search_seq_work_seq_no
+	pattern = hook::pattern("56 E8 ? ? ? ? 83 C4 ? 66 83 78 4C 00 74");
+	ReadCall(pattern.count(1).get(0).get<uint32_t>(0x1), Snd_search_seq_work_seq_no);
+
+	// Find Snd_seq_work_calc_ax_vol
+	pattern = hook::pattern("F6 46 56 01 74 ? 56 E8 ? ? ? ? DB 46 64");
+	ReadCall(pattern.count(1).get(0).get<uint32_t>(0x7), Snd_seq_work_calc_ax_vol);
 }
