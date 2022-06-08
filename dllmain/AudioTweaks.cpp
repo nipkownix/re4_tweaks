@@ -68,9 +68,9 @@ void AudioTweaks_UpdateVolume()
 	if (!g_Snd_sys_vol || !prev_vol_bgm || !prev_vol_se)
 		return;
 
-	// value gets shifted left by 8, as done by Snd_set_system_vol
-	g_Snd_sys_vol->str_bgm = g_Snd_sys_vol->iss_bgm = g_Snd_sys_vol->mas_bgm = (int16_t(prev_vol_bgm * cfg.fVolumeBGM) << 8);
-	g_Snd_sys_vol->str_se = g_Snd_sys_vol->iss_se = g_Snd_sys_vol->mas_se = (int16_t(prev_vol_se * cfg.fVolumeSE) << 8);
+	// shift value left by 8, as done by Snd_set_system_vol
+	g_Snd_sys_vol->str_bgm = g_Snd_sys_vol->iss_bgm = g_Snd_sys_vol->str_se = (int16_t(prev_vol_bgm * cfg.fVolumeBGM) << 8);
+	g_Snd_sys_vol->iss_se = (int16_t(prev_vol_se * cfg.fVolumeSE) << 8); // str_se treated as bgm, since it's mainly used by cutscenes (which usually have BGM, unsure if baked in)
 
 	if (g_mwply && (
 		FlagIsSet(GlobalPtr()->flags_STATUS_501C, uint32_t(Flags_STATUS::STA_MOVIE_ON)) ||
