@@ -25,6 +25,26 @@ struct SND_SYS_VOL // name from PS2 sound driver, might not be correct (values c
 	int16_t str_se;
 };
 
+struct SND_STR
+{
+	uint32_t field_0;
+	uint8_t unk_4[4];
+	uint32_t field_8;
+	uint32_t field_C;
+	uint8_t unk_10[0x18];
+	uint32_t field_28;
+	uint8_t unk_2C[0x10];
+	int vol_decibels_3C;
+	uint16_t vol_transformed_40;
+	uint8_t unk_42[0x4];
+	uint16_t status_flags_46;
+	uint8_t unk_48[8];
+	int str_type_50; // checked by Snd_str_work_calc_ax_vol, 4 is treated as SE, otherwise BGM
+	int snd_id_54;
+	uint8_t unk_58[0x4];
+};
+static_assert(sizeof(SND_STR) == 0x5C, "sizeof(SND_STR)");
+
 SND_SYS_VOL* g_Snd_sys_vol;
 
 // track previous volume game tried to set, since it seems to lower volume in certain areas (eg. when subscreen is open)
@@ -63,6 +83,10 @@ void __cdecl mwPlySetOutVol_Hook(void* mwply, int vol)
 	mwPlySetOutVol(mwply, new_vol);
 }
 
+SND_STR* str_work = nullptr; // 0x127B6B8 in 1.1.0
+void(__cdecl* Snd_str_work_calc_ax_vol)(void* str); // 0x979E70 in 1.1.0
+int16_t(__cdecl* sub_97AC10)(uint32_t a1, uint32_t a2, uint16_t a3, float a4); // 0x97AC10, related to GC vers SYNSetMasterVolume fn
+
 void AudioTweaks_UpdateVolume()
 {
 	if (!g_Snd_sys_vol || !prev_vol_bgm || !prev_vol_se)
@@ -78,6 +102,20 @@ void AudioTweaks_UpdateVolume()
 		FlagIsSet(GlobalPtr()->flags_STATUS_501C, uint32_t(Flags_STATUS::STA_MOVIE2_ON))))
 	{
 		mwPlySetOutVol_Hook(g_mwply, -100); // -100 comes from cSofdec::startApp, hook will adjust it for us
+	}
+
+	// Update volume of any currently playing sounds (str_* only?)
+	for (int i = 0; i < 4; i++)
+	{
+		auto* cur_str = &str_work[i];
+		if (cur_str->field_C != 1)
+			continue;
+
+		// Use Snd_str_work_calc_ax_vol to update volume of the SND_STR
+		Snd_str_work_calc_ax_vol(cur_str);
+
+		// Then call sub_97AC10 to actually update XAudio volume of this sound
+		sub_97AC10(cur_str->field_0, cur_str->field_8, cur_str->str_type_50 /* gets truncated to uint16 for some reason? */, float(cur_str->vol_decibels_3C));
 	}
 }
 
@@ -96,4 +134,16 @@ void Init_AudioTweaks()
 	pattern = hook::pattern("6A 9C 56 E8 ? ? ? ?");
 	ReadCall(pattern.count(1).get(0).get<uint32_t>(3), mwPlySetOutVol);
 	InjectHook(pattern.count(1).get(0).get<uint32_t>(3), mwPlySetOutVol_Hook, PATCH_CALL);
+
+	// Fetch addr of SND_STR structs
+	pattern = hook::pattern("6B C0 5C 05 ? ? ? ? 5D C3");
+	str_work = *pattern.count(2).get(0).get<SND_STR*>(4);
+
+	// Find Snd_str_work_calc_ax_vol so we can update volume of SND_STR correctly
+	pattern = hook::pattern("8A 46 4C A8 01 74 ? A8 04 75 ? 56 E8 ? ? ? ? 83 C4 04");
+	ReadCall(pattern.count(1).get(0).get<uint32_t>(0xC), Snd_str_work_calc_ax_vol);
+
+	// Find sub_97AC10 so we can tell XAudio to update volume
+	pattern = hook::pattern("D9 1C ? 50 51 52 E8 ? ? ? ? 83 C4 10 5F B8 01 00 00 00");
+	ReadCall(pattern.count(1).get(0).get<uint32_t>(0x6), sub_97AC10);
 }

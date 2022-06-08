@@ -375,7 +375,6 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				ImGui::TextWrapped("Any currently playing audio usually won't be affected until the audio track has been reloaded (eg. by reloading the level)");
 				ImGui::TextWrapped("Cutscene Volume will also affect volume of merchant screen dialogue, as that seems to be handled the same way as cutscenes.");
 			}
 
