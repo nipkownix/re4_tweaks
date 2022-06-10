@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include "stdafx.h"
 #include "dllmain.h"
@@ -275,83 +277,124 @@ int Settings::KeyMap(const char* key, bool get_vk)
 
 void Settings::ReadSettings()
 {
-	CIniReader iniReader("");
+	// Read default settings file first
+	ReadSettings("");
+
+	auto ProcessInisFromPath = [&](std::string_view base_path)
+	{
+		if (!std::filesystem::exists(base_path))
+			return;
+
+		std::vector<std::filesystem::path> override_inis;
+		for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(base_path))
+		{
+			auto& path = dirEntry.path();
+
+			std::string ext = path.extension().string();
+			std::transform(ext.begin(), ext.end(), ext.begin(),
+				[](unsigned char c) { return std::tolower(c); });
+
+			if (ext != ".ini")
+				continue;
+
+			override_inis.push_back(path);
+		}
+
+		// Sort INI filenames alphabetically
+		std::sort(override_inis.begin(), override_inis.end());
+
+		// Process override INIs
+		for (const auto& path : override_inis)
+			ReadSettings(path.string());
+	};
+
+	// Try reading any setting override files
+	// (try multiple paths since our working directory could be messed up)
+	ProcessInisFromPath("re4_tweaks/setting_overrides/");
+	ProcessInisFromPath("../re4_tweaks/setting_overrides/");
+	ProcessInisFromPath("Bin32/re4_tweaks/setting_overrides/");
+	ProcessInisFromPath("../Bin32/re4_tweaks/setting_overrides/");
+}
+
+void Settings::ReadSettings(std::string_view ini_path)
+{
+	CIniReader iniReader(ini_path);
 
 	#ifdef VERBOSE
-	con.AddLogChar("Reading settings");
+	con.AddLogChar("Reading settings from %s", ini_path.data());
 	#endif
 
 	cfg.HasUnsavedChanges = false;
 
 	// DISPLAY
-	cfg.fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", 0.0f);
+	cfg.fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
 	if (cfg.fFOVAdditional > 0.0f)
 		cfg.bEnableFOV = true;
 	else
 		cfg.bEnableFOV = false;
 
-	cfg.bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", true);
-	cfg.bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", false);
-	cfg.bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", true);
-	cfg.iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", -1);
-	cfg.bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", true);
-	cfg.bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", true);
-	cfg.bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", true);
-	cfg.bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", true);
-	cfg.bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", true);
-	cfg.bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", true);
-	cfg.bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", false);
-	cfg.iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", -1);
-	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", -1);
-	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", false);
+	cfg.bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
+	cfg.bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
+	cfg.bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
+	cfg.iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
+	cfg.bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);
+	cfg.bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03);
+	cfg.bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", cfg.bFixBlurryImage);
+	cfg.bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", cfg.bDisableFilmGrain);
+	cfg.bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", cfg.bEnableGCBlur);
+	cfg.bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", cfg.bEnableGCScopeBlur);
+	cfg.bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", cfg.bWindowBorderless);
+	cfg.iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", cfg.iWindowPositionX);
+	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
+	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
 
 	// MOUSE
-	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", true);
-	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", 1.0f);
-	cfg.bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", true);
-	cfg.bUnlockCameraFromAim = iniReader.ReadBoolean("MOUSE", "UnlockCameraFromAim", false);
-	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", true);
-	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", true);
-	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", true);
+	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
+	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
+	cfg.bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", cfg.bUseRawMouseInput);
+	cfg.bUnlockCameraFromAim = iniReader.ReadBoolean("MOUSE", "UnlockCameraFromAim", cfg.bUnlockCameraFromAim);
+	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
+	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", cfg.bFixSniperFocus);
+	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
-	cfg.bUseSprintToggle = iniReader.ReadBoolean("KEYBOARD", "UseSprintToggle", false);
-	cfg.bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", true);
-	cfg.sFlipItemUp = iniReader.ReadString("KEYBOARD", "FlipItemUp", "HOME");
-	cfg.sFlipItemDown = iniReader.ReadString("KEYBOARD", "FlipItemDown", "END");
-	cfg.sFlipItemLeft = iniReader.ReadString("KEYBOARD", "FlipItemLeft", "INSERT");
-	cfg.sFlipItemRight = iniReader.ReadString("KEYBOARD", "FlipItemRight", "PAGEUP");
-	cfg.sQTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", "D");
-	cfg.sQTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", "A");
+	cfg.bUseSprintToggle = iniReader.ReadBoolean("KEYBOARD", "UseSprintToggle", cfg.bUseSprintToggle);
+	cfg.bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
+	cfg.sFlipItemUp = iniReader.ReadString("KEYBOARD", "FlipItemUp", cfg.sFlipItemUp);
+	cfg.sFlipItemDown = iniReader.ReadString("KEYBOARD", "FlipItemDown", cfg.sFlipItemDown);
+	cfg.sFlipItemLeft = iniReader.ReadString("KEYBOARD", "FlipItemLeft", cfg.sFlipItemLeft);
+	cfg.sFlipItemRight = iniReader.ReadString("KEYBOARD", "FlipItemRight", cfg.sFlipItemRight);
+	cfg.sQTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", cfg.sQTE_key_1);
+	cfg.sQTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", cfg.sQTE_key_2);
 
 	// CONTROLLER
-	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", 1.0f);
+	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
 	if (cfg.fControllerSensitivity != 1.0f)
 		cfg.bEnableControllerSens = true;
 	else
 		cfg.bEnableControllerSens = false;
 
-	cfg.bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", true);
+	cfg.bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
 
-	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", 0.4f);
+	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
 	if (cfg.fXinputDeadzone < 0.0f)
 		cfg.fXinputDeadzone = 0.0f;
 
 	if (cfg.fXinputDeadzone > 3.0f)
-		cfg.fXinputDeadzone = 3.5f;
+		cfg.fXinputDeadzone = 3.0f;
 
 	// FRAME RATE
-	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", true);
-	cfg.bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", true);
-	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", true);
-	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", true);
-	cfg.bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", true);
-	cfg.bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", false);
+	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
+	cfg.bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", cfg.bFixTurningSpeed);
+	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
+	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
+	cfg.bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", cfg.bEnableFastMath);
+	cfg.bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", cfg.bPrecacheModels);
 
 	// MISC
-	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", "");
+	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", cfg.sWrappedDllPath);
 
-	cfg.bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", false);
+	cfg.bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", cfg.bOverrideCostumes);
 
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
 	if (!buf.empty())
@@ -383,35 +426,35 @@ void Settings::ReadSettings()
 	iCostumeComboAshley = (int)cfg.CostumeOverride.Ashley;
 	iCostumeComboAda = (int)cfg.CostumeOverride.Ada;
 
-	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", false);
+	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 
-	cfg.iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", -1);
+	cfg.iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
 	if (cfg.iViolenceLevelOverride < -1)
 		cfg.iViolenceLevelOverride = -1;
 
 	if (cfg.iViolenceLevelOverride > 2)
 		cfg.iViolenceLevelOverride = 2;
 
-	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", true);
-	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", true);
-	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", false);
-	cfg.bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", false);
-	cfg.bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", false);
-	cfg.bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", false);
-	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", false);
-	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", false);
+	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);
+	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
+	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
+	cfg.bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", cfg.bAllowAshleySuplex);
+	cfg.bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", cfg.bDisableQTE);
+	cfg.bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE);
+	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
+	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
 
 	// MEMORY
-	cfg.bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", true);
-	cfg.bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", true);
-	cfg.bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", true);
+	cfg.bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD);
+	cfg.bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc);
+	cfg.bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc);
 
 	// HOTKEYS
-	cfg.sConfigMenuKeyCombo = iniReader.ReadString("HOTKEYS", "ConfigMenu", "F1");
+	cfg.sConfigMenuKeyCombo = iniReader.ReadString("HOTKEYS", "ConfigMenu", cfg.sConfigMenuKeyCombo);
 	if (cfg.sConfigMenuKeyCombo.length())
 		ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
 
-	cfg.sConsoleKeyCombo = iniReader.ReadString("HOTKEYS", "Console", "F2");
+	cfg.sConsoleKeyCombo = iniReader.ReadString("HOTKEYS", "Console", cfg.sConsoleKeyCombo);
 	if (cfg.sConsoleKeyCombo.length())
 	{
 		ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
@@ -420,33 +463,33 @@ void Settings::ReadSettings()
 		con.TitleKeyCombo = cfg.sConsoleKeyCombo;
 	}
 
-	cfg.sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", "CTRL+F3");
+	cfg.sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", cfg.sDebugMenuKeyCombo);
 	if (cfg.sDebugMenuKeyCombo.length())
 		ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
 
-	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurningModifier", "ALT");
+	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurningModifier", cfg.sMouseTurnModifierKeyCombo);
 	if (cfg.sMouseTurnModifierKeyCombo.length())
 		ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
 
-	cfg.sJetSkiTrickCombo = iniReader.ReadString("HOTKEYS", "JetSkiTricks", "LMOUSE+RMOUSE");
+	cfg.sJetSkiTrickCombo = iniReader.ReadString("HOTKEYS", "JetSkiTricks", cfg.sJetSkiTrickCombo);
 	if (cfg.sJetSkiTrickCombo.length())
 		ParseJetSkiTrickCombo(cfg.sJetSkiTrickCombo);
 
 	// FPS WARNING
-	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", false);
+	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", cfg.bIgnoreFPSWarning);
 	
 	// IMGUI
-	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", 1.0f);
+	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", cfg.fFontSize);
 	if (cfg.fFontSize < 1.0f)
 		cfg.fFontSize = 1.0f;
 
 	if (cfg.fFontSize > 1.3f)
 		cfg.fFontSize = 1.3f;
 
-	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", false);
+	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", cfg.bDisableMenuTip);
 
 	// LOG
-	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", false);
+	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", cfg.bVerboseLog);
 }
 
 void Settings::WriteSettings()
