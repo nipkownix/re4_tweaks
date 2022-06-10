@@ -134,6 +134,15 @@ FixQTE = true
 ; Fixes difference between 30/60FPS on physics applied to Ashley.
 FixAshleyBustPhysics = true
 
+; Replaces older math functions in the game with much more optimized equivalents.
+; Experimental, can hopefully improve framerate in some areas that had dips.
+EnableFastMath = true
+
+; Forces game to fully cache all models in the level after loading in.
+; May help with framerate drops when viewing a model for the first time.
+; (not fully tested, could cause issues if level has many models to load!)
+PrecacheModels = false
+
 [MISC]
 ; Path to DLL to wrap, comment or leave empty to wrap system DLL
 ; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)

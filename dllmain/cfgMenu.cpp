@@ -562,6 +562,30 @@ void cfgMenuRender()
 				// AshleyBustPhysicsFix
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixAshleyBustPhysics", &cfg.bFixAshleyBustPhysics);
 				ImGui::TextWrapped("Fixes difference between 30/60FPS on physics applied to Ashley.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// EnableFastMath
+				if (ImGui::Checkbox("EnableFastMath", &cfg.bEnableFastMath))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Replaces older math functions in the game with much more optimized equivalents.");
+				ImGui::TextWrapped("Experimental, can hopefully improve framerate in some areas that had dips.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// PrecacheModels
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("PrecacheModels", &cfg.bPrecacheModels);
+				ImGui::TextWrapped("Forces game to fully cache all models in the level after loading in.");
+				ImGui::TextWrapped("May help with framerate drops when viewing a model for the first time.");
+				ImGui::TextWrapped("(not fully tested, could cause issues if level has many models to load!)");
+				ImGui::TextWrapped("Changes take effect on next level load.");
 			}
 
 			// Misc tab

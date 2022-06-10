@@ -12,6 +12,7 @@ void Init_HandleLimits();
 void Init_Input();
 void Init_KeyboardMouseTweaks();
 void Init_Logging();
+void Init_MathReimpl();
 void Init_Misc();
 void Init_QTEfixes();
 void Init_sofdec();

@@ -13,6 +13,32 @@ int intCurrentFrameRate()
 	return *(int32_t*)(ptrGameFrameRate);
 }
 
+uint32_t ModelForceRenderAll_EndTick = 0;
+
+// Called by AddOtModelPosRadius to check if model is in view of camera
+bool(*collision_sphere_hexahedron)(void*, void*);
+bool collision_sphere_hexahedron_Hook(void* a1, void* a2)
+{
+	if (ModelForceRenderAll_EndTick > GlobalPtr()->frameCounter_530C)
+		return true;
+	return collision_sphere_hexahedron(a1, a2);
+}
+
+void(*NowLoadingOff)();
+void NowLoadingOff_Hook()
+{
+	NowLoadingOff();
+
+	// Enable model hack for 1 tick after loading
+	// Forces game to fully process all models (rendering etc)
+	// Without this game could lag significantly when many newly-seen models are on screen
+	// By forcing this processing for all models, it seems something is cached
+	// which stops lag from occurring when the models are viewed later on
+	// (by enabling this hack after load screen, the player will also view any perf drop from it as part of loading too :)
+	if (cfg.bPrecacheModels)
+		ModelForceRenderAll_EndTick = GlobalPtr()->frameCounter_530C + 1;
+}
+
 void Init_60fpsFixes()
 {
 	auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -149,6 +175,40 @@ void Init_60fpsFixes()
 			}
 		}; injector::MakeInline<AshleyBustFrametimeFix>(pattern.count(1).get(0).get<uint32_t>(6), pattern.count(1).get(0).get<uint32_t>(11));
 	}
+
+	// Workaround for lag spike when many models are first shown on screen
+	// forces game to treat all models as on-screen for a single tick after loading
+	// allowing game to process/cache whatever data was causing lag spike
+	pattern = hook::pattern("8B 4F 08 50 8D 55 ? 52 89 4D ? E8 ? ? ? ?"); // AddOtModelPosRadius
+	auto caller = pattern.count(2).get(1).get<uint8_t>(0xB);
+	ReadCall(caller, collision_sphere_hexahedron);
+	InjectHook(caller, collision_sphere_hexahedron_Hook, PATCH_CALL);
+
+	pattern = hook::pattern("39 91 80 84 00 00 0F 85 ? ? ? ? E8 ? ? ? ?"); // gameStageInit
+	caller = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
+	ReadCall(caller, NowLoadingOff);
+	InjectHook(caller, NowLoadingOff_Hook, PATCH_JUMP);
+
+	pattern = hook::pattern("D8 D1 DF E0 DD D9 F6 C4 41 75 ? D9 C0 D9 EE DA E9 DF E0 F6 C4 44 7A");
+
+	struct ModelRenderDistHack
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			// original code we patched over...
+			__asm
+			{
+				fcom st(1)
+				fnstsw ax
+				fstp st(1)
+				mov ecx, [regs]
+				mov[ecx]regs.eax, eax
+			}
+			// distance check skip
+			if (ModelForceRenderAll_EndTick > GlobalPtr()->frameCounter_530C)
+				regs.eax = 0x3125; // passes "test ah, 41h"
+		}
+	}; injector::MakeInline<ModelRenderDistHack>(pattern.count(2).get(1).get<uint8_t>(0), pattern.count(2).get(1).get<uint8_t>(6));
 
 	Logging::Log() << __FUNCTION__ << " -> FPS fixes applied";
 }
