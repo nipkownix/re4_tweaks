@@ -154,6 +154,12 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableFastMath", cfg.bEnableFastMath ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "PrecacheModels", cfg.bPrecacheModels ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	Logging::Log() << "+--------------------------------+-----------------+";
 
 	// MISC

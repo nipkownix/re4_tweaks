@@ -136,6 +136,9 @@
     <ClCompile Include="AudioTweaks.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="MathReimpl.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\stdafx.h">
