@@ -421,27 +421,6 @@ struct cPlayer // unsure if correct name!
 #pragma pack(pop)
 static_assert(sizeof(cPlayer) == 0xA8, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
 
-// guessed names
-struct PenClothAtData
-{
-  uint32_t field_0;
-  Mtx mtx_4;
-  Mtx mtx_34;
-  Vec field_64;
-  Vec field_70;
-  float field_7C;
-  float field_80;
-};
-static_assert(sizeof(PenClothAtData) == 0x84, "sizeof(PenClothAtData)");
-
-struct PenClothAtTable
-{
-  int count_0;
-  PenClothAtData* data_ptr_4;
-  PenClothAtData data_8[1]; // multiple
-};
-static_assert(sizeof(PenClothAtTable) == 0x8C, "sizeof(PenClothAtTable)");
-
 struct DatTblEntry
 {
   /* 0x00 */ char name_0[48];

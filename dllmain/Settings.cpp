@@ -346,7 +346,6 @@ void Settings::ReadSettings()
 	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", true);
 	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", true);
 	cfg.bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", true);
-	cfg.bEnableReimplementedCloth = iniReader.ReadBoolean("FRAME RATE", "EnableReimplementedCloth", false);
 	cfg.bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", false);
 
 	// MISC
@@ -535,7 +534,6 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
 	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", cfg.bEnableFastMath);
-	iniReader.WriteBoolean("FRAME RATE", "EnableReimplementedCloth", cfg.bEnableReimplementedCloth);
 	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", cfg.bPrecacheModels);
 
 	// MISC

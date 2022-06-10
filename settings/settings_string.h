@@ -138,11 +138,6 @@ FixAshleyBustPhysics = true
 ; Experimental, can hopefully improve framerate in some areas that had dips.
 EnableFastMath = true
 
-; Reimplements certain cloth-physics functions to vastly improve framerate in certain areas.
-; Experimental, but mostly seems to work fine.
-; (if you notice any breakage from it feel free to disable it here, and please let us know about it!)
-EnableReimplementedCloth = false
-
 ; Forces game to fully cache all models in the level after loading in.
 ; May help with framerate drops when viewing a model for the first time.
 ; (not fully tested, could cause issues if level has many models to load!)

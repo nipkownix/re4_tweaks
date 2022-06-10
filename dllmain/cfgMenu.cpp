@@ -580,16 +580,6 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				// EnableReimplementedCloth
-				cfg.HasUnsavedChanges |= ImGui::Checkbox("EnableReimplementedCloth", &cfg.bEnableReimplementedCloth);
-				ImGui::TextWrapped("Reimplements certain cloth-physics functions to vastly improve framerate in certain areas.");
-				ImGui::TextWrapped("Experimental, but mostly seems to work fine.");
-				ImGui::TextWrapped("(if you notice any breakage from it feel free to disable it here, and please let us know about it!)");
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
 				// PrecacheModels
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("PrecacheModels", &cfg.bPrecacheModels);
 				ImGui::TextWrapped("Forces game to fully cache all models in the level after loading in.");
