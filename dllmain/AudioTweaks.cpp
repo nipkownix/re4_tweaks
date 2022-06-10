@@ -14,10 +14,11 @@ struct SND_SYS_VOL // name from PS2 sound driver, might not be correct (values c
 	int16_t str_bgm;
 	int16_t str_se;
 };
+static_assert(sizeof(SND_SYS_VOL) == 0xC, "sizeof(SND_SYS_VOL)");
 
 struct SND_STR
 {
-	uint32_t field_0;
+	uint32_t sound_idx_0; // idx into Snd_str_work? used to fetch IXACT3Cue ptr
 	uint8_t unk_4[4];
 	uint32_t field_8;
 	uint32_t field_C;
@@ -34,6 +35,21 @@ struct SND_STR
 	uint8_t unk_58[0x4];
 };
 static_assert(sizeof(SND_STR) == 0x5C, "sizeof(SND_STR)");
+
+struct SND_SEQ
+{
+	uint32_t sound_idx_0; // idx into Snd_str_work? used to fetch IXACT3Cue ptr
+	uint8_t unk_4[0x10];
+	uint16_t field_14;
+	uint8_t unk_16[0x36];
+	uint8_t status_flags_4C; // maybe uint32, game only checks lowest byte tho...
+	uint8_t unk_4D[0x7];
+	uint8_t seq_type_54; // checked by Snd_seq_work_calc_ax_vol, 2 is treated as SE, otherwise BGM
+	uint8_t unk_55[0xF];
+	int vol_decibels_64;
+	uint8_t unk_68[0x24];
+};
+static_assert(sizeof(SND_SEQ) == 0x8C, "sizeof(SND_SEQ)");
 
 SND_SYS_VOL* g_Snd_sys_vol;
 
@@ -54,18 +70,18 @@ void __cdecl mwPlySetOutVol_Hook(void* mwply, int vol)
 	// volume of 0 would cause divide by zero (which doesn't crash, but does make volume extremely loud)
 	// -960 seems to be minimum volume allowed by Criware, so we'll set to that (not completely sure if it's muted or not though)
 	int new_vol = -960;
-	if(cfg.fVolumeCutscene > 0)
+	if (cfg.fVolumeCutscene > 0)
 		new_vol = int(float(vol) / cfg.fVolumeCutscene);
 
 	mwPlySetOutVol(mwply, new_vol);
 }
 
 SND_STR* str_work = nullptr; // 0x127B6B8 in 1.1.0
-void(__cdecl* Snd_str_work_calc_ax_vol)(void* str); // 0x979E70 in 1.1.0
+void(__cdecl* Snd_str_work_calc_ax_vol)(SND_STR* str); // 0x979E70 in 1.1.0
 void(__cdecl* SYNSetMasterVolume)(uint32_t a1, uint16_t a2, float a3); // 0x97AB90 in 1.1.0, GC vers names it SYNSetMasterVolume, likely different name on PC
 
-uint8_t* (__cdecl* Snd_search_seq_work_seq_no)(int seq_no); // 0x978070 in 1.1.0, guessed name
-void(__cdecl* Snd_seq_work_calc_ax_vol)(void* a1); // 0x978150 in 1.1.0
+SND_SEQ* (__cdecl* Snd_search_seq_work_seq_no)(int seq_no); // 0x978070 in 1.1.0, guessed name
+void(__cdecl* Snd_seq_work_calc_ax_vol)(SND_SEQ* a1); // 0x978150 in 1.1.0
 
 void AudioTweaks_UpdateVolume()
 {
@@ -98,21 +114,21 @@ void AudioTweaks_UpdateVolume()
 		Snd_str_work_calc_ax_vol(cur_str);
 
 		// Use SYNSetMasterVolume to update XAudio volume of the sound
-		SYNSetMasterVolume(cur_str->field_0, cur_str->str_type_50 /* gets truncated to uint16 for some reason? */, float(cur_str->vol_decibels_3C));
+		SYNSetMasterVolume(cur_str->sound_idx_0, cur_str->str_type_50 /* gets truncated to uint16 for some reason? */, float(cur_str->vol_decibels_3C));
 	}
 
 	// Update volume of any playing seq sounds
 	for (int i = 0; i < 8; i++)
 	{
-		uint8_t* cur_seq = Snd_search_seq_work_seq_no(i);
-		if ((cur_seq[0x4C] & 0x10) == 0)
+		SND_SEQ* cur_seq = Snd_search_seq_work_seq_no(i);
+		if ((cur_seq->status_flags_4C & 0x10) == 0)
 			continue;
 
 		// Update volume of the seq with our updated values
 		Snd_seq_work_calc_ax_vol(cur_seq);
 
 		// Use SYNSetMasterVolume to update XAudio volume of the sound
-		SYNSetMasterVolume(*(uint32_t*)cur_seq, *(uint16_t*)(cur_seq + 0x14), float(*(int*)(cur_seq + 0x64)));
+		SYNSetMasterVolume(cur_seq->sound_idx_0, cur_seq->field_14, float(cur_seq->vol_decibels_64));
 	}
 }
 
