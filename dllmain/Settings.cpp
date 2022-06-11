@@ -12,6 +12,9 @@
 
 Settings cfg;
 
+const std::string sSettingOverridesPath = "/re4_tweaks/setting_overrides/";
+const std::string sHDProjectOverrideName = "HDProject.ini";
+
 const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
 const char* sAdaCostumeNames[] = {"RE2", "Spy", "Normal"};
@@ -280,40 +283,38 @@ void Settings::ReadSettings()
 	// Read default settings file first
 	ReadSettings("");
 
-	auto ProcessInisFromPath = [&](std::string_view base_path)
-	{
-		if (!std::filesystem::exists(base_path))
-			return;
-
-		std::vector<std::filesystem::path> override_inis;
-		for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(base_path))
-		{
-			auto& path = dirEntry.path();
-
-			std::string ext = path.extension().string();
-			std::transform(ext.begin(), ext.end(), ext.begin(),
-				[](unsigned char c) { return std::tolower(c); });
-
-			if (ext != ".ini")
-				continue;
-
-			override_inis.push_back(path);
-		}
-
-		// Sort INI filenames alphabetically
-		std::sort(override_inis.begin(), override_inis.end());
-
-		// Process override INIs
-		for (const auto& path : override_inis)
-			ReadSettings(path.string());
-	};
-
 	// Try reading any setting override files
-	// (try multiple paths since our working directory could be messed up)
-	ProcessInisFromPath("re4_tweaks/setting_overrides/");
-	ProcessInisFromPath("../re4_tweaks/setting_overrides/");
-	ProcessInisFromPath("Bin32/re4_tweaks/setting_overrides/");
-	ProcessInisFromPath("../Bin32/re4_tweaks/setting_overrides/");
+	auto override_path = rootPath + sSettingOverridesPath;
+
+	if (!std::filesystem::exists(override_path))
+		return;
+
+	std::vector<std::filesystem::path> override_inis;
+	for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(override_path))
+	{
+		auto& path = dirEntry.path();
+
+		std::string ext = path.extension().string();
+		std::transform(ext.begin(), ext.end(), ext.begin(),
+			[](unsigned char c) { return std::tolower(c); });
+
+		if (ext != ".ini")
+			continue;
+
+		override_inis.push_back(path);
+	}
+
+	// Sort INI filenames alphabetically
+	std::sort(override_inis.begin(), override_inis.end());
+
+	// Process override INIs
+	for (const auto& path : override_inis)
+		ReadSettings(path.string());
+
+	// Special case for HDProject settings, make sure it overrides all other INIs
+	auto hdproject_path = override_path + sHDProjectOverrideName;
+	if (std::filesystem::exists(hdproject_path))
+		ReadSettings(hdproject_path);
 }
 
 void Settings::ReadSettings(std::string_view ini_path)
@@ -321,7 +322,10 @@ void Settings::ReadSettings(std::string_view ini_path)
 	CIniReader iniReader(ini_path);
 
 	#ifdef VERBOSE
-	con.AddLogChar("Reading settings from %s", ini_path.data());
+	if (!ini_path.length())
+		con.AddLogChar("Reading settings");
+	else
+		con.AddLogChar("Reading settings from %s", ini_path.data());
 	#endif
 
 	cfg.HasUnsavedChanges = false;

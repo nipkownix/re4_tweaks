@@ -100,7 +100,7 @@ struct Settings
 	bool bDisableMenuTip = false;
 	bool bVerboseLog = false;
 
-	bool HasUnsavedChanges;
+	bool HasUnsavedChanges = false;
 
 	void ReadSettings();
 	void ReadSettings(std::string_view ini_path);
