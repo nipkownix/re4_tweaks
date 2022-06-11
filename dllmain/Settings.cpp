@@ -353,13 +353,13 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
 
 	// AUDIO
-	cfg.fVolumeBGM = iniReader.ReadFloat("AUDIO", "VolumeBGM", 1.0f);
+	cfg.fVolumeBGM = iniReader.ReadFloat("AUDIO", "VolumeBGM", cfg.fVolumeBGM);
 	cfg.fVolumeBGM = fmin(fmax(cfg.fVolumeBGM, 0.0f), 1.0f); // limit between 0.0 - 1.0
 
-	cfg.fVolumeSE = iniReader.ReadFloat("AUDIO", "VolumeSE", 1.0f);
+	cfg.fVolumeSE = iniReader.ReadFloat("AUDIO", "VolumeSE", cfg.fVolumeSE);
 	cfg.fVolumeSE = fmin(fmax(cfg.fVolumeSE, 0.0f), 1.0f); // limit between 0.0 - 1.0
 
-	cfg.fVolumeCutscene = iniReader.ReadFloat("AUDIO", "VolumeCutscene", 1.0f);
+	cfg.fVolumeCutscene = iniReader.ReadFloat("AUDIO", "VolumeCutscene", cfg.fVolumeCutscene);
 	cfg.fVolumeCutscene = fmin(fmax(cfg.fVolumeCutscene, 0.0f), 1.0f); // limit between 0.0 - 1.0
 
 	// MOUSE
