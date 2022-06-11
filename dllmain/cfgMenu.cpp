@@ -54,8 +54,8 @@ void cfgMenuBinding()
 
 void cfgMenuRender()
 {
-	ImGui::SetNextWindowSize(ImVec2(910, 630), ImGuiCond_FirstUseEver);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(910, (570 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
+	ImGui::SetNextWindowSize(ImVec2(960, 630), ImGuiCond_FirstUseEver);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(960, (630 * (ImGui::GetIO().FontGlobalScale + 0.35f))));
 
 	if (ImGui::Begin(cfgMenuTitle.data(), 0))
 	{
