@@ -392,11 +392,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
 
 	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
-	if (cfg.fXinputDeadzone < 0.0f)
-		cfg.fXinputDeadzone = 0.0f;
-
-	if (cfg.fXinputDeadzone > 3.0f)
-		cfg.fXinputDeadzone = 3.0f;
+	cfg.fXinputDeadzone = fmin(fmax(cfg.fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
 
 	// FRAME RATE
 	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
@@ -444,11 +440,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 
 	cfg.iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
-	if (cfg.iViolenceLevelOverride < -1)
-		cfg.iViolenceLevelOverride = -1;
-
-	if (cfg.iViolenceLevelOverride > 2)
-		cfg.iViolenceLevelOverride = 2;
+	cfg.iViolenceLevelOverride = min(max(cfg.iViolenceLevelOverride, -1), 2); // limit between -1 to 2
 
 	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);
 	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
@@ -495,11 +487,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	
 	// IMGUI
 	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", cfg.fFontSize);
-	if (cfg.fFontSize < 1.0f)
-		cfg.fFontSize = 1.0f;
-
-	if (cfg.fFontSize > 1.3f)
-		cfg.fFontSize = 1.3f;
+	cfg.fFontSize = fmin(fmax(cfg.fFontSize, 1.0f), 1.3f); // limit between 1.0 - 1.3
 
 	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", cfg.bDisableMenuTip);
 

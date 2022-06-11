@@ -215,7 +215,7 @@ void cfgMenuRender()
 					ImGui::PushItemWidth(170);
 					if (!cfg.bEnableFOV)
 						cfg.fFOVAdditional = 0.0f;
-					ImGui::SliderFloat("FOV Slider", &cfg.fFOVAdditional, 0.0f, 50.0f, "%.0f");
+					ImGui::SliderFloat("FOV Slider", &cfg.fFOVAdditional, 0.0f, 50.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 					ImGui::PopItemWidth();
 
 					ImGui::EndTable();
@@ -567,7 +567,7 @@ void cfgMenuRender()
 					ImGui::TableNextColumn();
 					ImGui::Dummy(ImVec2(0.0f, 12.0f));
 					ImGui::PushItemWidth(170);
-					ImGui::SliderFloat("Deadzone Slider", &cfg.fXinputDeadzone, 0.0f, 3.5f, "%.2f");
+					ImGui::SliderFloat("Deadzone Slider", &cfg.fXinputDeadzone, 0.0f, 3.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 					ImGui::PopItemWidth();
 
 					if (ImGui::IsItemEdited())
