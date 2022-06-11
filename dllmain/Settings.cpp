@@ -387,6 +387,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 
 	// CONTROLLER
 	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
+	cfg.fControllerSensitivity = fmin(fmax(cfg.fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
 	if (cfg.fControllerSensitivity != 1.0f)
 		cfg.bEnableControllerSens = true;
 	else
@@ -396,6 +397,10 @@ void Settings::ReadSettings(std::string_view ini_path)
 
 	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
 	cfg.fXinputDeadzone = fmin(fmax(cfg.fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
+	if (cfg.fXinputDeadzone != 1.0f)
+		cfg.bEnableDeadzoneOverride = true;
+	else
+		cfg.bEnableDeadzoneOverride = false;
 
 	// FRAME RATE
 	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);

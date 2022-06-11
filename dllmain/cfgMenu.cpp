@@ -208,14 +208,23 @@ void cfgMenuRender()
 					{
 						cfg.HasUnsavedChanges = true;
 					}
-					ImGui::TextWrapped("Additional FOV value. 20 seems good for most cases.");
+					ImGui::TextWrapped("Additional FOV value.");
+					ImGui::TextWrapped("20 seems good for most cases.");
 
 					ImGui::TableNextColumn();
+
 					ImGui::Dummy(ImVec2(0.0f, 15.0f));
-					ImGui::PushItemWidth(170);
+
+					ImGui::PushItemWidth(ImGui::GetWindowSize().x - 480);
+
 					if (!cfg.bEnableFOV)
 						cfg.fFOVAdditional = 0.0f;
+
+					ImGui::BeginDisabled(!cfg.bEnableFOV);
+
 					ImGui::SliderFloat("FOV Slider", &cfg.fFOVAdditional, 0.0f, 50.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+
+					ImGui::EndDisabled();
 					ImGui::PopItemWidth();
 
 					ImGui::EndTable();
@@ -413,7 +422,7 @@ void cfgMenuRender()
 			// Mouse tab
 			if (Tab == MenuTab::Mouse)
 			{
-				if (ImGui::BeginTable("FOVTable", 2, TableFlags))
+				if (ImGui::BeginTable("MSensTable", 2, TableFlags))
 				{
 					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 340.0f);
 					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
@@ -427,10 +436,16 @@ void cfgMenuRender()
 					ImGui::TextWrapped("\"Modern\" aiming mode in the game's settings is recommended.");
 
 					ImGui::TableNextColumn();
-					ImGui::Dummy(ImVec2(0.0f, 20.0f));
-					ImGui::PushItemWidth(170);
+					ImGui::Dummy(ImVec2(0.0f, 30.0f));
 
-					ImGui::SliderFloat("Sensitivity Slider", &cfg.fTurnSensitivity, 0.50f, 2.0f, "%.2f");
+					ImGui::PushItemWidth(ImGui::GetWindowSize().x - 520);
+
+					ImGui::BeginDisabled(!cfg.bUseMouseTurning);
+
+					ImGui::SliderFloat("Sensitivity Slider", &cfg.fTurnSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+
+					ImGui::EndDisabled();
+
 					ImGui::PopItemWidth();
 
 					ImGui::EndTable();
@@ -552,10 +567,18 @@ void cfgMenuRender()
 
 					ImGui::TableNextColumn();
 					ImGui::Dummy(ImVec2(0.0f, 20.0f));
-					ImGui::PushItemWidth(170);
+
+					ImGui::PushItemWidth(ImGui::GetWindowSize().x - 520);
+
 					if (!cfg.bEnableControllerSens)
 						cfg.fControllerSensitivity = 1.0f;
-					ImGui::SliderFloat("Sensitivity Slider", &cfg.fControllerSensitivity, 0.50f, 4.0f, "%.2f");
+
+					ImGui::BeginDisabled(!cfg.bEnableControllerSens);
+
+					ImGui::SliderFloat("Sensitivity Slider", &cfg.fControllerSensitivity, 0.50f, 4.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+
+					ImGui::EndDisabled();
+
 					ImGui::PopItemWidth();
 
 					ImGui::EndTable();
@@ -581,13 +604,28 @@ void cfgMenuRender()
 
 					ImGui::TableNextColumn();
 
+					if (ImGui::Checkbox("Override Xinput Deadzone", &cfg.bEnableDeadzoneOverride))
+					{
+						cfg.HasUnsavedChanges = true;
+					}
 					ImGui::TextWrapped("Change the Xinput controller deadzone.");
+					ImGui::TextWrapped("(Unrelated to the previous option)");
 					ImGui::TextWrapped("The game's default is 1, but that seems unnecessarily large, so we default to 0.4 instead.");
 
 					ImGui::TableNextColumn();
 					ImGui::Dummy(ImVec2(0.0f, 12.0f));
-					ImGui::PushItemWidth(170);
+
+					ImGui::PushItemWidth(ImGui::GetWindowSize().x - 520);
+
+					if (!cfg.bEnableDeadzoneOverride)
+						cfg.fXinputDeadzone = 1.0f;
+
+					ImGui::BeginDisabled(!cfg.bEnableDeadzoneOverride);
+
 					ImGui::SliderFloat("Deadzone Slider", &cfg.fXinputDeadzone, 0.0f, 3.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+
+					ImGui::EndDisabled();
+
 					ImGui::PopItemWidth();
 
 					if (ImGui::IsItemEdited())

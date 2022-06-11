@@ -126,7 +126,7 @@ ControllerSensitivity = 1.0
 ; Removes unnecessary deadzones that were added for Xinput controllers.
 RemoveExtraXinputDeadzone = true
 
-; Change the Xinput controller deadzone.
+; Change the Xinput controller deadzone. (Unrelated to the previous option)
 ; The game's default is 1, but that seems unnecessarily large, so we default to 0.4 instead.
 ; Min 0.0, max 3.5.
 XinputDeadzone = 0.4

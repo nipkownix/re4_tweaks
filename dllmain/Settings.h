@@ -55,6 +55,7 @@ struct Settings
 	float fControllerSensitivity = 1.0f;
 	bool bEnableControllerSens = false;
 	bool bRemoveExtraXinputDeadzone = true;
+	bool bEnableDeadzoneOverride = true;
 	float fXinputDeadzone = 0.4f;
 
 	// FRAME RATE
