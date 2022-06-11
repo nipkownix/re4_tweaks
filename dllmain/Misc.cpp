@@ -97,15 +97,11 @@ std::string looseFilePath(const char* filePath)
 	std::string origPath = path;
 	if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 	{
-		path = "Bin32\\re4_tweaks\\sideload\\" + origPath;
+		path = rootPath + "/re4_tweaks/sideload/" + origPath;
 		if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 		{
-			path = "..\\Bin32\\re4_tweaks\\sideload\\" + origPath;
-			if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
-			{
-				nonExistentFiles[origPath] = true;
-				return "";
-			}
+			nonExistentFiles[origPath] = true;
+			return "";
 		}
 	}
 
@@ -373,8 +369,7 @@ void Init_Misc()
 	// (but only if we find a replacement for the placeholder English subs in the game folder)
 	{
 		bool hasSubs =
-			GetFileAttributesA("..\\Bin32\\re4_tweaks\\sideload\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF ||
-			GetFileAttributesA("Bin32\\re4_tweaks\\sideload\\event\\r100\\s03\\etc\\r100s03.mdt") != 0xFFFFFFFF;
+			GetFileAttributesA((rootPath + "/re4_tweaks/sideload/event/r100/s03/etc/r100s03.mdt").c_str()) != 0xFFFFFFFF;
 
 		if (hasSubs)
 		{
