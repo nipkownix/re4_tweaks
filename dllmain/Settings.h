@@ -8,59 +8,59 @@ struct Settings
 	int KeyMap(const char* key, bool get_vk);
 
 	// DISPLAY
-	float fFOVAdditional;
-	bool bEnableFOV;
-	bool bFixUltraWideAspectRatio;
-	bool bDisableVsync;
-	bool bFixDisplayMode;
-	int iCustomRefreshRate;
-	bool bRestorePickupTransparency;
-	bool bDisableBrokenFilter03;
-	bool bFixBlurryImage;
-	bool bDisableFilmGrain;
-	bool bEnableGCBlur;
-	bool bEnableGCScopeBlur;
-	bool bWindowBorderless;
-	int iWindowPositionX;
-	int iWindowPositionY;
-	bool bRememberWindowPos;
+	float fFOVAdditional = 0.0f;
+	bool bEnableFOV = false;
+	bool bFixUltraWideAspectRatio = true;
+	bool bDisableVsync = false;
+	bool bFixDisplayMode = true;
+	int iCustomRefreshRate = -1;
+	bool bRestorePickupTransparency = true;
+	bool bDisableBrokenFilter03 = true;
+	bool bFixBlurryImage = true;
+	bool bDisableFilmGrain = true;
+	bool bEnableGCBlur = true;
+	bool bEnableGCScopeBlur = true;
+	bool bWindowBorderless = false;
+	int iWindowPositionX = -1;
+	int iWindowPositionY = -1;
+	bool bRememberWindowPos = false;
 
 	// MOUSE
-	bool bUseMouseTurning;
-	float fTurnSensitivity;
-	bool bUseRawMouseInput;
-	bool bUnlockCameraFromAim;
-	bool bFixSniperZoom;
-	bool bFixSniperFocus;
-	bool bFixRetryLoadMouseSelector;
+	bool bUseMouseTurning = true;
+	float fTurnSensitivity = 1.0f;
+	bool bUseRawMouseInput = true;
+	bool bUnlockCameraFromAim = false;
+	bool bFixSniperZoom = true;
+	bool bFixSniperFocus = true;
+	bool bFixRetryLoadMouseSelector = true;
 
 	// KEYBOARD
-	bool bUseSprintToggle;
-	bool bFallbackToEnglishKeyIcons;
-	std::string sFlipItemUp;
-	std::string sFlipItemDown;
-	std::string sFlipItemLeft;
-	std::string sFlipItemRight;
-	std::string sQTE_key_1;
-	std::string sQTE_key_2;
+	bool bUseSprintToggle = false;
+	bool bFallbackToEnglishKeyIcons = true;
+	std::string sFlipItemUp = "HOME";
+	std::string sFlipItemDown = "END";
+	std::string sFlipItemLeft = "INSERT";
+	std::string sFlipItemRight = "PAGEUP";
+	std::string sQTE_key_1 = "D";
+	std::string sQTE_key_2 = "A";
 
 	// CONTROLLER
-	float fControllerSensitivity;
-	bool bEnableControllerSens;
-	bool bRemoveExtraXinputDeadzone;
-	float fXinputDeadzone;
+	float fControllerSensitivity = 1.0f;
+	bool bEnableControllerSens = false;
+	bool bRemoveExtraXinputDeadzone = true;
+	float fXinputDeadzone = 0.4f;
 
 	// FRAME RATE
-	bool bFixFallingItemsSpeed;
-	bool bFixTurningSpeed;
-	bool bFixQTE;
-	bool bFixAshleyBustPhysics;
-	bool bEnableFastMath;
-	bool bPrecacheModels;
+	bool bFixFallingItemsSpeed = true;
+	bool bFixTurningSpeed = true;
+	bool bFixQTE = true;
+	bool bFixAshleyBustPhysics = true;
+	bool bEnableFastMath = true;
+	bool bPrecacheModels = false;
 
 	// MISC
-	std::string sWrappedDllPath;
-	bool bOverrideCostumes;
+	std::string sWrappedDllPath = "";
+	bool bOverrideCostumes = false;
 
 	struct CostumeOverrideList
 	{
@@ -69,40 +69,41 @@ struct Settings
 		AdaCostumes Ada;
 	} CostumeOverride;
 
-	bool bAshleyJPCameraAngles;
-	int iViolenceLevelOverride;
-	bool bAllowSellingHandgunSilencer;
-	bool bAllowMafiaLeonCutscenes;
-	bool bSilenceArmoredAshley;
-	bool bAllowAshleySuplex;
-	bool bDisableQTE;
-	bool bAutomaticMashingQTE;
-	bool bSkipIntroLogos;
-	bool bEnableDebugMenu;
+	bool bAshleyJPCameraAngles = false;
+	int iViolenceLevelOverride = -1;
+	bool bAllowSellingHandgunSilencer = true;
+	bool bAllowMafiaLeonCutscenes = true;
+	bool bSilenceArmoredAshley = false;
+	bool bAllowAshleySuplex = false;
+	bool bDisableQTE = false;
+	bool bAutomaticMashingQTE = false;
+	bool bSkipIntroLogos = false;
+	bool bEnableDebugMenu = false;
 
 	// MEMORY
-	bool bAllowHighResolutionSFD;
-	bool bRaiseVertexAlloc;
-	bool bRaiseInventoryAlloc;
+	bool bAllowHighResolutionSFD = true;
+	bool bRaiseVertexAlloc = true;
+	bool bRaiseInventoryAlloc = true;
 
 	// HOTKEYS
-	std::string sConfigMenuKeyCombo;
-	std::string sConsoleKeyCombo;
-	std::string sDebugMenuKeyCombo;
-	std::string sMouseTurnModifierKeyCombo;
-	std::string sJetSkiTrickCombo;
+	std::string sConfigMenuKeyCombo = "F1";
+	std::string sConsoleKeyCombo = "F2";
+	std::string sDebugMenuKeyCombo = "CTRL+F3";
+	std::string sMouseTurnModifierKeyCombo = "ALT";
+	std::string sJetSkiTrickCombo = "LMOUSE+RMOUSE";
 
 	// WARNING
-	bool bIgnoreFPSWarning;
+	bool bIgnoreFPSWarning = false;
 
 	// IMGUI
-	float fFontSize;
-	bool bDisableMenuTip;
-	bool bVerboseLog;
+	float fFontSize = 1.0f;
+	bool bDisableMenuTip = false;
+	bool bVerboseLog = false;
 
-	bool HasUnsavedChanges;
+	bool HasUnsavedChanges = false;
 
 	void ReadSettings();
+	void ReadSettings(std::string_view ini_path);
 	void WriteSettings();
 };
 

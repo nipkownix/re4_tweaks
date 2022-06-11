@@ -44,11 +44,13 @@ jobs:
           head -n -1 settings/settings_string.h | tail -n +3 > dinput8.ini
           
 
-      - name: Copy english subtitle data files
+      - name: Copy game data files
         shell: bash
         run: |
           cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Debug/re4_tweaks/
           cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Release/re4_tweaks/
+          cp -r dist/Bin32/re4_tweaks/ Debug/
+          cp -r dist/Bin32/re4_tweaks/ Release/
 
       - name: Upload
         uses: actions/upload-artifact@v2
