@@ -99,9 +99,18 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\external\Hooking\Hook.cpp" />
-    <ClCompile Include="..\external\Hooking\HotPatch.cpp" />
-    <ClCompile Include="..\external\Hooking\IATPatch.cpp" />
+    <ClCompile Include="..\external\Hooking\Hook.cpp">
+      <Optimization>MaxSpeed</Optimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
+    <ClCompile Include="..\external\Hooking\HotPatch.cpp">
+      <Optimization>MaxSpeed</Optimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
+    <ClCompile Include="..\external\Hooking\IATPatch.cpp">
+      <Optimization>MaxSpeed</Optimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
     <ClCompile Include="..\external\imgui\imgui.cpp" />
     <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
@@ -112,7 +121,10 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\external\Logging\Logging.cpp" />
     <ClCompile Include="..\external\miniz\miniz.c" />
-    <ClCompile Include="..\external\ModUtils\Patterns.cpp" />
+    <ClCompile Include="..\external\ModUtils\Patterns.cpp">
+      <Optimization>MaxSpeed</Optimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
     <ClCompile Include="..\includes\stdafx.cpp" />
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="60fpsFixes.cpp" />
