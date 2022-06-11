@@ -339,6 +339,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 
 	cfg.bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
 	cfg.bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
+	cfg.bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
 	cfg.bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	cfg.iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
 	cfg.bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);
@@ -548,6 +549,7 @@ void Settings::WriteSettings()
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
 	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
 	iniReader.WriteBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
+	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
 	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);

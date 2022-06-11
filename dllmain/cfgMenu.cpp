@@ -249,6 +249,18 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// FixDPIScale
+				if (ImGui::Checkbox("FixDPIScale", &cfg.bFixDPIScale))
+				{
+					cfg.HasUnsavedChanges = true;
+					NeedsToRestart = true;
+				}
+				ImGui::TextWrapped("Forces game to run at normal 100%% DPI scaling, fixes resolution issues for players that have above 100%% DPI scaling set.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FixDisplayMode
 				if (ImGui::Checkbox("FixDisplayMode", &cfg.bFixDisplayMode))
 				{

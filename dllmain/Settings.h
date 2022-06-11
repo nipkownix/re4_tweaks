@@ -12,6 +12,7 @@ struct Settings
 	bool bEnableFOV = false;
 	bool bFixUltraWideAspectRatio = true;
 	bool bDisableVsync = false;
+	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
 	int iCustomRefreshRate = -1;
 	bool bRestorePickupTransparency = true;

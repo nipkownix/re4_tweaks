@@ -304,4 +304,10 @@ void Init_DisplayTweaks()
 		if (cfg.bDisableFilmGrain)
 			Logging::Log() << "DisableFilmGrain applied";
 	}
+
+	// Disable Windows DPI scaling
+	if (cfg.bFixDPIScale)
+	{
+		SetProcessDPIAware();
+	}
 }
