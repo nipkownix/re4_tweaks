@@ -374,20 +374,40 @@ void cfgMenuRender()
 			// Audio tab
 			if (Tab == MenuTab::Audio)
 			{
-				bool changed = ImGui::SliderFloat("Music Volume", &cfg.fVolumeBGM, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-				changed |= ImGui::SliderFloat("Effect Volume", &cfg.fVolumeSE, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-				changed |= ImGui::SliderFloat("Cutscene Volume", &cfg.fVolumeCutscene, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-				if (changed)
+				if (ImGui::BeginTable("AudioVolTable", 2, TableFlags))
 				{
-					cfg.HasUnsavedChanges = true;
-					AudioTweaks_UpdateVolume();
+					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 340.0f);
+					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
+
+					ImGui::TableNextColumn();
+
+					ImGui::Dummy(ImVec2(0.0f, 32.0f));
+
+					ImGui::TextWrapped("Adjust the volume of the game.");
+					ImGui::Spacing();
+					ImGui::TextWrapped("Cutscene Volume will also affect volume of merchant screen dialogue, as that seems to be handled the same way as cutscenes.");
+
+					ImGui::TableNextColumn();
+
+					ImGui::Dummy(ImVec2(0.0f, 12.0f));
+
+					ImGui::PushItemWidth(ImGui::GetWindowSize().x - 520);
+
+					bool changed = ImGui::SliderInt("Master Volume", &cfg.iVolumeMaster, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+					changed |= ImGui::SliderInt("Music Volume", &cfg.iVolumeBGM, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+					changed |= ImGui::SliderInt("Effect Volume", &cfg.iVolumeSE, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+					changed |= ImGui::SliderInt("Cutscene Volume", &cfg.iVolumeCutscene, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+					ImGui::PopItemWidth();
+
+					if (changed)
+					{
+						cfg.HasUnsavedChanges = true;
+						AudioTweaks_UpdateVolume();
+					}
+
+					ImGui::EndTable();
 				}
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				ImGui::TextWrapped("Cutscene Volume will also affect volume of merchant screen dialogue, as that seems to be handled the same way as cutscenes.");
 			}
 
 			// Mouse tab

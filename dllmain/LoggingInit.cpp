@@ -76,13 +76,16 @@ void LogSettings()
 	// AUDIO
 	Logging::Log() << "+ AUDIO--------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15f |", "VolumeBGM", cfg.fVolumeBGM);
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeMaster", cfg.iVolumeMaster);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "VolumeSE", cfg.fVolumeSE);
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeBGM", cfg.iVolumeBGM);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "VolumeCutscene", cfg.fVolumeCutscene);
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeSE", cfg.iVolumeSE);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeCutscene", cfg.iVolumeCutscene);
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";

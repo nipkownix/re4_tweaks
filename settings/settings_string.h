@@ -58,11 +58,12 @@ RememberWindowPos = false
 
 [AUDIO]
 ; Allows seperate adjustment of background music/sound effect/cutscene volume
-; 1.0 is 100%, 0.5 is 50%, range is 0.0 to 1.0
 ; VolumeCutscene will also affect volume of merchant screen dialogue, as that seems to be handled the same way as cutscenes.
-VolumeBGM = 1.0
-VolumeSE = 1.0
-VolumeCutscene = 1.0
+; Min 0, max 100.
+VolumeMaster = 100
+VolumeBGM = 100
+VolumeSE = 100
+VolumeCutscene = 100
 
 [MOUSE]
 ; Makes it so the mouse turns the character instead of controlling the camera.

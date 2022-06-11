@@ -27,9 +27,10 @@ struct Settings
 	bool bRememberWindowPos = false;
 
 	// AUDIO
-	float fVolumeBGM = 1.0f;
-	float fVolumeSE = 1.0f;
-	float fVolumeCutscene = 1.0f;
+	int iVolumeMaster = 100;
+	int iVolumeBGM = 100;
+	int iVolumeSE = 100;
+	int iVolumeCutscene = 100;
 
 	// MOUSE
 	bool bUseMouseTurning = true;

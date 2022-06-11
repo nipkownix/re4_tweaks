@@ -354,14 +354,17 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
 
 	// AUDIO
-	cfg.fVolumeBGM = iniReader.ReadFloat("AUDIO", "VolumeBGM", cfg.fVolumeBGM);
-	cfg.fVolumeBGM = fmin(fmax(cfg.fVolumeBGM, 0.0f), 1.0f); // limit between 0.0 - 1.0
+	cfg.iVolumeMaster = iniReader.ReadInteger("AUDIO", "VolumeMaster", cfg.iVolumeMaster);
+	cfg.iVolumeMaster = min(max(cfg.iVolumeMaster, 0), 100); // limit between 0 - 100
 
-	cfg.fVolumeSE = iniReader.ReadFloat("AUDIO", "VolumeSE", cfg.fVolumeSE);
-	cfg.fVolumeSE = fmin(fmax(cfg.fVolumeSE, 0.0f), 1.0f); // limit between 0.0 - 1.0
+	cfg.iVolumeBGM = iniReader.ReadInteger("AUDIO", "VolumeBGM", cfg.iVolumeBGM);
+	cfg.iVolumeBGM = min(max(cfg.iVolumeBGM, 0), 100); // limit between 0 - 100
 
-	cfg.fVolumeCutscene = iniReader.ReadFloat("AUDIO", "VolumeCutscene", cfg.fVolumeCutscene);
-	cfg.fVolumeCutscene = fmin(fmax(cfg.fVolumeCutscene, 0.0f), 1.0f); // limit between 0.0 - 1.0
+	cfg.iVolumeSE = iniReader.ReadInteger("AUDIO", "VolumeSE", cfg.iVolumeSE);
+	cfg.iVolumeSE = min(max(cfg.iVolumeSE, 0), 100); // limit between 0 - 100
+
+	cfg.iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", cfg.iVolumeCutscene);
+	cfg.iVolumeCutscene = min(max(cfg.iVolumeCutscene, 0), 100); // limit between 0 - 100
 
 	// MOUSE
 	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
@@ -552,9 +555,10 @@ void Settings::WriteSettings()
 	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
 
 	// AUDIO
-	iniReader.WriteFloat("AUDIO", "VolumeBGM", cfg.fVolumeBGM);
-	iniReader.WriteFloat("AUDIO", "VolumeSE", cfg.fVolumeSE);
-	iniReader.WriteFloat("AUDIO", "VolumeCutscene", cfg.fVolumeCutscene);
+	iniReader.WriteInteger("AUDIO", "VolumeMaster", cfg.iVolumeMaster);
+	iniReader.WriteInteger("AUDIO", "VolumeBGM", cfg.iVolumeBGM);
+	iniReader.WriteInteger("AUDIO", "VolumeSE", cfg.iVolumeSE);
+	iniReader.WriteInteger("AUDIO", "VolumeCutscene", cfg.iVolumeCutscene);
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
