@@ -133,6 +133,9 @@
     <ClCompile Include="D3D9hook.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="AudioTweaks.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
     <ClCompile Include="MathReimpl.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
@@ -361,6 +364,9 @@
       <Filter>external\miniz</Filter>
     </ClInclude>
     <ClInclude Include="D3D9hook.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioTweaks.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>

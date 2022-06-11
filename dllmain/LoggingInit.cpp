@@ -70,6 +70,20 @@ void LogSettings()
 
 	Logging::Log() << "+--------------------------------+-----------------+";
 
+	// AUDIO
+	Logging::Log() << "+ AUDIO--------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15f |", "VolumeBGM", cfg.fVolumeBGM);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "VolumeSE", cfg.fVolumeSE);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "VolumeCutscene", cfg.fVolumeCutscene);
+	Logging::Log() << settingBuf;
+
+	Logging::Log() << "+--------------------------------+-----------------+";
+
 	// MOUSE
 	Logging::Log() << "+ MOUSE--------------------------+-----------------+";
 
