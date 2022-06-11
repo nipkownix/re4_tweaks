@@ -32,6 +32,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "DisableVsync", cfg.bDisableVsync ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "FixDPIScale", cfg.bFixDPIScale ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "FixDisplayMode", cfg.bFixDisplayMode ? "true" : "false");
 	Logging::Log() << settingBuf;
 

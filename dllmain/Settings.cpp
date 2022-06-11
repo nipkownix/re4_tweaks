@@ -339,6 +339,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 
 	cfg.bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
 	cfg.bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
+	cfg.bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
 	cfg.bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	cfg.iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
 	cfg.bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);
@@ -353,13 +354,13 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
 
 	// AUDIO
-	cfg.fVolumeBGM = iniReader.ReadFloat("AUDIO", "VolumeBGM", 1.0f);
+	cfg.fVolumeBGM = iniReader.ReadFloat("AUDIO", "VolumeBGM", cfg.fVolumeBGM);
 	cfg.fVolumeBGM = fmin(fmax(cfg.fVolumeBGM, 0.0f), 1.0f); // limit between 0.0 - 1.0
 
-	cfg.fVolumeSE = iniReader.ReadFloat("AUDIO", "VolumeSE", 1.0f);
+	cfg.fVolumeSE = iniReader.ReadFloat("AUDIO", "VolumeSE", cfg.fVolumeSE);
 	cfg.fVolumeSE = fmin(fmax(cfg.fVolumeSE, 0.0f), 1.0f); // limit between 0.0 - 1.0
 
-	cfg.fVolumeCutscene = iniReader.ReadFloat("AUDIO", "VolumeCutscene", 1.0f);
+	cfg.fVolumeCutscene = iniReader.ReadFloat("AUDIO", "VolumeCutscene", cfg.fVolumeCutscene);
 	cfg.fVolumeCutscene = fmin(fmax(cfg.fVolumeCutscene, 0.0f), 1.0f); // limit between 0.0 - 1.0
 
 	// MOUSE
@@ -391,11 +392,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
 
 	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
-	if (cfg.fXinputDeadzone < 0.0f)
-		cfg.fXinputDeadzone = 0.0f;
-
-	if (cfg.fXinputDeadzone > 3.0f)
-		cfg.fXinputDeadzone = 3.0f;
+	cfg.fXinputDeadzone = fmin(fmax(cfg.fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
 
 	// FRAME RATE
 	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
@@ -443,11 +440,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
 
 	cfg.iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
-	if (cfg.iViolenceLevelOverride < -1)
-		cfg.iViolenceLevelOverride = -1;
-
-	if (cfg.iViolenceLevelOverride > 2)
-		cfg.iViolenceLevelOverride = 2;
+	cfg.iViolenceLevelOverride = min(max(cfg.iViolenceLevelOverride, -1), 2); // limit between -1 to 2
 
 	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);
 	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
@@ -494,11 +487,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	
 	// IMGUI
 	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", cfg.fFontSize);
-	if (cfg.fFontSize < 1.0f)
-		cfg.fFontSize = 1.0f;
-
-	if (cfg.fFontSize > 1.3f)
-		cfg.fFontSize = 1.3f;
+	cfg.fFontSize = fmin(fmax(cfg.fFontSize, 1.0f), 1.3f); // limit between 1.0 - 1.3
 
 	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", cfg.bDisableMenuTip);
 
@@ -548,6 +537,7 @@ void Settings::WriteSettings()
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
 	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
 	iniReader.WriteBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
+	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
 	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);

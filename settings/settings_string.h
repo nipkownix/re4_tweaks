@@ -12,6 +12,9 @@ FixUltraWideAspectRatio = true
 ; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
 DisableVsync = false
 
+; Forces game to run at normal 100% DPI scaling, fixes resolution issues for players that have above 100% DPI scaling set.
+FixDPIScale = true
+
 ; Allows the game to use non-60Hz refresh rates in fullscreen, fixing the black screen issue people have
 ; when starting it.
 FixDisplayMode = true
