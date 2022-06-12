@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <mutex>
 #include "stdafx.h"
 #include "dllmain.h"
 #include "ConsoleWnd.h"
@@ -503,8 +504,12 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", cfg.bVerboseLog);
 }
 
-void Settings::WriteSettings()
+std::mutex settingsThreadRunningMutex;
+
+DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 {
+	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // only allow single thread writing to INI at one time
+
 	CIniReader iniReader("");
 
 	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
@@ -629,4 +634,14 @@ void Settings::WriteSettings()
 	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);
 
 	cfg.HasUnsavedChanges = false;
+
+	return 0;
+}
+
+void Settings::WriteSettings()
+{
+	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // if thread is already running, wait for it to finish
+
+	// Spawn a new thread to handle writing settings, as INI writing funcs that get used are pretty slow
+	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, NULL, 0, NULL);
 }
