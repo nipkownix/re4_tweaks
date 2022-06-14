@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <Windows.h>
 #include <cassert>
+#include "dllmain.h"
 #include "../external/Hooking/Hook.h"
 #include "ConsoleWnd.h"
 #include "Settings.h"
@@ -421,6 +422,75 @@ bool input::is_any_mouse_button_released() const
 	return false;
 }
 
+void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
+{
+	int HotkeyVK1 = 0;
+	int HotkeyVK2 = 0;
+
+	std::string OrigHotkeyCombo = *cfgHotkey;
+	std::string FinalHotkeyCombo;
+
+	// Hacky way to change ImGui's current button label
+	*cfgHotkey = "Press any key...";
+
+	bool waitingforkey = true;
+
+	while (waitingforkey == true) {
+		for (unsigned int Key1 = 0; Key1 < ARRAYSIZE(_keys); Key1++)
+		{
+			while (is_key_down(Key1)) {
+				HotkeyVK1 = Key1;
+
+				if (supportsCombo)
+				{
+					for (unsigned int Key2 = 0; Key2 < ARRAYSIZE(_keys); Key2++)
+					{
+						if (is_key_down(Key2) && (Key2 != Key1))
+						{
+							HotkeyVK2 = Key2;
+						}
+					}
+				}
+				waitingforkey = false;
+			}
+		}
+	}
+
+	#ifdef VERBOSE
+	con.AddConcatLog("HotkeyVK1 = ", HotkeyVK1);
+	con.AddConcatLog("HotkeyVK2 = ", HotkeyVK2);
+	#endif
+
+	// Check if our KeyMap function is able to identify the key names, restore the original combo if not.
+	// As of now, there's no popup informing the user that the key is unsupported. TODO: Add popup?
+	if (HotkeyVK2 > 0)
+	{
+		if ((cfg.KeyMap(key_name(HotkeyVK1).c_str(), true) == 0) || (cfg.KeyMap(key_name(HotkeyVK2).c_str(), true) == 0))
+		{
+			*cfgHotkey = OrigHotkeyCombo;
+			return;
+		}
+		else
+			FinalHotkeyCombo = key_name(HotkeyVK1) + "+" + key_name(HotkeyVK2);
+	}
+	else
+	{
+		if ((cfg.KeyMap(key_name(HotkeyVK1).c_str(), true) == 0))
+		{
+			*cfgHotkey = OrigHotkeyCombo;
+			return;
+		}
+		else
+			FinalHotkeyCombo = key_name(HotkeyVK1);
+	}
+
+	#ifdef VERBOSE
+	con.AddConcatLog("FinalHotkeyCombo = ", FinalHotkeyCombo.c_str());
+	#endif
+
+	*cfgHotkey = FinalHotkeyCombo;
+}
+
 void input::next_frame()
 {
 	_frame_count++;
@@ -466,47 +536,26 @@ std::string input::key_name(unsigned int keycode)
 	if (keycode >= 256)
 		return std::string();
 
-	static const char *keyboard_keys_german[256] = {
-		"", "Left Mouse", "Right Mouse", "Cancel", "Middle Mouse", "X1 Mouse", "X2 Mouse", "", "Backspace", "Tab", "", "", "Clear", "Enter", "", "",
-		"Shift", "Control", "Alt", "Pause", "Caps Lock", "", "", "", "", "", "", "Escape", "", "", "", "",
-		"Leertaste", "Bild auf", "Bild ab", "Ende", "Pos 1", "Left Arrow", "Up Arrow", "Right Arrow", "Down Arrow", "Select", "", "", "Druck", "Einfg", "Entf", "Hilfe",
-		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "", "", "", "", "", "",
-		"", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-		"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Left Windows", "Right Windows", "Apps", "", "Sleep",
-		"Numpad 0", "Numpad 1", "Numpad 2", "Numpad 3", "Numpad 4", "Numpad 5", "Numpad 6", "Numpad 7", "Numpad 8", "Numpad 9", "Numpad *", "Numpad +", "", "Numpad -", "Numpad ,", "Numpad /",
-		"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16",
-		"F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", "", "", "", "", "", "", "", "",
-		"Num Lock", "Scroll Lock", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"Left Shift", "Right Shift", "Left Control", "Right Control", "Left Menu", "Right Menu", "Browser Back", "Browser Forward", "Browser Refresh", "Browser Stop", "Browser Search", "Browser Favorites", "Browser Home", "Volume Mute", "Volume Down", "Volume Up",
-		"Next Track", "Previous Track", "Media Stop", "Media Play/Pause", "Mail", "Media Select", "Launch App 1", "Launch App 2", "", "", u8"Ü", "OEM +", "OEM ,", "OEM -", "OEM .", "OEM #",
-		u8"Ö", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "", "", "", "", u8"OEM ß", "OEM ^", u8"OEM ´", u8"Ä", "OEM 8",
-		"", "", "OEM <", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "Attn", "CrSel", "ExSel", "Erase EOF", "Play", "Zoom", "", "PA1", "OEM Clear", ""
-	};
 	static const char *keyboard_keys_international[256] = {
-		"", "Left Mouse", "Right Mouse", "Cancel", "Middle Mouse", "X1 Mouse", "X2 Mouse", "", "Backspace", "Tab", "", "", "Clear", "Enter", "", "",
-		"Shift", "Control", "Alt", "Pause", "Caps Lock", "", "", "", "", "", "", "Escape", "", "", "", "",
-		"Space", "Page Up", "Page Down", "End", "Home", "Left Arrow", "Up Arrow", "Right Arrow", "Down Arrow", "Select", "", "", "Print Screen", "Insert", "Delete", "Help",
+		"", "LMOUSE", "RMOUSE", "BREAK", "MMOUSE", "MOUSE4", "MOUSE5", "", "BACKSPACE", "TAB", "", "", "CLEAR", "ENTER", "", "",
+		"SHIFT", "CONTROL", "ALT", "PAUSE", "CAPSLOCK", "", "", "", "", "", "", "ESCAPE", "", "", "", "",
+		"SPACE", "PAGEUP", "PAGEDOWN", "END", "HOME", "LEFT", "UP", "RIGHT", "DOWN", "SELECT", "", "", "PRINTSCR", "INSERT", "DELETE", "HELP",
 		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "", "", "", "", "", "",
 		"", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-		"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Left Windows", "Right Windows", "Apps", "", "Sleep",
-		"Numpad 0", "Numpad 1", "Numpad 2", "Numpad 3", "Numpad 4", "Numpad 5", "Numpad 6", "Numpad 7", "Numpad 8", "Numpad 9", "Numpad *", "Numpad +", "", "Numpad -", "Numpad Decimal", "Numpad /",
+		"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "LWIN", "RWIN", "APPS", "", "SLEEP",
+		"NUMPAD0", "NUMPAD1", "NUMPAD2", "NUMPAD3", "NUMPAD4", "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9", "MULTIPLY", "ADD", "", "SUBTRACT", "DECIMAL", "DIVIDE",
 		"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16",
 		"F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", "", "", "", "", "", "", "", "",
-		"Num Lock", "Scroll Lock", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"Left Shift", "Right Shift", "Left Control", "Right Control", "Left Menu", "Right Menu", "Browser Back", "Browser Forward", "Browser Refresh", "Browser Stop", "Browser Search", "Browser Favorites", "Browser Home", "Volume Mute", "Volume Down", "Volume Up",
-		"Next Track", "Previous Track", "Media Stop", "Media Play/Pause", "Mail", "Media Select", "Launch App 1", "Launch App 2", "", "", "OEM ;", "OEM +", "OEM ,", "OEM -", "OEM .", "OEM /",
-		"OEM ~", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "", "", "", "", "OEM [", "OEM \\", "OEM ]", "OEM '", "OEM 8",
-		"", "", "OEM <", "", "", "", "", "", "", "", "", "", "", "", "", "",
+		"NUMLOCK", "SCROLL", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+		"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL", "LMENU", "RMENU", "Browser Back", "Browser Forward", "Browser Refresh", "Browser Stop", "Browser Search", "Browser Favorites", "Browser Home", "Volume Mute", "Volume Down", "Volume Up",
+		"Next Track", "Previous Track", "Media Stop", "Media Play/Pause", "Mail", "Media Select", "Launch App 1", "Launch App 2", "", "", "OEM_1", "OEM_PLUS", "OEM_COMMA", "OEM_MINUS", "OEM_PERIOD", "OEM_2",
+		"OEM_3", "ABNT_C1", "ABNT_C2", "", "", "", "", "", "", "", "", "", "", "", "", "",
+		"", "", "", "", "", "", "", "", "", "", "", "OEM_4", "OEM_5", "OEM_6", "OEM_7", "OEM_8",
+		"", "", "OEM_102", "", "", "", "", "", "", "", "", "", "", "", "", "",
 		"", "", "", "", "", "", "Attn", "CrSel", "ExSel", "Erase EOF", "Play", "Zoom", "", "PA1", "OEM Clear", ""
 	};
 
-	const LANGID language = LOWORD(GetKeyboardLayout(0));
-
-	return ((language & 0xFF) == LANG_GERMAN) ?
-		keyboard_keys_german[keycode] : keyboard_keys_international[keycode];
+	return keyboard_keys_international[keycode];
 }
 std::string input::key_name(const unsigned int key[4])
 {

@@ -96,23 +96,6 @@ FixSniperFocus = true
 FixRetryLoadMouseSelector = true
 
 [KEYBOARD]
-; Key bindings for flipping items in the inventory screen when using keyboard and mouse.
-; Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is
-; possible using a controller.
-FlipItemUp    = HOME
-FlipItemDown  = END
-FlipItemLeft  = INSERT
-FlipItemRight = PAGEUP
-
-; Key bindings for QTE keys when playing with keyboard and mouse.
-; Unlike the "official" way of rebinding keys through usr_input.ini, this
-; option also changes the on-screen prompt to properly match the selected key.
-QTE_key_1 = D
-QTE_key_2 = A
-
-; Changes sprint key to act like a toggle instead of needing to be held.
-UseSprintToggle = false
-
 ; Game will turn keys invisible for certain unsupported keyboard languages
 ; Enabling this should make game use English keys for unsupported ones instead
 ; (if game supports your current language it should still use it however)
@@ -161,6 +144,7 @@ PrecacheModels = false
 ;WrappedDLLPath = 
 
 ; Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.
+; May cause weird visuals in cutscenes.
 ; Possible costume values:
 ; Leon: Jacket, Normal, Vest, RPD, Mafia
 ; Ashley: Normal, Popstar, Armor
@@ -193,6 +177,9 @@ SilenceArmoredAshley = false
 ; (previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)
 AllowAshleySuplex = false
 
+; Changes sprint key to act like a toggle instead of needing to be held.
+UseSprintToggle = false
+
 ; Disables most of the QTEs, making them pass automatically.
 DisableQTE = false
 
@@ -222,7 +209,7 @@ RaiseInventoryAlloc = true
 
 [HOTKEYS]
 ; Key combinations for various re4_tweaks features
-; All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names
+; Most keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names
 ; (see top of Settings.cpp file for possible key names to use)
 
 ; Key combination to open the re4_tweaks config menu
@@ -230,6 +217,22 @@ ConfigMenu = F1
 
 ; Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)
 Console = F2
+
+; Key bindings for flipping items in the inventory screen when using keyboard and mouse.
+; Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is
+; possible using a controller.
+; * Key combinations not supported
+FlipItemUp    = HOME
+FlipItemDown  = END
+FlipItemLeft  = INSERT
+FlipItemRight = PAGEUP
+
+; Key bindings for QTE keys when playing with keyboard and mouse.
+; Unlike the "official" way of rebinding keys through usr_input.ini, this
+; option also changes the on-screen prompt to properly match the selected key.
+; * Key combinations not supported
+QTE_key_1 = D
+QTE_key_2 = A
 
 ; Key combination to make the "tool menu" debug menu appear
 ; Requires EnableDebugMenu to be enabled.

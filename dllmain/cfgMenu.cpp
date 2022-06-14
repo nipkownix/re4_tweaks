@@ -14,6 +14,7 @@
 
 bool bCfgMenuOpen;
 bool NeedsToRestart;
+bool bWaitingForHotkey;
 
 enum class MenuTab
 {
@@ -48,8 +49,29 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 
 void cfgMenuBinding()
 {
-	if (_input->is_combo_pressed(&cfgMenuCombo))
+	if (_input->is_combo_pressed(&cfgMenuCombo) && !bWaitingForHotkey)
 		bCfgMenuOpen = !bCfgMenuOpen;
+}
+
+// If we don't run these in another thread, we end up locking the rendering
+void SetHotkeyComboThread(std::string* cfgHotkey)
+{
+	bWaitingForHotkey = true;
+
+	_input->set_hotkey(cfgHotkey, true);
+
+	bWaitingForHotkey = false;
+	return;
+}
+
+void SetHotkeyThread(std::string* cfgHotkey)
+{
+	bWaitingForHotkey = true;
+
+	_input->set_hotkey(cfgHotkey, false);
+
+	bWaitingForHotkey = false;
+	return;
 }
 
 void cfgMenuRender()
@@ -506,40 +528,6 @@ void cfgMenuRender()
 			// Keyboard tab
 			if (Tab == MenuTab::Keyboard)
 			{
-				// Inv flip key bindings
-				ImGui::TextWrapped("Key bindings for flipping items in the inventory screen when using keyboard and mouse.");
-				ImGui::TextWrapped("Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is possible using a controller.");
-
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("Flip UP", &cfg.sFlipItemUp, ImGuiInputTextFlags_CharsUppercase);
-				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip DOWN", &cfg.sFlipItemDown, ImGuiInputTextFlags_CharsUppercase);
-				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip LEFT", &cfg.sFlipItemLeft, ImGuiInputTextFlags_CharsUppercase);
-				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("Flip RIGHT", &cfg.sFlipItemRight, ImGuiInputTextFlags_CharsUppercase);
-				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::PopItemWidth();
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				// QTE key bindings
-				ImGui::TextWrapped("Key bindings for QTE keys when playing with keyboard and mouse.");
-				ImGui::TextWrapped("Unlike the \"official\" way of rebinding keys through usr_input.ini, this option also changes the on-screen prompt to properly match the selected key.");
-
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("QTE key 1", &cfg.sQTE_key_1, ImGuiInputTextFlags_CharsUppercase);
-				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::InputText("QTE key 2", &cfg.sQTE_key_2, ImGuiInputTextFlags_CharsUppercase);
-				cfg.HasUnsavedChanges |= ImGui::IsItemEdited();
-				ImGui::PopItemWidth();
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
 				// English key icons
 				if (ImGui::Checkbox("FallbackToEnglishKeyIcons", &cfg.bFallbackToEnglishKeyIcons))
 				{
@@ -703,6 +691,7 @@ void cfgMenuRender()
 				// OverrideCostumes
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &cfg.bOverrideCostumes);
 				ImGui::TextWrapped("Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.");
+				ImGui::TextWrapped("May cause weird visuals in cutscenes.");
 
 				ImGui::BeginDisabled(!cfg.bOverrideCostumes);
 				ImGui::PushItemWidth(150);
@@ -889,27 +878,31 @@ void cfgMenuRender()
 			// Hotkeys tab
 			if (Tab == MenuTab::Hotkeys)
 			{
-				ImGui::TextWrapped("All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names.");
+				ImGui::TextWrapped("Key combinations for various re4_tweaks features.");
+				ImGui::TextWrapped("Most keys can be combined (requiring multiple to be pressed at the same time). To combine, hold one key and press another at the same time.");
 				ImGui::TextWrapped("(Press \"Save\" for changes to take effect.)");
-				ImGui::TextWrapped("(see top of Settings.cpp file for possible key names to use)");
 
-				ImGui::Dummy(ImVec2(0.0f, 5.0f));
+				ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
 				// cfgMenu key binding
 				ImGui::TextWrapped("Key combination to open the re4_tweaks config menu");
+				ImGui::Spacing();
 
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("Open config menu", &cfg.sConfigMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth();
-
-				if (ImGui::IsItemEdited())
+				ImGui::PushID(1);
+				if (ImGui::Button(cfg.sConfigMenuKeyCombo.c_str(), ImVec2(150, 0)))
+				{
 					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sConfigMenuKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Open config menu", &cfg.sConfigMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
 
 				ImGui::Spacing();
 				ImGui::Separator();
@@ -917,28 +910,138 @@ void cfgMenuRender()
 
 				// Console key binding
 				ImGui::TextWrapped("Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)");
+				ImGui::Spacing();
 
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("Open console", &cfg.sConsoleKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth();
-
-				if (ImGui::IsItemEdited())
+				ImGui::PushID(2);
+				if (ImGui::Button(cfg.sConsoleKeyCombo.c_str(), ImVec2(150, 0)))
+				{
 					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sConsoleKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Open console");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// Inv flip key bindings
+				ImGui::TextWrapped("Key bindings for flipping items in the inventory screen when using keyboard and mouse.");
+				ImGui::TextWrapped("Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is possible using a controller.");
+				ImGui::BulletText("Key combinations not supported");
+				ImGui::Spacing();
+
+				ImGui::Columns(2, "inv flip");
+
+				// UP
+				ImGui::PushID(3);
+				if (ImGui::Button(cfg.sFlipItemUp.c_str(), ImVec2(150, 0)))
+				{
+					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemUp, 0, NULL);
+				}
+				ImGui::PopID();
+				ImGui::SameLine();
+				ImGui::TextWrapped("Flip UP");
+
+				// DOWN
+				ImGui::PushID(4);
+				if (ImGui::Button(cfg.sFlipItemDown.c_str(), ImVec2(150, 0)))
+				{
+					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemDown, 0, NULL);
+				}
+				ImGui::PopID();
+				ImGui::SameLine();
+				ImGui::TextWrapped("Flip DOWN");
+
+				ImGui::NextColumn();
+
+				// LEFT
+				ImGui::PushID(5);
+				if (ImGui::Button(cfg.sFlipItemLeft.c_str(), ImVec2(150, 0)))
+				{
+					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemLeft, 0, NULL);
+				}
+				ImGui::PopID();
+				ImGui::SameLine();
+				ImGui::TextWrapped("Flip LEFT");
+
+				// RIGHT
+				ImGui::PushID(6);
+				if (ImGui::Button(cfg.sFlipItemRight.c_str(), ImVec2(150, 0)))
+				{
+					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemRight, 0, NULL);
+				}
+				ImGui::PopID();
+				ImGui::SameLine();
+				ImGui::TextWrapped("Flip RIGHT");
+
+				ImGui::Columns();
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// QTE key bindings
+				ImGui::TextWrapped("Key bindings for QTE keys when playing with keyboard and mouse.");
+				ImGui::TextWrapped("Unlike the \"official\" way of rebinding keys through usr_input.ini, this option also changes the on-screen prompt to properly match the selected key.");
+				ImGui::BulletText("Key combinations not supported");
+				ImGui::Spacing();
+
+				ImGui::Columns(2, "qte");
+
+				// QTE1
+				ImGui::PushID(7);
+				if (ImGui::Button(cfg.sQTE_key_1.c_str(), ImVec2(150, 0)))
+				{
+					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sQTE_key_1, 0, NULL);
+				}
+				ImGui::PopID();
+				ImGui::SameLine();
+				ImGui::TextWrapped("QTE key 1");
+
+				ImGui::NextColumn();
+
+				// QTE2
+				ImGui::PushID(8);
+				if (ImGui::Button(cfg.sQTE_key_2.c_str(), ImVec2(150, 0)))
+				{
+					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sQTE_key_2, 0, NULL);
+				}
+				ImGui::PopID();
+				ImGui::SameLine();
+				ImGui::TextWrapped("QTE key 2");
+
+				ImGui::Columns();
 
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
 
 				// Debug menu keyboard bindings
-				ImGui::TextWrapped("Key-combination to make the \"tool menu\" debug menu appear.");
+				ImGui::TextWrapped("Key combination to make the \"tool menu\" debug menu appear.");
 				ImGui::TextWrapped("Requires EnableDebugMenu to be enabled.");
+				ImGui::Spacing();
 
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("Open debug menu", &cfg.sDebugMenuKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth();
-
-				if (ImGui::IsItemEdited())
+				ImGui::PushID(9);
+				if (ImGui::Button(cfg.sDebugMenuKeyCombo.c_str(), ImVec2(150, 0)))
+				{
 					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sDebugMenuKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Open debug menu");
 
 				ImGui::Spacing();
 				ImGui::Separator();
@@ -946,27 +1049,39 @@ void cfgMenuRender()
 
 				// MouseTurningModifier bindings
 				ImGui::TextWrapped("MouseTurning camera modifier. When holding this key combination, MouseTurning is temporarily activated/deactivated.");
+				ImGui::Spacing();
 
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("MouseTurning modifier", &cfg.sMouseTurnModifierKeyCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth();
-
-				if (ImGui::IsItemEdited())
+				ImGui::PushID(10);
+				if (ImGui::Button(cfg.sMouseTurnModifierKeyCombo.c_str(), ImVec2(150, 0)))
+				{
 					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sMouseTurnModifierKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("MouseTurning modifier");
 
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
 
 				// JetSkiTricks bindings
-				ImGui::TextWrapped("Key combo for jump tricks during Jet-ski sequence (normally RT+LT on controller)");
+				ImGui::TextWrapped("Key combination for jump tricks during Jet-ski sequence (normally RT+LT on controller)");
+				ImGui::Spacing();
 
-				ImGui::PushItemWidth(100);
-				ImGui::InputText("Trick while riding Jet-ski", &cfg.sJetSkiTrickCombo, ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth();
-
-				if (ImGui::IsItemEdited())
+				ImGui::PushID(11);
+				if (ImGui::Button(cfg.sJetSkiTrickCombo.c_str(), ImVec2(150, 0)))
+				{
 					cfg.HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sJetSkiTrickCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Trick while riding Jet-ski");
 			}
 
 			ImGui::EndChild();
@@ -978,17 +1093,20 @@ void cfgMenuRender()
 
 void ShowCfgMenuTip()
 {
-	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(ImVec2(20, viewport->Pos.y + 20));
-	ImGui::SetNextWindowBgAlpha(0.5);
+	if (!bCfgMenuOpen)
+	{
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(ImVec2(20, viewport->Pos.y + 20));
+		ImGui::SetNextWindowBgAlpha(0.5);
 
-	ImGui::Begin("cfgMenuTip", nullptr, ImGuiWindowFlags_NoDecoration |
-		ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
-		ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing);
+		ImGui::Begin("cfgMenuTip", nullptr, ImGuiWindowFlags_NoDecoration |
+			ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
+			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing);
 
-	std::string tooltip = std::string("re4_tweaks: Press ") + cfg.sConfigMenuKeyCombo + std::string(" to open the configuration menu");
+		std::string tooltip = std::string("re4_tweaks: Press ") + cfg.sConfigMenuKeyCombo + std::string(" to open the configuration menu");
 
-	ImGui::TextUnformatted(tooltip.data());
+		ImGui::TextUnformatted(tooltip.data());
 
-	ImGui::End();
+		ImGui::End();
+	}
 }

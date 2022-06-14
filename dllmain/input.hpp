@@ -58,6 +58,7 @@ public:
 	bool is_any_mouse_button_down() const;
 	bool is_any_mouse_button_pressed() const;
 	bool is_any_mouse_button_released() const;
+	void set_hotkey(std::string* cfgHotkey, bool supportsCombo);
 	short mouse_wheel_delta() const { return _mouse_wheel_delta; }
 	int mouse_movement_delta_x() const { return _mouse_position[0] - _last_mouse_position[0]; }
 	int mouse_movement_delta_y() const { return _mouse_position[1] - _last_mouse_position[1]; }

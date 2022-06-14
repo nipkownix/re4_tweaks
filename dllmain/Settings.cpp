@@ -182,21 +182,36 @@ std::unordered_map<std::string, key_type> key_map
 	{ "RWIN",	{ 0x5C, 0xDC } },  // Right Win
 
 	// VKs for localised keyboards
-	{ ";",	{ VK_OEM_1, 0x27 } },
-	{ ":",	{ VK_OEM_1, 0x27 } },
-	{ "/",	{ VK_OEM_2, 0x35 } },
-	{ "?",	{ VK_OEM_2, 0x35 } },
-	{ "'",	{ VK_OEM_3, 0 } },  // UK keyboard
-	{ "@",	{ VK_OEM_3, 0 } },  // UK keyboard
-	{ "[",	{ VK_OEM_4, 0x1A } },
-	{ "{",	{ VK_OEM_4, 0x1A } },
-	{ "\\",	{ VK_OEM_5, 0x2B } },
-	{ "|",	{ VK_OEM_5, 0x2B } },
-	{ "]",	{ VK_OEM_6, 0x1B } },
-	{ "}",	{ VK_OEM_6, 0x1B } },
-	{ "#",	{ VK_OEM_7, 0 } },  // UK keyboard
-	{ "\"", { VK_OEM_7, 0 } },  // UK keyboard
-	{ "`",	{ VK_OEM_8, 0 } },  // UK keyboard
+	{ "ABNT_C1",		{ 0xC1, 0 } },
+	{ "ABNT_C2",		{ 0xC2, 0 } },
+	{ ";",				{ VK_OEM_1, 0x27 } },
+	{ ":",				{ VK_OEM_1, 0x27 } },
+	{ "OEM_1",			{ VK_OEM_1, 0x27 } },
+	{ "<",				{ VK_OEM_102, 0 } },
+	{ ">",				{ VK_OEM_102, 0 } },
+	{ "OEM_102",		{ VK_OEM_102, 0 } },
+	{ "/",				{ VK_OEM_2, 0x35 } },
+	{ "?",				{ VK_OEM_2, 0x35 } },
+	{ "OEM_2",			{ VK_OEM_2, 0x35 } },
+	{ "`",				{ VK_OEM_3, 0 } },
+	{ "~",				{ VK_OEM_3, 0 } },
+	{ "OEM_3",			{ VK_OEM_3, 0 } },
+	{ "[",				{ VK_OEM_4, 0x1A } },
+	{ "{",				{ VK_OEM_4, 0x1A } },
+	{ "OEM_4",			{ VK_OEM_4, 0x1A } },
+	{ "\\",				{ VK_OEM_5, 0x2B } },
+	{ "|",				{ VK_OEM_5, 0x2B } },
+	{ "OEM_5",			{ VK_OEM_5, 0x2B } },
+	{ "]",				{ VK_OEM_6, 0x1B } },
+	{ "}",				{ VK_OEM_6, 0x1B } },
+	{ "OEM_6",			{ VK_OEM_6, 0x1B } },
+	{ "\"",				{ VK_OEM_7, 0 } },
+	{ "'",				{ VK_OEM_7, 0 } },
+	{ "OEM_7",			{ VK_OEM_7, 0 } },
+	{ "`",				{ VK_OEM_8, 0 } },
+	{ "§",				{ VK_OEM_8, 0 } },
+	{ "!",				{ VK_OEM_8, 0 } },
+	{ "OEM_8",			{ VK_OEM_8, 0 } },
 
 	// Mouse
 	{ "LMOUSE", { VK_LBUTTON, 0 } },
@@ -377,14 +392,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
-	cfg.bUseSprintToggle = iniReader.ReadBoolean("KEYBOARD", "UseSprintToggle", cfg.bUseSprintToggle);
 	cfg.bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
-	cfg.sFlipItemUp = iniReader.ReadString("KEYBOARD", "FlipItemUp", cfg.sFlipItemUp);
-	cfg.sFlipItemDown = iniReader.ReadString("KEYBOARD", "FlipItemDown", cfg.sFlipItemDown);
-	cfg.sFlipItemLeft = iniReader.ReadString("KEYBOARD", "FlipItemLeft", cfg.sFlipItemLeft);
-	cfg.sFlipItemRight = iniReader.ReadString("KEYBOARD", "FlipItemRight", cfg.sFlipItemRight);
-	cfg.sQTE_key_1 = iniReader.ReadString("KEYBOARD", "QTE_key_1", cfg.sQTE_key_1);
-	cfg.sQTE_key_2 = iniReader.ReadString("KEYBOARD", "QTE_key_2", cfg.sQTE_key_2);
 
 	// CONTROLLER
 	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
@@ -455,6 +463,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
 	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
 	cfg.bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", cfg.bAllowAshleySuplex);
+	cfg.bUseSprintToggle = iniReader.ReadBoolean("MISC", "UseSprintToggle", cfg.bUseSprintToggle);
 	cfg.bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", cfg.bDisableQTE);
 	cfg.bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE);
 	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
@@ -478,6 +487,13 @@ void Settings::ReadSettings(std::string_view ini_path)
 		// Update console title
 		con.TitleKeyCombo = cfg.sConsoleKeyCombo;
 	}
+
+	cfg.sFlipItemUp = iniReader.ReadString("HOTKEYS", "FlipItemUp", cfg.sFlipItemUp);
+	cfg.sFlipItemDown = iniReader.ReadString("HOTKEYS", "FlipItemDown", cfg.sFlipItemDown);
+	cfg.sFlipItemLeft = iniReader.ReadString("HOTKEYS", "FlipItemLeft", cfg.sFlipItemLeft);
+	cfg.sFlipItemRight = iniReader.ReadString("HOTKEYS", "FlipItemRight", cfg.sFlipItemRight);
+	cfg.sQTE_key_1 = iniReader.ReadString("HOTKEYS", "QTE_key_1", cfg.sQTE_key_1);
+	cfg.sQTE_key_2 = iniReader.ReadString("HOTKEYS", "QTE_key_2", cfg.sQTE_key_2);
 
 	cfg.sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", cfg.sDebugMenuKeyCombo);
 	if (cfg.sDebugMenuKeyCombo.length())
@@ -580,14 +596,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
-	iniReader.WriteBoolean("KEYBOARD", "UseSprintToggle", cfg.bUseSprintToggle);
 	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
-	iniReader.WriteString("KEYBOARD", "FlipItemUp", " " + cfg.sFlipItemUp);
-	iniReader.WriteString("KEYBOARD", "FlipItemDown", " " + cfg.sFlipItemDown);
-	iniReader.WriteString("KEYBOARD", "FlipItemLeft", " " + cfg.sFlipItemLeft);
-	iniReader.WriteString("KEYBOARD", "FlipItemRight", " " + cfg.sFlipItemRight);
-	iniReader.WriteString("KEYBOARD", "QTE_key_1", " " + cfg.sQTE_key_1);
-	iniReader.WriteString("KEYBOARD", "QTE_key_2", " " + cfg.sQTE_key_2);
 
 	// CONTROLLER
 	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
@@ -613,6 +622,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
 	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
 	iniReader.WriteBoolean("MISC", "AllowAshleySuplex", cfg.bAllowAshleySuplex);
+	iniReader.WriteBoolean("MISC", "UseSprintToggle", cfg.bUseSprintToggle);
 	iniReader.WriteBoolean("MISC", "DisableQTE", cfg.bDisableQTE);
 	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
@@ -626,6 +636,12 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	// HOTKEYS
 	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + cfg.sConfigMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "Console", " " + cfg.sConsoleKeyCombo);
+	iniReader.WriteString("HOTKEYS", "FlipItemUp", " " + cfg.sFlipItemUp);
+	iniReader.WriteString("HOTKEYS", "FlipItemDown", " " + cfg.sFlipItemDown);
+	iniReader.WriteString("HOTKEYS", "FlipItemLeft", " " + cfg.sFlipItemLeft);
+	iniReader.WriteString("HOTKEYS", "FlipItemRight", " " + cfg.sFlipItemRight);
+	iniReader.WriteString("HOTKEYS", "QTE_key_1", " " + cfg.sQTE_key_1);
+	iniReader.WriteString("HOTKEYS", "QTE_key_2", " " + cfg.sQTE_key_2);
 	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + cfg.sDebugMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + cfg.sMouseTurnModifierKeyCombo);
 	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + cfg.sJetSkiTrickCombo);
