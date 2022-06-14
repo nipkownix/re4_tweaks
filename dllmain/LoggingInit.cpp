@@ -119,28 +119,7 @@ void LogSettings()
 	// KEYBOARD
 	Logging::Log() << "+ KEYBOARD-----------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "UseSprintToggle", cfg.bUseSprintToggle ? "true" : "false");
-	Logging::Log() << settingBuf;
-
 	sprintf(settingBuf, "| %-30s | %15s |", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons ? "true" : "false");
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemUp", cfg.sFlipItemUp.data());
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemDown", cfg.sFlipItemDown.data());
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemLeft", cfg.sFlipItemLeft.data());
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemRight", cfg.sFlipItemRight.data());
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_1", cfg.sQTE_key_1.data());
-	Logging::Log() << settingBuf;
-
-	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_2", cfg.sQTE_key_2.data());
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -218,6 +197,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "AllowAshleySuplex", cfg.bAllowAshleySuplex ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "UseSprintToggle", cfg.bUseSprintToggle ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "DisableQTE", cfg.bDisableQTE ? "true" : "false");
 	Logging::Log() << settingBuf;
 	
@@ -253,6 +235,24 @@ void LogSettings()
 	Logging::Log() << settingBuf;
 
 	sprintf(settingBuf, "| %-30s | %15s |", "Console", cfg.sConsoleKeyCombo.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemUp", cfg.sFlipItemUp.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemDown", cfg.sFlipItemDown.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemLeft", cfg.sFlipItemLeft.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemRight", cfg.sFlipItemRight.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_1", cfg.sQTE_key_1.data());
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_2", cfg.sQTE_key_2.data());
 	Logging::Log() << settingBuf;
 
 	sprintf(settingBuf, "| %-30s | %15s |", "DebugMenu", cfg.sDebugMenuKeyCombo.data());
