@@ -243,7 +243,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	{
 		char c = combo[i];
 
-		if (!isalpha(c) && (c < 0x30 || c > 0x39) && c != '-')
+		if (!isalpha(c) && (c < 0x30 || c > 0x39) && c != '-' && c != '_')
 		{
 			// seperator, try parsing previous token
 
