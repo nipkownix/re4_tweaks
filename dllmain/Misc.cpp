@@ -297,7 +297,7 @@ BYTE __stdcall j_PlSetCostume_Hook()
 		GlobalPtr()->Costume_subchar_4FCB = (uint8_t)cfg.CostumeOverride.Ashley;
 		break;
 	case CharacterID::Ashley:
-		GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Ashley;
+		// GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Ashley; <- Disabled for being very unreliable. Crashed on me many times, and when it didn't Ashley had parts of her body invisible. TODO: Fix this oe day.
 		break;
 	case CharacterID::Ada:
 	{
