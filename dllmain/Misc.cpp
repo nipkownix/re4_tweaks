@@ -453,20 +453,6 @@ void Init_Misc()
 		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
 		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
 
-		// Event__ExePacket_SetParts -- Issue: Game would load Leon's jacket into cutscenes if Ashley's costume was set to Normal.
-		// Similar to the Chicago Typewriter stuff.
-		pattern = hook::pattern("0F B6 81 ? ? ? ? 48 53 8B 5D ? 56 57 8B 7B ? 0F 84 ? ? ? ? 8A 81 ? ? ? ? 84 C0");
-		struct ExePacket_SetParts_struct
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				if ((LeonCostumes)GlobalPtr()->plCostume_4FC9 == LeonCostumes::Jacket)
-					regs.ef &= ~(1 << regs.zero_flag);
-				else
-					regs.ef |= (1 << regs.zero_flag);
-			}
-		}; injector::MakeInline<ExePacket_SetParts_struct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(8));
-
 		Logging::Log() << "OverrideCostumes applied";
 	}
 
