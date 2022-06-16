@@ -793,6 +793,14 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// FixDitmanGlitch
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &cfg.bFixDitmanGlitch);
+				ImGui::TextWrapped("Fixes the Ditman glitch, which would allow players to increase their walk speed.");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// UseSprintToggle
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &cfg.bUseSprintToggle);
 				ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");

@@ -408,6 +408,61 @@ struct SYSTEM_SAVE
 static_assert(sizeof(SYSTEM_SAVE) == 0xA0, "sizeof(SYSTEM_SAVE)"); // TODO: find if this size is correct
 
 #pragma pack(push, 1)
+struct MOTION_INFO
+{
+  int fcvDataPtr_0;
+  uint32_t* animDataPtr_4;
+  int16_t field_8;
+  int field_A;
+  int16_t field_E;
+  int field_10;
+  int16_t field_14;
+  int field_16;
+  int16_t field_1A;
+  int field_1C;
+  float frameCount_20;
+  float frameCurrent_24;
+  float frameCurrent_Backup_28;
+  float framePrev_2C;
+  uint8_t numAnimNodes_30;
+  uint8_t unk_31[3];
+  int animNodeAddrs_34;
+  void* animDescPtr_38;
+  uint16_t field_3C;
+  uint16_t field_3E;
+  uint16_t motionFlags_40;
+  uint16_t field_42;
+  uint32_t flags_44;
+  Vec field_48;
+  Vec field_54;
+  Vec field_60;
+  float field_6C;
+  float field_70;
+  float field_74;
+  float field_78;
+  float field_7C;
+  float field_80;
+  Vec field_84;
+  Vec field_90;
+  Vec field_9C;
+  uint16_t* field_A8;
+  int16_t field_AC;
+  int16_t field_AE;
+  int16_t field_B0;
+  int16_t flags_B2;
+  int field_B4;
+  float cur_frame_B8;
+  uint16_t numFrames_BC;
+  uint8_t unk_BE[2];
+  float speed_C0;
+  uint8_t field_C4;
+  uint8_t field_C5;
+  uint8_t unk_C6[2];
+  float field_C8;
+  uint8_t* field_CC;
+};
+static_assert(sizeof(MOTION_INFO) == 0xD0, "sizeof(MOTION_INFO)");
+
 struct cPlayer // unsure if correct name!
 {
   /* 0x000 */ uint8_t unk0[0x94];
@@ -416,10 +471,12 @@ struct cPlayer // unsure if correct name!
   /* 0x09C */ float Z;
   /* 0x0A0 */ float unkA0;
   /* 0x0A4 */ float Angle;
+  /* 0x0A8 */ uint8_t unk_A8[0x1D8 - 0xA8];
+  /* 0x1D8 */ MOTION_INFO MotInfo_1D8;
   /* goes to 7F0+ */
 };
 #pragma pack(pop)
-static_assert(sizeof(cPlayer) == 0xA8, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
+static_assert(sizeof(cPlayer) == 0x2A8, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
 
 struct DatTblEntry
 {

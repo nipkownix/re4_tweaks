@@ -42,7 +42,6 @@ struct Settings
 	bool bFixRetryLoadMouseSelector = true;
 
 	// KEYBOARD
-	bool bUseSprintToggle = false;
 	bool bFallbackToEnglishKeyIcons = true;
 	std::string sFlipItemUp = "HOME";
 	std::string sFlipItemDown = "END";
@@ -83,6 +82,8 @@ struct Settings
 	bool bAllowMafiaLeonCutscenes = true;
 	bool bSilenceArmoredAshley = false;
 	bool bAllowAshleySuplex = false;
+	bool bFixDitmanGlitch = false;
+	bool bUseSprintToggle = false;
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
 	bool bSkipIntroLogos = false;
