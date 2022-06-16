@@ -322,6 +322,30 @@ BYTE __stdcall j_PlSetCostume_Hook()
 	return val;
 }
 
+typedef void(__cdecl* wepXX_routine)(cPlayer* a1);
+wepXX_routine wep17_r3_ready00 = nullptr;
+wepXX_routine wep17_r3_ready10 = nullptr;
+wepXX_routine wep02_r3_ready10 = nullptr;
+
+float(__cdecl* CameraControl__getCameraDirection)();
+void __cdecl wep17_r3_ready00_Hook(cPlayer* a1)
+{
+	// Update weapon direction to match camera if allowing quickturn
+	if(cfg.bAllowMatildaQuickturn)
+		a1->plWep_7D8->field_30 = CameraControl__getCameraDirection();
+
+	wep17_r3_ready00(a1);
+}
+
+void __cdecl wep17_r3_ready10_Hook(cPlayer* a1)
+{
+	// Jump to wep02_r3_ready10 to allow Mathilda to quickturn character
+	if (cfg.bAllowMatildaQuickturn)
+		wep02_r3_ready10(a1);
+	else
+		wep17_r3_ready10(a1);
+}
+
 void(__fastcall* cPlayer__weaponInit)(cPlayer* thisptr, void* unused);
 void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 {
@@ -346,6 +370,30 @@ void Init_Misc()
 		
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, PATCH_JUMP);
+	}
+	// Hooks to allow quickturning character when wielding Matilda
+	// (credits to qingsheng8848 for finding out this method!)
+	{
+		// Get pointer to wep02_r2_ready func table
+		auto pattern = hook::pattern("89 45 FC 53 56 8B 75 08 0F B6 86 FF 00 00 00 8B 0C 85");
+		uint32_t* wep02_r2_ready_funcTbl = *pattern.count(1).get(0).get<uint32_t*>(0x12);
+
+		wep02_r3_ready10 = (wepXX_routine)wep02_r2_ready_funcTbl[1];
+
+		// Get pointer to wep17_r2_ready (mathilda) func table
+		pattern = hook::pattern("C6 40 24 01 0F B6 86 FF 00 00 00 8B 0C 85 ? ? ? ? 56 FF D1 83 C4 04 83 3D");
+		uint32_t* wep17_r2_ready_funcTbl = *pattern.count(1).get(0).get<uint32_t*>(0xE);
+
+		wep17_r3_ready00 = (wepXX_routine)wep17_r2_ready_funcTbl[0];
+		wep17_r3_ready10 = (wepXX_routine)wep17_r2_ready_funcTbl[1];
+
+		// Hook wep17_r3_ready00 & ready10
+		wep17_r2_ready_funcTbl[0] = (uint32_t)&wep17_r3_ready00_Hook;
+		wep17_r2_ready_funcTbl[1] = (uint32_t)&wep17_r3_ready10_Hook;
+
+		// Fetch CameraControl::getCameraDirection addr
+		pattern = hook::pattern("E8 ? ? ? ? 8B 96 D8 07 00 00 D9 5A 30");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CameraControl__getCameraDirection);
 	}
 	// Hook SsTermMain MDT reading functions so we can load loose file instead
 	{

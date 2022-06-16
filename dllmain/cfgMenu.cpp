@@ -793,6 +793,15 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// AllowMatildaQuickturn
+				cfg.HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &cfg.bAllowMatildaQuickturn);
+				ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
+				ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// FixDitmanGlitch
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &cfg.bFixDitmanGlitch);
 				ImGui::TextWrapped("Fixes the Ditman glitch, which would allow players to increase their walk speed.");
