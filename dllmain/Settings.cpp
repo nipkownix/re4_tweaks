@@ -463,6 +463,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
 	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
 	cfg.bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", cfg.bAllowAshleySuplex);
+	cfg.bFixDitmanGlitch = iniReader.ReadBoolean("MISC", "FixDitmanGlitch", cfg.bFixDitmanGlitch);
 	cfg.bUseSprintToggle = iniReader.ReadBoolean("MISC", "UseSprintToggle", cfg.bUseSprintToggle);
 	cfg.bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", cfg.bDisableQTE);
 	cfg.bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE);
@@ -622,6 +623,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
 	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
 	iniReader.WriteBoolean("MISC", "AllowAshleySuplex", cfg.bAllowAshleySuplex);
+	iniReader.WriteBoolean("MISC", "FixDitmanGlitch", cfg.bFixDitmanGlitch);
 	iniReader.WriteBoolean("MISC", "UseSprintToggle", cfg.bUseSprintToggle);
 	iniReader.WriteBoolean("MISC", "DisableQTE", cfg.bDisableQTE);
 	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE);

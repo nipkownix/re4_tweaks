@@ -177,6 +177,10 @@ SilenceArmoredAshley = false
 ; (previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)
 AllowAshleySuplex = false
 
+; Fixes the Ditman glitch, which would allow players to increase their walk speed.
+; Not recommended, but mod makers may be interested in enabling this (see Bin32/re4_tweaks/setting_overrides/overrides_info.txt)
+FixDitmanGlitch = false
+
 ; Changes sprint key to act like a toggle instead of needing to be held.
 UseSprintToggle = false
 

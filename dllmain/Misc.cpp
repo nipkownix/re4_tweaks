@@ -322,8 +322,31 @@ BYTE __stdcall j_PlSetCostume_Hook()
 	return val;
 }
 
+void(__fastcall* cPlayer__weaponInit)(cPlayer* thisptr, void* unused);
+void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
+{
+	// Fix Ditman glitch by resetting player anim speed to 1 when weapon changing (weaponInit is called during change)
+	// Ditman glitch seems to be caused by changing weapon while in-between different weapon states
+	// The Striker has unique code inside wep07_r3_ready00 state which increases this speed var to 1.4
+	// (maybe as a workaround to increase the anim speed without redoing anims, no other weps have similar code)
+	// Normally this would then be nearly-instantly reverted back to 1.0 by the wep07_r3_ready10 state, but changing weapons can interrupt that
+	// We fix that here by resetting speed to 1 whenever weapon change is occurring, pretty simple fix
+
+	if (cfg.bFixDitmanGlitch)
+		thisptr->MotInfo_1D8.speed_C0 = 1.0f;
+
+	cPlayer__weaponInit(thisptr, unused);
+}
+
 void Init_Misc()
 {
+	// Hook cPlayer::weaponInit so we can add code to fix ditman glitch
+	{
+		auto pattern = hook::pattern("83 C4 0C E8 ? ? ? ? D9 EE 8B 06 D9 9E 44 05 00 00");
+		
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, PATCH_JUMP);
+	}
 	// Hook SsTermMain MDT reading functions so we can load loose file instead
 	{
 		auto pattern = hook::pattern("8B 41 44 A3");

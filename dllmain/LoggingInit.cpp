@@ -197,6 +197,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "AllowAshleySuplex", cfg.bAllowAshleySuplex ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "FixDitmanGlitch", cfg.bFixDitmanGlitch ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "UseSprintToggle", cfg.bUseSprintToggle ? "true" : "false");
 	Logging::Log() << settingBuf;
 
