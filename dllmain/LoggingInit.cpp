@@ -41,6 +41,18 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15i |", "CustomRefreshRate", cfg.iCustomRefreshRate);
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideLaserColor", cfg.bOverrideLaserColor ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "LaserR", cfg.fLaserRGB[0] * 255.0f);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "LaserG", cfg.fLaserRGB[1] * 255.0f);
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15f |", "LaserB", cfg.fLaserRGB[2] * 255.0f);
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15s |", "RestorePickupTransparency", cfg.bRestorePickupTransparency ? "true" : "false");
 	Logging::Log() << settingBuf;
 

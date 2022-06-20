@@ -24,6 +24,15 @@ FixDisplayMode = true
 ; -1 will make it try to use the current refresh rate as reported by Windows.
 CustomRefreshRate = -1
 
+; Overrides the color of the laser sights.
+; Values used here are RGB, in that order.
+; Note: The game's vanilla config.ini contains a setting to change the alpha/opacity of the laser,
+; but since it doesn't work, we don't include it here.
+OverrideLaserColor = false
+LaserR = 255
+LaserG = 0
+LaserB = 0
+
 ; Restores a transparency effect that is missing from the item pickup screeen.
 RestorePickupTransparency = true
 

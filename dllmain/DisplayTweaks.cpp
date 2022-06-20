@@ -7,6 +7,7 @@
 #include "Logging/Logging.h"
 #include "EndSceneHook.h"
 #include "Patches.h"
+#include "cfgMenu.h"
 
 int g_UserRefreshRate;
 
@@ -17,6 +18,11 @@ uintptr_t ptrAfterEsp04TransHook;
 
 uintptr_t* ptrNonBlurryVertex;
 uintptr_t* ptrBlurryVertex;
+
+uint32_t* ptrLaserR;
+uint32_t* ptrLaserG;
+uint32_t* ptrLaserB;
+uint32_t* ptrLaserA;
 
 void __declspec(naked) ItemExamineHook()
 {
@@ -246,6 +252,46 @@ void Init_DisplayTweaks()
 
 		if (cfg.bRestorePickupTransparency)
 			Logging::Log() << "RestorePickupTransparency enabled";
+	}
+
+	// Override laser sight colors
+	{
+		auto pattern = hook::pattern("D9 05 ? ? ? ? D9 99 ? ? ? ? 8B 55 ? D9 05 ? ? ? ? D9");
+		ptrLaserR = *pattern.count(1).get(0).get<uint32_t*>(2);
+		ptrLaserG = *pattern.count(1).get(0).get<uint32_t*>(17);
+		ptrLaserB = *pattern.count(1).get(0).get<uint32_t*>(32);
+		ptrLaserA = *pattern.count(1).get(0).get<uint32_t*>(47);
+
+		pattern = hook::pattern("A1 ? ? ? ? D9 5D ? 83 F8 ? 75 ? 8B 15 ? ? ? ? D9 45 ? 8B 0D ? ? ? ? 83");
+		struct DrawLaserStruct
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (cfg.bOverrideLaserColor)
+				{
+					*(float*)(ptrLaserR) = cfg.fLaserRGB[0] * 255.0f;
+					*(float*)(ptrLaserG) = cfg.fLaserRGB[1] * 255.0f;
+					*(float*)(ptrLaserB) = cfg.fLaserRGB[2] * 255.0f;
+
+					// Seems the game disables reading custom RGB colors if the alpha is set to 255?
+					// The alpha value also seems to be doing nothing useful. It does affect the opacity of the laser dot, but not the line itself.
+					// Forcing 220 makes it look okay-ish.
+					*(int8_t*)(ptrLaserA) = (int8_t)220;
+				}
+				else
+				{
+					*(float*)(ptrLaserR) = 255.0f;
+					*(float*)(ptrLaserG) = 0.0f;
+					*(float*)(ptrLaserB) = 0.0f;
+					*(int8_t*)(ptrLaserA) = (int8_t)255;
+				}
+
+				regs.eax = *(int8_t*)(ptrLaserA);
+			}
+		}; injector::MakeInline<DrawLaserStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		pattern = hook::pattern("a1 ? ? ? ? 83 f8 ? 75 ? 8b 0d ? ? ? ? d9 45 ? 8b 15 ? ? ? ? 83 ec");
+		injector::MakeInline<DrawLaserStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
 
 	// Disable Filter03 for now, as we have yet to find a way to actually fix it

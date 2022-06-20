@@ -358,6 +358,12 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
 	cfg.bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	cfg.iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
+	cfg.bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", cfg.bOverrideLaserColor);
+
+	cfg.fLaserRGB[0] = iniReader.ReadFloat("DISPLAY", "LaserR", cfg.fLaserR) / 255.0f;
+	cfg.fLaserRGB[1] = iniReader.ReadFloat("DISPLAY", "LaserG", cfg.fLaserG) / 255.0f;
+	cfg.fLaserRGB[2] = iniReader.ReadFloat("DISPLAY", "LaserB", cfg.fLaserB) / 255.0f;
+
 	cfg.bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);
 	cfg.bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03);
 	cfg.bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", cfg.bFixBlurryImage);
@@ -571,6 +577,12 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
+	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", cfg.bOverrideLaserColor);
+
+	iniReader.WriteFloat("DISPLAY", "LaserR", cfg.fLaserRGB[0] * 255.0f);
+	iniReader.WriteFloat("DISPLAY", "LaserG", cfg.fLaserRGB[1] * 255.0f);
+	iniReader.WriteFloat("DISPLAY", "LaserB", cfg.fLaserRGB[2] * 255.0f);
+
 	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);
 	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03);
 	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", cfg.bFixBlurryImage);

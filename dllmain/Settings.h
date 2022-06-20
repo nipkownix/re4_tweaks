@@ -15,6 +15,11 @@ struct Settings
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
 	int iCustomRefreshRate = -1;
+	bool bOverrideLaserColor = false;
+	float fLaserRGB[3] = { 1.0f, 0.0f, 0.0f };
+	float fLaserR = 255;
+	float fLaserG = 0;
+	float fLaserB = 0;
 	bool bRestorePickupTransparency = true;
 	bool bDisableBrokenFilter03 = true;
 	bool bFixBlurryImage = true;
@@ -43,12 +48,6 @@ struct Settings
 
 	// KEYBOARD
 	bool bFallbackToEnglishKeyIcons = true;
-	std::string sFlipItemUp = "HOME";
-	std::string sFlipItemDown = "END";
-	std::string sFlipItemLeft = "INSERT";
-	std::string sFlipItemRight = "PAGEUP";
-	std::string sQTE_key_1 = "D";
-	std::string sQTE_key_2 = "A";
 
 	// CONTROLLER
 	float fControllerSensitivity = 1.0f;
@@ -98,6 +97,12 @@ struct Settings
 	// HOTKEYS
 	std::string sConfigMenuKeyCombo = "F1";
 	std::string sConsoleKeyCombo = "F2";
+	std::string sFlipItemUp = "HOME";
+	std::string sFlipItemDown = "END";
+	std::string sFlipItemLeft = "INSERT";
+	std::string sFlipItemRight = "PAGEUP";
+	std::string sQTE_key_1 = "D";
+	std::string sQTE_key_2 = "A";
 	std::string sDebugMenuKeyCombo = "CTRL+F3";
 	std::string sMouseTurnModifierKeyCombo = "ALT";
 	std::string sJetSkiTrickCombo = "LMOUSE+RMOUSE";

@@ -317,6 +317,35 @@ void cfgMenuRender()
 				ImGui::Separator();
 				ImGui::Spacing();
 
+				// OverrideLaserColor
+				if (ImGui::BeginTable("LaserTable", 2, TableFlags))
+				{
+					ImGui::TableSetupColumn("Col1", ImGuiTableColumnFlags_WidthFixed, 480.0f);
+					ImGui::TableSetupColumn("Col2", ImGuiTableColumnFlags_WidthStretch, 320.0f);
+
+					ImGui::TableNextColumn();
+					cfg.HasUnsavedChanges |= ImGui::Checkbox("OverrideLaserColor", &cfg.bOverrideLaserColor);
+					ImGui::TextWrapped("Overrides the color of the laser sights.");
+					ImGui::TextWrapped("Note: The game's vanilla config.ini contains a setting to change the");
+					ImGui::TextWrapped("alpha/opacity of the laser, but since it doesn't work, we don't include it here.");
+
+					ImGui::TableNextColumn();
+
+					ImGui::Dummy(ImVec2(0.0f, 25.0f));
+
+					ImGui::BeginDisabled(!cfg.bOverrideLaserColor);
+
+					ImGui::ColorEdit4("Laser color picker", cfg.fLaserRGB, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs);
+
+					ImGui::EndDisabled();
+
+					ImGui::EndTable();
+				}
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				// RestorePickupTransparency
 				cfg.HasUnsavedChanges |= ImGui::Checkbox("RestorePickupTransparency", &cfg.bRestorePickupTransparency);
 				ImGui::TextWrapped("Restores transparency on the item pickup screeen.");
