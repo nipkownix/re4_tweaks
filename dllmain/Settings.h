@@ -82,6 +82,7 @@ struct Settings
 	bool bAllowMafiaLeonCutscenes = true;
 	bool bSilenceArmoredAshley = false;
 	bool bAllowAshleySuplex = false;
+	bool bAllowMatildaQuickturn = false;
 	bool bFixDitmanGlitch = false;
 	bool bUseSprintToggle = false;
 	bool bDisableQTE = false;

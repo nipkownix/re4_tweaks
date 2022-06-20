@@ -463,6 +463,31 @@ struct MOTION_INFO
 };
 static_assert(sizeof(MOTION_INFO) == 0xD0, "sizeof(MOTION_INFO)");
 
+struct cPlWep
+{
+  uint8_t unk_0[32];
+  uint8_t field_20;
+  uint8_t field_21;
+  uint8_t unk_22[1];
+  uint8_t field_23;
+  uint8_t field_24;
+  uint8_t unk_25[1];
+  uint8_t flags_26;
+  uint8_t unk_27[1];
+  float field_28;
+  float field_2C;
+  float field_30;
+  void* wep0_ptr_34;
+  void* wep1_ptr_38;
+  uint8_t unk_3C[4];
+  uint8_t field_40;
+  uint8_t unk_41[1];
+  char field_42;
+  uint8_t field_43;
+  Vec field_44;
+};
+static_assert(sizeof(cPlWep) == 0x50, "sizeof(cPlWep)");
+
 struct cPlayer // unsure if correct name!
 {
   /* 0x000 */ uint8_t unk0[0x94];
@@ -473,10 +498,12 @@ struct cPlayer // unsure if correct name!
   /* 0x0A4 */ float Angle;
   /* 0x0A8 */ uint8_t unk_A8[0x1D8 - 0xA8];
   /* 0x1D8 */ MOTION_INFO MotInfo_1D8;
+  /* 0x2A8 */ uint8_t unk_2A8[0x7D8 - 0x2A8];
+  /* 0x7D8 */ cPlWep* plWep_7D8;
   /* goes to 7F0+ */
 };
 #pragma pack(pop)
-static_assert(sizeof(cPlayer) == 0x2A8, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
+static_assert(sizeof(cPlayer) == 0x7DC, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
 
 struct DatTblEntry
 {
