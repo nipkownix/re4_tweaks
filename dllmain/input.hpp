@@ -58,6 +58,9 @@ public:
 	bool is_any_mouse_button_down() const;
 	bool is_any_mouse_button_pressed() const;
 	bool is_any_mouse_button_released() const;
+	std::string KeyMap_getSTR(int keyINT);
+	int KeyMap_getVK(std::string keySTR);
+	int KeyMap_getDIK(std::string keySTR);
 	void set_hotkey(std::string* cfgHotkey, bool supportsCombo);
 	short mouse_wheel_delta() const { return _mouse_wheel_delta; }
 	int mouse_movement_delta_x() const { return _mouse_position[0] - _last_mouse_position[0]; }
@@ -124,6 +127,8 @@ public:
 	/// <param name="message_data">A pointer to a <see cref="MSG"/> with the message data.</param>
 	/// <returns><c>true</c> if the called should ignore this message, or <c>false</c> if it should pass it on to the application.</returns>
 	static bool handle_window_message(const void *message_data);
+
+	void Init_Input();
 
 private:
 	std::shared_mutex _mutex;

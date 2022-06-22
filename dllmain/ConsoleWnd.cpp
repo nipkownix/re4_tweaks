@@ -8,6 +8,7 @@
 #include "imgui\imgui_impl_win32.h"
 #include "imgui\imgui_impl_dx9.h"
 #include "input.hpp"
+#include "cfgMenu.h"
 
 ConsoleOutput con;
 
@@ -206,7 +207,7 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
-    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide");
+    std::string name = str_to_utf8(std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide"));
     ImGui::Begin(name.data());
     ImGui::End();
     Draw(name.data());

@@ -2,6 +2,7 @@
 
 void cfgMenuRender();
 void ShowCfgMenuTip();
+std::string str_to_utf8(std::string const& str);
 
 extern bool bCfgMenuOpen;
 extern bool bWaitingForHotkey;

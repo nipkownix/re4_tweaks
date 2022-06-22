@@ -74,6 +74,22 @@ void SetHotkeyThread(std::string* cfgHotkey)
 	return;
 }
 
+// ImGui can't render special chars such as "Ç" without this. Meh.
+std::string str_to_utf8(std::string const& str)
+{
+	int slength = (int)str.length() + 1;
+	int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, 0, 0);
+	std::wstring wide(len, L'\0');
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, &wide[0], len);
+
+	slength = (int)wide.length() + 1;
+	len = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), slength, 0, 0, 0, 0);
+	std::string utf8(len, '\0');
+	WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), slength, &utf8[0], len, 0, 0);
+
+	return utf8;
+}
+
 void cfgMenuRender()
 {
 	ImGui::SetNextWindowSize(ImVec2(960, 630), ImGuiCond_FirstUseEver);
@@ -939,7 +955,7 @@ void cfgMenuRender()
 				ImGui::Spacing();
 
 				ImGui::PushID(1);
-				if (ImGui::Button(cfg.sConfigMenuKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sConfigMenuKeyCombo).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sConfigMenuKeyCombo, 0, NULL);
@@ -959,7 +975,7 @@ void cfgMenuRender()
 				ImGui::Spacing();
 
 				ImGui::PushID(2);
-				if (ImGui::Button(cfg.sConsoleKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sConsoleKeyCombo).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sConsoleKeyCombo, 0, NULL);
@@ -984,7 +1000,7 @@ void cfgMenuRender()
 
 				// UP
 				ImGui::PushID(3);
-				if (ImGui::Button(cfg.sFlipItemUp.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sFlipItemUp).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemUp, 0, NULL);
@@ -995,7 +1011,7 @@ void cfgMenuRender()
 
 				// DOWN
 				ImGui::PushID(4);
-				if (ImGui::Button(cfg.sFlipItemDown.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sFlipItemDown).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemDown, 0, NULL);
@@ -1008,7 +1024,7 @@ void cfgMenuRender()
 
 				// LEFT
 				ImGui::PushID(5);
-				if (ImGui::Button(cfg.sFlipItemLeft.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sFlipItemLeft).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemLeft, 0, NULL);
@@ -1019,7 +1035,7 @@ void cfgMenuRender()
 
 				// RIGHT
 				ImGui::PushID(6);
-				if (ImGui::Button(cfg.sFlipItemRight.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sFlipItemRight).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemRight, 0, NULL);
@@ -1044,7 +1060,7 @@ void cfgMenuRender()
 
 				// QTE1
 				ImGui::PushID(7);
-				if (ImGui::Button(cfg.sQTE_key_1.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sQTE_key_1).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sQTE_key_1, 0, NULL);
@@ -1057,7 +1073,7 @@ void cfgMenuRender()
 
 				// QTE2
 				ImGui::PushID(8);
-				if (ImGui::Button(cfg.sQTE_key_2.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sQTE_key_2).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sQTE_key_2, 0, NULL);
@@ -1078,7 +1094,7 @@ void cfgMenuRender()
 				ImGui::Spacing();
 
 				ImGui::PushID(9);
-				if (ImGui::Button(cfg.sDebugMenuKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sDebugMenuKeyCombo).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sDebugMenuKeyCombo, 0, NULL);
@@ -1098,7 +1114,7 @@ void cfgMenuRender()
 				ImGui::Spacing();
 
 				ImGui::PushID(10);
-				if (ImGui::Button(cfg.sMouseTurnModifierKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sMouseTurnModifierKeyCombo).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sMouseTurnModifierKeyCombo, 0, NULL);
@@ -1118,7 +1134,7 @@ void cfgMenuRender()
 				ImGui::Spacing();
 
 				ImGui::PushID(11);
-				if (ImGui::Button(cfg.sJetSkiTrickCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(str_to_utf8(cfg.sJetSkiTrickCombo).c_str(), ImVec2(150, 0)))
 				{
 					cfg.HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sJetSkiTrickCombo, 0, NULL);
@@ -1149,7 +1165,7 @@ void ShowCfgMenuTip()
 			ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
 			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing);
 
-		std::string tooltip = std::string("re4_tweaks: Press ") + cfg.sConfigMenuKeyCombo + std::string(" to open the configuration menu");
+		std::string tooltip = str_to_utf8(std::string("re4_tweaks: Press ") + cfg.sConfigMenuKeyCombo + std::string(" to open the configuration menu"));
 
 		ImGui::TextUnformatted(tooltip.data());
 

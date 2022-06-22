@@ -5,8 +5,6 @@
 
 struct Settings
 {
-	int KeyMap(const char* key, bool get_vk);
-
 	// DISPLAY
 	float fFOVAdditional = 0.0f;
 	bool bEnableFOV = false;

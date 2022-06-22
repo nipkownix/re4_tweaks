@@ -13,6 +13,7 @@
 #include "ConsoleWnd.h"
 #include "Settings.h"
 #include <iomanip>
+#include <array>
 #include "MouseTurning.h"
 
 std::shared_ptr<class input> _input;
@@ -21,6 +22,12 @@ extern HMODULE g_module_handle;
 static std::shared_mutex s_windows_mutex;
 static std::unordered_map<HWND, unsigned int> s_raw_input_windows;
 static std::unordered_map<HWND, std::weak_ptr<input>> s_windows;
+
+static std::unordered_map<unsigned int, std::string> _keyboardStringMap;
+
+static std::unordered_map<std::string, unsigned int> _keyboardVKMap;
+static std::unordered_map<std::string, unsigned int> _keyboardDIKMap;
+
 
 input::input(window_handle window)
 	: _window(window)
@@ -422,6 +429,88 @@ bool input::is_any_mouse_button_released() const
 	return false;
 }
 
+std::string input::KeyMap_getSTR(int keyINT)
+{
+	if (!_keyboardStringMap.count(keyINT))
+		return std::string();
+
+	return _keyboardStringMap[keyINT];
+}
+
+int input::KeyMap_getVK(std::string keySTR)
+{
+
+	if (!_keyboardVKMap.count(keySTR))
+		return 0;
+
+	return _keyboardVKMap[keySTR];
+}
+
+int input::KeyMap_getDIK(std::string keySTR)
+{
+
+	if (!_keyboardDIKMap.count(keySTR))
+		return 0;
+
+	return _keyboardDIKMap[keySTR];
+}
+
+std::string WstrToStr(const std::wstring& wstr)
+{
+	const int BUFF_SIZE = 7;
+	if (MB_CUR_MAX >= BUFF_SIZE) throw std::invalid_argument("BUFF_SIZE too small");
+	std::string result;
+	bool shifts = std::wctomb(nullptr, 0);  // reset the conversion state
+	for (const wchar_t wc : wstr)
+	{
+		std::array<char, BUFF_SIZE> buffer;
+		const int ret = std::wctomb(buffer.data(), wc);
+		if (ret < 0) throw std::invalid_argument("inconvertible wide characters in the current locale");
+		buffer[ret] = '\0';  // make 'buffer' contain a C-style string
+		result = result + std::string(buffer.data());
+	}
+	return result;
+}
+
+void ClearKeyboardBuffer(int key_code, BYTE* keyboard_state)
+{
+	unsigned int scan_code = MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
+
+	wchar_t chars[5];
+	int code = 0;
+	do {
+		code = ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
+	} while (code < 0);
+}
+
+std::string get_str_from_VK(int key_code) {
+
+	unsigned int scan_code = MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
+
+	uint8_t keyStates[256];
+	memset(keyStates, 1, 256); // all pressed
+
+	wchar_t chars[5];
+	int code = ToUnicode(key_code, scan_code, keyStates, chars, 4, 0);
+
+	if (code == -1) {
+		// dead key
+		if (chars[0] == 0 || iswcntrl(chars[0])) {
+			return std::string();
+		}
+		code = 1;
+	}
+
+	// Avoid stuff like ´´ or ~~
+	ClearKeyboardBuffer(key_code, keyStates);
+
+	if (code <= 0 || (code == 1 && iswcntrl(chars[0]))) {
+		return std::string();
+	}
+
+	return WstrToStr(chars);
+}
+
 void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
 {
 	int HotkeyVK1 = 0;
@@ -435,7 +524,7 @@ void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
 
 	bool waitingforkey = true;
 
-	while (waitingforkey == true) {
+	while (waitingforkey) {
 		for (unsigned int Key1 = 0; Key1 < ARRAYSIZE(_keys); Key1++)
 		{
 			while (is_key_down(Key1)) {
@@ -456,6 +545,11 @@ void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
 		}
 	}
 
+	// Clear the second hotkey if they're the same.
+	// I've had that happen before due to deadkey weirdness.
+	if (HotkeyVK1 == HotkeyVK2)
+		HotkeyVK2 = 0;
+
 	#ifdef VERBOSE
 	con.AddConcatLog("HotkeyVK1 = ", HotkeyVK1);
 	con.AddConcatLog("HotkeyVK2 = ", HotkeyVK2);
@@ -465,23 +559,23 @@ void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
 	// As of now, there's no popup informing the user that the key is unsupported. TODO: Add popup?
 	if (HotkeyVK2 > 0)
 	{
-		if ((cfg.KeyMap(key_name(HotkeyVK1).c_str(), true) == 0) || (cfg.KeyMap(key_name(HotkeyVK2).c_str(), true) == 0))
+		if (KeyMap_getSTR(HotkeyVK1).empty() || KeyMap_getSTR(HotkeyVK2).empty())
 		{
 			*cfgHotkey = OrigHotkeyCombo;
 			return;
 		}
 		else
-			FinalHotkeyCombo = key_name(HotkeyVK1) + "+" + key_name(HotkeyVK2);
+			FinalHotkeyCombo = KeyMap_getSTR(HotkeyVK1) + "+" + KeyMap_getSTR(HotkeyVK2);
 	}
 	else
 	{
-		if ((cfg.KeyMap(key_name(HotkeyVK1).c_str(), true) == 0))
+		if (KeyMap_getSTR(HotkeyVK1).empty())
 		{
 			*cfgHotkey = OrigHotkeyCombo;
 			return;
 		}
 		else
-			FinalHotkeyCombo = key_name(HotkeyVK1);
+			FinalHotkeyCombo = KeyMap_getSTR(HotkeyVK1);
 	}
 
 	#ifdef VERBOSE
@@ -902,8 +996,119 @@ void InstallGetCursorPos_Hook()
 	GetCursorPos_orig = (decltype(GetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetCursorPos, nullptr, nullptr);
 }
 
-void Init_Input()
+void input::Init_Input()
 {
+	// Populate string map
+	Logging::Log() << "Populating keymap...";
+
+	std::string keystring;
+	for (int i = 0; i < 256; ++i)
+	{
+		keystring = get_str_from_VK(i);
+
+		_keyboardStringMap.insert(_keyboardStringMap.end(), std::pair<unsigned int, std::string>(i, keystring));
+		keystring = "";
+	}
+
+	_keyboardStringMap[0x1B] = "ESCAPE";
+	_keyboardStringMap[0x70] = "F1";
+	_keyboardStringMap[0x71] = "F2";
+	_keyboardStringMap[0x72] = "F3";
+	_keyboardStringMap[0x73] = "F4";
+	_keyboardStringMap[0x74] = "F5";
+	_keyboardStringMap[0x75] = "F6";
+	_keyboardStringMap[0x76] = "F7";
+	_keyboardStringMap[0x77] = "F8";
+	_keyboardStringMap[0x78] = "F9";
+	_keyboardStringMap[0x79] = "F10";
+	_keyboardStringMap[0x7A] = "F11";
+	_keyboardStringMap[0x7B] = "F12";
+	_keyboardStringMap[0x7C] = "F13";
+	_keyboardStringMap[0x7D] = "F14";
+	_keyboardStringMap[0x7E] = "F15";
+	_keyboardStringMap[0x08] = "BACKSPACE";
+	_keyboardStringMap[0x20] = "SPACE";
+	_keyboardStringMap[0x2D] = "INSERT";
+	_keyboardStringMap[0x23] = "END";
+	_keyboardStringMap[0x24] = "HOME";
+	_keyboardStringMap[0x22] = "PAGEDOWN";
+	_keyboardStringMap[0x21] = "PAGEUP";
+	_keyboardStringMap[0x2E] = "DELETE";
+	_keyboardStringMap[0x0D] = "ENTER";
+	_keyboardStringMap[0x09] = "TAB";
+	_keyboardStringMap[0x14] = "CAPSLOCK";
+	_keyboardStringMap[0x5D] = "APPS";
+	_keyboardStringMap[0x15] = "KANA";
+	_keyboardStringMap[0x19] = "KANJI";
+	_keyboardStringMap[0x1C] = "CONVERT";
+	_keyboardStringMap[0x1D] = "NONCONVERT";
+	_keyboardStringMap[0x2C] = "PRINTSCR";
+	_keyboardStringMap[0x91] = "SCROLL";
+	_keyboardStringMap[0x13] = "PAUSE";
+
+	// Numpad
+	_keyboardStringMap[0x90] = "NUMLOCK";
+	_keyboardStringMap[0x6F] = "NUMPAD_/";
+	_keyboardStringMap[0x6C] = "NUMPAD_ENTER";
+	_keyboardStringMap[0x6A] = "NUMPAD_*";
+	_keyboardStringMap[0x6D] = "NUMPAD_-";
+	_keyboardStringMap[0x6B] = "NUMPAD_+";
+	_keyboardStringMap[0x6E] = "NUMPAD_.";
+	_keyboardStringMap[0x60] = "NUMPAD_0";
+	_keyboardStringMap[0x61] = "NUMPAD_1";
+	_keyboardStringMap[0x62] = "NUMPAD_2";
+	_keyboardStringMap[0x63] = "NUMPAD_3";
+	_keyboardStringMap[0x64] = "NUMPAD_4";
+	_keyboardStringMap[0x65] = "NUMPAD_5";
+	_keyboardStringMap[0x66] = "NUMPAD_6";
+	_keyboardStringMap[0x67] = "NUMPAD_7";
+	_keyboardStringMap[0x68] = "NUMPAD_8";
+	_keyboardStringMap[0x68] = "NUMPAD_9";
+
+	// Arrow keys
+	_keyboardStringMap[0x26] = "UP";
+	_keyboardStringMap[0x28] = "DOWN";
+	_keyboardStringMap[0x25] = "LEFT";
+	_keyboardStringMap[0x27] = "RIGHT";
+
+	// Shift
+	_keyboardStringMap[0x10] = "SHIFT";
+	_keyboardStringMap[0xA0] = "LSHIFT";
+	_keyboardStringMap[0xA1] = "RSHIFT";
+
+	// Control
+	_keyboardStringMap[0x11] = "CTRL";
+	_keyboardStringMap[0xA2] = "LCTRL";
+	_keyboardStringMap[0xA3] = "RCTRL";
+
+	// Alt
+	_keyboardStringMap[0x12] = "ALT";
+	_keyboardStringMap[0xA4] = "LALT";
+	_keyboardStringMap[0xA5] = "RALT";
+
+	// Winkey
+	_keyboardStringMap[0x5B] = "LWIN";
+	_keyboardStringMap[0x5C] = "RWIN";
+
+	// Mouse
+	_keyboardStringMap[VK_LBUTTON] = "LMOUSE";
+	_keyboardStringMap[VK_RBUTTON] = "RMOUSE";
+	_keyboardStringMap[VK_MBUTTON] = "MMOUSE";
+	_keyboardStringMap[VK_XBUTTON1] = "MOUSE4";
+	_keyboardStringMap[VK_XBUTTON2] = "MOUSE5";
+
+	// Copy string map to vk map, inverting the items, so we can get VK from str
+	for (std::unordered_map<unsigned int, std::string>::iterator i = _keyboardStringMap.begin(); i != _keyboardStringMap.end(); ++i)
+		_keyboardVKMap[i->second] = i->first;
+
+	// Populate DIK map, so we can get DIK from str
+	for (int i = 0; i < 256; ++i) 
+	{
+		unsigned int DIK = MapVirtualKeyEx(i, /*MAPVK_VK_TO_VSC*/0, GetKeyboardLayout(0)) & 0xFF;
+
+		_keyboardDIKMap.insert(_keyboardDIKMap.end(), std::pair<std::string, unsigned int>(_keyboardStringMap[i], DIK));
+	}
+
 	Logging::Log() << "Hooking input-related APIs...";
 
 	InstallGetMessageA_Hook();

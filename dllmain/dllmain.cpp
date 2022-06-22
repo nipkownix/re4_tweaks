@@ -8,6 +8,7 @@
 #include "Game.h"
 #include "Patches.h"
 #include "Logging/Logging.h"
+#include "input.hpp"
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -31,6 +32,13 @@ void Init_Main()
 {
 	con.AddLogChar("Big ironic thanks to QLOC S.A.");
 
+	Init_Logging();
+
+	// Install input-related hooks and populate keymap
+	_input->Init_Input();
+
+	cfg.ReadSettings();
+
 	if (!Init_Game())
 		return;
 
@@ -50,9 +58,6 @@ void Init_Main()
 	Init_KeyboardMouseTweaks();
 
 	Init_ControllerTweaks();
-
-	// Install input-related hooks
-	Init_Input();
 
 	// Install a WndProc hook and register the resulting hWnd for input
 	Init_WndProcHook();
@@ -92,9 +97,17 @@ void LoadRealDLL(HMODULE hModule)
 	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());
 
 	const char* wrappedDllPath = nullptr;
-	if (cfg.sWrappedDllPath.size())
+
+	// Read WrappedDLLPath from .ini file
+	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+
+	char userDllPath[256] = {};
+
+	GetPrivateProfileStringA("MISC", "WrappedDLLPath", "", userDllPath, 256, iniPath.c_str());
+
+	if (strlen(userDllPath) > 0)
 	{
-		wrappedDllPath = cfg.sWrappedDllPath.c_str();
+		wrappedDllPath = userDllPath;
 		// User has specified a DLL to wrap, make sure it exists first:
 		if (GetFileAttributesA(wrappedDllPath) == 0xFFFFFFFF)
 			wrappedDllPath = nullptr;
@@ -115,10 +128,6 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		g_module_handle = hModule;
 
 		StorePath(hModule);
-
-		Init_Logging();
-
-		cfg.ReadSettings();
 
 		LoadRealDLL(hModule);
 

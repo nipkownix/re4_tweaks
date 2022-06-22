@@ -10,6 +10,7 @@
 #include "MouseTurning.h"
 #include "cfgMenu.h"
 #include "Patches.h"
+#include "input.hpp"
 
 Settings cfg;
 
@@ -19,213 +20,6 @@ const std::string sHDProjectOverrideName = "HDProject.ini";
 const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
 const char* sAdaCostumeNames[] = {"RE2", "Spy", "Normal"};
-
-struct key_type {
-	int vk;
-	int dik;
-};
-
-std::unordered_map<std::string, key_type> key_map
-{
-	{ "ESCAPE",		{ 0x1B, 0x01 } },  // Esc
-	{ "ESC",		{ 0x1B, 0x01 } },  // Esc
-	{ "0",			{ 0x30, 0x0B } },  // 0
-	{ "1",			{ 0x31, 0x02 } },  // 1
-	{ "2",			{ 0x32, 0x03 } },  // 2
-	{ "3",			{ 0x33, 0x04 } },  // 3
-	{ "4",			{ 0x34, 0x05 } },  // 4
-	{ "5",			{ 0x35, 0x06 } },  // 5
-	{ "6",			{ 0x36, 0x07 } },  // 6
-	{ "7",			{ 0x37, 0x08 } },  // 7
-	{ "8",			{ 0x38, 0x09 } },  // 8
-	{ "9",			{ 0x39, 0x0A } },  // 9
-	{ "A",			{ 0x41, 0x1E } },  // A
-	{ "B",			{ 0x42, 0x30 } },  // B
-	{ "C",			{ 0x43, 0x2E } },  // C
-	{ "D",			{ 0x44, 0x20 } },  // D
-	{ "E",			{ 0x45, 0x12 } },  // E
-	{ "F",			{ 0x46, 0x21 } },  // F
-	{ "G",			{ 0x47, 0x22 } },  // G
-	{ "H",			{ 0x48, 0x23 } },  // H
-	{ "I",			{ 0x49, 0x17 } },  // I
-	{ "J",			{ 0x4A, 0x24 } },  // J
-	{ "K",			{ 0x4B, 0x25 } },  // K
-	{ "L",			{ 0x4C, 0x26 } },  // L
-	{ "M",			{ 0x4D, 0x32 } },  // M
-	{ "N",			{ 0x4E, 0x31 } },  // N
-	{ "O",			{ 0x4F, 0x18 } },  // O
-	{ "P",			{ 0x50, 0x19 } },  // P
-	{ "Q",			{ 0x51, 0x10 } },  // Q
-	{ "R",			{ 0x52, 0x13 } },  // R
-	{ "S",			{ 0x53, 0x1F } },  // S
-	{ "T",			{ 0x54, 0x14 } },  // T
-	{ "U",			{ 0x55, 0x16 } },  // U
-	{ "V",			{ 0x56, 0x2F } },  // V
-	{ "W",			{ 0x57, 0x11 } },  // W
-	{ "X",			{ 0x58, 0x2D } },  // X
-	{ "Y",			{ 0x59, 0x15 } },  // Y
-	{ "Z",			{ 0x5A, 0x2C } },  // Z
-	{ "BACK",		{ 0x08, 0x0E } },  // Backspace
-	{ "BACKSPACE",  { 0x08, 0x0E } },  // Backspace
-	{ "BKSP",		{ 0x08, 0x0E } },  // Backspace
-	{ "ADD",		{ 0x6B, 0x4E } },  // Numpad +
-	{ "NUM+",		{ 0x6B, 0x4E } },  // Numpad +
-	{ "DECIMAL",	{ 0x6E, 0x53 } },  // Numpad .
-	{ "NUM.",		{ 0x6E, 0x53 } },  // Numpad .
-	{ "DIVIDE",		{ 0x6F, 0xB5 } },  // Numpad /
-	{ "NUM/",		{ 0x6F, 0xB5 } },  // Numpad /
-	{ "MULTIPLY",	{ 0x6A, 0x37 } },  // Numpad *
-	{ "NUM*",		{ 0x6A, 0x37 } },  // Numpad *
-	{ "SUBTRACT",	{ 0x6D, 0x4A } },  // Numpad -
-	{ "NUM-",		{ 0x6D, 0x4A } },  // Numpad -
-	{ "NUMPAD0",	{ 0x60, 0x52 } },  // Numpad 0
-	{ "NUMPAD1",	{ 0x61, 0x4F } },  // Numpad 1
-	{ "NUMPAD2",	{ 0x62, 0x50 } },  // Numpad 2
-	{ "NUMPAD3",	{ 0x63, 0x51 } },  // Numpad 3
-	{ "NUMPAD4",	{ 0x64, 0x4B } },  // Numpad 4
-	{ "NUMPAD5",	{ 0x65, 0x4C } },  // Numpad 5
-	{ "NUMPAD6",	{ 0x66, 0x4D } },  // Numpad 6
-	{ "NUMPAD7",	{ 0x67, 0x47 } },  // Numpad 7
-	{ "NUMPAD8",	{ 0x68, 0x48 } },  // Numpad 8
-	{ "NUMPAD9",	{ 0x69, 0x49 } },  // Numpad 9
-	{ "NUM0",		{ 0x60, 0x52 } },  // Numpad 0
-	{ "NUM1",		{ 0x61, 0x4F } },  // Numpad 1
-	{ "NUM2",		{ 0x62, 0x50 } },  // Numpad 2
-	{ "NUM3",		{ 0x63, 0x51 } },  // Numpad 3
-	{ "NUM4",		{ 0x64, 0x4B } },  // Numpad 4
-	{ "NUM5",		{ 0x65, 0x4C } },  // Numpad 5
-	{ "NUM6",		{ 0x66, 0x4D } },  // Numpad 6
-	{ "NUM7",		{ 0x67, 0x47 } },  // Numpad 7
-	{ "NUM8",		{ 0x68, 0x48 } },  // Numpad 8
-	{ "NUM9",		{ 0x69, 0x49 } },  // Numpad 9
-	{ "OEM_COMMA",  { 0xBC, 0x33 } },  // OEM_COMMA (< ,)
-	{ "OEM_MINUS",  { 0xBD, 0x0C } },  // OEM_MINUS (_ -)
-	{ "OEM_PERIOD", { 0xBE, 0x34 } },  // OEM_PERIOD (> .)
-	{ "OEM_PLUS",	{ 0xBB, 0x0D } },  // OEM_PLUS (+ =)
-	{ "<",			{ 0xBC, 0x33 } },  // OEM_COMMA (< ,)
-	{ ",",			{ 0xBC, 0x33 } },  // OEM_COMMA (< ,)
-	{ "_",			{ 0xBD, 0x0C } },  // OEM_MINUS (_ -)
-	{ "-",			{ 0xBD, 0x0C } },  // OEM_MINUS (_ -)
-	{ ">",			{ 0xBE, 0x34 } },  // OEM_PERIOD (> .)
-	{ ".",			{ 0xBE, 0x34 } },  // OEM_PERIOD (> .)
-	{ "+",			{ 0xBB, 0x0D } },  // OEM_PLUS (+ =)
-	{ "=",			{ 0xBB, 0x0D } },  // OEM_PLUS (+ =)
-	{ "RETURN",		{ 0x0D, 0x1C } },  // Enter
-	{ "ENTER",		{ 0x0D, 0x1C } },  // Enter
-	{ "RENTER",		{ 0x6C, 0x9C } },  // Right/Numpad Enter
-	{ "SPACE",		{ 0x20, 0x39 } },  // Space
-	{ "TAB",		{ 0x09, 0x0F } },  // Tab
-	{ "APPS",		{ 0x5D, 0xDD } },  // Context Menu
-	{ "CAPSLOCK",	{ 0x14, 0x3A } },  // Caps Lock
-	{ "CONVERT",	{ 0x1C, 0x79 } },  // Convert
-	{ "UP",			{ 0x26, 0xC8 } },  // Arrow Up
-	{ "DOWN",		{ 0x28, 0xD0 } },  // Arrow Down
-	{ "LEFT",		{ 0x25, 0xCB } },  // Arrow Left
-	{ "RIGHT",		{ 0x27, 0xCD } },  // Arrow Right
-	{ "F1",			{ 0x70, 0x3B } },  // F1
-	{ "F2",			{ 0x71, 0x3C } },  // F2
-	{ "F3",			{ 0x72, 0x3D } },  // F3
-	{ "F4",			{ 0x73, 0x3E } },  // F4
-	{ "F5",			{ 0x74, 0x3F } },  // F5
-	{ "F6",			{ 0x75, 0x40 } },  // F6
-	{ "F7",			{ 0x76, 0x41 } },  // F7
-	{ "F8",			{ 0x77, 0x42 } },  // F8
-	{ "F9",			{ 0x78, 0x43 } },  // F9
-	{ "F10",		{ 0x79, 0x44 } },  // F10
-	{ "F11",		{ 0x7A, 0x57 } },  // F11
-	{ "F12",		{ 0x7B, 0x58 } },  // F12
-	{ "F13",		{ 0x7C, 0x64 } },  // F13
-	{ "F14",		{ 0x7D, 0x65 } },  // F14
-	{ "F15",		{ 0x7E, 0x66 } },  // F15
-	{ "HOME",		{ 0x24, 0xC7 } },  // Home
-	{ "INSERT",		{ 0x2D, 0xD2 } },  // Insert
-	{ "DELETE",		{ 0x2E, 0xD3 } },  // Delete
-	{ "DEL",		{ 0x2E, 0xD3 } },  // Delete
-	{ "END",		{ 0x23, 0xCF } },  // End
-	{ "PAGEUP",		{ 0x21, 0xC9 } },  // Page Up
-	{ "PAGEDOWN",	{ 0x22, 0xD1 } },  // Page Down
-	{ "PGUP",		{ 0x21, 0xC9 } },  // Page Up
-	{ "PGDOWN",		{ 0x22, 0xD1 } },  // Page Down
-	{ "KANA",		{ 0x15, 0x70 } },  // Kana
-	{ "KANJI",		{ 0x19, 0x94 } },  // Kanji
-	{ "NONCONVERT",	{ 0x1D, 0x7B } },  // Non Convert
-	{ "NUMLOCK",	{ 0x90, 0x45 } },  // Num Lock
-	{ "PAUSE",		{ 0x13, 0xC5 } },  // Pause
-	{ "SCROLL",		{ 0x91, 0x46 } },  // Scrol Lock
-	{ "SLEEP",		{ 0x5F, 0xDF } },  // Sleep
-	{ "PRINTSCR",	{ 0x2C, 0xB7 } },  // Print Screen
-
-	// Control
-	{ "CONTROL",	{ 0x11, 0x1D } },  // Ctrl
-	{ "CTRL",		{ 0x11, 0x1D } },  // Ctrl
-	{ "LCONTROL",	{ 0xA2, 0x1D } },  // Left Ctrl
-	{ "LCTRL",		{ 0xA2, 0x1D } },  // Left Ctrl
-	{ "RCONTROL",	{ 0xA3, 0x9D } },  // Right Ctrl
-	{ "RCTRL",		{ 0xA3, 0x9D } },  // Right Ctrl
-
-	// Alt
-	{ "MENU",	{ 0x12, 0x38 } },  // Alt
-	{ "LMENU",	{ 0xA4, 0x38 } },  // Left Alt
-	{ "RMENU",	{ 0xA5, 0xB8 } },  // Right Alt
-	{ "ALT",	{ 0x12, 0x38 } },  // Alt
-	{ "LALT",	{ 0xA4, 0x38 } },  // Left Alt
-	{ "RALT",	{ 0xA5, 0xB8 } },  // Right Alt
-	{ "ALTGR",	{ 0xA5, 0xB8 } },  // Right Alt
-
-	// Shift
-	{ "SHIFT",	{ 0x10, 0x2A } },  // Shift
-	{ "LSHIFT", { 0xA0, 0x2A } },  // Left Shift
-	{ "RSHIFT", { 0xA1, 0x36 } },  // Right Shift
-	
-	// Winkey
-	{ "LWIN",	{ 0x5B, 0xDB } },  // Left Win
-	{ "RWIN",	{ 0x5C, 0xDC } },  // Right Win
-
-	// VKs for localised keyboards
-	{ "ABNT_C1",		{ 0xC1, 0 } },
-	{ "ABNT_C2",		{ 0xC2, 0 } },
-	{ ";",				{ VK_OEM_1, 0x27 } },
-	{ ":",				{ VK_OEM_1, 0x27 } },
-	{ "OEM_1",			{ VK_OEM_1, 0x27 } },
-	{ "<",				{ VK_OEM_102, 0 } },
-	{ ">",				{ VK_OEM_102, 0 } },
-	{ "OEM_102",		{ VK_OEM_102, 0 } },
-	{ "/",				{ VK_OEM_2, 0x35 } },
-	{ "?",				{ VK_OEM_2, 0x35 } },
-	{ "OEM_2",			{ VK_OEM_2, 0x35 } },
-	{ "`",				{ VK_OEM_3, 0 } },
-	{ "~",				{ VK_OEM_3, 0 } },
-	{ "OEM_3",			{ VK_OEM_3, 0 } },
-	{ "[",				{ VK_OEM_4, 0x1A } },
-	{ "{",				{ VK_OEM_4, 0x1A } },
-	{ "OEM_4",			{ VK_OEM_4, 0x1A } },
-	{ "\\",				{ VK_OEM_5, 0x2B } },
-	{ "|",				{ VK_OEM_5, 0x2B } },
-	{ "OEM_5",			{ VK_OEM_5, 0x2B } },
-	{ "]",				{ VK_OEM_6, 0x1B } },
-	{ "}",				{ VK_OEM_6, 0x1B } },
-	{ "OEM_6",			{ VK_OEM_6, 0x1B } },
-	{ "\"",				{ VK_OEM_7, 0 } },
-	{ "'",				{ VK_OEM_7, 0 } },
-	{ "OEM_7",			{ VK_OEM_7, 0 } },
-	{ "`",				{ VK_OEM_8, 0 } },
-	{ "§",				{ VK_OEM_8, 0 } },
-	{ "!",				{ VK_OEM_8, 0 } },
-	{ "OEM_8",			{ VK_OEM_8, 0 } },
-
-	// Mouse
-	{ "LMOUSE", { VK_LBUTTON, 0 } },
-	{ "RMOUSE", { VK_RBUTTON, 0 } },
-	{ "MMOUSE", { VK_MBUTTON, 0 } },
-	{ "LCLICK", { VK_LBUTTON, 0 } },
-	{ "RCLICK", { VK_RBUTTON, 0 } },
-	{ "MCLICK", { VK_MBUTTON, 0 } },
-	{ "MOUSE1", { VK_LBUTTON, 0 } },
-	{ "MOUSE2", { VK_RBUTTON, 0 } },
-	{ "MOUSE3", { VK_MBUTTON, 0 } },
-	{ "MOUSE4", { VK_XBUTTON1, 0 } },
-	{ "MOUSE5", { VK_XBUTTON2, 0 } }
-};
 
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 {
@@ -237,19 +31,18 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	std::vector<uint32_t> new_combo;
 	std::string cur_token;
 
-	// Parse combo tokens into buttons bitfield (tokens seperated by any
-	// non-alphabetical char, eg. +)
+	// Parse combo tokens into buttons bitfield (tokens seperated by "+")
 	for (size_t i = 0; i < combo.length(); i++)
 	{
 		char c = combo[i];
 
-		if (!isalpha(c) && (c < 0x30 || c > 0x39) && c != '-' && c != '_')
+		if (c == '+')
 		{
 			// seperator, try parsing previous token
 
 			if (cur_token.length())
 			{
-				uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
+				uint32_t token_num = _input->KeyMap_getVK(cur_token);
 				if (!token_num)
 				{
 					// parse failed...
@@ -270,7 +63,8 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 
 	if (cur_token.length())
 	{
-		uint32_t token_num = cfg.KeyMap(cur_token.c_str(), true);
+		// Get VK for the current token and push it into the vector
+		uint32_t token_num = _input->KeyMap_getVK(cur_token);
 		if (!token_num)
 		{
 			// parse failed...
@@ -283,21 +77,11 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	return new_combo;
 }
 
-int Settings::KeyMap(const char* key, bool get_vk)
-{
-	if (!key_map.count(key))
-		return 0;
-
-	if (get_vk)
-		return key_map[key].vk;
-
-	return key_map[key].dik;
-}
-
 void Settings::ReadSettings()
 {
 	// Read default settings file first
-	ReadSettings("");
+	std::string sDefaultIniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+	ReadSettings(sDefaultIniPath);
 
 	// Try reading any setting override files
 	auto override_path = rootPath + sSettingOverridesPath;
@@ -338,10 +122,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	CIniReader iniReader(ini_path);
 
 	#ifdef VERBOSE
-	if (!ini_path.length())
-		con.AddLogChar("Reading settings");
-	else
-		con.AddLogChar("Reading settings from %s", ini_path.data());
+	con.AddLogChar("Reading settings from %s", ini_path.data());
 	#endif
 
 	cfg.HasUnsavedChanges = false;
@@ -426,8 +207,6 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", cfg.bPrecacheModels);
 
 	// MISC
-	cfg.sWrappedDllPath = iniReader.ReadString("MISC", "WrappedDLLPath", cfg.sWrappedDllPath);
-
 	cfg.bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", cfg.bOverrideCostumes);
 
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");

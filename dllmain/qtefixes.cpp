@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 #include "Logging/Logging.h"
 #include "Game.h"
+#include "input.hpp"
 
 uintptr_t* ptrKrauserQTEMovAddr;
 static uint32_t* ptrQTEactive;
@@ -79,7 +80,7 @@ int* __cdecl KEY1prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = cfg.KeyMap(cfg.sQTE_key_1.data(), false);
+	int newKey = _input->KeyMap_getDIK(cfg.sQTE_key_1);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -88,7 +89,7 @@ int* __cdecl KEY2prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = cfg.KeyMap(cfg.sQTE_key_2.data(), false);
+	int newKey = _input->KeyMap_getDIK(cfg.sQTE_key_2);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -516,7 +517,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.ebx = cfg.KeyMap(cfg.sQTE_key_1.data(), false);
+					regs.ebx = _input->KeyMap_getDIK(cfg.sQTE_key_1);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -529,7 +530,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.edx = cfg.KeyMap(cfg.sQTE_key_2.data(), false);
+					regs.edx = _input->KeyMap_getDIK(cfg.sQTE_key_2);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));

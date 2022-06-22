@@ -325,11 +325,13 @@ void Init_KeyboardMouseTweaks()
 			void operator()(injector::reg_pack& regs)
 			{
 				regs.eax = *(int32_t*)ptrInvMovAddr;
-
-				if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemLeft.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemRight.data(), true)))
+				
+				// input::is_key_pressed doesn't seem work reliably here. Not sure why, but using GetAsyncKeyState is fine since this code only runs if 
+				// the player is moving something in the inventory.
+				if ((GetAsyncKeyState(_input->KeyMap_getVK(cfg.sFlipItemLeft)) & 1) || (GetAsyncKeyState(_input->KeyMap_getVK(cfg.sFlipItemRight)) & 1))
 					regs.eax = 0x00300000;
 
-				else if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemUp.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemDown.data(), true)))
+				else if ((GetAsyncKeyState(_input->KeyMap_getVK(cfg.sFlipItemUp)) & 1) || (GetAsyncKeyState(_input->KeyMap_getVK(cfg.sFlipItemDown)) & 1))
 					regs.eax = 0x00C00000;
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
