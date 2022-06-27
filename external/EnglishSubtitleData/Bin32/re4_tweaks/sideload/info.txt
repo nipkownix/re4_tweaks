@@ -1,4 +1,4 @@
-This folder contains newly made English subtitles, which were originally missing from the game.
-Also fixes up a few typos in the existing radio conversation subtitles.
+This folder contains newly made English subtitles which were originally missing from the game, and fixes up a few typos in the existing radio conversation subtitles.
 
-Many thanks to linkthehylian, Zaphero1, nr1995 & laymonage for writing/contributing to these text fixes, and zatarita for helping locate the radio files!
+Many thanks to linkthehylian, Zaphero1, nr1995, laymonage & albert for writing/contributing to these text fixes, and zatarita for helping locate the radio files!
+Also thanks to albert for contributing fixes to the Spanish subtitles!
