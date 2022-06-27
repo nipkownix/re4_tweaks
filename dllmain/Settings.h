@@ -48,10 +48,10 @@ struct Settings
 	bool bFallbackToEnglishKeyIcons = true;
 
 	// CONTROLLER
+	bool bOverrideControllerSensitivity = false;
 	float fControllerSensitivity = 1.0f;
-	bool bEnableControllerSens = false;
 	bool bRemoveExtraXinputDeadzone = true;
-	bool bEnableDeadzoneOverride = true;
+	bool bOverrideXinputDeadzone = true;
 	float fXinputDeadzone = 0.4f;
 
 	// FRAME RATE

@@ -97,7 +97,8 @@ std::string looseFilePath(const char* filePath)
 	std::string origPath = path;
 	if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 	{
-		path = rootPath + "/re4_tweaks/sideload/" + origPath;
+		path = rootPath + "re4_tweaks\\sideload\\" + origPath;
+		con.AddLogChar(path.c_str());
 		if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 		{
 			nonExistentFiles[origPath] = true;

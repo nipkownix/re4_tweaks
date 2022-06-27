@@ -14,7 +14,7 @@
 
 Settings cfg;
 
-const std::string sSettingOverridesPath = "/re4_tweaks/setting_overrides/";
+const std::string sSettingOverridesPath = "re4_tweaks\\setting_overrides\\";
 const std::string sHDProjectOverrideName = "HDProject.ini";
 
 const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
@@ -182,21 +182,15 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
 
 	// CONTROLLER
+	cfg.bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", cfg.bOverrideControllerSensitivity);
 	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
 	cfg.fControllerSensitivity = fmin(fmax(cfg.fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
-	if (cfg.fControllerSensitivity != 1.0f)
-		cfg.bEnableControllerSens = true;
-	else
-		cfg.bEnableControllerSens = false;
 
 	cfg.bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
 
+	cfg.bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", cfg.bOverrideXinputDeadzone);
 	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
 	cfg.fXinputDeadzone = fmin(fmax(cfg.fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
-	if (cfg.fXinputDeadzone != 1.0f)
-		cfg.bEnableDeadzoneOverride = true;
-	else
-		cfg.bEnableDeadzoneOverride = false;
 
 	// FRAME RATE
 	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
@@ -299,7 +293,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	
 	// IMGUI
 	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", cfg.fFontSize);
-	cfg.fFontSize = fmin(fmax(cfg.fFontSize, 1.0f), 1.3f); // limit between 1.0 - 1.3
+	cfg.fFontSize = fmin(fmax(cfg.fFontSize, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
 	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", cfg.bDisableMenuTip);
 
@@ -392,8 +386,10 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
 
 	// CONTROLLER
+	iniReader.WriteBoolean("CONTROLLER", "OverrideControllerSensitivity", cfg.bOverrideControllerSensitivity);
 	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
 	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
+	iniReader.WriteBoolean("CONTROLLER", "OverrideXinputDeadzone", cfg.bOverrideXinputDeadzone);
 	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
 
 	// FRAME RATE

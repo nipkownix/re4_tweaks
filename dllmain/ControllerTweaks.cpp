@@ -24,7 +24,7 @@ void Init_ControllerTweaks()
 			{
 				double aim_spd_val = *(double*)ptrAimSpeedFldAddr;
 
-				if ((GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
+				if (cfg.bOverrideControllerSensitivity && ((GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController)))
 					aim_spd_val /= cfg.fControllerSensitivity;
 
 				_asm {fld aim_spd_val}
@@ -34,7 +34,7 @@ void Init_ControllerTweaks()
 		pattern = hook::pattern("DD 05 ? ? ? ? DC F9 DD 05 ? ? ? ? DC FA D9 01");
 		injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-		if (cfg.fControllerSensitivity != 1.0f)
+		if (cfg.bOverrideControllerSensitivity)
 			Logging::Log() << __FUNCTION__ << " -> Controller sensitivity changes applied";
 	}
 
@@ -59,7 +59,10 @@ void Init_ControllerTweaks()
 		g_XInputDeadzone_RS = (int*)*pattern.count(1).get(0).get<uint32_t>(3);
 
 		// Calculate new PadXinputRead deadzone
-		*g_XInputDeadzone_LS = (int)(cfg.fXinputDeadzone * 7849); // 7849 and 8689 are the default values
-		*g_XInputDeadzone_RS = (int)(cfg.fXinputDeadzone * 8689);
+		if (cfg.bOverrideXinputDeadzone)
+		{
+			*g_XInputDeadzone_LS = (int)(cfg.fXinputDeadzone * 7849); // 7849 and 8689 are the default values
+			*g_XInputDeadzone_RS = (int)(cfg.fXinputDeadzone * 8689);
+		}
 	}
 }

@@ -139,10 +139,16 @@ void LogSettings()
 	// CONTROLLER
 	Logging::Log() << "+ CONTROLLER---------------------+-----------------+";
 
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideControllerSensitivity", cfg.bOverrideControllerSensitivity ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15f |", "ControllerSensitivity", cfg.fControllerSensitivity);
 	Logging::Log() << settingBuf;
 
 	sprintf(settingBuf, "| %-30s | %15s |", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideXinputDeadzone", cfg.bOverrideXinputDeadzone ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	sprintf(settingBuf, "| %-30s | %15f |", "XinputDeadzone", cfg.fXinputDeadzone);
