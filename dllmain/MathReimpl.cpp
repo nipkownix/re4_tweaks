@@ -20,8 +20,6 @@ void* j_PSVECDotProduct;
 float(__cdecl* PSVECDotProduct)(const Vec*, const Vec*);
 void* j_PSVECCrossProduct;
 void(__cdecl* PSVECCrossProduct)(const Vec*, const Vec*, Vec*);
-void* j_PSVECMag;
-float(__cdecl* PSVECMag)(const Vec*);
 void* j_PSVECSquareDistance;
 float(__cdecl* PSVECSquareDistance)(const Vec* a, const Vec* b);
 void* j_GetDistance;
@@ -156,11 +154,6 @@ void VECCrossProduct(const Vec* a, const Vec* b, Vec* axb)
 
 	if (a == axb || b == axb)
 		*axb = *out;
-}
-
-float __cdecl VECMag(const Vec* v)
-{
-	return (float)SQRTF(v->y * v->y + v->x * v->x + v->z * v->z);
 }
 
 float VECSquareDistance(const Vec* a, const Vec* b)
@@ -569,14 +562,9 @@ void Init_MathReimpl()
 			}
 		}
 
-		// VECMag
-		{
-			auto pattern = hook::pattern("E8 ? ? ? ? 8D 55 ? 52 E8 ? ? ? ? D9 5D ? D9 45 ?");
-			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
-			ReadCall(caller, PSVECMag);
-
-			InjectHook(caller, VECMag, PATCH_JUMP);
-		}
+		// note: VECMag used to be hooked here, but our SSE-enabled SQRTF func seemed to cause problems with certain anims
+		// (https://github.com/nipkownix/re4_tweaks/issues/226)
+		// removed until a solution is found
 
 		// VECSquareDistance
 		{
