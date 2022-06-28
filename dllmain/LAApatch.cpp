@@ -59,7 +59,9 @@ void LAApatch::LAARender()
 		ImGui::TextWrapped("Your game executable is missing the 4GB/LAA patch, this will likely cause issues with mods that require increased memory.\n\nDo you want re4_tweaks to patch the game EXE for you? (requires relaunch!)");
 
 		ImGui::Spacing();
-		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 225);
+		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 225, ImGui::GetWindowHeight() - 45));
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
 
 		if (ImGui::Button("Yes", ImVec2(104, 35)))
 		{
@@ -149,6 +151,8 @@ void LAApatch::LAARender()
 		{
 			LAA_State = LAADialogState::NotShowing;
 		}
+
+		ImGui::PopStyleColor();
 
 		ImGui::End();
 	}
