@@ -177,6 +177,8 @@ void LAApatch::LAARender()
 
 		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 113);
 
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
+
 		if (ImGui::Button("OK", ImVec2(104, 35)))
 		{
 			LAA_State = LAADialogState::NotShowing;
@@ -189,6 +191,8 @@ void LAApatch::LAARender()
 				return;
 			}
 		}
+
+		ImGui::PopStyleColor();
 
 		ImGui::End();
 	}

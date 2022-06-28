@@ -58,6 +58,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_KILLFOCUS:
 			// Clear the mouse delta value if we lose focus
 			*(int32_t*)(ptrMouseDeltaX) = 0;
+
+			// Move cursor to the center of the window
+			RECT rect;
+			if (GetWindowRect(hWindow, &rect))
+			{
+				static int width = rect.right - rect.left;
+				static int height = rect.bottom - rect.top;
+
+				SetCursorPos(width / 2, height / 2);
+
+				// Try to show the cursor immediately
+				while (ShowCursor(TRUE) < 0);
+				SetCursor(LoadCursor(NULL, IDC_ARROW));
+				SendMessage(hWindow, WM_SETCURSOR, (WPARAM)hWindow, MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+			}
 			break;
 
 		case WM_CLOSE:
