@@ -140,6 +140,7 @@ void Settings::ReadSettings(std::string_view ini_path)
 	cfg.bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	cfg.iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
 	cfg.bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", cfg.bOverrideLaserColor);
+	cfg.bRainbowLaser = iniReader.ReadBoolean("DISPLAY", "RainbowLaser", cfg.bRainbowLaser);
 
 	cfg.fLaserRGB[0] = iniReader.ReadFloat("DISPLAY", "LaserR", cfg.fLaserR) / 255.0f;
 	cfg.fLaserRGB[1] = iniReader.ReadFloat("DISPLAY", "LaserG", cfg.fLaserG) / 255.0f;
@@ -351,6 +352,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
 	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
 	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", cfg.bOverrideLaserColor);
+	iniReader.WriteBoolean("DISPLAY", "RainbowLaser", cfg.bRainbowLaser);
 
 	iniReader.WriteFloat("DISPLAY", "LaserR", cfg.fLaserRGB[0] * 255.0f);
 	iniReader.WriteFloat("DISPLAY", "LaserG", cfg.fLaserRGB[1] * 255.0f);

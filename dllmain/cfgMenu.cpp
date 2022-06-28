@@ -514,9 +514,18 @@ void cfgMenuRender()
 						ImGui::TextWrapped("alpha/opacity of the laser, but since it doesn't work, we don't include it here.");
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::BeginDisabled(!cfg.bOverrideLaserColor);
+						ImGui::BeginDisabled(!cfg.bOverrideLaserColor || cfg.bRainbowLaser);
 						ImGui::ColorEdit4("Laser color picker", cfg.fLaserRGB, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs);
 						ImGui::EndDisabled();
+
+						ImGui::Spacing();
+
+						ImGui::BeginDisabled(!cfg.bOverrideLaserColor);
+						cfg.HasUnsavedChanges |= ImGui::Checkbox("RainbowLaser", &cfg.bRainbowLaser);
+						ImGui::EndDisabled();
+
+						if (!cfg.bOverrideLaserColor)
+							cfg.bRainbowLaser = false;
 
 						bgHeight = ImGui::GetCursorPos().y;
 					}

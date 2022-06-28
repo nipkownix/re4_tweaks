@@ -44,6 +44,9 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "OverrideLaserColor", cfg.bOverrideLaserColor ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	sprintf(settingBuf, "| %-30s | %15s |", "RainbowLaser", cfg.bRainbowLaser ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	sprintf(settingBuf, "| %-30s | %15f |", "LaserR", cfg.fLaserRGB[0] * 255.0f);
 	Logging::Log() << settingBuf;
 

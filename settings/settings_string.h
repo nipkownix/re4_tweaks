@@ -29,6 +29,7 @@ CustomRefreshRate = -1
 ; Note: The game's vanilla config.ini contains a setting to change the alpha/opacity of the laser,
 ; but since it doesn't work, we don't include it here.
 OverrideLaserColor = false
+RainbowLaser = false
 LaserR = 255
 LaserG = 0
 LaserB = 0

@@ -14,6 +14,7 @@ struct Settings
 	bool bFixDisplayMode = true;
 	int iCustomRefreshRate = -1;
 	bool bOverrideLaserColor = false;
+	bool bRainbowLaser = false;
 	float fLaserRGB[3] = { 1.0f, 0.0f, 0.0f };
 	float fLaserR = 255;
 	float fLaserG = 0;
