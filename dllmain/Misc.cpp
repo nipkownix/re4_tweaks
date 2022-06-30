@@ -484,6 +484,79 @@ void Init_Misc()
 		ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), j_PlSetCostume_Orig);
 		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), j_PlSetCostume_Hook);
 
+		// Separate Ways and Assignment Ada don't call PlSetCostume. Instead, the costume is set at titleAda and titleSub.
+		struct AdaCosStruct
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!cfg.bOverrideCostumes)
+					GlobalPtr()->plCostume_4FC9 = (uint8_t)AdaCostumes::Normal;
+				else
+				{
+					// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
+					uint8_t costumeID = (uint8_t)cfg.CostumeOverride.Ada;
+					if (costumeID == 2)
+						costumeID++;
+
+					GlobalPtr()->plCostume_4FC9 = costumeID;
+
+					#ifdef VERBOSE
+					con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
+					con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+					#endif
+				}
+			}
+		}; 
+		
+		// titleAda
+		pattern = hook::pattern("C6 81 ? ? ? ? ? 8B 15 ? ? ? ? 6A ? C6 82 ? ? ? ? ? A1 ? ? ? ? 80 78");
+		injector::MakeInline<AdaCosStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		// titleSub
+		pattern = hook::pattern("C6 ? ? ? ? ? ? E8 ? ? ? ? 6A ? 68 ? ? ? ? 6A ? 89 46 ? E8 ? ? ? ? 8B 15");
+		injector::MakeInline<AdaCosStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		// The Mercenaries also sets costumes using titleSub.
+		pattern = hook::pattern("C6 46 ? ? 88 4E ? E8 ? ? ? ? 6A ? 6A ? 6A ? 6A ? 6A ? 6A ? E8");
+		struct MercsTitleSubCos
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+
+				*(uint8_t*)(regs.esi + 0x01) = 0x0A;
+				*(uint8_t*)(regs.esi + 0x6E) = (uint8_t)regs.ecx & 0xFF;
+
+				if (cfg.bOverrideCostumes)
+				{
+					CharacterID curPlType = (CharacterID)GlobalPtr()->curPlType_4FC8;
+
+					switch (curPlType)
+					{
+					case CharacterID::Leon:
+						GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Leon;
+						break;
+					case CharacterID::Ada:
+					{
+						// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
+						uint8_t costumeID = (uint8_t)cfg.CostumeOverride.Ada;
+						if (costumeID == 2)
+							costumeID++;
+
+						GlobalPtr()->plCostume_4FC9 = costumeID;
+						break;
+					}
+					default:
+						GlobalPtr()->plCostume_4FC9 = (uint8_t)0; // HUNK, Krauser and Wesker only have one costume
+					}
+
+					#ifdef VERBOSE
+					con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
+					con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+					#endif
+				}
+			}
+		}; injector::MakeInline<MercsTitleSubCos>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
 		// Fix instructions that are checking for Ashley's armor costume instead of Leon's mafia costume, which can a bunch of issues
 		//
 		// PlClothSetLeon -- Issue: Would not apply jacket physics if Ashley isn't armored
