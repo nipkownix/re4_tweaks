@@ -58,6 +58,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_KILLFOCUS:
 			// Clear the mouse delta value if we lose focus
 			*(int32_t*)(ptrMouseDeltaX) = 0;
+			_input->clear_mouse_delta();
 
 			// Move cursor to the center of the window
 			RECT rect;
@@ -84,6 +85,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		// Clear the mouse delta value if the cfg menu is open
 		*(int32_t*)(ptrMouseDeltaX) = 0;
+		_input->clear_mouse_delta();
 	}
 
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);

@@ -82,6 +82,12 @@ public:
 		return delta;
 	}
 
+	void clear_mouse_delta()
+	{
+		_raw_mouse_delta[0] = 0;
+		_raw_mouse_delta[1] = 0;
+	}
+
 	/// <summary>
 	/// Returns the character input as captured by 'WM_CHAR' for the current frame.
 	/// </summary>
