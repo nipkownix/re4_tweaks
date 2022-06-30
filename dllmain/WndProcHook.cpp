@@ -17,7 +17,11 @@ static uint32_t* ptrMouseDeltaX;
 int curPosX;
 int curPosY;
 
-void EnableClipCursor(HWND window) {
+void EnableClipCursor(HWND window)
+{
+	if (cfg.bNeverHideCursor)
+		return;
+
 	RECT rect;
 	GetClientRect(window, &rect);
 
@@ -50,7 +54,8 @@ void EnableClipCursor(HWND window) {
 	#endif
 }
 
-void DisableClipCursor(bool bCenterCursor) {
+void DisableClipCursor(bool bCenterCursor)
+{
 	ClipCursor(nullptr);
 
 	// Move cursor to the center of the window
