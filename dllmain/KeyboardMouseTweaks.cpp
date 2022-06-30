@@ -184,8 +184,8 @@ void InstallShowCursor_hook()
 HCURSOR(WINAPI* SetCursor_orig)(HCURSOR hCursor);
 HCURSOR WINAPI SetCursor_hook(HCURSOR hCursor)
 {
-	// Do nothing.
-	return NULL;
+	// Simply set it to the regular arrow cursor.
+	return SetCursor_orig(LoadCursor(NULL, IDC_ARROW));
 }
 
 FARPROC p_SetCursor = nullptr;
