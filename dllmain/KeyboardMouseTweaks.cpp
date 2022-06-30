@@ -8,6 +8,7 @@
 #include "Logging/Logging.h"
 #include "WndProcHook.h"
 #include "input.hpp"
+#include <Hooking/Hook.h>
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -160,9 +161,55 @@ void Init_KeyIconMapping_Hook()
 	memcpy(g_KeyIconData, KeyIconData_US, sizeof(KeyIconData_US));
 }
 
+int(WINAPI* ShowCursor_orig)(BOOL bShow);
+int WINAPI ShowCursor_hook(BOOL bShow)
+{
+	// Never hide the cursor. Call it using true instead, to avoid any potential weirdness.
+	while (ShowCursor_orig(TRUE) < 0);
+	return 0;
+}
+
+FARPROC p_ShowCursor = nullptr;
+void InstallShowCursor_hook()
+{
+	if (cfg.bVerboseLog)
+		Logging::Log() << "Hooking ShowCursor...";
+
+	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+	InterlockedExchangePointer((PVOID*)&p_ShowCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "ShowCursor"), "ShowCursor", ShowCursor_hook));
+
+	ShowCursor_orig = (decltype(ShowCursor_orig))InterlockedCompareExchangePointer((PVOID*)&p_ShowCursor, nullptr, nullptr);
+}
+
+HCURSOR(WINAPI* SetCursor_orig)(HCURSOR hCursor);
+HCURSOR WINAPI SetCursor_hook(HCURSOR hCursor)
+{
+	// Do nothing.
+	return NULL;
+}
+
+FARPROC p_SetCursor = nullptr;
+void InstallSetCursor_hook()
+{
+	if (cfg.bVerboseLog)
+		Logging::Log() << "Hooking SetCursor...";
+
+	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+	InterlockedExchangePointer((PVOID*)&p_SetCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "SetCursor"), "SetCursor", SetCursor_hook));
+
+	SetCursor_orig = (decltype(SetCursor_orig))InterlockedCompareExchangePointer((PVOID*)&p_SetCursor, nullptr, nullptr);
+}
+
 void Init_KeyboardMouseTweaks()
 {
 	Init_MouseTurning();
+
+	// Useful when debugging/breakpointing
+	if (cfg.bNeverHideCursor)
+	{
+		InstallShowCursor_hook();
+		InstallSetCursor_hook();
+	}
 
 	// LastUsedController pointer
 	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");

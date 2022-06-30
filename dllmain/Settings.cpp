@@ -298,8 +298,9 @@ void Settings::ReadSettings(std::string_view ini_path)
 
 	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", cfg.bDisableMenuTip);
 
-	// LOG
-	cfg.bVerboseLog = iniReader.ReadBoolean("LOG", "VerboseLog", cfg.bVerboseLog);
+	// DEBUG
+	cfg.bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", cfg.bVerboseLog);
+	cfg.bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", cfg.bNeverHideCursor);
 }
 
 std::mutex settingsThreadRunningMutex;

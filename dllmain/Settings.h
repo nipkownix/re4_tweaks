@@ -112,7 +112,10 @@ struct Settings
 	// IMGUI
 	float fFontSize = 1.0f;
 	bool bDisableMenuTip = false;
+	
+	// DEBUG
 	bool bVerboseLog = false;
+	bool bNeverHideCursor = false;
 
 	bool HasUnsavedChanges = false;
 

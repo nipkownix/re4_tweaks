@@ -310,6 +310,15 @@ void LogSettings()
 	sprintf(settingBuf, "| %-30s | %15s |", "DisableMenuTip", cfg.bDisableMenuTip ? "true" : "false");
 	Logging::Log() << settingBuf;
 
+	// DEBUG
+	Logging::Log() << "+ DEBUG--------------------------+-----------------+";
+
+	sprintf(settingBuf, "| %-30s | %15s |", "VerboseLog", cfg.bVerboseLog ? "true" : "false");
+	Logging::Log() << settingBuf;
+
+	sprintf(settingBuf, "| %-30s | %15s |", "NeverHideCursor", cfg.bNeverHideCursor ? "true" : "false");
+	Logging::Log() << settingBuf;
+
 	Logging::Log() << "+--------------------------------+-----------------+";
 }
 
