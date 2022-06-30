@@ -309,9 +309,10 @@ void cfgMenuRender()
 					ImGui::SameLine();
 					ImGui::BulletText(txt);
 				}
+
+				ImGui::EndTable();
 			}
 
-			ImGui::EndTable();
 			ImGui::EndChild();
 		}
 
