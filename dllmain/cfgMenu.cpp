@@ -1,17 +1,13 @@
 #define NOMINMAX
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
+#include "Patches.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
-#include "LAApatch.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_stdlib.h"
-#include "MouseTurning.h"
 #include "input.hpp"
-#include "EndSceneHook.h"
 #include "Patches.h"
-#include "AudioTweaks.h"
+#include <hashes.h>
 
 bool bCfgMenuOpen;
 bool NeedsToRestart;
@@ -54,7 +50,7 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 
 void cfgMenuBinding()
 {
-	if (_input->is_combo_pressed(&cfgMenuCombo) && !bWaitingForHotkey)
+	if (pInput->is_combo_pressed(&cfgMenuCombo) && !bWaitingForHotkey)
 		bCfgMenuOpen = !bCfgMenuOpen;
 }
 
@@ -63,7 +59,7 @@ void SetHotkeyComboThread(std::string* cfgHotkey)
 {
 	bWaitingForHotkey = true;
 
-	_input->set_hotkey(cfgHotkey, true);
+	pInput->set_hotkey(cfgHotkey, true);
 
 	bWaitingForHotkey = false;
 	return;
@@ -73,7 +69,7 @@ void SetHotkeyThread(std::string* cfgHotkey)
 {
 	bWaitingForHotkey = true;
 
-	_input->set_hotkey(cfgHotkey, false);
+	pInput->set_hotkey(cfgHotkey, false);
 
 	bWaitingForHotkey = false;
 	return;
@@ -226,8 +222,8 @@ void cfgMenuRender()
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
 			if (ImGui::Button(ICON_FA_ERASER" Discard", ImVec2(85, 35)))
 			{
-				cfg.ReadSettings();
-				ImGui::GetIO().FontGlobalScale = cfg.fFontSize - 0.35f;
+				pConfig->ReadSettings();
+				ImGui::GetIO().FontGlobalScale = pConfig->fFontSize - 0.35f;
 			}
 
 			ImGui::SameLine();
@@ -235,17 +231,17 @@ void cfgMenuRender()
 			if (ImGui::Button(ICON_FA_CODE" Save", ImVec2(85, 35)))
 			{
 				// Parse key combos on save
-				ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
-				ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
-				ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
-				ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
-				ParseJetSkiTrickCombo(cfg.sJetSkiTrickCombo);
+				ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
+				ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
+				ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
+				ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
+				ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
 
 				// Update console title
-				con.TitleKeyCombo = cfg.sConsoleKeyCombo;
+				con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
 
-				cfg.fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
-				cfg.WriteSettings();
+				pConfig->fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
+				pConfig->WriteSettings();
 			}
 
 			ImGui::EndChild();
@@ -270,7 +266,7 @@ void cfgMenuRender()
 					if (ImGui::GetIO().FontGlobalScale > 0.65f)
 						ImGui::GetIO().FontGlobalScale -= 0.05f;
 
-					cfg.HasUnsavedChanges = true;
+					pConfig->HasUnsavedChanges = true;
 				}
 
 				ImGui::SameLine();
@@ -280,7 +276,7 @@ void cfgMenuRender()
 					if (ImGui::GetIO().FontGlobalScale < 0.90f)
 						ImGui::GetIO().FontGlobalScale += 0.05f;
 
-					cfg.HasUnsavedChanges = true;
+					pConfig->HasUnsavedChanges = true;
 				}
 
 				ImGui::SameLine();
@@ -290,7 +286,7 @@ void cfgMenuRender()
 				ImGui::TableNextColumn();
 
 				// Tips
-				if (cfg.HasUnsavedChanges)
+				if (pConfig->HasUnsavedChanges)
 				{
 					const char *txt = "You have unsaved changes!";
 
@@ -342,9 +338,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("FOVAdditional", &cfg.bEnableFOV))
+						if (ImGui::Checkbox("FOVAdditional", &pConfig->bEnableFOV))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 						}
 
 						ImGui_ItemSeparator();
@@ -357,13 +353,13 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("FOV Slider").x);
-						ImGui::BeginDisabled(!cfg.bEnableFOV);
-						ImGui::SliderFloat("FOV Slider", &cfg.fFOVAdditional, 0.0f, 50.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+						ImGui::BeginDisabled(!pConfig->bEnableFOV);
+						ImGui::SliderFloat("FOV Slider", &pConfig->fFOVAdditional, 0.0f, 50.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();
 
-						if (!cfg.bEnableFOV)
-							cfg.fFOVAdditional = 0.0f;
+						if (!pConfig->bEnableFOV)
+							pConfig->fFOVAdditional = 0.0f;
 
 						// Store current pos, so we can use it as a BG height.
 						// (ImGui really should have a way to simply get the current row/cell height of a table instead...
@@ -380,9 +376,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("FixUltraWideAspectRatio", &cfg.bFixUltraWideAspectRatio))
+						if (ImGui::Checkbox("FixUltraWideAspectRatio", &pConfig->bFixUltraWideAspectRatio))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -405,9 +401,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("DisableVsync", &cfg.bDisableVsync))
+						if (ImGui::Checkbox("DisableVsync", &pConfig->bDisableVsync))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -430,9 +426,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("FixDPIScale", &cfg.bFixDPIScale))
+						if (ImGui::Checkbox("FixDPIScale", &pConfig->bFixDPIScale))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -455,9 +451,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("FixDisplayMode", &cfg.bFixDisplayMode))
+						if (ImGui::Checkbox("FixDisplayMode", &pConfig->bFixDisplayMode))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -474,14 +470,14 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushItemWidth(100);
-						ImGui::BeginDisabled(!cfg.bFixDisplayMode);
-						ImGui::InputInt("Hz", &cfg.iCustomRefreshRate);
+						ImGui::BeginDisabled(!pConfig->bFixDisplayMode);
+						ImGui::InputInt("Hz", &pConfig->iCustomRefreshRate);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();
 
 						if (ImGui::IsItemEdited())
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -505,7 +501,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("OverrideLaserColor", &cfg.bOverrideLaserColor);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("OverrideLaserColor", &pConfig->bOverrideLaserColor);
 
 						ImGui_ItemSeparator();
 
@@ -515,18 +511,18 @@ void cfgMenuRender()
 						ImGui::TextWrapped("alpha/opacity of the laser, but since it doesn't work, we don't include it here.");
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::BeginDisabled(!cfg.bOverrideLaserColor || cfg.bRainbowLaser);
-						ImGui::ColorEdit4("Laser color picker", cfg.fLaserRGB, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs);
+						ImGui::BeginDisabled(!pConfig->bOverrideLaserColor || pConfig->bRainbowLaser);
+						ImGui::ColorEdit4("Laser color picker", pConfig->fLaserRGB, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs);
 						ImGui::EndDisabled();
 
 						ImGui::Spacing();
 
-						ImGui::BeginDisabled(!cfg.bOverrideLaserColor);
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("RainbowLaser", &cfg.bRainbowLaser);
+						ImGui::BeginDisabled(!pConfig->bOverrideLaserColor);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RainbowLaser", &pConfig->bRainbowLaser);
 						ImGui::EndDisabled();
 
-						if (!cfg.bOverrideLaserColor)
-							cfg.bRainbowLaser = false;
+						if (!pConfig->bOverrideLaserColor)
+							pConfig->bRainbowLaser = false;
 
 						bgHeight = ImGui::GetCursorPos().y;
 					}
@@ -542,7 +538,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("RestorePickupTransparency", &cfg.bRestorePickupTransparency);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RestorePickupTransparency", &pConfig->bRestorePickupTransparency);
 
 						ImGui_ItemSeparator();
 
@@ -563,7 +559,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("DisableBrokenFilter03", &cfg.bDisableBrokenFilter03);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DisableBrokenFilter03", &pConfig->bDisableBrokenFilter03);
 
 						ImGui_ItemSeparator();
 
@@ -585,7 +581,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixBlurryImage", &cfg.bFixBlurryImage);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixBlurryImage", &pConfig->bFixBlurryImage);
 
 						ImGui_ItemSeparator();
 
@@ -606,7 +602,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("DisableFilmGrain", &cfg.bDisableFilmGrain);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DisableFilmGrain", &pConfig->bDisableFilmGrain);
 
 						ImGui_ItemSeparator();
 
@@ -627,9 +623,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("EnableGCBlur", &cfg.bEnableGCBlur))
+						if (ImGui::Checkbox("EnableGCBlur", &pConfig->bEnableGCBlur))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -652,9 +648,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("EnableGCScopeBlur", &cfg.bEnableGCScopeBlur))
+						if (ImGui::Checkbox("EnableGCScopeBlur", &pConfig->bEnableGCScopeBlur))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -677,9 +673,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("WindowBorderless", &cfg.bWindowBorderless))
+						if (ImGui::Checkbox("WindowBorderless", &pConfig->bWindowBorderless))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -696,15 +692,15 @@ void cfgMenuRender()
 						ImGui::TextWrapped("-1 will use the games default (usually places it at 0,0)");
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::BeginDisabled(cfg.bRememberWindowPos);
+						ImGui::BeginDisabled(pConfig->bRememberWindowPos);
 						ImGui::PushItemWidth(150);
-						ImGui::InputInt("X Pos", &cfg.iWindowPositionX);
-						ImGui::InputInt("Y Pos", &cfg.iWindowPositionY);
+						ImGui::InputInt("X Pos", &pConfig->iWindowPositionX);
+						ImGui::InputInt("Y Pos", &pConfig->iWindowPositionY);
 						ImGui::PopItemWidth();
 						ImGui::EndDisabled();
 
 						ImGui::Dummy(ImVec2(10, 10));
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &cfg.bRememberWindowPos);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &pConfig->bRememberWindowPos);
 						ImGui::TextWrapped("Remember the last window position. This automatically updates the \"X Pos\" and \"Y Pos\" values above.");
 
 						bgHeight = ImGui::GetCursorPos().y;
@@ -745,15 +741,15 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Cutscene Volume").x);
-						bool changed = ImGui::SliderInt("Master Volume", &cfg.iVolumeMaster, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
-						changed |= ImGui::SliderInt("Music Volume", &cfg.iVolumeBGM, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
-						changed |= ImGui::SliderInt("Effect Volume", &cfg.iVolumeSE, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
-						changed |= ImGui::SliderInt("Cutscene Volume", &cfg.iVolumeCutscene, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+						bool changed = ImGui::SliderInt("Master Volume", &pConfig->iVolumeMaster, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+						changed |= ImGui::SliderInt("Music Volume", &pConfig->iVolumeBGM, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+						changed |= ImGui::SliderInt("Effect Volume", &pConfig->iVolumeSE, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
+						changed |= ImGui::SliderInt("Cutscene Volume", &pConfig->iVolumeCutscene, 0, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::PopItemWidth();
 
 						if (changed)
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							AudioTweaks_UpdateVolume();
 						}
 
@@ -780,7 +776,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("UseMouseTurning", &cfg.bUseMouseTurning);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UseMouseTurning", &pConfig->bUseMouseTurning);
 
 						ImGui_ItemSeparator();
 
@@ -791,8 +787,8 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 20));
 
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Sensitivity Slider").x);
-						ImGui::BeginDisabled(!cfg.bUseMouseTurning);
-						ImGui::SliderFloat("Sensitivity Slider", &cfg.fTurnSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+						ImGui::BeginDisabled(!pConfig->bUseMouseTurning);
+						ImGui::SliderFloat("Sensitivity Slider", &pConfig->fTurnSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();
 
@@ -809,7 +805,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("UseRawMouseInput", &cfg.bUseRawMouseInput);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UseRawMouseInput", &pConfig->bUseRawMouseInput);
 
 						ImGui_ItemSeparator();
 
@@ -824,7 +820,7 @@ void cfgMenuRender()
 					ImGui::Dummy(ImVec2(10, 25));
 					column1_lastY = ImGui::GetCursorPos().y;
 
-					// UnlockCameraFromAim
+					// DetachCameraFromAim
 					{
 						ImGui::TableSetColumnIndex(0);
 						ImGui::SetCursorPosY(column0_lastY);
@@ -832,7 +828,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("UnlockCameraFromAim", &cfg.bUnlockCameraFromAim);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DetachCameraFromAim", &pConfig->bDetachCameraFromAim);
 
 						ImGui_ItemSeparator();
 
@@ -855,7 +851,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixSniperZoom", &cfg.bFixSniperZoom);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixSniperZoom", &pConfig->bFixSniperZoom);
 
 						ImGui_ItemSeparator();
 
@@ -876,9 +872,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("FixSniperFocus", &cfg.bFixSniperFocus))
+						if (ImGui::Checkbox("FixSniperFocus", &pConfig->bFixSniperFocus))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -902,7 +898,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixRetryLoadMouseSelector", &cfg.bFixRetryLoadMouseSelector);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixRetryLoadMouseSelector", &pConfig->bFixRetryLoadMouseSelector);
 
 						ImGui_ItemSeparator();
 
@@ -936,9 +932,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("FallbackToEnglishKeyIcons", &cfg.bFallbackToEnglishKeyIcons))
+						if (ImGui::Checkbox("FallbackToEnglishKeyIcons", &pConfig->bFallbackToEnglishKeyIcons))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -974,7 +970,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("OverrideControllerSensitivity", &cfg.bOverrideControllerSensitivity);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("OverrideControllerSensitivity", &pConfig->bOverrideControllerSensitivity);
 
 						ImGui_ItemSeparator();
 
@@ -984,13 +980,13 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Sensitivity Slider").x);
-						ImGui::BeginDisabled(!cfg.bOverrideControllerSensitivity);
-						ImGui::SliderFloat("Sensitivity Slider", &cfg.fControllerSensitivity, 0.50f, 4.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+						ImGui::BeginDisabled(!pConfig->bOverrideControllerSensitivity);
+						ImGui::SliderFloat("Sensitivity Slider", &pConfig->fControllerSensitivity, 0.50f, 4.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();
 
-						if (!cfg.bOverrideControllerSensitivity)
-							cfg.fControllerSensitivity = 1.0f;
+						if (!pConfig->bOverrideControllerSensitivity)
+							pConfig->fControllerSensitivity = 1.0f;
 
 						bgHeight = ImGui::GetCursorPos().y;
 					}
@@ -1005,7 +1001,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("RemoveExtraXinputDeadzone", &cfg.bRemoveExtraXinputDeadzone);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RemoveExtraXinputDeadzone", &pConfig->bRemoveExtraXinputDeadzone);
 
 						ImGui_ItemSeparator();
 
@@ -1026,7 +1022,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("EnableDeadzoneOverride", &cfg.bOverrideXinputDeadzone);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("EnableDeadzoneOverride", &pConfig->bOverrideXinputDeadzone);
 
 						ImGui_ItemSeparator();
 
@@ -1038,20 +1034,20 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Deadzone Slider").x);
-						ImGui::BeginDisabled(!cfg.bOverrideXinputDeadzone);
-						ImGui::SliderFloat("Deadzone Slider", &cfg.fXinputDeadzone, 0.0f, 3.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+						ImGui::BeginDisabled(!pConfig->bOverrideXinputDeadzone);
+						ImGui::SliderFloat("Deadzone Slider", &pConfig->fXinputDeadzone, 0.0f, 3.5f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();
 
 						if (ImGui::IsItemEdited())
 						{
-							cfg.HasUnsavedChanges = true;
-							*g_XInputDeadzone_LS = (int)(cfg.fXinputDeadzone * 7849);
-							*g_XInputDeadzone_RS = (int)(cfg.fXinputDeadzone * 8689);
+							pConfig->HasUnsavedChanges = true;
+							*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * 7849);
+							*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * 8689);
 						}
 
-						if (!cfg.bOverrideXinputDeadzone)
-							cfg.fXinputDeadzone = 1.0f;
+						if (!pConfig->bOverrideXinputDeadzone)
+							pConfig->fXinputDeadzone = 1.0f;
 
 						bgHeight = ImGui::GetCursorPos().y;
 					}
@@ -1079,7 +1075,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &cfg.bFixFallingItemsSpeed);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &pConfig->bFixFallingItemsSpeed);
 
 						ImGui_ItemSeparator();
 
@@ -1099,7 +1095,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixTurningSpeed", &cfg.bFixTurningSpeed);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixTurningSpeed", &pConfig->bFixTurningSpeed);
 
 						ImGui_ItemSeparator();
 
@@ -1120,7 +1116,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &cfg.bFixQTE);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &pConfig->bFixQTE);
 
 						ImGui_ItemSeparator();
 
@@ -1142,7 +1138,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixAshleyBustPhysics", &cfg.bFixAshleyBustPhysics);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixAshleyBustPhysics", &pConfig->bFixAshleyBustPhysics);
 
 						ImGui_ItemSeparator();
 
@@ -1163,9 +1159,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("EnableFastMath", &cfg.bEnableFastMath))
+						if (ImGui::Checkbox("EnableFastMath", &pConfig->bEnableFastMath))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -1189,7 +1185,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("PrecacheModels", &cfg.bPrecacheModels);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("PrecacheModels", &pConfig->bPrecacheModels);
 
 						ImGui_ItemSeparator();
 
@@ -1225,7 +1221,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &cfg.bOverrideCostumes);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &pConfig->bOverrideCostumes);
 
 						ImGui_ItemSeparator();
 
@@ -1235,27 +1231,27 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 
-						ImGui::BeginDisabled(!cfg.bOverrideCostumes);
+						ImGui::BeginDisabled(!pConfig->bOverrideCostumes);
 						ImGui::PushItemWidth(150);
 						ImGui::Combo("Leon", &iCostumeComboLeon, sLeonCostumeNames, IM_ARRAYSIZE(sLeonCostumeNames));
 						if (ImGui::IsItemEdited())
 						{
-							cfg.HasUnsavedChanges = true;
-							cfg.CostumeOverride.Leon = (LeonCostumes)iCostumeComboLeon;
+							pConfig->HasUnsavedChanges = true;
+							pConfig->CostumeOverride.Leon = (LeonCostumes)iCostumeComboLeon;
 						}
 
 						ImGui::Combo("Ashley", &iCostumeComboAshley, sAshleyCostumeNames, IM_ARRAYSIZE(sAshleyCostumeNames));
 						if (ImGui::IsItemEdited())
 						{
-							cfg.HasUnsavedChanges = true;
-							cfg.CostumeOverride.Ashley = (AshleyCostumes)iCostumeComboAshley;
+							pConfig->HasUnsavedChanges = true;
+							pConfig->CostumeOverride.Ashley = (AshleyCostumes)iCostumeComboAshley;
 						}
 
 						ImGui::Combo("Ada", &iCostumeComboAda, sAdaCostumeNames, IM_ARRAYSIZE(sAdaCostumeNames));
 						if (ImGui::IsItemEdited())
 						{
-							cfg.HasUnsavedChanges = true;
-							cfg.CostumeOverride.Ada = (AdaCostumes)iCostumeComboAda;
+							pConfig->HasUnsavedChanges = true;
+							pConfig->CostumeOverride.Ada = (AdaCostumes)iCostumeComboAda;
 						}
 						ImGui::PopItemWidth();
 						ImGui::EndDisabled();
@@ -1273,7 +1269,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &cfg.bAshleyJPCameraAngles);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &pConfig->bAshleyJPCameraAngles);
 
 						ImGui_ItemSeparator();
 
@@ -1304,15 +1300,15 @@ void cfgMenuRender()
 						
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::PushItemWidth(100);
-						if (ImGui::InputInt("Violence Level Override", &cfg.iViolenceLevelOverride))
+						if (ImGui::InputInt("Violence Level Override", &pConfig->iViolenceLevelOverride))
 						{
-							if (cfg.iViolenceLevelOverride < -1)
-								cfg.iViolenceLevelOverride = -1;
+							if (pConfig->iViolenceLevelOverride < -1)
+								pConfig->iViolenceLevelOverride = -1;
 
-							if (cfg.iViolenceLevelOverride > 2)
-								cfg.iViolenceLevelOverride = 2;
+							if (pConfig->iViolenceLevelOverride > 2)
+								pConfig->iViolenceLevelOverride = 2;
 
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true; // unfortunately required as game only reads pSys from savegame during first loading screen...
 						}
 						ImGui::PopItemWidth();
@@ -1331,9 +1327,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("AllowSellingHandgunSilencer", &cfg.bAllowSellingHandgunSilencer))
+						if (ImGui::Checkbox("AllowSellingHandgunSilencer", &pConfig->bAllowSellingHandgunSilencer))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -1356,9 +1352,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("AllowMafiaLeonCutscenes", &cfg.bAllowMafiaLeonCutscenes))
+						if (ImGui::Checkbox("AllowMafiaLeonCutscenes", &pConfig->bAllowMafiaLeonCutscenes))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -1381,7 +1377,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &cfg.bSilenceArmoredAshley);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &pConfig->bSilenceArmoredAshley);
 
 						ImGui_ItemSeparator();
 
@@ -1403,7 +1399,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &cfg.bAllowAshleySuplex);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &pConfig->bAllowAshleySuplex);
 
 						ImGui_ItemSeparator();
 
@@ -1425,7 +1421,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &cfg.bAllowMatildaQuickturn);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &pConfig->bAllowMatildaQuickturn);
 
 						ImGui_ItemSeparator();
 
@@ -1447,7 +1443,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &cfg.bFixDitmanGlitch);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &pConfig->bFixDitmanGlitch);
 
 						ImGui_ItemSeparator();
 
@@ -1468,7 +1464,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &cfg.bUseSprintToggle);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &pConfig->bUseSprintToggle);
 
 						ImGui_ItemSeparator();
 
@@ -1489,7 +1485,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &cfg.bDisableQTE);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &pConfig->bDisableQTE);
 
 						ImGui_ItemSeparator();
 
@@ -1510,7 +1506,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &cfg.bAutomaticMashingQTE);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &pConfig->bAutomaticMashingQTE);
 
 						ImGui_ItemSeparator();
 
@@ -1531,7 +1527,7 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						cfg.HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &cfg.bSkipIntroLogos);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &pConfig->bSkipIntroLogos);
 
 						ImGui_ItemSeparator();
 
@@ -1552,9 +1548,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("EnableDebugMenu", &cfg.bEnableDebugMenu))
+						if (ImGui::Checkbox("EnableDebugMenu", &pConfig->bEnableDebugMenu))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -1592,9 +1588,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("AllowHighResolutionSFD", &cfg.bAllowHighResolutionSFD))
+						if (ImGui::Checkbox("AllowHighResolutionSFD", &pConfig->bAllowHighResolutionSFD))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -1617,9 +1613,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("RaiseVertexAlloc", &cfg.bRaiseVertexAlloc))
+						if (ImGui::Checkbox("RaiseVertexAlloc", &pConfig->bRaiseVertexAlloc))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -1643,9 +1639,9 @@ void cfgMenuRender()
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("RaiseInventoryAlloc", &cfg.bRaiseInventoryAlloc))
+						if (ImGui::Checkbox("RaiseInventoryAlloc", &pConfig->bRaiseInventoryAlloc))
 						{
-							cfg.HasUnsavedChanges = true;
+							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 
@@ -1704,10 +1700,10 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(1);
-						if (ImGui::Button(str_to_utf8(cfg.sConfigMenuKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(str_to_utf8(pConfig->sConfigMenuKeyCombo).c_str(), ImVec2(150, 0)))
 						{
-							cfg.HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sConfigMenuKeyCombo, 0, NULL);
+							pConfig->HasUnsavedChanges = true;
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sConfigMenuKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1732,10 +1728,10 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(2);
-						if (ImGui::Button(str_to_utf8(cfg.sConsoleKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(str_to_utf8(pConfig->sConsoleKeyCombo).c_str(), ImVec2(150, 0)))
 						{
-							cfg.HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sConsoleKeyCombo, 0, NULL);
+							pConfig->HasUnsavedChanges = true;
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sConsoleKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1773,10 +1769,10 @@ void cfgMenuRender()
 							// UP
 							ImGui::TextWrapped("Flip UP");
 							ImGui::PushID(3);
-							if (ImGui::Button(str_to_utf8(cfg.sFlipItemUp).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(str_to_utf8(pConfig->sFlipItemUp).c_str(), ImVec2(140, 0)))
 							{
-								cfg.HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemUp, 0, NULL);
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemUp, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1785,10 +1781,10 @@ void cfgMenuRender()
 							// DOWN
 							ImGui::TextWrapped("Flip DOWN");
 							ImGui::PushID(4);
-							if (ImGui::Button(str_to_utf8(cfg.sFlipItemDown).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(str_to_utf8(pConfig->sFlipItemDown).c_str(), ImVec2(140, 0)))
 							{
-								cfg.HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemDown, 0, NULL);
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemDown, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1797,10 +1793,10 @@ void cfgMenuRender()
 							// LEFT
 							ImGui::TextWrapped("Flip LEFT");
 							ImGui::PushID(5);
-							if (ImGui::Button(str_to_utf8(cfg.sFlipItemLeft).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(str_to_utf8(pConfig->sFlipItemLeft).c_str(), ImVec2(140, 0)))
 							{
-								cfg.HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemLeft, 0, NULL);
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemLeft, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1809,10 +1805,10 @@ void cfgMenuRender()
 							// RIGHT
 							ImGui::TextWrapped("Flip RIGHT");
 							ImGui::PushID(6);
-							if (ImGui::Button(str_to_utf8(cfg.sFlipItemRight).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(str_to_utf8(pConfig->sFlipItemRight).c_str(), ImVec2(140, 0)))
 							{
-								cfg.HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sFlipItemRight, 0, NULL);
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemRight, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1836,7 +1832,7 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Key bindings for QTE keys when playing with keyboard and mouse.");
 						ImGui::Dummy(ImVec2(10, 10));
 
-						ImGui::TextWrapped("Unlike the \"official\" way of rebinding keys through usr_input.ini, this option also changes the on-screen prompt to properly match the selected key.");
+						ImGui::TextWrapped("Unlike the \"official\" way of rebinding keys through usrpInput.ini, this option also changes the on-screen prompt to properly match the selected key.");
 						ImGui::BulletText("Key combinations not supported");
 						ImGui::Spacing();
 
@@ -1848,10 +1844,10 @@ void cfgMenuRender()
 							// QTE1
 							ImGui::TextWrapped("QTE key 1");
 							ImGui::PushID(7);
-							if (ImGui::Button(str_to_utf8(cfg.sQTE_key_1).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(str_to_utf8(pConfig->sQTE_key_1).c_str(), ImVec2(140, 0)))
 							{
-								cfg.HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sQTE_key_1, 0, NULL);
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sQTE_key_1, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1860,10 +1856,10 @@ void cfgMenuRender()
 							// QTE2
 							ImGui::TextWrapped("QTE key 2");
 							ImGui::PushID(8);
-							if (ImGui::Button(str_to_utf8(cfg.sQTE_key_2).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(str_to_utf8(pConfig->sQTE_key_2).c_str(), ImVec2(140, 0)))
 							{
-								cfg.HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &cfg.sQTE_key_2, 0, NULL);
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sQTE_key_2, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1891,10 +1887,10 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(9);
-						if (ImGui::Button(str_to_utf8(cfg.sDebugMenuKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(str_to_utf8(pConfig->sDebugMenuKeyCombo).c_str(), ImVec2(150, 0)))
 						{
-							cfg.HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sDebugMenuKeyCombo, 0, NULL);
+							pConfig->HasUnsavedChanges = true;
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sDebugMenuKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1923,10 +1919,10 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(10);
-						if (ImGui::Button(str_to_utf8(cfg.sMouseTurnModifierKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(str_to_utf8(pConfig->sMouseTurnModifierKeyCombo).c_str(), ImVec2(150, 0)))
 						{
-							cfg.HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sMouseTurnModifierKeyCombo, 0, NULL);
+							pConfig->HasUnsavedChanges = true;
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sMouseTurnModifierKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1952,10 +1948,10 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(11);
-						if (ImGui::Button(str_to_utf8(cfg.sJetSkiTrickCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(str_to_utf8(pConfig->sJetSkiTrickCombo).c_str(), ImVec2(150, 0)))
 						{
-							cfg.HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &cfg.sJetSkiTrickCombo, 0, NULL);
+							pConfig->HasUnsavedChanges = true;
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sJetSkiTrickCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1996,7 +1992,7 @@ void ShowCfgMenuTip()
 			ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
 			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing);
 
-		std::string tooltip = str_to_utf8(std::string("re4_tweaks: Press ") + cfg.sConfigMenuKeyCombo + std::string(" to open the configuration menu"));
+		std::string tooltip = str_to_utf8(std::string("re4_tweaks: Press ") + pConfig->sConfigMenuKeyCombo + std::string(" to open the configuration menu"));
 
 		ImGui::TextUnformatted(tooltip.data());
 

@@ -2,39 +2,6 @@
 #include <cstdint>
 #include "GameFlags.h"
 
-enum class CharacterID : std::uint8_t
-{
-	Leon,
-	Ashley,
-	Ada,
-	HUNK,
-	Krauser,
-	Wesker
-};
-
-enum class LeonCostumes
-{
-	Jacket,
-	Normal,
-	Vest,
-	RPD,
-	Mafia
-};
-
-enum class AshleyCostumes
-{
-	Normal,
-	Popstar,
-	Armor
-};
-
-enum class AdaCostumes
-{
-	RE2,
-	Spy,
-	Normal
-};
-
 // From GC SDK?
 typedef struct tagVec // PS2 seems to refer to these via the tag names
 {
@@ -153,6 +120,58 @@ enum class KEY_BTN : unsigned __int64
 	KEY_SR = 0x40000000000000,
 	KEY_SL = 0x80000000000000,
 	KEY_SUDRL = 0xF0000000000000,
+};
+
+enum class InputDevices
+{
+	// 0 = Keyboard?
+	// 1 = Mouse
+	// 2 = Xinput Controller
+	// 3 = Dinput Controller
+	
+	Keyboard,
+	Mouse,
+	XinputController,
+	DinputController
+};
+
+enum class MouseAimingModes : std::uint8_t
+{
+	Classic,
+	Modern
+};
+
+enum class CharacterID : std::uint8_t
+{
+	Leon,
+	Ashley,
+	Ada,
+	HUNK,
+	Krauser,
+	Wesker
+};
+
+enum class LeonCostumes
+{
+	Jacket,
+	Normal,
+	Vest,
+	RPD,
+	Mafia
+};
+
+enum class AshleyCostumes
+{
+	Normal,
+	Popstar,
+	Armor
+};
+
+enum class AdaCostumes
+{
+	RE2,
+	Spy,
+	Normal
 };
 
 enum EM_BE_FLAG : uint8_t
@@ -523,13 +542,15 @@ static_assert(sizeof(DatTbl) == 8, "sizeof(DatTbl)");
 
 std::string GameVersion();
 bool GameVersionIsDebug();
+InputDevices LastUsedDevice();
+int g_MOUSE_SENS();
+MouseAimingModes GetMouseAimingMode();
+void SetMouseAimingMode(MouseAimingModes newMode);
 
 GLOBALS* GlobalPtr();
 SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
 uint8_t* GameSavePtr();
-
-CharacterID CharacterFromPlTypeId(std::uint8_t id);
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

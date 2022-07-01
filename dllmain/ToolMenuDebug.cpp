@@ -1,7 +1,6 @@
 #include <iostream>
 #include "stdafx.h"
 #include "Game.h"
-#include "ConsoleWnd.h"
 
 // Fixes for debug-builds tool menu
 // (mainly just hooks for funcs that handle input for those menus, so we can slow down inputs to them)

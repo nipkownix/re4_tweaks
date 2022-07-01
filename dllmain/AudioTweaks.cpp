@@ -1,9 +1,8 @@
 #include <iostream>
 #include "stdafx.h"
+#include "Patches.h"
 #include "Game.h"
-#include "dllmain.h"
 #include "Settings.h"
-#include "AudioTweaks.h"
 
 struct SND_SYS_VOL // name from PS2 sound driver, might not be correct (values could be part of larger Snd_ctrl_work struct)
 {
@@ -70,8 +69,8 @@ void __cdecl mwPlySetOutVol_Hook(void* mwply, int vol)
 	// volume of 0 would cause divide by zero (which doesn't crash, but does make volume extremely loud)
 	// -960 seems to be minimum volume allowed by Criware, so we'll set to that (not completely sure if it's muted or not though)
 	int new_vol = -960;
-	if (cfg.iVolumeCutscene > 0)
-		new_vol = int(float(vol) / ((cfg.iVolumeCutscene / 100.0f) * (cfg.iVolumeMaster / 100.0f)));
+	if (pConfig->iVolumeCutscene > 0)
+		new_vol = int(float(vol) / ((pConfig->iVolumeCutscene / 100.0f) * (pConfig->iVolumeMaster / 100.0f)));
 
 	mwPlySetOutVol(mwply, new_vol);
 }
@@ -92,9 +91,9 @@ void AudioTweaks_UpdateVolume()
 
 	const float vol_max = 127;
 
-	g_Snd_sys_vol->str_bgm = g_Snd_sys_vol->iss_bgm = (int16_t(vol_max * (cfg.iVolumeBGM / 100.0f) * (cfg.iVolumeMaster / 100.0f)) << 8);
-	g_Snd_sys_vol->iss_se = (int16_t(vol_max * (cfg.iVolumeSE / 100.0f) * (cfg.iVolumeMaster / 100.0f)) << 8);
-	g_Snd_sys_vol->str_se = (int16_t(vol_max * (cfg.iVolumeCutscene / 100.0f) * (cfg.iVolumeMaster / 100.0f)) << 8); // str_se seems to mostly get used by cutscenes / merchant dialogue
+	g_Snd_sys_vol->str_bgm = g_Snd_sys_vol->iss_bgm = (int16_t(vol_max * (pConfig->iVolumeBGM / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
+	g_Snd_sys_vol->iss_se = (int16_t(vol_max * (pConfig->iVolumeSE / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
+	g_Snd_sys_vol->str_se = (int16_t(vol_max * (pConfig->iVolumeCutscene / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8); // str_se seems to mostly get used by cutscenes / merchant dialogue
 
 	if (g_mwply && (
 		FlagIsSet(GlobalPtr()->flags_STATUS_501C, uint32_t(Flags_STATUS::STA_MOVIE_ON)) ||

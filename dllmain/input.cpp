@@ -4,19 +4,17 @@
  */
 
 #include "input.hpp"
+#include "Patches.h"
 #include <algorithm>
 #include <unordered_map>
 #include <Windows.h>
 #include <cassert>
-#include "dllmain.h"
 #include "../external/Hooking/Hook.h"
-#include "ConsoleWnd.h"
 #include "Settings.h"
 #include <iomanip>
 #include <array>
-#include "MouseTurning.h"
 
-std::shared_ptr<class input> _input;
+std::shared_ptr<class input> pInput;
 
 extern HMODULE g_module_handle;
 static std::shared_mutex s_windows_mutex;
@@ -328,10 +326,10 @@ bool input::is_combo_pressed(std::vector<uint32_t>* KeyVector) const
 	bool isComboPressed = KeyVector->size() > 0;
 	for (auto& key : *KeyVector)
 	{
-		if (!_input->is_key_down(key) || bStateChanged)
+		if (!pInput->is_key_down(key) || bStateChanged)
 			isComboPressed = false;
 
-		if (_input->is_key_released(key) && bStateChanged)
+		if (pInput->is_key_released(key) && bStateChanged)
 			bStateChanged = false;
 	}
 
@@ -352,7 +350,7 @@ bool input::is_combo_down(std::vector<uint32_t>* KeyVector) const
 	bool isComboDown = KeyVector->size() > 0;
 	for (auto& key : *KeyVector)
 	{
-		if (!_input->is_key_down(key) || bStateChanged)
+		if (!pInput->is_key_down(key) || bStateChanged)
 			isComboDown = false;
 	}
 
@@ -625,39 +623,6 @@ void input::next_frame()
 		(_keys_time[VK_SNAPSHOT] = time);
 }
 
-std::string input::key_name(unsigned int keycode)
-{
-	if (keycode >= 256)
-		return std::string();
-
-	static const char *keyboard_keys_international[256] = {
-		"", "LMOUSE", "RMOUSE", "BREAK", "MMOUSE", "MOUSE4", "MOUSE5", "", "BACKSPACE", "TAB", "", "", "CLEAR", "ENTER", "", "",
-		"SHIFT", "CONTROL", "ALT", "PAUSE", "CAPSLOCK", "", "", "", "", "", "", "ESCAPE", "", "", "", "",
-		"SPACE", "PAGEUP", "PAGEDOWN", "END", "HOME", "LEFT", "UP", "RIGHT", "DOWN", "SELECT", "", "", "PRINTSCR", "INSERT", "DELETE", "HELP",
-		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "", "", "", "", "", "",
-		"", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-		"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "LWIN", "RWIN", "APPS", "", "SLEEP",
-		"NUMPAD0", "NUMPAD1", "NUMPAD2", "NUMPAD3", "NUMPAD4", "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9", "MULTIPLY", "ADD", "", "SUBTRACT", "DECIMAL", "DIVIDE",
-		"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16",
-		"F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", "", "", "", "", "", "", "", "",
-		"NUMLOCK", "SCROLL", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL", "LMENU", "RMENU", "Browser Back", "Browser Forward", "Browser Refresh", "Browser Stop", "Browser Search", "Browser Favorites", "Browser Home", "Volume Mute", "Volume Down", "Volume Up",
-		"Next Track", "Previous Track", "Media Stop", "Media Play/Pause", "Mail", "Media Select", "Launch App 1", "Launch App 2", "", "", "OEM_1", "OEM_PLUS", "OEM_COMMA", "OEM_MINUS", "OEM_PERIOD", "OEM_2",
-		"OEM_3", "ABNT_C1", "ABNT_C2", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "", "", "", "", "OEM_4", "OEM_5", "OEM_6", "OEM_7", "OEM_8",
-		"", "", "OEM_102", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "Attn", "CrSel", "ExSel", "Erase EOF", "Play", "Zoom", "", "PA1", "OEM Clear", ""
-	};
-
-	return keyboard_keys_international[keycode];
-}
-std::string input::key_name(const unsigned int key[4])
-{
-	assert(key[0] != VK_CONTROL && key[0] != VK_SHIFT && key[0] != VK_MENU);
-
-	return (key[1] ? "Ctrl + " : std::string()) + (key[2] ? "Shift + " : std::string()) + (key[3] ? "Alt + " : std::string()) + key_name(key[0]);
-}
-
 static inline bool is_blocking_mouse_input()
 {
 	const std::shared_lock<std::shared_mutex> lock(s_windows_mutex);
@@ -710,7 +675,7 @@ BOOL WINAPI HookGetMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 FARPROC p_GetMessageA = nullptr;
 void InstallGetMessageA_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking GetMessageA...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -751,7 +716,7 @@ BOOL WINAPI HookGetMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 FARPROC p_GetMessageW = nullptr;
 void InstallGetMessageW_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking GetMessageW...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -783,7 +748,7 @@ BOOL WINAPI HookPeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 FARPROC p_PeekMessageA = nullptr;
 void InstallPeekMessageA_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking PeekMessageA...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -815,7 +780,7 @@ BOOL WINAPI HookPeekMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 FARPROC p_PeekMessageW = nullptr;
 void InstallPeekMessageW_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking PeekMessageW...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -837,7 +802,7 @@ BOOL WINAPI HookPostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 FARPROC p_PostMessageA = nullptr;
 void InstallPostMessageA_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking PostMessageA...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -858,7 +823,7 @@ BOOL WINAPI HookPostMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 FARPROC p_PostMessageW = nullptr;
 void InstallPostMessageW_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking PostMessageW...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -870,7 +835,7 @@ void InstallPostMessageW_Hook()
 BOOL(WINAPI* RegisterRawInputDevices_orig)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
 BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << __FUNCTION__ << " > Redirecting " << "RegisterRawInputDevices" << '(' << "pRawInputDevices = " << pRawInputDevices << ", uiNumDevices = " << uiNumDevices << ", cbSize = " << cbSize << ')' << " ...";
 
 
@@ -878,7 +843,7 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 	{
 		const auto &device = pRawInputDevices[i];
 
-		if (cfg.bVerboseLog)
+		if (pConfig->bVerboseLog)
 		{
 			Logging::Log() << __FUNCTION__ << " > Dumping device registration at index " << i << ":";
 			Logging::Log() << __FUNCTION__ << "  +-----------------------------------------+-----------------------------------------+";
@@ -912,7 +877,7 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 FARPROC p_RegisterRawInputDevices = nullptr;
 void InstallRegisterRawInputDevices_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking RegisterRawInputDevices...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -934,7 +899,7 @@ BOOL WINAPI HookClipCursor(const RECT *lpRect)
 FARPROC p_ClipCursor = nullptr;
 void InstallClipCursor_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking ClipCursor...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -960,7 +925,7 @@ BOOL WINAPI HookSetCursorPos(int X, int Y)
 FARPROC p_SetCursorPos = nullptr;
 void InstallSetCursorPos_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking SetCursorPos...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -987,7 +952,7 @@ BOOL WINAPI HookGetCursorPos(LPPOINT lpPoint)
 FARPROC p_GetCursorPos = nullptr;
 void InstallGetCursorPos_Hook()
 {
-	if (cfg.bVerboseLog)
+	if (pConfig->bVerboseLog)
 		Logging::Log() << "Hooking GetCursorPos...";
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");

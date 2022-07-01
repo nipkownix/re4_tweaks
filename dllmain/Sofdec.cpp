@@ -1,7 +1,5 @@
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
-#include "ConsoleWnd.h"
 #include "Logging/Logging.h"
 
 uintptr_t* ptrSFDMovAddr;

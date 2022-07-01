@@ -1,6 +1,5 @@
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
 #include "Settings.h"
 #include "Logging/Logging.h"
 
@@ -389,7 +388,7 @@ void Init_FilterXXFixes()
 {
 	GetFilterPointers();
 
-	if (cfg.bEnableGCBlur)
+	if (pConfig->bEnableGCBlur)
 	{
 		// Hook Filter01Render, first block (loop that's ran 4 times + 0.25 pass)
 		auto pattern = hook::pattern("3C 01 0F 85 ? ? ? ? D9 85");
@@ -412,7 +411,7 @@ void Init_FilterXXFixes()
 		Logging::Log() << __FUNCTION__ << " -> EnableGCBlur applied";
 	}
 
-	if (cfg.bEnableGCScopeBlur)
+	if (pConfig->bEnableGCScopeBlur)
 	{
 		// Short-circuit Filter0aGXDraw to skip over the GXPosition etc things that we reimplement ourselves
 		auto pattern = hook::pattern("D9 45 A4 DC 15 ? ? ? ? DF E0 F6 C4 41 75 ? DC 1D ? ? ? ? DF E0 F6 C4 05 0F 8B ? ? ? ? EB");

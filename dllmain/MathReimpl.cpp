@@ -4,7 +4,6 @@
 #include <intrin.h>
 #include <xmmintrin.h>
 #include "stdafx.h"
-#include "dllmain.h"
 #include "Settings.h"
 #include "Game.h"
 
@@ -461,7 +460,7 @@ void MTXRotAxisRad(Mtx m, const Vec* axis, float rad)
 
 void Init_MathReimpl()
 {
-	if (cfg.bEnableFastMath)
+	if (pConfig->bEnableFastMath)
 	{
 		int cpuinfo[4];
 		__cpuid(cpuinfo, 1);

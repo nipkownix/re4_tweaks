@@ -1,23 +1,18 @@
 #include <iostream>
 #include "stdafx.h"
-#include "WndProcHook.h"
-#include "dllmain.h"
+#include "Patches.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
-#include "LAApatch.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_internal.h"
 #include "imgui\imgui_impl_win32.h"
 #include "imgui\imgui_impl_dx9.h"
 #include "imgui\imgui_stdlib.h"
 #include <faprolight.hpp>
-#include "MouseTurning.h"
+#include <sffont.hpp>
+#include <hashes.h>
 #include "input.hpp"
-#include "EndSceneHook.h"
-#include "cfgMenu.h"
 #include "Logging/Logging.h"
 #include "resource.h"
-#include "Patches.h"
 
 EndSceneHook esHook;
 
@@ -185,7 +180,7 @@ ImGuiKey VKToImGuiKey(int VK)
 	}
 }
 
-void ImGui_InputUpdate()
+void ImGuipInputUpdate()
 {
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -193,26 +188,26 @@ void ImGui_InputUpdate()
 	io.DeltaTime = esHook._last_frame_duration.count() * 1e-9f;
 
 	// Update mouse pos
-	io.AddMousePosEvent((float)_input->mouse_position_x(), (float)_input->mouse_position_y());
+	io.AddMousePosEvent((float)pInput->mouse_position_x(), (float)pInput->mouse_position_y());
 
 	// Add wheel delta to the current absolute mouse wheel position
-	io.MouseWheel += _input->mouse_wheel_delta();
+	io.MouseWheel += pInput->mouse_wheel_delta();
 
 	// Update all the button states
-	io.AddKeyEvent(ImGuiKey_ModAlt, _input->is_key_down(0x12)); // VK_MENU
-	io.AddKeyEvent(ImGuiKey_ModCtrl, _input->is_key_down(0x11)); // VK_CONTROL
-	io.AddKeyEvent(ImGuiKey_ModShift, _input->is_key_down(0x10)); // VK_SHIFT
+	io.AddKeyEvent(ImGuiKey_ModAlt, pInput->is_key_down(0x12)); // VK_MENU
+	io.AddKeyEvent(ImGuiKey_ModCtrl, pInput->is_key_down(0x11)); // VK_CONTROL
+	io.AddKeyEvent(ImGuiKey_ModShift, pInput->is_key_down(0x10)); // VK_SHIFT
 
-	io.AddMouseButtonEvent(0, _input->is_mouse_button_down(0));
-	io.AddMouseButtonEvent(1, _input->is_mouse_button_down(1));
-	io.AddMouseButtonEvent(2, _input->is_mouse_button_down(2));
-	io.AddMouseButtonEvent(3, _input->is_mouse_button_down(3));
-	io.AddMouseButtonEvent(4, _input->is_mouse_button_down(4));
+	io.AddMouseButtonEvent(0, pInput->is_mouse_button_down(0));
+	io.AddMouseButtonEvent(1, pInput->is_mouse_button_down(1));
+	io.AddMouseButtonEvent(2, pInput->is_mouse_button_down(2));
+	io.AddMouseButtonEvent(3, pInput->is_mouse_button_down(3));
+	io.AddMouseButtonEvent(4, pInput->is_mouse_button_down(4));
 
 	for (unsigned int i = 0; i < 256; i++)
-		io.AddKeyEvent(VKToImGuiKey(i), _input->is_key_down(i));
+		io.AddKeyEvent(VKToImGuiKey(i), pInput->is_key_down(i));
 
-	for (wchar_t c : _input->text_input())
+	for (wchar_t c : pInput->text_input())
 		io.AddInputCharacter(c);
 }
 
@@ -257,19 +252,12 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 
 	io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 24, &ImCustomIcons, icon_ranges);
 
-	io.FontGlobalScale = cfg.fFontSize - 0.35f;
+	io.FontGlobalScale = pConfig->fFontSize - 0.35f;
 
 	ApplyImGuiTheme();
 
 	ImGui_ImplWin32_Init(hWindow);
 	ImGui_ImplDX9_Init(pDevice);
-
-	// Check if the exe is LAA
-	if (!laa.GameIsLargeAddressAware())
-	{
-		Logging::Log() << "Non-LAA executable detected!";
-		laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
-	}
 
 	// Update cfgMenu window title
 	cfgMenuTitle.append(" v");
@@ -277,7 +265,7 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 }
 
 // Add our new code right before the game calls EndScene
-void EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
+void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 {
 	// Init ImGui
 	if (!didInit)
@@ -287,7 +275,7 @@ void EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplWin32_NewFrame();
 
 	// Update ImGui input for this frame
-	ImGui_InputUpdate();
+	ImGuipInputUpdate();
 
 	ImGui::NewFrame();
 
@@ -298,7 +286,7 @@ void EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ConsoleBinding();
 
 	// Show cfgMenu tip
-	if (!cfg.bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
+	if (!pConfig->bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
 		ShowCfgMenuTip();
 
 	#ifdef VERBOSE
@@ -306,35 +294,30 @@ void EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	con.ShowConsoleOutput();
 	#endif 
 
-	// Calls the LAA window if needed
-	if (laa.LAA_State != LAADialogState::NotShowing && ((esHook._last_present_time - esHook._start_time) > std::chrono::seconds(10)))
+	// Show the LAA window if needed
+	if (laa.LAA_State != LAADialogState::NotShowing)
 	{
-		// Make cursor visible
-		ImGui::GetIO().MouseDrawCursor = true;
-
-		laa.LAARender();
+		if ((esHook._last_present_time - esHook._start_time) > std::chrono::seconds(10))
+			laa.LAARender();
 	}
 
-	// Calls the actual menu function
+	// Show the cfgMenu
 	if (bCfgMenuOpen)
 	{
-		// Make cursor visible
-		ImGui::GetIO().MouseDrawCursor = true;
-
 		//ImGui::ShowDemoWindow();
 		cfgMenuRender();
 	}
 
-	if (!bCfgMenuOpen && (laa.LAA_State == LAADialogState::NotShowing))
-		ImGui::GetIO().MouseDrawCursor = false;
+	// Show cursor if needed
+	ImGui::GetIO().MouseDrawCursor = bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing);
 
 	ImGui::EndFrame();
 	ImGui::Render();
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	_input->block_mouse_input(bCfgMenuOpen || laa.LAA_State == LAADialogState::Showing);
-	_input->block_keyboard_input(bCfgMenuOpen || laa.LAA_State == LAADialogState::Showing);
+	pInput->block_mouse_input(bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing));
+	pInput->block_keyboard_input(bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing));
 
 	// Update _last_frame_duration and _last_present_time
 	const auto current_time = std::chrono::high_resolution_clock::now();
@@ -342,7 +325,7 @@ void EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	esHook._last_present_time = current_time;
 
 	// Reset input status
-	_input->next_frame();
+	pInput->next_frame();
 
 	return;
 }

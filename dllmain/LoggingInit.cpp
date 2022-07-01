@@ -1,8 +1,7 @@
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
+#include "Patches.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
 #include "Logging/Logging.h"
 #include "gitparams.h"
 #include "resource.h"
@@ -23,67 +22,67 @@ void LogSettings()
 	// DISPLAY
 	Logging::Log() << "+ DISPLAY------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15f |", "FOVAdditional", cfg.fFOVAdditional);
+	sprintf(settingBuf, "| %-30s | %15f |", "FOVAdditional", pConfig->fFOVAdditional);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixUltraWideAspectRatio", pConfig->bFixUltraWideAspectRatio ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "DisableVsync", cfg.bDisableVsync ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableVsync", pConfig->bDisableVsync ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixDPIScale", cfg.bFixDPIScale ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixDPIScale", pConfig->bFixDPIScale ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixDisplayMode", cfg.bFixDisplayMode ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixDisplayMode", pConfig->bFixDisplayMode ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15i |", "CustomRefreshRate", cfg.iCustomRefreshRate);
+	sprintf(settingBuf, "| %-30s | %15i |", "CustomRefreshRate", pConfig->iCustomRefreshRate);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "OverrideLaserColor", cfg.bOverrideLaserColor ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideLaserColor", pConfig->bOverrideLaserColor ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "RainbowLaser", cfg.bRainbowLaser ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "RainbowLaser", pConfig->bRainbowLaser ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "LaserR", cfg.fLaserRGB[0] * 255.0f);
+	sprintf(settingBuf, "| %-30s | %15f |", "LaserR", pConfig->fLaserRGB[0] * 255.0f);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "LaserG", cfg.fLaserRGB[1] * 255.0f);
+	sprintf(settingBuf, "| %-30s | %15f |", "LaserG", pConfig->fLaserRGB[1] * 255.0f);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "LaserB", cfg.fLaserRGB[2] * 255.0f);
+	sprintf(settingBuf, "| %-30s | %15f |", "LaserB", pConfig->fLaserRGB[2] * 255.0f);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "RestorePickupTransparency", cfg.bRestorePickupTransparency ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "RestorePickupTransparency", pConfig->bRestorePickupTransparency ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03 ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03 ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixBlurryImage", cfg.bFixBlurryImage ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixBlurryImage", pConfig->bFixBlurryImage ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "DisableFilmGrain", cfg.bDisableFilmGrain ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableFilmGrain", pConfig->bDisableFilmGrain ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCBlur", cfg.bEnableGCBlur ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCBlur", pConfig->bEnableGCBlur ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCScopeBlur", cfg.bEnableGCScopeBlur ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "WindowBorderless", cfg.bWindowBorderless ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "WindowBorderless", pConfig->bWindowBorderless ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionX", cfg.iWindowPositionX);
+	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionX", pConfig->iWindowPositionX);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionY", cfg.iWindowPositionY);
+	sprintf(settingBuf, "| %-30s | %15i |", "WindowPositionY", pConfig->iWindowPositionY);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "RememberWindowPos", cfg.bRememberWindowPos ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "RememberWindowPos", pConfig->bRememberWindowPos ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -91,16 +90,16 @@ void LogSettings()
 	// AUDIO
 	Logging::Log() << "+ AUDIO--------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15i |", "VolumeMaster", cfg.iVolumeMaster);
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeMaster", pConfig->iVolumeMaster);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15i |", "VolumeBGM", cfg.iVolumeBGM);
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeBGM", pConfig->iVolumeBGM);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15i |", "VolumeSE", cfg.iVolumeSE);
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeSE", pConfig->iVolumeSE);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15i |", "VolumeCutscene", cfg.iVolumeCutscene);
+	sprintf(settingBuf, "| %-30s | %15i |", "VolumeCutscene", pConfig->iVolumeCutscene);
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -108,25 +107,25 @@ void LogSettings()
 	// MOUSE
 	Logging::Log() << "+ MOUSE--------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "UseMouseTurning", cfg.bUseMouseTurning ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "UseMouseTurning", pConfig->bUseMouseTurning ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "TurnSensitivity", cfg.fTurnSensitivity);
+	sprintf(settingBuf, "| %-30s | %15f |", "TurnSensitivity", pConfig->fTurnSensitivity);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "UseRawMouseInput", cfg.bUseRawMouseInput ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "UseRawMouseInput", pConfig->bUseRawMouseInput ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "UnlockCameraFromAim", cfg.bUnlockCameraFromAim ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "DetachCameraFromAim", pConfig->bDetachCameraFromAim ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperZoom", cfg.bFixSniperZoom ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperZoom", pConfig->bFixSniperZoom ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperFocus", cfg.bFixSniperFocus ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixSniperFocus", pConfig->bFixSniperFocus ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixRetryLoadMouseSelector", pConfig->bFixRetryLoadMouseSelector ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -134,7 +133,7 @@ void LogSettings()
 	// KEYBOARD
 	Logging::Log() << "+ KEYBOARD-----------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -142,19 +141,19 @@ void LogSettings()
 	// CONTROLLER
 	Logging::Log() << "+ CONTROLLER---------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "OverrideControllerSensitivity", cfg.bOverrideControllerSensitivity ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "ControllerSensitivity", cfg.fControllerSensitivity);
+	sprintf(settingBuf, "| %-30s | %15f |", "ControllerSensitivity", pConfig->fControllerSensitivity);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "OverrideXinputDeadzone", cfg.bOverrideXinputDeadzone ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15f |", "XinputDeadzone", cfg.fXinputDeadzone);
+	sprintf(settingBuf, "| %-30s | %15f |", "XinputDeadzone", pConfig->fXinputDeadzone);
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -162,22 +161,22 @@ void LogSettings()
 	// FRAME RATE
 	Logging::Log() << "+ FRAME RATE---------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixTurningSpeed", cfg.bFixTurningSpeed ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixTurningSpeed", pConfig->bFixTurningSpeed ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixQTE", cfg.bFixQTE ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixQTE", pConfig->bFixQTE ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "EnableFastMath", cfg.bEnableFastMath ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableFastMath", pConfig->bEnableFastMath ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "PrecacheModels", cfg.bPrecacheModels ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "PrecacheModels", pConfig->bPrecacheModels ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -185,58 +184,58 @@ void LogSettings()
 	// MISC
 	Logging::Log() << "+ MISC---------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "WrappedDllPath", cfg.sWrappedDllPath.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "WrappedDllPath", pConfig->sWrappedDllPath.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "OverrideCostumes", cfg.bOverrideCostumes ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "OverrideCostumes", pConfig->bOverrideCostumes ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "LeonCostume", sLeonCostumeNames[(int)cfg.CostumeOverride.Leon]);
+	sprintf(settingBuf, "| %-30s | %15s |", "LeonCostume", sLeonCostumeNames[(int)pConfig->CostumeOverride.Leon]);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AshleyCostume", sAshleyCostumeNames[(int)cfg.CostumeOverride.Ashley]);
+	sprintf(settingBuf, "| %-30s | %15s |", "AshleyCostume", sAshleyCostumeNames[(int)pConfig->CostumeOverride.Ashley]);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AdaCostume", sAdaCostumeNames[(int)cfg.CostumeOverride.Ada]);
+	sprintf(settingBuf, "| %-30s | %15s |", "AdaCostume", sAdaCostumeNames[(int)pConfig->CostumeOverride.Ada]);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15d |", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
+	sprintf(settingBuf, "| %-30s | %15d |", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AllowAshleySuplex", cfg.bAllowAshleySuplex ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowAshleySuplex", pConfig->bAllowAshleySuplex ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AllowMatildaQuickturn", cfg.bAllowMatildaQuickturn ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowMatildaQuickturn", pConfig->bAllowMatildaQuickturn ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FixDitmanGlitch", cfg.bFixDitmanGlitch ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "FixDitmanGlitch", pConfig->bFixDitmanGlitch ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "UseSprintToggle", cfg.bUseSprintToggle ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "UseSprintToggle", pConfig->bUseSprintToggle ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "DisableQTE", cfg.bDisableQTE ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableQTE", pConfig->bDisableQTE ? "true" : "false");
 	Logging::Log() << settingBuf;
 	
-	sprintf(settingBuf, "| %-30s | %15s |", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "SkipIntroLogos", cfg.bSkipIntroLogos ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "SkipIntroLogos", pConfig->bSkipIntroLogos ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "EnableDebugMenu", cfg.bEnableDebugMenu ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "EnableDebugMenu", pConfig->bEnableDebugMenu ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -244,13 +243,13 @@ void LogSettings()
 	// MEMORY
 	Logging::Log() << "+ MEMORY-------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "RaiseVertexAlloc", pConfig->bRaiseVertexAlloc ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -258,37 +257,37 @@ void LogSettings()
 	// HOTKEYS
 	Logging::Log() << "+ HOTKEYS------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "ConfigMenu", cfg.sConfigMenuKeyCombo.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "ConfigMenu", pConfig->sConfigMenuKeyCombo.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "Console", cfg.sConsoleKeyCombo.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "Console", pConfig->sConsoleKeyCombo.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemUp", cfg.sFlipItemUp.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemUp", pConfig->sFlipItemUp.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemDown", cfg.sFlipItemDown.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemDown", pConfig->sFlipItemDown.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemLeft", cfg.sFlipItemLeft.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemLeft", pConfig->sFlipItemLeft.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemRight", cfg.sFlipItemRight.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "FlipItemRight", pConfig->sFlipItemRight.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_1", cfg.sQTE_key_1.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_1", pConfig->sQTE_key_1.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_2", cfg.sQTE_key_2.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "QTE_key_2", pConfig->sQTE_key_2.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "DebugMenu", cfg.sDebugMenuKeyCombo.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "DebugMenu", pConfig->sDebugMenuKeyCombo.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "MouseTurningModifier", cfg.sMouseTurnModifierKeyCombo.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo.data());
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "JetSkiTricks", cfg.sJetSkiTrickCombo.data());
+	sprintf(settingBuf, "| %-30s | %15s |", "JetSkiTricks", pConfig->sJetSkiTrickCombo.data());
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -296,7 +295,7 @@ void LogSettings()
 	// FPS WARNING
 	Logging::Log() << "+ WARNING------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "IgnoreFPSWarning", cfg.bIgnoreFPSWarning ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";
@@ -304,19 +303,19 @@ void LogSettings()
 	// IMGUI
 	Logging::Log() << "+ IMGUI--------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15f |", "FontSize", cfg.fFontSize);
+	sprintf(settingBuf, "| %-30s | %15f |", "FontSize", pConfig->fFontSize);
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "DisableMenuTip", cfg.bDisableMenuTip ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "DisableMenuTip", pConfig->bDisableMenuTip ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	// DEBUG
 	Logging::Log() << "+ DEBUG--------------------------+-----------------+";
 
-	sprintf(settingBuf, "| %-30s | %15s |", "VerboseLog", cfg.bVerboseLog ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "VerboseLog", pConfig->bVerboseLog ? "true" : "false");
 	Logging::Log() << settingBuf;
 
-	sprintf(settingBuf, "| %-30s | %15s |", "NeverHideCursor", cfg.bNeverHideCursor ? "true" : "false");
+	sprintf(settingBuf, "| %-30s | %15s |", "NeverHideCursor", pConfig->bNeverHideCursor ? "true" : "false");
 	Logging::Log() << settingBuf;
 
 	Logging::Log() << "+--------------------------------+-----------------+";

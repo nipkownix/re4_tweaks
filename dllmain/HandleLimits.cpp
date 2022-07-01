@@ -1,6 +1,5 @@
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
 #include "Settings.h"
 #include "Logging/Logging.h"
 #include "Patches.h"
@@ -8,11 +7,11 @@
 void Init_HandleLimits()
 {
 	// SFD size
-	if (cfg.bAllowHighResolutionSFD)
+	if (pConfig->bAllowHighResolutionSFD)
 		Init_sofdec();
 
 	// vertex buffers
-	if (cfg.bRaiseVertexAlloc)
+	if (pConfig->bRaiseVertexAlloc)
 	{
 		auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
 		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 800000, true);  // 400000 -> 800000
@@ -40,7 +39,7 @@ void Init_HandleLimits()
 	}
 
 	// Inventory screen mem
-	if (cfg.bRaiseInventoryAlloc)
+	if (pConfig->bRaiseInventoryAlloc)
 	{
 		const int SSOldSize = 0x34AC00;
 		const int SSNewSize = 0x2000000;

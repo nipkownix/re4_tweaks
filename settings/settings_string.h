@@ -92,7 +92,7 @@ UseRawMouseInput = true
 ; When using the "Modern" mouse setting, the game locks the camera position to the aiming position, making both move together.
 ; Although this is the expected behavior in most games, some people might prefer to keep the original camera behavior while also having the benefits from "Modern" aiming.
 ; Enabling this will also restore the horizontal aiming sway that was lost when the devs implemented "Modern" aiming.
-UnlockCameraFromAim = false
+DetachCameraFromAim = false
 
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.
 FixSniperZoom = true
@@ -246,7 +246,7 @@ FlipItemLeft  = INSERT
 FlipItemRight = PAGEUP
 
 ; Key bindings for QTE keys when playing with keyboard and mouse.
-; Unlike the "official" way of rebinding keys through usr_input.ini, this
+; Unlike the "official" way of rebinding keys through usrpInput.ini, this
 ; option also changes the on-screen prompt to properly match the selected key.
 ; * Key combinations not supported
 QTE_key_1 = D

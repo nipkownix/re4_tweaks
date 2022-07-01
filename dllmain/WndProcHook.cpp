@@ -1,13 +1,10 @@
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
-#include "cfgMenu.h"
-#include "WndProcHook.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
 #include "input.hpp"
 #include "Logging/Logging.h"
 #include "Game.h"
+#include "Patches.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -19,7 +16,7 @@ int curPosY;
 
 void EnableClipCursor(HWND window)
 {
-	if (cfg.bNeverHideCursor)
+	if (pConfig->bNeverHideCursor)
 		return;
 
 	RECT rect;
@@ -102,7 +99,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case WM_EXITSIZEMOVE:
 			EnableClipCursor(hWindow);
-			if (cfg.bRememberWindowPos)
+			if (pConfig->bRememberWindowPos)
 			{
 				// Write new window position
 				#ifdef VERBOSE
@@ -112,8 +109,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				CIniReader iniReader("");
 
-				cfg.iWindowPositionX = curPosX;
-				cfg.iWindowPositionY = curPosY;
+				pConfig->iWindowPositionX = curPosX;
+				pConfig->iWindowPositionY = curPosY;
 
 				iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
 				iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
@@ -136,7 +133,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_KILLFOCUS:
 			// Clear the mouse delta value if we lose focus
 			*(int32_t*)(ptrMouseDeltaX) = 0;
-			_input->clear_mouse_delta();
+			pInput->clear_mouse_delta();
 
 			// Unlock cursor
 			DisableClipCursor(true);
@@ -151,7 +148,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		// Clear the mouse delta value if the cfg menu is open
 		*(int32_t*)(ptrMouseDeltaX) = 0;
-		_input->clear_mouse_delta();
+		pInput->clear_mouse_delta();
 	}
 
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
@@ -160,20 +157,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 // CreateWindowExA hook to get the hWindow and set up the WndProc hook
 HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 {
-	int windowX = cfg.iWindowPositionX < 0 ? CW_USEDEFAULT : cfg.iWindowPositionX;
-	int windowY = cfg.iWindowPositionY < 0 ? CW_USEDEFAULT : cfg.iWindowPositionY;
+	int windowX = pConfig->iWindowPositionX < 0 ? CW_USEDEFAULT : pConfig->iWindowPositionX;
+	int windowY = pConfig->iWindowPositionY < 0 ? CW_USEDEFAULT : pConfig->iWindowPositionY;
 
-	HWND result = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, cfg.bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-	hWindow = result;
+	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, pConfig->bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 
 	Logging::Log() << __FUNCTION__ << " -> Window created. Registering for input...";
 
 	// Register hWnd for input processing
-	_input = input::register_window(hWindow);
+	pInput = input::register_window(hWindow);
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);
 
-	return result;
+	return hWindow;
 }
 
 void Init_WndProcHook()

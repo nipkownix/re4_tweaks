@@ -1,17 +1,8 @@
 #include <iostream>
 #include "stdafx.h"
 #include "Game.h"
-#include "dllmain.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
 #include "Logging/Logging.h"
-
-static uint32_t* ptrGameFrameRate;
-
-int intCurrentFrameRate()
-{
-	return *(int32_t*)(ptrGameFrameRate);
-}
 
 uint32_t ModelForceRenderAll_EndTick = 0;
 
@@ -35,49 +26,35 @@ void NowLoadingOff_Hook()
 	// By forcing this processing for all models, it seems something is cached
 	// which stops lag from occurring when the models are viewed later on
 	// (by enabling this hack after load screen, the player will also view any perf drop from it as part of loading too :)
-	if (cfg.bPrecacheModels)
+	if (pConfig->bPrecacheModels)
 		ModelForceRenderAll_EndTick = GlobalPtr()->frameCounter_530C + 1;
 }
 
 void Init_60fpsFixes()
 {
-	auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
-	ptrGameFrameRate = *pattern.count(1).get(0).get<uint32_t*>(2);
-
-	// Treasure items fall speed
+	// Fix the speed of falling items
 	{
-		auto pattern = hook::pattern("DC 25 ? ? ? ? 6A ? 83 EC ? 8D BE ? ? ? ? D9 9E ? ? ? ? B9");
-		struct TreasureSpeed
+		struct TreasureAmmoSpeed
 		{
 			void operator()(injector::reg_pack& regs)
 			{
 				float vanillaMulti = 10.0;
-				float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
+				float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
 
-				if (cfg.bFixFallingItemsSpeed)
+				if (pConfig->bFixFallingItemsSpeed)
 					_asm {fsub newMulti}
 				else
 					_asm {fsub vanillaMulti}
 			}
-		}; injector::MakeInline<TreasureSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-	}
+		}; 
 
-	// Ammo boxes fall speed
-	{
-		auto pattern = hook::pattern("DC 0D ? ? ? ? D8 83 ? ? ? ? D9 9B ? ? ? ? D9 83");
-		struct AmmoBoxSpeed
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				float vanillaMulti = 10.0;
-				float newMulti = static_cast<float>(30) / intCurrentFrameRate() * 10;
+		// Treasure items
+		auto pattern = hook::pattern("DC 25 ? ? ? ? 6A ? 83 EC ? 8D BE ? ? ? ? D9 9E ? ? ? ? B9");
+		injector::MakeInline<TreasureAmmoSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-				if (cfg.bFixFallingItemsSpeed)
-					_asm {fmul newMulti}
-				else
-					_asm {fmul vanillaMulti}
-			}
-		}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+		// Ammo boxes
+		pattern = hook::pattern("DC 0D ? ? ? ? D8 83 ? ? ? ? D9 9B ? ? ? ? D9 83");
+		injector::MakeInline<TreasureAmmoSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
 	}
 
 	// Fix character backwards turning speed
@@ -89,14 +66,14 @@ void Init_60fpsFixes()
 				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
 				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 
-				if (cfg.bFixTurningSpeed)
+				if (pConfig->bFixTurningSpeed)
 					_asm {fsub newTurnSpeed}
 				else
 					_asm {fsub cPlayer__SPEED_WALK_TURN}
 			}
 		};
 
-		pattern = hook::pattern("D8 25 ? ? ? ? D9 ? A4 00 00 00");
+		auto pattern = hook::pattern("D8 25 ? ? ? ? D9 ? A4 00 00 00");
 
 		// 0x7636d9 - pl_R1_Back
 		// 0x766069 - pl_R1_Crouch
@@ -114,7 +91,7 @@ void Init_60fpsFixes()
 				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
 				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 
-				if (cfg.bFixTurningSpeed)
+				if (pConfig->bFixTurningSpeed)
 					_asm {fadd newTurnSpeed}
 				else
 					_asm {fadd cPlayer__SPEED_WALK_TURN}
@@ -138,7 +115,7 @@ void Init_60fpsFixes()
 				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
 				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 
-				if (cfg.bFixTurningSpeed)
+				if (pConfig->bFixTurningSpeed)
 					_asm {fld newTurnSpeed}
 				else
 					_asm {fld cPlayer__SPEED_WALK_TURN}
@@ -161,7 +138,7 @@ void Init_60fpsFixes()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (cfg.bFixAshleyBustPhysics)
+				if (pConfig->bFixAshleyBustPhysics)
 				{
 					// Update ebx to make use of delta-time from pG+0x70
 					float ebx = float(regs.ebx);
@@ -179,7 +156,7 @@ void Init_60fpsFixes()
 	// Workaround for lag spike when many models are first shown on screen
 	// forces game to treat all models as on-screen for a single tick after loading
 	// allowing game to process/cache whatever data was causing lag spike
-	pattern = hook::pattern("8B 4F 08 50 8D 55 ? 52 89 4D ? E8 ? ? ? ?"); // AddOtModelPosRadius
+	auto pattern = hook::pattern("8B 4F 08 50 8D 55 ? 52 89 4D ? E8 ? ? ? ?"); // AddOtModelPosRadius
 	auto caller = pattern.count(2).get(1).get<uint8_t>(0xB);
 	ReadCall(caller, collision_sphere_hexahedron);
 	InjectHook(caller, collision_sphere_hexahedron_Hook, PATCH_CALL);

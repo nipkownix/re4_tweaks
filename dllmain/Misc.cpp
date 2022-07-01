@@ -1,11 +1,9 @@
 #include <iostream>
 #include "stdafx.h"
-#include "Game.h"
-#include "dllmain.h"
-#include "Settings.h"
-#include "ConsoleWnd.h"
-#include "Logging/Logging.h"
 #include "Patches.h"
+#include "Game.h"
+#include "Settings.h"
+#include "Logging/Logging.h"
 
 static uint32_t* ptrGameFrameRate;
 
@@ -14,11 +12,11 @@ void __stdcall setLanguage_Hook()
 {
 	// Update violence level on game launch / new game
 	setLanguage_Orig();
-	if (cfg.iViolenceLevelOverride >= 0)
+	if (pConfig->iViolenceLevelOverride >= 0)
 	{
 		auto* SystemSave = SystemSavePtr();
 		if (SystemSave)
-			SystemSave->violenceLevel_9 = uint8_t(cfg.iViolenceLevelOverride);
+			SystemSave->violenceLevel_9 = uint8_t(pConfig->iViolenceLevelOverride);
 	}
 }
 
@@ -28,11 +26,11 @@ void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
 {
 	// pSys gets overwritten with data from gamesave during first loading screen, so update violence level after reading it
 	cCard__firstCheck10_Orig(thisptr, unused);
-	if (cfg.iViolenceLevelOverride >= 0)
+	if (pConfig->iViolenceLevelOverride >= 0)
 	{
 		auto* SystemSave = SystemSavePtr();
 		if (SystemSave)
-			SystemSave->violenceLevel_9 = uint8_t(cfg.iViolenceLevelOverride);
+			SystemSave->violenceLevel_9 = uint8_t(pConfig->iViolenceLevelOverride);
 	}
 }
 
@@ -286,7 +284,7 @@ BYTE __stdcall j_PlSetCostume_Hook()
 {
 	BYTE val = j_PlSetCostume_Orig();
 
-	if (!cfg.bOverrideCostumes)
+	if (!pConfig->bOverrideCostumes)
 		return val;
 
 	CharacterID curPlType = (CharacterID)GlobalPtr()->curPlType_4FC8;
@@ -294,16 +292,16 @@ BYTE __stdcall j_PlSetCostume_Hook()
 	switch (curPlType)
 	{
 	case CharacterID::Leon:
-		GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Leon;
-		GlobalPtr()->Costume_subchar_4FCB = (uint8_t)cfg.CostumeOverride.Ashley;
+		GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Leon;
+		GlobalPtr()->Costume_subchar_4FCB = (uint8_t)pConfig->CostumeOverride.Ashley;
 		break;
 	case CharacterID::Ashley:
-		// GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Ashley; <- Disabled for being very unreliable. Crashed on me many times, and when it didn't Ashley had parts of her body invisible. TODO: Fix this oe day.
+		// GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ashley; <- Disabled for being very unreliable. Crashed on me many times, and when it didn't Ashley had parts of her body invisible. TODO: Fix this oe day.
 		break;
 	case CharacterID::Ada:
 	{
 		// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-		uint8_t costumeID = (uint8_t)cfg.CostumeOverride.Ada;
+		uint8_t costumeID = (uint8_t)pConfig->CostumeOverride.Ada;
 		if (costumeID == 2)
 			costumeID++;
 
@@ -332,7 +330,7 @@ float(__cdecl* CameraControl__getCameraDirection)();
 void __cdecl wep17_r3_ready00_Hook(cPlayer* a1)
 {
 	// Update weapon direction to match camera if allowing quickturn
-	if(cfg.bAllowMatildaQuickturn)
+	if(pConfig->bAllowMatildaQuickturn)
 		a1->plWep_7D8->field_30 = CameraControl__getCameraDirection();
 
 	wep17_r3_ready00(a1);
@@ -341,7 +339,7 @@ void __cdecl wep17_r3_ready00_Hook(cPlayer* a1)
 void __cdecl wep17_r3_ready10_Hook(cPlayer* a1)
 {
 	// Jump to wep02_r3_ready10 to allow Mathilda to quickturn character
-	if (cfg.bAllowMatildaQuickturn)
+	if (pConfig->bAllowMatildaQuickturn)
 		wep02_r3_ready10(a1);
 	else
 		wep17_r3_ready10(a1);
@@ -357,7 +355,7 @@ void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 	// Normally this would then be nearly-instantly reverted back to 1.0 by the wep07_r3_ready10 state, but changing weapons can interrupt that
 	// We fix that here by resetting speed to 1 whenever weapon change is occurring, pretty simple fix
 
-	if (cfg.bFixDitmanGlitch)
+	if (pConfig->bFixDitmanGlitch)
 		thisptr->MotInfo_1D8.speed_C0 = 1.0f;
 
 	cPlayer__weaponInit(thisptr, unused);
@@ -365,6 +363,13 @@ void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 
 void Init_Misc()
 {
+	// Check if the exe is LAA
+	if (!laa.GameIsLargeAddressAware())
+	{
+		Logging::Log() << "Non-LAA executable detected!";
+		laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
+	}
+
 	// Hook cPlayer::weaponInit so we can add code to fix ditman glitch
 	{
 		auto pattern = hook::pattern("83 C4 0C E8 ? ? ? ? D9 EE 8B 06 D9 9E 44 05 00 00");
@@ -489,12 +494,12 @@ void Init_Misc()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!cfg.bOverrideCostumes)
+				if (!pConfig->bOverrideCostumes)
 					GlobalPtr()->plCostume_4FC9 = (uint8_t)AdaCostumes::Normal;
 				else
 				{
 					// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-					uint8_t costumeID = (uint8_t)cfg.CostumeOverride.Ada;
+					uint8_t costumeID = (uint8_t)pConfig->CostumeOverride.Ada;
 					if (costumeID == 2)
 						costumeID++;
 
@@ -526,19 +531,19 @@ void Init_Misc()
 				*(uint8_t*)(regs.esi + 0x01) = 0x0A;
 				*(uint8_t*)(regs.esi + 0x6E) = (uint8_t)regs.ecx & 0xFF;
 
-				if (cfg.bOverrideCostumes)
+				if (pConfig->bOverrideCostumes)
 				{
 					CharacterID curPlType = (CharacterID)GlobalPtr()->curPlType_4FC8;
 
 					switch (curPlType)
 					{
 					case CharacterID::Leon:
-						GlobalPtr()->plCostume_4FC9 = (uint8_t)cfg.CostumeOverride.Leon;
+						GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Leon;
 						break;
 					case CharacterID::Ada:
 					{
 						// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-						uint8_t costumeID = (uint8_t)cfg.CostumeOverride.Ada;
+						uint8_t costumeID = (uint8_t)pConfig->CostumeOverride.Ada;
 						if (costumeID == 2)
 							costumeID++;
 
@@ -602,7 +607,7 @@ void Init_Misc()
 	}
 
 	// Mafia Leon on cutscenes
-	if (cfg.bAllowMafiaLeonCutscenes)
+	if (pConfig->bAllowMafiaLeonCutscenes)
 	{
 		auto pattern = hook::pattern("80 B9 ? ? ? ? 04 6A ? 6A ? 6A ? 6A ? 0F 85");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), (uint8_t)-1, true); // Allow the correct models to be used
@@ -642,7 +647,7 @@ void Init_Misc()
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
 
-				if (cfg.bSilenceArmoredAshley)
+				if (pConfig->bSilenceArmoredAshley)
 				{
 					// Make the game think Ashley isn't using the clanky costume
 					regs.ef &= ~(1 << regs.zero_flag);
@@ -655,7 +660,7 @@ void Init_Misc()
 	}
 
 	// Check if the game is running at a valid frame rate
-	if (!cfg.bIgnoreFPSWarning)
+	if (!pConfig->bIgnoreFPSWarning)
 	{
 		// Hook function to read the FPS value from config.ini
 		auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -708,7 +713,7 @@ void Init_Misc()
 			void operator()(injector::reg_pack& regs)
 			{
 				bool unlock = *(uint32_t*)(pSys + 8) == 0 // pSys->language_8
-					|| cfg.bAshleyJPCameraAngles;
+					|| pConfig->bAshleyJPCameraAngles;
 
 				// set zero-flag if we're unlocking the camera, for the jz game uses after this hook
 				if (unlock)
@@ -723,7 +728,7 @@ void Init_Misc()
 
 		injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
-		if (cfg.bAshleyJPCameraAngles)
+		if (pConfig->bAshleyJPCameraAngles)
 			Logging::Log() << "AshleyJPCameraAngles enabled";
 	}
 
@@ -761,7 +766,7 @@ void Init_Misc()
 	}
 
 	// Option to skip the intro logos when starting up the game
-	if (cfg.bSkipIntroLogos)
+	if (pConfig->bSkipIntroLogos)
 	{
 		auto pattern = hook::pattern("81 7E 24 E6 00 00 00");
 		// Overwrite some kind of timer check to check for 0 seconds instead
@@ -773,7 +778,7 @@ void Init_Misc()
 	}
 
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
-	if (cfg.bEnableDebugMenu)
+	if (pConfig->bEnableDebugMenu)
 	{
 		Init_ToolMenu();
 		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
@@ -782,7 +787,7 @@ void Init_Misc()
 	}
 
 	// Add Handgun silencer to merchant sell list
-	if (cfg.bAllowSellingHandgunSilencer)
+	if (pConfig->bAllowSellingHandgunSilencer)
 	{
 		auto pattern = hook::pattern("DB 00 AC 0D 01 00 FF FF 00 00 00 00 00 00 00 00 00 00 0B 01");
 
@@ -844,7 +849,7 @@ void Init_Misc()
 
 				// Add Ashley player-type check, make it use Ada/Hunk/Wesker case which calls SetKick
 				// TODO: some reason SetKick doesn't work for Ashley? might be player-type checks inside it, so right now this just disables Suplex if bAllowAshleySuplex isn't set
-				if (!cfg.bAllowAshleySuplex && playerType == 1)
+				if (!pConfig->bAllowAshleySuplex && playerType == 1)
 				{
 					regs.eax = 0;
 				}

@@ -3,16 +3,12 @@
 #include <iostream>
 #include <mutex>
 #include "stdafx.h"
-#include "dllmain.h"
-#include "ConsoleWnd.h"
 #include "Settings.h"
 #include "settings_string.h"
-#include "MouseTurning.h"
-#include "cfgMenu.h"
 #include "Patches.h"
 #include "input.hpp"
 
-Settings cfg;
+std::shared_ptr<class Config> pConfig = std::make_shared<Config>();
 
 const std::string sSettingOverridesPath = "re4_tweaks\\setting_overrides\\";
 const std::string sHDProjectOverrideName = "HDProject.ini";
@@ -42,7 +38,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 
 			if (cur_token.length())
 			{
-				uint32_t token_num = _input->KeyMap_getVK(cur_token);
+				uint32_t token_num = pInput->KeyMap_getVK(cur_token);
 				if (!token_num)
 				{
 					// parse failed...
@@ -64,7 +60,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	if (cur_token.length())
 	{
 		// Get VK for the current token and push it into the vector
-		uint32_t token_num = _input->KeyMap_getVK(cur_token);
+		uint32_t token_num = pInput->KeyMap_getVK(cur_token);
 		if (!token_num)
 		{
 			// parse failed...
@@ -77,7 +73,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	return new_combo;
 }
 
-void Settings::ReadSettings()
+void Config::ReadSettings()
 {
 	// Read default settings file first
 	std::string sDefaultIniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
@@ -117,7 +113,7 @@ void Settings::ReadSettings()
 		ReadSettings(hdproject_path);
 }
 
-void Settings::ReadSettings(std::string_view ini_path)
+void Config::ReadSettings(std::string_view ini_path)
 {
 	CIniReader iniReader(ini_path);
 
@@ -125,182 +121,182 @@ void Settings::ReadSettings(std::string_view ini_path)
 	con.AddLogChar("Reading settings from %s", ini_path.data());
 	#endif
 
-	cfg.HasUnsavedChanges = false;
+	pConfig->HasUnsavedChanges = false;
 
 	// DISPLAY
-	cfg.fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
-	if (cfg.fFOVAdditional > 0.0f)
-		cfg.bEnableFOV = true;
+	pConfig->fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", pConfig->fFOVAdditional);
+	if (pConfig->fFOVAdditional > 0.0f)
+		pConfig->bEnableFOV = true;
 	else
-		cfg.bEnableFOV = false;
+		pConfig->bEnableFOV = false;
 
-	cfg.bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
-	cfg.bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
-	cfg.bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
-	cfg.bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
-	cfg.iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
-	cfg.bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", cfg.bOverrideLaserColor);
-	cfg.bRainbowLaser = iniReader.ReadBoolean("DISPLAY", "RainbowLaser", cfg.bRainbowLaser);
+	pConfig->bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", pConfig->bFixUltraWideAspectRatio);
+	pConfig->bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
+	pConfig->bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
+	pConfig->bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
+	pConfig->iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", pConfig->iCustomRefreshRate);
+	pConfig->bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", pConfig->bOverrideLaserColor);
+	pConfig->bRainbowLaser = iniReader.ReadBoolean("DISPLAY", "RainbowLaser", pConfig->bRainbowLaser);
 
-	cfg.fLaserRGB[0] = iniReader.ReadFloat("DISPLAY", "LaserR", cfg.fLaserR) / 255.0f;
-	cfg.fLaserRGB[1] = iniReader.ReadFloat("DISPLAY", "LaserG", cfg.fLaserG) / 255.0f;
-	cfg.fLaserRGB[2] = iniReader.ReadFloat("DISPLAY", "LaserB", cfg.fLaserB) / 255.0f;
+	pConfig->fLaserRGB[0] = iniReader.ReadFloat("DISPLAY", "LaserR", pConfig->fLaserRGB[0]) / 255.0f;
+	pConfig->fLaserRGB[1] = iniReader.ReadFloat("DISPLAY", "LaserG", pConfig->fLaserRGB[1]) / 255.0f;
+	pConfig->fLaserRGB[2] = iniReader.ReadFloat("DISPLAY", "LaserB", pConfig->fLaserRGB[2]) / 255.0f;
 
-	cfg.bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);
-	cfg.bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03);
-	cfg.bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", cfg.bFixBlurryImage);
-	cfg.bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", cfg.bDisableFilmGrain);
-	cfg.bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", cfg.bEnableGCBlur);
-	cfg.bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", cfg.bEnableGCScopeBlur);
-	cfg.bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", cfg.bWindowBorderless);
-	cfg.iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", cfg.iWindowPositionX);
-	cfg.iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
-	cfg.bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
+	pConfig->bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", pConfig->bRestorePickupTransparency);
+	pConfig->bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03);
+	pConfig->bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
+	pConfig->bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
+	pConfig->bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
+	pConfig->bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
+	pConfig->bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
+	pConfig->iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
+	pConfig->iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", pConfig->iWindowPositionY);
+	pConfig->bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", pConfig->bRememberWindowPos);
 
 	// AUDIO
-	cfg.iVolumeMaster = iniReader.ReadInteger("AUDIO", "VolumeMaster", cfg.iVolumeMaster);
-	cfg.iVolumeMaster = min(max(cfg.iVolumeMaster, 0), 100); // limit between 0 - 100
+	pConfig->iVolumeMaster = iniReader.ReadInteger("AUDIO", "VolumeMaster", pConfig->iVolumeMaster);
+	pConfig->iVolumeMaster = min(max(pConfig->iVolumeMaster, 0), 100); // limit between 0 - 100
 
-	cfg.iVolumeBGM = iniReader.ReadInteger("AUDIO", "VolumeBGM", cfg.iVolumeBGM);
-	cfg.iVolumeBGM = min(max(cfg.iVolumeBGM, 0), 100); // limit between 0 - 100
+	pConfig->iVolumeBGM = iniReader.ReadInteger("AUDIO", "VolumeBGM", pConfig->iVolumeBGM);
+	pConfig->iVolumeBGM = min(max(pConfig->iVolumeBGM, 0), 100); // limit between 0 - 100
 
-	cfg.iVolumeSE = iniReader.ReadInteger("AUDIO", "VolumeSE", cfg.iVolumeSE);
-	cfg.iVolumeSE = min(max(cfg.iVolumeSE, 0), 100); // limit between 0 - 100
+	pConfig->iVolumeSE = iniReader.ReadInteger("AUDIO", "VolumeSE", pConfig->iVolumeSE);
+	pConfig->iVolumeSE = min(max(pConfig->iVolumeSE, 0), 100); // limit between 0 - 100
 
-	cfg.iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", cfg.iVolumeCutscene);
-	cfg.iVolumeCutscene = min(max(cfg.iVolumeCutscene, 0), 100); // limit between 0 - 100
+	pConfig->iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
+	pConfig->iVolumeCutscene = min(max(pConfig->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
 	// MOUSE
-	cfg.bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
-	cfg.fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
-	cfg.bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", cfg.bUseRawMouseInput);
-	cfg.bUnlockCameraFromAim = iniReader.ReadBoolean("MOUSE", "UnlockCameraFromAim", cfg.bUnlockCameraFromAim);
-	cfg.bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
-	cfg.bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", cfg.bFixSniperFocus);
-	cfg.bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
+	pConfig->bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
+	pConfig->fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", pConfig->fTurnSensitivity);
+	pConfig->bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", pConfig->bUseRawMouseInput);
+	pConfig->bDetachCameraFromAim = iniReader.ReadBoolean("MOUSE", "DetachCameraFromAim", pConfig->bDetachCameraFromAim);
+	pConfig->bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", pConfig->bFixSniperZoom);
+	pConfig->bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", pConfig->bFixSniperFocus);
+	pConfig->bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", pConfig->bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
-	cfg.bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
+	pConfig->bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons);
 
 	// CONTROLLER
-	cfg.bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", cfg.bOverrideControllerSensitivity);
-	cfg.fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
-	cfg.fControllerSensitivity = fmin(fmax(cfg.fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
+	pConfig->bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity);
+	pConfig->fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", pConfig->fControllerSensitivity);
+	pConfig->fControllerSensitivity = fmin(fmax(pConfig->fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
 
-	cfg.bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
+	pConfig->bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone);
 
-	cfg.bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", cfg.bOverrideXinputDeadzone);
-	cfg.fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
-	cfg.fXinputDeadzone = fmin(fmax(cfg.fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
+	pConfig->bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone);
+	pConfig->fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", pConfig->fXinputDeadzone);
+	pConfig->fXinputDeadzone = fmin(fmax(pConfig->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
 
 	// FRAME RATE
-	cfg.bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
-	cfg.bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", cfg.bFixTurningSpeed);
-	cfg.bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
-	cfg.bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
-	cfg.bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", cfg.bEnableFastMath);
-	cfg.bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", cfg.bPrecacheModels);
+	pConfig->bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed);
+	pConfig->bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", pConfig->bFixTurningSpeed);
+	pConfig->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", pConfig->bFixQTE);
+	pConfig->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics);
+	pConfig->bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", pConfig->bEnableFastMath);
+	pConfig->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
-	cfg.bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", cfg.bOverrideCostumes);
+	pConfig->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
 
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "Jacket") cfg.CostumeOverride.Leon = LeonCostumes::Jacket;
-		if (buf == "Normal") cfg.CostumeOverride.Leon = LeonCostumes::Normal;
-		if (buf == "Vest") cfg.CostumeOverride.Leon = LeonCostumes::Vest;
-		if (buf == "RPD") cfg.CostumeOverride.Leon = LeonCostumes::RPD;
-		if (buf == "Mafia") cfg.CostumeOverride.Leon = LeonCostumes::Mafia;
+		if (buf == "Jacket") pConfig->CostumeOverride.Leon = LeonCostumes::Jacket;
+		if (buf == "Normal") pConfig->CostumeOverride.Leon = LeonCostumes::Normal;
+		if (buf == "Vest") pConfig->CostumeOverride.Leon = LeonCostumes::Vest;
+		if (buf == "RPD") pConfig->CostumeOverride.Leon = LeonCostumes::RPD;
+		if (buf == "Mafia") pConfig->CostumeOverride.Leon = LeonCostumes::Mafia;
 	}
 
 	buf = iniReader.ReadString("MISC", "AshleyCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "Normal") cfg.CostumeOverride.Ashley = AshleyCostumes::Normal;
-		if (buf == "Popstar") cfg.CostumeOverride.Ashley = AshleyCostumes::Popstar;
-		if (buf == "Armor") cfg.CostumeOverride.Ashley = AshleyCostumes::Armor;
+		if (buf == "Normal") pConfig->CostumeOverride.Ashley = AshleyCostumes::Normal;
+		if (buf == "Popstar") pConfig->CostumeOverride.Ashley = AshleyCostumes::Popstar;
+		if (buf == "Armor") pConfig->CostumeOverride.Ashley = AshleyCostumes::Armor;
 	}
 
 	buf = iniReader.ReadString("MISC", "AdaCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "RE2") cfg.CostumeOverride.Ada = AdaCostumes::RE2;
-		if (buf == "Spy") cfg.CostumeOverride.Ada = AdaCostumes::Spy;
-		if (buf == "Normal") cfg.CostumeOverride.Ada = AdaCostumes::Normal;
+		if (buf == "RE2") pConfig->CostumeOverride.Ada = AdaCostumes::RE2;
+		if (buf == "Spy") pConfig->CostumeOverride.Ada = AdaCostumes::Spy;
+		if (buf == "Normal") pConfig->CostumeOverride.Ada = AdaCostumes::Normal;
 	}
 
-	iCostumeComboLeon = (int)cfg.CostumeOverride.Leon;
-	iCostumeComboAshley = (int)cfg.CostumeOverride.Ashley;
-	iCostumeComboAda = (int)cfg.CostumeOverride.Ada;
+	iCostumeComboLeon = (int)pConfig->CostumeOverride.Leon;
+	iCostumeComboAshley = (int)pConfig->CostumeOverride.Ashley;
+	iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
 
-	cfg.bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
+	pConfig->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles);
 
-	cfg.iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
-	cfg.iViolenceLevelOverride = min(max(cfg.iViolenceLevelOverride, -1), 2); // limit between -1 to 2
+	pConfig->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
+	pConfig->iViolenceLevelOverride = min(max(pConfig->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
 
-	cfg.bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);
-	cfg.bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
-	cfg.bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
-	cfg.bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", cfg.bAllowAshleySuplex);
-	cfg.bAllowMatildaQuickturn = iniReader.ReadBoolean("MISC", "AllowMatildaQuickturn", cfg.bAllowMatildaQuickturn);
-	cfg.bFixDitmanGlitch = iniReader.ReadBoolean("MISC", "FixDitmanGlitch", cfg.bFixDitmanGlitch);
-	cfg.bUseSprintToggle = iniReader.ReadBoolean("MISC", "UseSprintToggle", cfg.bUseSprintToggle);
-	cfg.bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", cfg.bDisableQTE);
-	cfg.bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE);
-	cfg.bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
-	cfg.bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
+	pConfig->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer);
+	pConfig->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes);
+	pConfig->bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley);
+	pConfig->bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", pConfig->bAllowAshleySuplex);
+	pConfig->bAllowMatildaQuickturn = iniReader.ReadBoolean("MISC", "AllowMatildaQuickturn", pConfig->bAllowMatildaQuickturn);
+	pConfig->bFixDitmanGlitch = iniReader.ReadBoolean("MISC", "FixDitmanGlitch", pConfig->bFixDitmanGlitch);
+	pConfig->bUseSprintToggle = iniReader.ReadBoolean("MISC", "UseSprintToggle", pConfig->bUseSprintToggle);
+	pConfig->bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", pConfig->bDisableQTE);
+	pConfig->bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
+	pConfig->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
+	pConfig->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
 
 	// MEMORY
-	cfg.bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD);
-	cfg.bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc);
-	cfg.bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc);
+	pConfig->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
+	pConfig->bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", pConfig->bRaiseVertexAlloc);
+	pConfig->bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc);
 
 	// HOTKEYS
-	cfg.sConfigMenuKeyCombo = iniReader.ReadString("HOTKEYS", "ConfigMenu", cfg.sConfigMenuKeyCombo);
-	if (cfg.sConfigMenuKeyCombo.length())
-		ParseConfigMenuKeyCombo(cfg.sConfigMenuKeyCombo);
+	pConfig->sConfigMenuKeyCombo = iniReader.ReadString("HOTKEYS", "ConfigMenu", pConfig->sConfigMenuKeyCombo);
+	if (pConfig->sConfigMenuKeyCombo.length())
+		ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
 
-	cfg.sConsoleKeyCombo = iniReader.ReadString("HOTKEYS", "Console", cfg.sConsoleKeyCombo);
-	if (cfg.sConsoleKeyCombo.length())
+	pConfig->sConsoleKeyCombo = iniReader.ReadString("HOTKEYS", "Console", pConfig->sConsoleKeyCombo);
+	if (pConfig->sConsoleKeyCombo.length())
 	{
-		ParseConsoleKeyCombo(cfg.sConsoleKeyCombo);
+		ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
 
 		// Update console title
-		con.TitleKeyCombo = cfg.sConsoleKeyCombo;
+		con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
 	}
 
-	cfg.sFlipItemUp = iniReader.ReadString("HOTKEYS", "FlipItemUp", cfg.sFlipItemUp);
-	cfg.sFlipItemDown = iniReader.ReadString("HOTKEYS", "FlipItemDown", cfg.sFlipItemDown);
-	cfg.sFlipItemLeft = iniReader.ReadString("HOTKEYS", "FlipItemLeft", cfg.sFlipItemLeft);
-	cfg.sFlipItemRight = iniReader.ReadString("HOTKEYS", "FlipItemRight", cfg.sFlipItemRight);
-	cfg.sQTE_key_1 = iniReader.ReadString("HOTKEYS", "QTE_key_1", cfg.sQTE_key_1);
-	cfg.sQTE_key_2 = iniReader.ReadString("HOTKEYS", "QTE_key_2", cfg.sQTE_key_2);
+	pConfig->sFlipItemUp = iniReader.ReadString("HOTKEYS", "FlipItemUp", pConfig->sFlipItemUp);
+	pConfig->sFlipItemDown = iniReader.ReadString("HOTKEYS", "FlipItemDown", pConfig->sFlipItemDown);
+	pConfig->sFlipItemLeft = iniReader.ReadString("HOTKEYS", "FlipItemLeft", pConfig->sFlipItemLeft);
+	pConfig->sFlipItemRight = iniReader.ReadString("HOTKEYS", "FlipItemRight", pConfig->sFlipItemRight);
+	pConfig->sQTE_key_1 = iniReader.ReadString("HOTKEYS", "QTE_key_1", pConfig->sQTE_key_1);
+	pConfig->sQTE_key_2 = iniReader.ReadString("HOTKEYS", "QTE_key_2", pConfig->sQTE_key_2);
 
-	cfg.sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", cfg.sDebugMenuKeyCombo);
-	if (cfg.sDebugMenuKeyCombo.length())
-		ParseToolMenuKeyCombo(cfg.sDebugMenuKeyCombo);
+	pConfig->sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", pConfig->sDebugMenuKeyCombo);
+	if (pConfig->sDebugMenuKeyCombo.length())
+		ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
 
-	cfg.sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurningModifier", cfg.sMouseTurnModifierKeyCombo);
-	if (cfg.sMouseTurnModifierKeyCombo.length())
-		ParseMouseTurnModifierCombo(cfg.sMouseTurnModifierKeyCombo);
+	pConfig->sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo);
+	if (pConfig->sMouseTurnModifierKeyCombo.length())
+		ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
 
-	cfg.sJetSkiTrickCombo = iniReader.ReadString("HOTKEYS", "JetSkiTricks", cfg.sJetSkiTrickCombo);
-	if (cfg.sJetSkiTrickCombo.length())
-		ParseJetSkiTrickCombo(cfg.sJetSkiTrickCombo);
+	pConfig->sJetSkiTrickCombo = iniReader.ReadString("HOTKEYS", "JetSkiTricks", pConfig->sJetSkiTrickCombo);
+	if (pConfig->sJetSkiTrickCombo.length())
+		ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
 
 	// FPS WARNING
-	cfg.bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", cfg.bIgnoreFPSWarning);
+	pConfig->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning);
 	
 	// IMGUI
-	cfg.fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", cfg.fFontSize);
-	cfg.fFontSize = fmin(fmax(cfg.fFontSize, 1.0f), 1.25f); // limit between 1.0 - 1.25
+	pConfig->fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", pConfig->fFontSize);
+	pConfig->fFontSize = fmin(fmax(pConfig->fFontSize, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
-	cfg.bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", cfg.bDisableMenuTip);
+	pConfig->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", pConfig->bDisableMenuTip);
 
 	// DEBUG
-	cfg.bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", cfg.bVerboseLog);
-	cfg.bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", cfg.bNeverHideCursor);
+	pConfig->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", pConfig->bVerboseLog);
+	pConfig->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", pConfig->bNeverHideCursor);
 }
 
 std::mutex settingsThreadRunningMutex;
@@ -346,109 +342,109 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	}
 
 	// DISPLAY
-	iniReader.WriteFloat("DISPLAY", "FOVAdditional", cfg.fFOVAdditional);
-	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", cfg.bFixUltraWideAspectRatio);
-	iniReader.WriteBoolean("DISPLAY", "DisableVsync", cfg.bDisableVsync);
-	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", cfg.bFixDPIScale);
-	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", cfg.bFixDisplayMode);
-	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", cfg.iCustomRefreshRate);
-	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", cfg.bOverrideLaserColor);
-	iniReader.WriteBoolean("DISPLAY", "RainbowLaser", cfg.bRainbowLaser);
+	iniReader.WriteFloat("DISPLAY", "FOVAdditional", pConfig->fFOVAdditional);
+	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", pConfig->bFixUltraWideAspectRatio);
+	iniReader.WriteBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
+	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
+	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
+	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", pConfig->iCustomRefreshRate);
+	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", pConfig->bOverrideLaserColor);
+	iniReader.WriteBoolean("DISPLAY", "RainbowLaser", pConfig->bRainbowLaser);
 
-	iniReader.WriteFloat("DISPLAY", "LaserR", cfg.fLaserRGB[0] * 255.0f);
-	iniReader.WriteFloat("DISPLAY", "LaserG", cfg.fLaserRGB[1] * 255.0f);
-	iniReader.WriteFloat("DISPLAY", "LaserB", cfg.fLaserRGB[2] * 255.0f);
+	iniReader.WriteFloat("DISPLAY", "LaserR", pConfig->fLaserRGB[0] * 255.0f);
+	iniReader.WriteFloat("DISPLAY", "LaserG", pConfig->fLaserRGB[1] * 255.0f);
+	iniReader.WriteFloat("DISPLAY", "LaserB", pConfig->fLaserRGB[2] * 255.0f);
 
-	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", cfg.bRestorePickupTransparency);
-	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", cfg.bDisableBrokenFilter03);
-	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", cfg.bFixBlurryImage);
-	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", cfg.bDisableFilmGrain);
-	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", cfg.bEnableGCBlur);
-	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", cfg.bEnableGCScopeBlur);
-	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", cfg.bWindowBorderless);
-	iniReader.WriteInteger("DISPLAY", "WindowPositionX", cfg.iWindowPositionX);
-	iniReader.WriteInteger("DISPLAY", "WindowPositionY", cfg.iWindowPositionY);
-	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", cfg.bRememberWindowPos);
+	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", pConfig->bRestorePickupTransparency);
+	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03);
+	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
+	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
+	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
+	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
+	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
+	iniReader.WriteInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
+	iniReader.WriteInteger("DISPLAY", "WindowPositionY", pConfig->iWindowPositionY);
+	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", pConfig->bRememberWindowPos);
 
 	// AUDIO
-	iniReader.WriteInteger("AUDIO", "VolumeMaster", cfg.iVolumeMaster);
-	iniReader.WriteInteger("AUDIO", "VolumeBGM", cfg.iVolumeBGM);
-	iniReader.WriteInteger("AUDIO", "VolumeSE", cfg.iVolumeSE);
-	iniReader.WriteInteger("AUDIO", "VolumeCutscene", cfg.iVolumeCutscene);
+	iniReader.WriteInteger("AUDIO", "VolumeMaster", pConfig->iVolumeMaster);
+	iniReader.WriteInteger("AUDIO", "VolumeBGM", pConfig->iVolumeBGM);
+	iniReader.WriteInteger("AUDIO", "VolumeSE", pConfig->iVolumeSE);
+	iniReader.WriteInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
 
 	// MOUSE
-	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", cfg.bUseMouseTurning);
-	iniReader.WriteFloat("MOUSE", "TurnSensitivity", cfg.fTurnSensitivity);
-	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", cfg.bUseRawMouseInput);
-	iniReader.WriteBoolean("MOUSE", "UnlockCameraFromAim", cfg.bUnlockCameraFromAim);
-	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", cfg.bFixSniperZoom);
-	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", cfg.bFixSniperFocus);
-	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", cfg.bFixRetryLoadMouseSelector);
+	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
+	iniReader.WriteFloat("MOUSE", "TurnSensitivity", pConfig->fTurnSensitivity);
+	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", pConfig->bUseRawMouseInput);
+	iniReader.WriteBoolean("MOUSE", "DetachCameraFromAim", pConfig->bDetachCameraFromAim);
+	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", pConfig->bFixSniperZoom);
+	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", pConfig->bFixSniperFocus);
+	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", pConfig->bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
-	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", cfg.bFallbackToEnglishKeyIcons);
+	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons);
 
 	// CONTROLLER
-	iniReader.WriteBoolean("CONTROLLER", "OverrideControllerSensitivity", cfg.bOverrideControllerSensitivity);
-	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", cfg.fControllerSensitivity);
-	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", cfg.bRemoveExtraXinputDeadzone);
-	iniReader.WriteBoolean("CONTROLLER", "OverrideXinputDeadzone", cfg.bOverrideXinputDeadzone);
-	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", cfg.fXinputDeadzone);
+	iniReader.WriteBoolean("CONTROLLER", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity);
+	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", pConfig->fControllerSensitivity);
+	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone);
+	iniReader.WriteBoolean("CONTROLLER", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone);
+	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", pConfig->fXinputDeadzone);
 
 	// FRAME RATE
-	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", cfg.bFixFallingItemsSpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", cfg.bFixTurningSpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixQTE", cfg.bFixQTE);
-	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", cfg.bFixAshleyBustPhysics);
-	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", cfg.bEnableFastMath);
-	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", cfg.bPrecacheModels);
+	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed);
+	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", pConfig->bFixTurningSpeed);
+	iniReader.WriteBoolean("FRAME RATE", "FixQTE", pConfig->bFixQTE);
+	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics);
+	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", pConfig->bEnableFastMath);
+	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
-	iniReader.WriteBoolean("MISC", "OverrideCostumes", cfg.bOverrideCostumes);
-	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[(int)cfg.CostumeOverride.Leon]));
-	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[(int)cfg.CostumeOverride.Ashley]));
-	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[(int)cfg.CostumeOverride.Ada]));
-	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", cfg.bAshleyJPCameraAngles);
-	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", cfg.iViolenceLevelOverride);
-	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", cfg.bAllowSellingHandgunSilencer);
-	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", cfg.bAllowMafiaLeonCutscenes);
-	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", cfg.bSilenceArmoredAshley);
-	iniReader.WriteBoolean("MISC", "AllowAshleySuplex", cfg.bAllowAshleySuplex);
-	iniReader.WriteBoolean("MISC", "AllowMatildaQuickturn", cfg.bAllowMatildaQuickturn);
-	iniReader.WriteBoolean("MISC", "FixDitmanGlitch", cfg.bFixDitmanGlitch);
-	iniReader.WriteBoolean("MISC", "UseSprintToggle", cfg.bUseSprintToggle);
-	iniReader.WriteBoolean("MISC", "DisableQTE", cfg.bDisableQTE);
-	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", cfg.bAutomaticMashingQTE);
-	iniReader.WriteBoolean("MISC", "SkipIntroLogos", cfg.bSkipIntroLogos);
-	iniReader.WriteBoolean("MISC", "EnableDebugMenu", cfg.bEnableDebugMenu);
+	iniReader.WriteBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
+	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[(int)pConfig->CostumeOverride.Leon]));
+	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[(int)pConfig->CostumeOverride.Ashley]));
+	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[(int)pConfig->CostumeOverride.Ada]));
+	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles);
+	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
+	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer);
+	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes);
+	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley);
+	iniReader.WriteBoolean("MISC", "AllowAshleySuplex", pConfig->bAllowAshleySuplex);
+	iniReader.WriteBoolean("MISC", "AllowMatildaQuickturn", pConfig->bAllowMatildaQuickturn);
+	iniReader.WriteBoolean("MISC", "FixDitmanGlitch", pConfig->bFixDitmanGlitch);
+	iniReader.WriteBoolean("MISC", "UseSprintToggle", pConfig->bUseSprintToggle);
+	iniReader.WriteBoolean("MISC", "DisableQTE", pConfig->bDisableQTE);
+	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
+	iniReader.WriteBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
+	iniReader.WriteBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
 
 	// MEMORY
-	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", cfg.bAllowHighResolutionSFD);
-	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", cfg.bRaiseVertexAlloc);
-	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", cfg.bRaiseInventoryAlloc);
+	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
+	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", pConfig->bRaiseVertexAlloc);
+	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc);
 
 	// HOTKEYS
-	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + cfg.sConfigMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "Console", " " + cfg.sConsoleKeyCombo);
-	iniReader.WriteString("HOTKEYS", "FlipItemUp", " " + cfg.sFlipItemUp);
-	iniReader.WriteString("HOTKEYS", "FlipItemDown", " " + cfg.sFlipItemDown);
-	iniReader.WriteString("HOTKEYS", "FlipItemLeft", " " + cfg.sFlipItemLeft);
-	iniReader.WriteString("HOTKEYS", "FlipItemRight", " " + cfg.sFlipItemRight);
-	iniReader.WriteString("HOTKEYS", "QTE_key_1", " " + cfg.sQTE_key_1);
-	iniReader.WriteString("HOTKEYS", "QTE_key_2", " " + cfg.sQTE_key_2);
-	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + cfg.sDebugMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + cfg.sMouseTurnModifierKeyCombo);
-	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + cfg.sJetSkiTrickCombo);
+	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + pConfig->sConfigMenuKeyCombo);
+	iniReader.WriteString("HOTKEYS", "Console", " " + pConfig->sConsoleKeyCombo);
+	iniReader.WriteString("HOTKEYS", "FlipItemUp", " " + pConfig->sFlipItemUp);
+	iniReader.WriteString("HOTKEYS", "FlipItemDown", " " + pConfig->sFlipItemDown);
+	iniReader.WriteString("HOTKEYS", "FlipItemLeft", " " + pConfig->sFlipItemLeft);
+	iniReader.WriteString("HOTKEYS", "FlipItemRight", " " + pConfig->sFlipItemRight);
+	iniReader.WriteString("HOTKEYS", "QTE_key_1", " " + pConfig->sQTE_key_1);
+	iniReader.WriteString("HOTKEYS", "QTE_key_2", " " + pConfig->sQTE_key_2);
+	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + pConfig->sDebugMenuKeyCombo);
+	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + pConfig->sMouseTurnModifierKeyCombo);
+	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + pConfig->sJetSkiTrickCombo);
 
 	// IMGUI
-	iniReader.WriteFloat("IMGUI", "FontSize", cfg.fFontSize);
+	iniReader.WriteFloat("IMGUI", "FontSize", pConfig->fFontSize);
 
-	cfg.HasUnsavedChanges = false;
+	pConfig->HasUnsavedChanges = false;
 
 	return 0;
 }
 
-void Settings::WriteSettings()
+void Config::WriteSettings()
 {
 	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // if thread is already running, wait for it to finish
 

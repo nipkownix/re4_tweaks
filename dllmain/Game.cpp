@@ -1,7 +1,5 @@
 #include "stdafx.h"
-#include "dllmain.h"
 #include "Game.h"
-#include "ConsoleWnd.h"
 
 std::string gameVersion;
 bool gameIsDebugBuild = false;
@@ -14,6 +12,30 @@ std::string GameVersion()
 bool GameVersionIsDebug()
 {
 	return gameIsDebugBuild;
+}
+
+uint32_t* ptrLastUsedDevice = nullptr;
+InputDevices LastUsedDevice()
+{
+	return *(InputDevices*)(ptrLastUsedDevice);
+}
+
+uint32_t* ptrMouseSens = nullptr;
+int g_MOUSE_SENS()
+{
+	return *(int8_t*)(ptrMouseSens);
+}
+
+uint32_t* ptrMouseAimMode = nullptr;
+MouseAimingModes GetMouseAimingMode()
+{
+	return *(MouseAimingModes*)(ptrMouseAimMode);
+}
+
+void SetMouseAimingMode(MouseAimingModes newMode)
+{
+	*(int8_t*)(ptrMouseAimMode) = (int8_t)newMode;
+	return;
 }
 
 GLOBALS** pG_ptr = nullptr;
@@ -80,6 +102,18 @@ bool Init_Game()
 	#ifdef VERBOSE
 	con.AddConcatLog("Game version = ", GameVersion().data());
 	#endif
+
+	// LastUsedDevice pointer
+	pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
+	ptrLastUsedDevice = *pattern.count(1).get(0).get<uint32_t*>(1);
+
+	// g_MOUSE_SENS pointer
+	pattern = hook::pattern("0F B6 05 ? ? ? ? 89 85 ? ? ? ? DB 85 ? ? ? ? DC 35");
+	ptrMouseSens = *pattern.count(1).get(0).get<uint32_t*>(3);
+
+	// Mouse aiming mode pointer
+	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
+	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
 
 	// Grab pointer to pG (pointer to games Global struct)
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");

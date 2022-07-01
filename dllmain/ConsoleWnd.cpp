@@ -1,14 +1,12 @@
 #include <iostream>
 #include "stdafx.h"
+#include "Patches.h"
 #include <d3d9.h>
-#include "dllmain.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_impl_win32.h"
 #include "imgui\imgui_impl_dx9.h"
 #include "input.hpp"
-#include "cfgMenu.h"
 
 ConsoleOutput con;
 
@@ -31,7 +29,7 @@ bool ParseConsoleKeyCombo(std::string_view in_combo)
 
 void ConsoleBinding()
 {
-    if (_input->is_combo_pressed(&ConsoleCombo))
+    if (pInput->is_combo_pressed(&ConsoleCombo))
         bConsoleOpen = !bConsoleOpen;
 }
 

@@ -1,13 +1,9 @@
 #include <iostream>
 #include "stdafx.h"
-#include "Game.h"
-#include "dllmain.h"
-#include "Settings.h"
-#include "ConsoleWnd.h"
-#include "Logging/Logging.h"
-#include "EndSceneHook.h"
 #include "Patches.h"
-#include "cfgMenu.h"
+#include "Game.h"
+#include "Settings.h"
+#include "Logging/Logging.h"
 
 int g_UserRefreshRate;
 
@@ -39,45 +35,45 @@ const uint8_t rgbcycle[360] = {
 
 void __declspec(naked) ItemExamineHook()
 {
-	if (!cfg.bRestorePickupTransparency)
+	if (!pConfig->bRestorePickupTransparency)
 		_asm
-	{
-		call ptrGXCopyTex
-		jmp ptrAfterItemExamineHook
-	}
+		{
+			call ptrGXCopyTex
+			jmp ptrAfterItemExamineHook
+		}
 	else
 		_asm {jmp ptrAfterItemExamineHook}
 }
 
 void __declspec(naked) Esp04TransHook()
 {
-	if (!cfg.bDisableFilmGrain)
+	if (!pConfig->bDisableFilmGrain)
 		_asm
-	{
-		push ebp
-		mov  ebp, esp
-		sub  esp, 0x68
-		jmp ptrAfterEsp04TransHook
-	}
+		{
+			push ebp
+			mov  ebp, esp
+			sub  esp, 0x68
+			jmp ptrAfterEsp04TransHook
+		}
 	else
 		_asm {ret}
 }
 
 BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
 {
-	int windowX = cfg.iWindowPositionX < 0 ? 0 : cfg.iWindowPositionX;
-	int windowY = cfg.iWindowPositionY < 0 ? 0 : cfg.iWindowPositionY;
+	int windowX = pConfig->iWindowPositionX < 0 ? 0 : pConfig->iWindowPositionX;
+	int windowY = pConfig->iWindowPositionY < 0 ? 0 : pConfig->iWindowPositionY;
 	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
 }
 
 BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
 {
 	// Early return if bWindowBorderless is set to true, as this call changes the window size to include borders.
-	if (cfg.bWindowBorderless)
+	if (pConfig->bWindowBorderless)
 		return true;
 
-	int windowX = cfg.iWindowPositionX < 0 ? 0 : cfg.iWindowPositionX;
-	int windowY = cfg.iWindowPositionY < 0 ? 0 : cfg.iWindowPositionY;
+	int windowX = pConfig->iWindowPositionX < 0 ? 0 : pConfig->iWindowPositionX;
+	int windowY = pConfig->iWindowPositionY < 0 ? 0 : pConfig->iWindowPositionY;
 	return MoveWindow(hWnd, windowX, windowY, nWidth, nHeight, bRepaint);
 }
 
@@ -90,7 +86,7 @@ void Init_DisplayTweaks()
 	Init_D3D9Hook();
 
 	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
-	if (cfg.bFixUltraWideAspectRatio)
+	if (pConfig->bFixUltraWideAspectRatio)
 		Init_UltraWideFix();
 
 	// Hook function that loads the FOV
@@ -102,8 +98,8 @@ void Init_DisplayTweaks()
 			{
 				float FOV = *(float*)(regs.ebp - 0x34);
 
-				if (cfg.fFOVAdditional > 0.0f)
-					FOV += cfg.fFOVAdditional;
+				if (pConfig->fFOVAdditional > 0.0f)
+					FOV += pConfig->fFOVAdditional;
 
 				_asm {fld FOV}
 
@@ -111,12 +107,12 @@ void Init_DisplayTweaks()
 			}
 		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-		if (cfg.fFOVAdditional > 0.0f)
+		if (pConfig->fFOVAdditional > 0.0f)
 			Logging::Log() << "FOV increased";
 	}
 
 	// Force v-sync off
-	if (cfg.bDisableVsync)
+	if (pConfig->bDisableVsync)
 	{
 		// See D3D9Hook.cpp -> hook_Direct3D9::CreateDevice and hook_Direct3D9::Reset
 
@@ -136,11 +132,11 @@ void Init_DisplayTweaks()
 
 	// Game is hardcoded to only allow 60Hz display modes for some reason...
 	// Hook func that runs EnumAdapterModes & checks for 60Hz modes, make it use the refresh rate from Windows instead
-	if (cfg.bFixDisplayMode)
+	if (pConfig->bFixDisplayMode)
 	{
-		if (cfg.iCustomRefreshRate > -1)
+		if (pConfig->iCustomRefreshRate > -1)
 		{
-			g_UserRefreshRate = cfg.iCustomRefreshRate;
+			g_UserRefreshRate = pConfig->iCustomRefreshRate;
 		}
 		else
 		{
@@ -164,7 +160,7 @@ void Init_DisplayTweaks()
 				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
 
 				// Log display modes for troubleshooting
-				if (cfg.bVerboseLog)
+				if (pConfig->bVerboseLog)
 				{
 					DEVMODE dm = { 0 };
 					dm.dmSize = sizeof(dm);
@@ -233,7 +229,7 @@ void Init_DisplayTweaks()
 	}
 
 	// Apply window changes
-	if (cfg.bWindowBorderless || cfg.iWindowPositionX > -1 || cfg.iWindowPositionY > -1)
+	if (pConfig->bWindowBorderless || pConfig->iWindowPositionX > -1 || pConfig->iWindowPositionY > -1)
 	{
 		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
 		auto pattern = hook::pattern("FF 15 ? ? ? ? 56 53 57 8D 45 EC 50 FF 15 ? ? ? ? 8B");
@@ -245,7 +241,7 @@ void Init_DisplayTweaks()
 		injector::MakeNOP(pattern.get_first(0), 6);
 		InjectHook(pattern.get_first(0), MoveWindow_Hook, PATCH_CALL);
 
-		if (cfg.bWindowBorderless)
+		if (pConfig->bWindowBorderless)
 		{
 			// if borderless, update the style set by SetWindowLongA
 			pattern = hook::pattern("25 00 00 38 7F 05 00 00 C8 00");
@@ -263,7 +259,7 @@ void Init_DisplayTweaks()
 		injector::MakeNOP(pattern.get_first(0), 5);
 		injector::MakeJMP(pattern.get_first(0), ItemExamineHook, true);
 
-		if (cfg.bRestorePickupTransparency)
+		if (pConfig->bRestorePickupTransparency)
 			Logging::Log() << "RestorePickupTransparency enabled";
 	}
 
@@ -277,14 +273,13 @@ void Init_DisplayTweaks()
 
 		static int rgbindex = 0;
 
-		pattern = hook::pattern("A1 ? ? ? ? D9 5D ? 83 F8 ? 75 ? 8B 15 ? ? ? ? D9 45 ? 8B 0D ? ? ? ? 83");
 		struct DrawLaserStruct
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (cfg.bOverrideLaserColor)
+				if (pConfig->bOverrideLaserColor)
 				{
-					if (cfg.bRainbowLaser)
+					if (pConfig->bRainbowLaser)
 					{
 						*(float*)(ptrLaserR) = rgbcycle[(rgbindex + 120) % 360];
 						*(float*)(ptrLaserG) = rgbcycle[rgbindex];
@@ -296,9 +291,9 @@ void Init_DisplayTweaks()
 					}
 					else
 					{
-						*(float*)(ptrLaserR) = cfg.fLaserRGB[0] * 255.0f;
-						*(float*)(ptrLaserG) = cfg.fLaserRGB[1] * 255.0f;
-						*(float*)(ptrLaserB) = cfg.fLaserRGB[2] * 255.0f;
+						*(float*)(ptrLaserR) = pConfig->fLaserRGB[0] * 255.0f;
+						*(float*)(ptrLaserG) = pConfig->fLaserRGB[1] * 255.0f;
+						*(float*)(ptrLaserB) = pConfig->fLaserRGB[2] * 255.0f;
 
 					}
 
@@ -317,7 +312,10 @@ void Init_DisplayTweaks()
 
 				regs.eax = *(int8_t*)(ptrLaserA);
 			}
-		}; injector::MakeInline<DrawLaserStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+		}; 
+		
+		pattern = hook::pattern("A1 ? ? ? ? D9 5D ? 83 F8 ? 75 ? 8B 15 ? ? ? ? D9 45 ? 8B 0D ? ? ? ? 83");
+		injector::MakeInline<DrawLaserStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 		pattern = hook::pattern("a1 ? ? ? ? 83 f8 ? 75 ? 8b 0d ? ? ? ? d9 45 ? 8b 15 ? ? ? ? 83 ec");
 		injector::MakeInline<DrawLaserStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -331,7 +329,7 @@ void Init_DisplayTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!cfg.bDisableBrokenFilter03)
+				if (!pConfig->bDisableBrokenFilter03)
 					_asm {call ptrFilter03}
 			}
 		}; injector::MakeInline<DisableBrokenFilter03>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -349,7 +347,7 @@ void Init_DisplayTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!cfg.bFixBlurryImage)
+				if (!pConfig->bFixBlurryImage)
 					regs.edx = *(int32_t*)ptrBlurryVertex;
 				else
 					regs.edx = *(int32_t*)ptrNonBlurryVertex;
@@ -365,7 +363,7 @@ void Init_DisplayTweaks()
 		pattern = hook::pattern("D9 5D ? FF D0 D9 E8 A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 6A ? 51 D9 1C ? 68");
 		injector::MakeInline<BlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
 
-		if (cfg.bFixBlurryImage)
+		if (pConfig->bFixBlurryImage)
 			Logging::Log() << "FixBlurryImage enabled";
 	}
 
@@ -376,12 +374,12 @@ void Init_DisplayTweaks()
 		injector::MakeNOP(pattern.get_first(0), 6);
 		injector::MakeJMP(pattern.get_first(0), Esp04TransHook, true);
 
-		if (cfg.bDisableFilmGrain)
+		if (pConfig->bDisableFilmGrain)
 			Logging::Log() << "DisableFilmGrain applied";
 	}
 
 	// Disable Windows DPI scaling
-	if (cfg.bFixDPIScale)
+	if (pConfig->bFixDPIScale)
 	{
 		SetProcessDPIAware();
 	}

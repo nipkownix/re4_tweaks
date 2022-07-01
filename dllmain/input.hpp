@@ -117,17 +117,6 @@ public:
 	void next_frame();
 
 	/// <summary>
-	/// Generates a human-friendly text representation of the specified <paramref name="keycode"/>.
-	/// </summary>
-	/// <param name="keycode">The virtual key code to use.</param>
-	static std::string key_name(unsigned int keycode);
-	/// <summary>
-	/// Generates a human-friendly text representation of the specified <paramref name="key"/> shortcut.
-	/// </summary>
-	/// <param name="key">The shortcut, consisting of the [virtual key code, Ctrl, Shift, Alt].</param>
-	static std::string key_name(const unsigned int key[4]);
-
-	/// <summary>
 	/// Internal window message procedure. This looks for input messages and updates state for the corresponding windows accordingly.
 	/// </summary>
 	/// <param name="message_data">A pointer to a <see cref="MSG"/> with the message data.</param>
@@ -154,4 +143,4 @@ private:
 	std::wstring _text_input;
 };
 
-extern std::shared_ptr<class input> _input;
+extern std::shared_ptr<class input> pInput;

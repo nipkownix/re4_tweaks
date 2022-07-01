@@ -3,8 +3,9 @@
 #include <vector>
 #include "Game.h"
 
-struct Settings
+class Config
 {
+public:
 	// DISPLAY
 	float fFOVAdditional = 0.0f;
 	bool bEnableFOV = false;
@@ -16,9 +17,6 @@ struct Settings
 	bool bOverrideLaserColor = false;
 	bool bRainbowLaser = false;
 	float fLaserRGB[3] = { 1.0f, 0.0f, 0.0f };
-	float fLaserR = 255;
-	float fLaserG = 0;
-	float fLaserB = 0;
 	bool bRestorePickupTransparency = true;
 	bool bDisableBrokenFilter03 = true;
 	bool bFixBlurryImage = true;
@@ -40,7 +38,7 @@ struct Settings
 	bool bUseMouseTurning = true;
 	float fTurnSensitivity = 1.0f;
 	bool bUseRawMouseInput = true;
-	bool bUnlockCameraFromAim = false;
+	bool bDetachCameraFromAim = false;
 	bool bFixSniperZoom = true;
 	bool bFixSniperFocus = true;
 	bool bFixRetryLoadMouseSelector = true;
@@ -124,7 +122,7 @@ struct Settings
 	void WriteSettings();
 };
 
-extern Settings cfg;
+extern std::shared_ptr<class Config> pConfig;
 
 extern const char* sLeonCostumeNames[5];
 extern const char* sAshleyCostumeNames[3];

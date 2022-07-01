@@ -1,8 +1,7 @@
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
+#include "Patches.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
 #include "Logging/Logging.h"
 #include "Game.h"
 #include "input.hpp"
@@ -29,7 +28,7 @@ bool __stdcall cActionButton_checkButton_hook(int a1)
 	// We run the original function first since that's what sets QTEactive to 0 or 1
 	bool orig = cActionButton_checkButton_orig(a1);
 
-	if (cfg.bDisableQTE && isQTEactive())
+	if (pConfig->bDisableQTE && isQTEactive())
 	{
 		isAutoQTE = true;
 		return true;
@@ -44,7 +43,7 @@ bool __stdcall cActionButton_checkButton_hook(int a1)
 unsigned int(__cdecl* KeyTrgCheck_orig)(KEY_BTN a1); // Used for the mashing QTEs
 unsigned int __cdecl KeyTrgCheck_hook(KEY_BTN a1)
 {
-	if (cfg.bDisableQTE || cfg.bAutomaticMashingQTE)
+	if (pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
 	{
 		isAutoQTE = true;
 		return 1;
@@ -59,7 +58,7 @@ unsigned int __cdecl KeyTrgCheck_hook(KEY_BTN a1)
 int (*sub_859810_orig)(); // Check for both QTE keys when running from Salazar's statue
 int sub_859810_hook()
 {
-	if (cfg.bDisableQTE)
+	if (pConfig->bDisableQTE)
 		return 1;
 	else
 		return sub_859810_orig();
@@ -68,7 +67,7 @@ int sub_859810_hook()
 int (*sub_8064B0_orig)(); // Last QTE from the laser room after Krauser
 int sub_8064B0_hook()
 {
-	if (cfg.bDisableQTE)
+	if (pConfig->bDisableQTE)
 		return 1;
 	else
 		return sub_8064B0_orig();
@@ -80,7 +79,7 @@ int* __cdecl KEY1prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = _input->KeyMap_getDIK(cfg.sQTE_key_1);
+	int newKey = pInput->KeyMap_getDIK(pConfig->sQTE_key_1);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -89,7 +88,7 @@ int* __cdecl KEY2prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = _input->KeyMap_getDIK(cfg.sQTE_key_2);
+	int newKey = pInput->KeyMap_getDIK(pConfig->sQTE_key_2);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -113,7 +112,7 @@ void Init_QTEfixes()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (cfg.bDisableQTE && (!cfg.bAutomaticMashingQTE || cfg.bAutomaticMashingQTE))
+				if (pConfig->bDisableQTE && (!pConfig->bAutomaticMashingQTE || pConfig->bAutomaticMashingQTE))
 				{
 					if (isAutoQTE || isQTEactive())
 						regs.ef &= ~(1 << regs.zero_flag);
@@ -181,7 +180,7 @@ void Init_QTEfixes()
 					{
 						int leftTrigger_A = *(int8_t*)(ptrleftTrigger_A);
 
-						if (!cfg.bDisableQTE)
+						if (!pConfig->bDisableQTE)
 						{
 							// Mimic what CMP does, since we're overwriting it.
 							if (leftTrigger_A > 0)
@@ -222,7 +221,7 @@ void Init_QTEfixes()
 					{
 						int rightTrigger_B = *(int8_t*)(ptrrightTrigger_B);
 
-						if (!cfg.bDisableQTE)
+						if (!pConfig->bDisableQTE)
 						{
 							// Mimic what CMP does, since we're overwriting it.
 							if (rightTrigger_B > 0)
@@ -287,7 +286,7 @@ void Init_QTEfixes()
 				{
 					int leftTrigger_A = *(int8_t*)(ptrleftTrigger_A);
 
-					if (!cfg.bDisableQTE)
+					if (!pConfig->bDisableQTE)
 					{
 						// Mimic what CMP does, since we're overwriting it.
 						if (leftTrigger_A > 0)
@@ -330,7 +329,7 @@ void Init_QTEfixes()
 				{
 					int rightTrigger_B = *(int8_t*)(ptrrightTrigger_B);
 
-					if (!cfg.bDisableQTE)
+					if (!pConfig->bDisableQTE)
 					{
 						// Mimic what CMP does, since we're overwriting it.
 						if (rightTrigger_B > 0)
@@ -384,7 +383,7 @@ void Init_QTEfixes()
 				{
 					float mashSpeed = *(float*)(regs.edi + 0x418);
 
-					if (cfg.bFixQTE && !(cfg.bDisableQTE || cfg.bAutomaticMashingQTE))
+					if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
 						mashSpeed /= GlobalPtr()->deltaTime_70;
 
 					_asm {fld mashSpeed}
@@ -400,7 +399,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					if (cfg.bFixQTE && !(cfg.bDisableQTE || cfg.bAutomaticMashingQTE))
+					if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
 						*(int32_t*)(regs.esi + 0x414) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 					else
 						*(int32_t*)(regs.esi + 0x414) += 1;
@@ -414,7 +413,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					if (cfg.bFixQTE && !(cfg.bDisableQTE || cfg.bAutomaticMashingQTE))
+					if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
 						*(int32_t*)(regs.esi + 0x428) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 					else
 						*(int32_t*)(regs.esi + 0x428) += 1;
@@ -432,7 +431,7 @@ void Init_QTEfixes()
 				{
 					float mashSpeed = *(float*)(regs.esi + 0x40C);
 
-					if (cfg.bFixQTE || cfg.bDisableQTE || cfg.bAutomaticMashingQTE)
+					if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
 						mashSpeed *= GlobalPtr()->deltaTime_70;
 
 					_asm {fld mashSpeed}
@@ -451,7 +450,7 @@ void Init_QTEfixes()
 
 					float mashSpeed = *(float*)(regs.edi);
 
-					if (cfg.bFixQTE || cfg.bDisableQTE || cfg.bAutomaticMashingQTE)
+					if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
 						mashSpeed /= GlobalPtr()->deltaTime_70;
 
 					regs.eax = (int32_t)mashSpeed;
@@ -466,7 +465,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					if (cfg.bFixQTE || cfg.bDisableQTE || cfg.bAutomaticMashingQTE)
+					if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
 						*(int32_t*)(regs.eax + 0x168) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 					else
 						*(int32_t*)(regs.eax + 0x168) += 1;
@@ -491,7 +490,7 @@ void Init_QTEfixes()
 					if (pressed)
 					{
 						con.AddLogInt(*(int32_t*)(regs.eax));
-						if (cfg.bFixQTE || cfg.bDisableQTE || cfg.bAutomaticMashingQTE)
+						if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
 							*(int32_t*)(regs.eax) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 						else
 							*(int32_t*)(regs.eax) += 1;
@@ -504,7 +503,7 @@ void Init_QTEfixes()
 			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
 		}
 
-		if (cfg.bFixQTE && !(cfg.bDisableQTE || cfg.bAutomaticMashingQTE))
+		if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
 			Logging::Log() << __FUNCTION__ << " -> QTE speed changes applied";
 	}
 
@@ -517,7 +516,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.ebx = _input->KeyMap_getDIK(cfg.sQTE_key_1);
+					regs.ebx = pInput->KeyMap_getDIK(pConfig->sQTE_key_1);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -530,7 +529,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.edx = _input->KeyMap_getDIK(cfg.sQTE_key_2);
+					regs.edx = pInput->KeyMap_getDIK(pConfig->sQTE_key_2);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));

@@ -1,12 +1,9 @@
 #include <iostream>
 #include "stdafx.h"
-#include "dllmain.h"
+#include "Patches.h"
 #include "..\Wrappers\wrapper.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
-#include "LoggingInit.h"
 #include "Game.h"
-#include "Patches.h"
 #include "Logging/Logging.h"
 #include "input.hpp"
 
@@ -35,10 +32,12 @@ void Init_Main()
 	Init_Logging();
 
 	// Install input-related hooks and populate keymap
-	_input->Init_Input();
+	pInput->Init_Input();
 
-	cfg.ReadSettings();
+	// Read re4_tweaks settings
+	pConfig->ReadSettings();
 
+	// Get game pointers and version info
 	if (!Init_Game())
 		return;
 

@@ -264,15 +264,6 @@
     <ClInclude Include="GameFlags.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="dllmain.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="WndProcHook.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="cfgMenu.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="Settings.h">
       <Filter>dllmain</Filter>
     </ClInclude>
@@ -303,15 +294,6 @@
     <ClInclude Include="..\settings\settings_string.h">
       <Filter>settings</Filter>
     </ClInclude>
-    <ClInclude Include="ConsoleWnd.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyboardMouseTweaks.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="MouseTurning.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="..\includes\faprolight.hpp">
       <Filter>includes</Filter>
     </ClInclude>
@@ -320,9 +302,6 @@
     </ClInclude>
     <ClInclude Include="..\includes\hashes.h">
       <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="LAApatch.h">
-      <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="..\includes\exception.hpp">
       <Filter>includes</Filter>
@@ -348,13 +327,7 @@
     <ClInclude Include="..\external\Logging\Logging.h">
       <Filter>external\Logging</Filter>
     </ClInclude>
-    <ClInclude Include="EndSceneHook.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="gitparams.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="LoggingInit.h">
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="Patches.h">
@@ -364,9 +337,6 @@
       <Filter>external\miniz</Filter>
     </ClInclude>
     <ClInclude Include="D3D9hook.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioTweaks.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
