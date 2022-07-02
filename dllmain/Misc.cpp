@@ -1,9 +1,8 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 
 static uint32_t* ptrGameFrameRate;
 
@@ -249,11 +248,15 @@ void __fastcall SsTermMain__OpeMdtSetNo_Hook(uint8_t* thisptr, void* unused, int
 		else if (chapter == 3 && realSetNo >= (MessageCount_op01 + MessageCount_op02))
 			realSetNo -= (MessageCount_op01 + MessageCount_op02);
 
-		// std::stringstream is broken by Logging.h line 424, weird
-		char pathBuf[4096];
-		sprintf_s(pathBuf, "op\\unpacked\\op%02d_%02d.mdt", chapter, realSetNo);
+		std::stringstream pathBuf;
 
-		std::string path = looseFilePath(pathBuf);
+		pathBuf << "op\\unpacked\\op";
+		pathBuf << std::setfill('0') << std::setw(2) << chapter;
+		pathBuf << "_";
+		pathBuf << std::setfill('0') << std::setw(2) << realSetNo;
+		pathBuf << ".mdt";
+
+		std::string path = looseFilePath(pathBuf.str().c_str());
 		if (path.empty())
 			return; // no loose file to load...
 
@@ -361,12 +364,74 @@ void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 	cPlayer__weaponInit(thisptr, unused);
 }
 
+void Install_LangLogHook()
+{
+	static char* game_lang = nullptr;
+
+	auto pattern = hook::pattern("8A ? 08 8B ? ? ? ? ? 88 ? ? ? ? ? C3 8B FF");
+	struct GameLangLog
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			if (GameVersion() == "1.1.0")
+				*(uint8_t*)(regs.ecx + 0x4FA3) = (uint8_t)regs.eax;
+			else
+				*(uint8_t*)(regs.edx + 0x4FA3) = (uint8_t)regs.ecx;
+
+			switch (GameVersion() == "1.1.0" ? (uint8_t)regs.eax : (uint8_t)regs.ecx)
+			{
+			case 2:
+				game_lang = "English";
+				break;
+			case 3:
+				game_lang = "German";
+				break;
+			case 4:
+				game_lang = "French";
+				break;
+			case 5:
+				game_lang = "Spanish";
+				break;
+			case 6:
+				game_lang = GameVersion() == "1.1.0" ? "Traditional Chinese" : "Italian";
+				break;
+			case 7:
+				game_lang = "Simplified Chinese";
+				break;
+			case 8:
+				game_lang = "Italian";
+				break;
+			default:
+				game_lang = "Unknown"; // We should never reach this.
+			}
+
+			#ifdef VERBOSE
+			con.AddConcatLog("Game language: ", game_lang);
+			#endif
+
+			spd::log()->info("Game language: {}", game_lang);
+		}
+	};
+
+	// Japanese exe doesn't have the setLanguage function, so we end up hooking nothing
+	if (pattern.size() != 1)
+	{
+		#ifdef VERBOSE
+		con.AddLogChar("Game language: Japanese");
+		#endif
+
+		spd::log()->info("Game language: Japanese");
+	}
+	else
+		injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
+}
+
 void Init_Misc()
 {
 	// Check if the exe is LAA
 	if (!laa.GameIsLargeAddressAware())
 	{
-		Logging::Log() << "Non-LAA executable detected!";
+		spd::log()->info("Non-LAA executable detected!");
 		laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
 	}
 
@@ -471,7 +536,7 @@ void Init_Misc()
 				injector::WriteMemory(pattern.count(2).get(0).get<uint8_t>(1), uint8_t(0x10), true);
 				injector::WriteMemory(pattern.count(2).get(1).get<uint8_t>(1), uint8_t(0x10), true);
 
-				Logging::Log() << __FUNCTION__ << " -> English subtitles unlocked";
+				spd::log()->info("{} -> English subtitles unlocked", __FUNCTION__);
 			}
 		}
 	}
@@ -481,6 +546,68 @@ void Init_Misc()
 		auto pattern = hook::pattern("8B 88 40 1E 00 00 3B 4D ? 0F 85 ? ? ? ?");
 		Nop(pattern.count(1).get(0).get<uint8_t>(0x9), 6);
 		Nop(pattern.count(1).get(0).get<uint8_t>(0x18), 6);
+	}
+
+	// Log game language once setLanguage is done
+	{
+		static char* game_lang = nullptr;
+
+		auto pattern = hook::pattern("8A ? 08 8B ? ? ? ? ? 88 ? ? ? ? ? C3 8B FF");
+		struct GameLangLog
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (GameVersion() == "1.1.0")
+					*(uint8_t*)(regs.ecx + 0x4FA3) = (uint8_t)regs.eax;
+				else
+					*(uint8_t*)(regs.edx + 0x4FA3) = (uint8_t)regs.ecx;
+
+				switch (GameVersion() == "1.1.0" ? (uint8_t)regs.eax : (uint8_t)regs.ecx)
+				{
+				case 2:
+					game_lang = "English";
+					break;
+				case 3:
+					game_lang = "German";
+					break;
+				case 4:
+					game_lang = "French";
+					break;
+				case 5:
+					game_lang = "Spanish";
+					break;
+				case 6:
+					game_lang = GameVersion() == "1.1.0" ? "Traditional Chinese" : "Italian";
+					break;
+				case 7:
+					game_lang = "Simplified Chinese";
+					break;
+				case 8:
+					game_lang = "Italian";
+					break;
+				default:
+					game_lang = "Unknown"; // We should never reach this.
+				}
+
+				#ifdef VERBOSE
+				con.AddConcatLog("Game language: ", game_lang);
+				#endif
+
+				spd::log()->info("Game language: {}", game_lang);
+			}
+		};
+
+		// Japanese exe doesn't have the setLanguage function, so we end up hooking nothing
+		if (pattern.size() != 1)
+		{
+			#ifdef VERBOSE
+			con.AddLogChar("Game language: Japanese");
+			#endif
+
+			spd::log()->info("Game language: Japanese");
+		}
+		else
+			injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
 	}
 
 	// Hook PlSetCostume to allow custom costume combos
@@ -603,7 +730,7 @@ void Init_Misc()
 		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
 		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
 
-		Logging::Log() << "OverrideCostumes applied";
+		spd::log()->info("OverrideCostumes applied");
 	}
 
 	// Mafia Leon on cutscenes
@@ -615,7 +742,7 @@ void Init_Misc()
 		pattern = hook::pattern("8B 7D 18 75 ? 80 B8 ? ? ? ? 02 75 ? 6A ? 68");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(11), (uint8_t)-1, true); // Allow the correct animations to be used
 
-		Logging::Log() << "AllowMafiaLeonCutscenes enabled";
+		spd::log()->info("AllowMafiaLeonCutscenes enabled");
 	}
 
 	// Silence armored Ashley
@@ -656,7 +783,7 @@ void Init_Misc()
 			}
 		}; injector::MakeInline<ClankClanklHook>(pattern.count(1).get(0).get<uint32_t>(3), pattern.count(1).get(0).get<uint32_t>(10));
 
-		Logging::Log() << "SilenceArmoredAshley applied";
+		spd::log()->info("SilenceArmoredAshley applied");
 	}
 
 	// Check if the game is running at a valid frame rate
@@ -703,7 +830,7 @@ void Init_Misc()
 		}; injector::MakeInline<ReadFPS>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 	else
-		Logging::Log() << "User decided to ignore the FPS warning";
+		spd::log()->info("User decided to ignore the FPS warning!");
 
 	// Unlock JP-only classic camera angle during Ashley segment
 	{
@@ -729,7 +856,7 @@ void Init_Misc()
 		injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
 		if (pConfig->bAshleyJPCameraAngles)
-			Logging::Log() << "AshleyJPCameraAngles enabled";
+			spd::log()->info("AshleyJPCameraAngles enabled");
 	}
 
 	// Allow changing games level of violence to users choice
@@ -774,7 +901,7 @@ void Init_Misc()
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
 
-		Logging::Log() << "SkipIntroLogos enabled";
+		spd::log()->info("SkipIntroLogos enabled");
 	}
 
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
@@ -783,7 +910,7 @@ void Init_Misc()
 		Init_ToolMenu();
 		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
 
-		Logging::Log() << "EnableDebugMenu applied";
+		spd::log()->info("EnableDebugMenu applied");
 	}
 
 	// Add Handgun silencer to merchant sell list
@@ -812,7 +939,7 @@ void Init_Misc()
 		uint32_t* g_item_price_tbl_num = pattern.count(1).get(0).get<uint32_t>(0);
 		*g_item_price_tbl_num += 1;
 
-		Logging::Log() << "AllowSellingHandgunSilencer enabled";
+		spd::log()->info("AllowSellingHandgunSilencer enabled");
 	}
 
 	// Allow physics to apply to tactical vest outfit

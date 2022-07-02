@@ -1,9 +1,8 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 
 int g_UserRefreshRate;
 
@@ -108,7 +107,7 @@ void Init_DisplayTweaks()
 		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 		if (pConfig->fFOVAdditional > 0.0f)
-			Logging::Log() << "FOV increased";
+			spd::log()->info("FOV increased");
 	}
 
 	// Force v-sync off
@@ -127,7 +126,7 @@ void Init_DisplayTweaks()
 			}
 		}; injector::MakeInline<WriteIniHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 
-		Logging::Log() << "Vsync disabled";
+		spd::log()->info("Vsync disabled");
 	}
 
 	// Game is hardcoded to only allow 60Hz display modes for some reason...
@@ -149,7 +148,9 @@ void Init_DisplayTweaks()
 				#ifdef VERBOSE
 				con.AddLogChar("Couldn't read the display refresh rate. Using fallback value.");
 				#endif
-				Logging::Log() << "FixDisplayMode > Couldn't read the display refresh rate. Using fallback value.";
+
+				spd::log()->info("FixDisplayMode -> Couldn't read the display refresh rate. Using fallback value.");
+
 				g_UserRefreshRate = 60; // Fallback value.
 			}
 			else
@@ -164,17 +165,14 @@ void Init_DisplayTweaks()
 				{
 					DEVMODE dm = { 0 };
 					dm.dmSize = sizeof(dm);
-					Logging::Log() << "+-------------+-------------+";
-					Logging::Log() << "| Display modes:            |";
+					spd::log()->info("+----------+----------+");
+					spd::log()->info("| Display modes       |");
+					spd::log()->info("+----------+----------+");
 					for (int iModeNum = 0; EnumDisplaySettings(device.DeviceName, iModeNum, &dm) != 0; iModeNum++)
 					{
-						char resolution[100];
-
-						sprintf(resolution, "%4dx%-4d", dm.dmPelsWidth, dm.dmPelsHeight);
-
-						Logging::Log() << "| Mode " << std::setw(2) << iModeNum << " = " << resolution << " " << std::setw(3) << dm.dmDisplayFrequency << "Hz" << " |";
+						spd::log()->info("| {:<5}x {:<5} {:>3} Hz |", dm.dmPelsWidth, dm.dmPelsHeight, dm.dmDisplayFrequency);
 					}
-					Logging::Log() << "+-------------+-------------+";
+					spd::log()->info("+----------+----------+");
 				}
 			}
 		}
@@ -183,7 +181,7 @@ void Init_DisplayTweaks()
 		con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
 		#endif
 
-		Logging::Log() << "FixDisplayMode -> New refresh rate = " << g_UserRefreshRate;
+		spd::log()->info("FixDisplayMode -> New refresh rate = {}", g_UserRefreshRate);
 
 		auto pattern = hook::pattern("8B 45 ? 83 F8 ? 75 ? 8B 4D ? 8B 7D ? 3B 4D");
 		struct DisplayModeFix
@@ -260,7 +258,7 @@ void Init_DisplayTweaks()
 		injector::MakeJMP(pattern.get_first(0), ItemExamineHook, true);
 
 		if (pConfig->bRestorePickupTransparency)
-			Logging::Log() << "RestorePickupTransparency enabled";
+			spd::log()->info("RestorePickupTransparency enabled");
 	}
 
 	// Override laser sight colors
@@ -334,7 +332,7 @@ void Init_DisplayTweaks()
 			}
 		}; injector::MakeInline<DisableBrokenFilter03>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		Logging::Log() << "DisableBrokenFilter03 applied";
+		spd::log()->info("DisableBrokenFilter03 applied");
 	}
 
 	// Fix a problem related to a vertex buffer that caused the image to be slightly blurred
@@ -364,7 +362,7 @@ void Init_DisplayTweaks()
 		injector::MakeInline<BlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
 
 		if (pConfig->bFixBlurryImage)
-			Logging::Log() << "FixBlurryImage enabled";
+			spd::log()->info("FixBlurryImage enabled");
 	}
 
 	// Disable film grain (Esp04)
@@ -375,7 +373,7 @@ void Init_DisplayTweaks()
 		injector::MakeJMP(pattern.get_first(0), Esp04TransHook, true);
 
 		if (pConfig->bDisableFilmGrain)
-			Logging::Log() << "DisableFilmGrain applied";
+			spd::log()->info("DisableFilmGrain applied");
 	}
 
 	// Disable Windows DPI scaling

@@ -1,5 +1,6 @@
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Game.h"
+#include "Patches.h"
 
 std::string gameVersion;
 bool gameIsDebugBuild = false;

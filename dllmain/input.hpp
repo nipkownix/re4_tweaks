@@ -38,6 +38,11 @@ public:
 
 	bool _ignore_shortcuts = false;
 
+	static std::string KeyMap_getSTR(int keyINT);
+	static int KeyMap_getVK(std::string keySTR);
+	static int KeyMap_getDIK(std::string keySTR);
+	static void set_hotkey(std::string* cfgHotkey, bool supportsCombo);
+
 	// Before accessing input data with any of the member functions below, first call "lock()" and keep the returned object alive while accessing it.
 
 	bool is_key_down(unsigned int keycode) const;
@@ -58,10 +63,6 @@ public:
 	bool is_any_mouse_button_down() const;
 	bool is_any_mouse_button_pressed() const;
 	bool is_any_mouse_button_released() const;
-	std::string KeyMap_getSTR(int keyINT);
-	int KeyMap_getVK(std::string keySTR);
-	int KeyMap_getDIK(std::string keySTR);
-	void set_hotkey(std::string* cfgHotkey, bool supportsCombo);
 	short mouse_wheel_delta() const { return _mouse_wheel_delta; }
 	int mouse_movement_delta_x() const { return _mouse_position[0] - _last_mouse_position[0]; }
 	int mouse_movement_delta_y() const { return _mouse_position[1] - _last_mouse_position[1]; }
@@ -123,7 +124,8 @@ public:
 	/// <returns><c>true</c> if the called should ignore this message, or <c>false</c> if it should pass it on to the application.</returns>
 	static bool handle_window_message(const void *message_data);
 
-	void Init_Input();
+	void PopulateKeymap();
+	void InstallHooks();
 
 private:
 	std::shared_mutex _mutex;

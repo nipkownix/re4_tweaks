@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "dllmain.h"
 
 // Replacement for broken debug\roomInfo.dat file included with RE4 UHD Steam
 // Merges strings + missing entries from debug\roomInfo.gc into it

@@ -1,9 +1,10 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "GameFlags.h"
 #include "Game.h"
 #include "Settings.h"
 #include "input.hpp"
+#include "Utils.h"
 
 // Light tool externs
 void LightTool_GetPointers();

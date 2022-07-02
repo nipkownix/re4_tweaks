@@ -120,6 +120,8 @@ public:
 	void ReadSettings();
 	void ReadSettings(std::string_view ini_path);
 	void WriteSettings();
+
+	void LogSettings();
 };
 
 extern std::shared_ptr<class Config> pConfig;

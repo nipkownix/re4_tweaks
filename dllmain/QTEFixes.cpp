@@ -1,8 +1,7 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 #include "Game.h"
 #include "input.hpp"
 
@@ -504,7 +503,7 @@ void Init_QTEfixes()
 		}
 
 		if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
-			Logging::Log() << __FUNCTION__ << " -> QTE speed changes applied";
+			spd::log()->info("{} -> QTE speed fixes applied", __FUNCTION__);
 	}
 
 	// QTE bindings and icons
@@ -549,6 +548,6 @@ void Init_QTEfixes()
 		InjectHook(pattern.count(4).get(2).get<uint32_t>(9), KEY2prompt_hook);
 		InjectHook(pattern.count(4).get(3).get<uint32_t>(9), KEY2prompt_hook);
 
-		Logging::Log() << __FUNCTION__ << " -> Keyboard QTE bindings applied";
+		spd::log()->info("{} -> Keyboard QTE bindings applied", __FUNCTION__);
 	}
 }

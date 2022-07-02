@@ -1,5 +1,5 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
 #include "imgui\imgui.h"
@@ -11,7 +11,6 @@
 #include <sffont.hpp>
 #include <hashes.h>
 #include "input.hpp"
-#include "Logging/Logging.h"
 #include "resource.h"
 
 EndSceneHook esHook;

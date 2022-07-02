@@ -1,8 +1,7 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Game.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 
 uint32_t ModelForceRenderAll_EndTick = 0;
 
@@ -187,5 +186,5 @@ void Init_60fpsFixes()
 		}
 	}; injector::MakeInline<ModelRenderDistHack>(pattern.count(2).get(1).get<uint8_t>(0), pattern.count(2).get(1).get<uint8_t>(6));
 
-	Logging::Log() << __FUNCTION__ << " -> FPS fixes applied";
+	spd::log()->info("{} -> FPS fixes applied", __FUNCTION__);
 }

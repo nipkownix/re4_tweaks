@@ -2,11 +2,12 @@
 #include <filesystem>
 #include <iostream>
 #include <mutex>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Settings.h"
 #include "settings_string.h"
 #include "Patches.h"
 #include "input.hpp"
+#include "Utils.h"
 
 std::shared_ptr<class Config> pConfig = std::make_shared<Config>();
 
@@ -38,7 +39,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 
 			if (cur_token.length())
 			{
-				uint32_t token_num = pInput->KeyMap_getVK(cur_token);
+				uint32_t token_num = input::KeyMap_getVK(cur_token);
 				if (!token_num)
 				{
 					// parse failed...
@@ -60,7 +61,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	if (cur_token.length())
 	{
 		// Get VK for the current token and push it into the vector
-		uint32_t token_num = pInput->KeyMap_getVK(cur_token);
+		uint32_t token_num = input::KeyMap_getVK(cur_token);
 		if (!token_num)
 		{
 			// parse failed...
@@ -118,8 +119,10 @@ void Config::ReadSettings(std::string_view ini_path)
 	CIniReader iniReader(ini_path);
 
 	#ifdef VERBOSE
-	con.AddLogChar("Reading settings from %s", ini_path.data());
+	con.AddLogChar("Reading settings from: %s", ini_path.data());
 	#endif
+
+	spd::log()->info("Reading settings from: \"{}\"", ini_path.data());
 
 	pConfig->HasUnsavedChanges = false;
 
@@ -332,10 +335,10 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 		if (isReadOnly)
 		{
 			#ifdef VERBOSE
-			con.AddLogChar("Read-only ini file detected. Attempting to remove flag.");
+			con.AddLogChar("Read-only ini file detected. Attempting to remove flag");
 			#endif
 
-			//Logging::Log() << __FUNCTION__ << " -> Read-only ini file detected. Attempting to remove flag.";
+			spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
 
 			SetFileAttributesA(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
 		}
@@ -450,4 +453,140 @@ void Config::WriteSettings()
 
 	// Spawn a new thread to handle writing settings, as INI writing funcs that get used are pretty slow
 	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, NULL, 0, NULL);
+}
+
+void Config::LogSettings()
+{
+	spd::log()->info("+--------------------------------+-----------------+");
+	spd::log()->info("| Setting                        | Value           |");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// DISPLAY
+	spd::log()->info("+ DISPLAY------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "FOVAdditional", pConfig->fFOVAdditional);
+	spd::log()->info("| {:<30} | {:>15} |", "FixUltraWideAspectRatio", pConfig->bFixUltraWideAspectRatio ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableVsync", pConfig->bDisableVsync ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", pConfig->bFixDPIScale ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", pConfig->bFixDisplayMode ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", pConfig->iCustomRefreshRate);
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideLaserColor", pConfig->bOverrideLaserColor ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RainbowLaser", pConfig->bRainbowLaser ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "LaserR", pConfig->fLaserRGB[0] * 255.0f);
+	spd::log()->info("| {:<30} | {:>15} |", "LaserG", pConfig->fLaserRGB[1] * 255.0f);
+	spd::log()->info("| {:<30} | {:>15} |", "LaserB", pConfig->fLaserRGB[2] * 255.0f);
+	spd::log()->info("| {:<30} | {:>15} |", "RestorePickupTransparency", pConfig->bRestorePickupTransparency ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03 ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixBlurryImage", pConfig->bFixBlurryImage ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableFilmGrain", pConfig->bDisableFilmGrain ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableGCBlur", pConfig->bEnableGCBlur ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", pConfig->bWindowBorderless ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", pConfig->iWindowPositionX);
+	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", pConfig->iWindowPositionY);
+	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", pConfig->bRememberWindowPos ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// AUDIO
+	spd::log()->info("+ AUDIO--------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeMaster", pConfig->iVolumeMaster);
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeBGM", pConfig->iVolumeBGM);
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeSE", pConfig->iVolumeSE);
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeCutscene", pConfig->iVolumeCutscene);
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// MOUSE
+	spd::log()->info("+ MOUSE--------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "UseMouseTurning", pConfig->bUseMouseTurning ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "TurnSensitivity", pConfig->fTurnSensitivity);
+	spd::log()->info("| {:<30} | {:>15} |", "UseRawMouseInput", pConfig->bUseRawMouseInput ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DetachCameraFromAim", pConfig->bDetachCameraFromAim ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixSniperZoom", pConfig->bFixSniperZoom ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixSniperFocus", pConfig->bFixSniperFocus ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixRetryLoadMouseSelector", pConfig->bFixRetryLoadMouseSelector ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// KEYBOARD
+	spd::log()->info("+ KEYBOARD-----------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// CONTROLLER
+	spd::log()->info("+ CONTROLLER---------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ControllerSensitivity", pConfig->fControllerSensitivity);
+	spd::log()->info("| {:<30} | {:>15} |", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "XinputDeadzone", pConfig->fXinputDeadzone);
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// FRAME RATE
+	spd::log()->info("+ FRAME RATE---------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixTurningSpeed", pConfig->bFixTurningSpeed ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixQTE", pConfig->bFixQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableFastMath", pConfig->bEnableFastMath ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "PrecacheModels", pConfig->bPrecacheModels ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// MISC
+	spd::log()->info("+ MISC---------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", pConfig->sWrappedDllPath.data());
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", pConfig->bOverrideCostumes ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[(int)pConfig->CostumeOverride.Leon]);
+	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[(int)pConfig->CostumeOverride.Ashley]);
+	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[(int)pConfig->CostumeOverride.Ada]);
+	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
+	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", pConfig->bAllowAshleySuplex ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", pConfig->bAllowMatildaQuickturn ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", pConfig->bFixDitmanGlitch ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", pConfig->bUseSprintToggle ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", pConfig->bDisableQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", pConfig->bSkipIntroLogos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", pConfig->bEnableDebugMenu ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// MEMORY
+	spd::log()->info("+ MEMORY-------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RaiseVertexAlloc", pConfig->bRaiseVertexAlloc ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// HOTKEYS
+	spd::log()->info("+ HOTKEYS------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "ConfigMenu", pConfig->sConfigMenuKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "Console", pConfig->sConsoleKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemUp", pConfig->sFlipItemUp.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemDown", pConfig->sFlipItemDown.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemLeft", pConfig->sFlipItemLeft.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemRight", pConfig->sFlipItemRight.data());
+	spd::log()->info("| {:<30} | {:>15} |", "QTE_key_1", pConfig->sQTE_key_1.data());
+	spd::log()->info("| {:<30} | {:>15} |", "QTE_key_2", pConfig->sQTE_key_2.data());
+	spd::log()->info("| {:<30} | {:>15} |", "DebugMenu", pConfig->sDebugMenuKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "JetSkiTricks", pConfig->sJetSkiTrickCombo.data());
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// FPS WARNING
+	spd::log()->info("+ WARNING------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// IMGUI
+	spd::log()->info("+ IMGUI--------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "FontSize", pConfig->fFontSize);
+	spd::log()->info("| {:<30} | {:>15} |", "DisableMenuTip", pConfig->bDisableMenuTip ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// DEBUG
+	spd::log()->info("+ DEBUG--------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "VerboseLog", pConfig->bVerboseLog ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "NeverHideCursor", pConfig->bNeverHideCursor ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
 }
