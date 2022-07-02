@@ -14,12 +14,10 @@
 #include "injector\utility.hpp"
 #include "Patterns.h"
 #include "MemoryMgr.h"
+#include <log.h>
 #include <filesystem>
 #include <string>
 #pragma warning(pop)
-
 using namespace Memory::VP;
 
-void CreateThreadAutoClose(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
-
-std::wstring GetModuleFileNameW(HMODULE hModule);
+#define VERBOSE

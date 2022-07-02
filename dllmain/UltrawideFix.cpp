@@ -1,6 +1,6 @@
 #include <iostream>
-#include "stdafx.h"
-#include "Logging/Logging.h"
+#include "dllmain.h"
+#include "Patches.h"
 
 double fDefaultEngineWidthScale = 1280.0;
 double fDefaultEngineAspectRatio = 1.777777791;
@@ -41,10 +41,7 @@ void Init_UltraWideFix()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			char resolution[100];
-			sprintf(resolution, "%ix%i %iHz", (int)regs.eax, (int)regs.ecx, (int)regs.esi);
-
-			Logging::Log() << "Changing game resolution to: " << resolution;
+			spd::log()->info("Changing game resolution to: {0}x{1} {2}Hz", (int)regs.eax, (int)regs.ecx, (int)regs.esi);
 
 			#ifdef VERBOSE
 			con.AddConcatLog("ResX = ", (int)regs.eax);
@@ -178,5 +175,5 @@ void Init_UltraWideFix()
 	pattern = hook::pattern("DC 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? D9 86 ? ? ? ? DC 2D ? ? ? ? 8B F8 DE C9 E8 ? ? ? ? 8A 1D ? ? ? ?");
 	injector::WriteMemory(pattern.get_first(2), &fNewRadioNamesPos, true);
 
-	Logging::Log() << __FUNCTION__ << " -> UltrawideFix applied";
+	spd::log()->info("{} -> UltrawideFix applied", __FUNCTION__);
 }

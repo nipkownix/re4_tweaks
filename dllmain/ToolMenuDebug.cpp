@@ -1,5 +1,5 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Game.h"
 
 // Fixes for debug-builds tool menu

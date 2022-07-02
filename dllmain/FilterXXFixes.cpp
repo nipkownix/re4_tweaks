@@ -1,7 +1,6 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 
 struct Filter01Params
 {
@@ -408,7 +407,7 @@ void Init_FilterXXFixes()
 		injector::WriteMemory(pattern.get_first(6), uint8_t(0x58), true); // POP EAX (fixes esp)
 		injector::MakeJMP(pattern.get_first(7), filter01_end, true); // JMP over code that was reimplemented
 
-		Logging::Log() << __FUNCTION__ << " -> EnableGCBlur applied";
+		spd::log()->info("{} -> EnableGCBlur applied", __FUNCTION__);
 	}
 
 	if (pConfig->bEnableGCScopeBlur)
@@ -426,6 +425,6 @@ void Init_FilterXXFixes()
 		InjectHook(ptr_Filter0aGXDraw_call2, Filter0aGXDraw_Hook);
 		InjectHook(ptr_Filter0aGXDraw_call3, Filter0aGXDraw_Hook);
 
-		Logging::Log() << __FUNCTION__ << " -> EnableGCScopeBlur applied";
+		spd::log()->info("{} -> EnableGCScopeBlur applied", __FUNCTION__);
 	}
 }

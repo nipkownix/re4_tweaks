@@ -3,7 +3,7 @@
 #include <iostream>
 #include <intrin.h>
 #include <xmmintrin.h>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Settings.h"
 #include "Game.h"
 

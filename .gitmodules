@@ -1,6 +1,3 @@
-[submodule "external/hooking"]
-	path = external/hooking
-	url = https://github.com/ThirteenAG/Hooking.Patterns.git
 [submodule "external/inireader"]
 	path = external/inireader
 	url = https://github.com/ThirteenAG/IniReader.git
@@ -10,9 +7,12 @@
 [submodule "external/ModUtils"]
 	path = external/ModUtils
 	url = https://github.com/CookiePLMonster/ModUtils.git
-[submodule "external/Hooking"]
-	path = external/Hooking
-	url = https://github.com/elishacloud/Hooking/
 [submodule "external/Logging"]
 	path = external/Logging
 	url = https://github.com/elishacloud/Logging
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "external/eHooking"]
+	path = external/eHooking
+	url = https://github.com/nipkownix/Hooking

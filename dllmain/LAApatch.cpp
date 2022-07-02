@@ -1,5 +1,5 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include <d3d9.h>
 #include <shellapi.h>

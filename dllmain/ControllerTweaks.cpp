@@ -1,7 +1,6 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 #include "Patches.h"
 
 uintptr_t* ptrAimSpeedFldAddr;
@@ -32,7 +31,7 @@ void Init_ControllerTweaks()
 		injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 		if (pConfig->bOverrideControllerSensitivity)
-			Logging::Log() << __FUNCTION__ << " -> Controller sensitivity changes applied";
+			spd::log()->info("{} -> Controller sensitivity changes applied", __FUNCTION__);
 	}
 
 	// Deadzone tweaks
@@ -61,7 +60,7 @@ void Init_ControllerTweaks()
 			*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * 7849); // 7849 and 8689 are the default values
 			*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * 8689);
 
-			Logging::Log() << __FUNCTION__ << " -> XInput deadzone changes applied";
+			spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
 		}
 	}
 }

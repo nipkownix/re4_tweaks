@@ -1,8 +1,7 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Settings.h"
 #include "input.hpp"
-#include "Logging/Logging.h"
 #include "Game.h"
 #include "Patches.h"
 
@@ -162,7 +161,7 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 
 	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, pConfig->bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 
-	Logging::Log() << __FUNCTION__ << " -> Window created. Registering for input...";
+	spd::log()->info("{} -> Window created; Registering for input", __FUNCTION__);
 
 	// Register hWnd for input processing
 	pInput = input::register_window(hWindow);

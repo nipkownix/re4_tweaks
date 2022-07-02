@@ -1,10 +1,10 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 #include "input.hpp"
-#include <Hooking/Hook.h>
+#include "../external/eHooking/Hook.h"
+#include "Utils.h"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -134,7 +134,7 @@ FARPROC p_ShowCursor = nullptr;
 void InstallShowCursor_hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking ShowCursor...";
+		spd::log()->info("Hooking ShowCursor...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_ShowCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "ShowCursor"), "ShowCursor", ShowCursor_hook));
@@ -153,7 +153,7 @@ FARPROC p_SetCursor = nullptr;
 void InstallSetCursor_hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking SetCursor...";
+		spd::log()->info("Hooking SetCursor...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_SetCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "SetCursor"), "SetCursor", SetCursor_hook));
@@ -204,7 +204,7 @@ void Init_KeyboardMouseTweaks()
 		}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 		if (pConfig->bUseRawMouseInput)
-			Logging::Log() << __FUNCTION__ << " -> Raw mouse input enabled";
+			spd::log()->info("{} -> Raw mouse input enabled", __FUNCTION__);
 	}
 
 	// Prevent some negative mouse acceleration from being applied
@@ -299,9 +299,8 @@ void Init_KeyboardMouseTweaks()
 		injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 		if (pConfig->bDetachCameraFromAim)
-			Logging::Log() << __FUNCTION__ << " -> Camera lock released";
+			spd::log()->info("{} -> DetachCameraFromAim applied", __FUNCTION__);
 	}
-
 
 	// Inventory item flip binding
 	{
@@ -323,7 +322,7 @@ void Init_KeyboardMouseTweaks()
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		Logging::Log() << __FUNCTION__ << " -> Keyboard inventory item flipping enabled";
+		spd::log()->info("{} -> Keyboard inventory item flipping enabled", __FUNCTION__);
 	}
 
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
@@ -360,7 +359,7 @@ void Init_KeyboardMouseTweaks()
 		}; injector::MakeInline<MouseMenuSelector>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	
 		if (pConfig->bFixRetryLoadMouseSelector)
-			Logging::Log() << __FUNCTION__ << " -> FixRetryLoadMouseSelector applied";
+			spd::log()->info("{} -> FixRetryLoadMouseSelector applied", __FUNCTION__);
 	}
 
 	// Fix camera after zooming with the sniper
@@ -377,7 +376,7 @@ void Init_KeyboardMouseTweaks()
 		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 		if (pConfig->bFixSniperZoom)
-			Logging::Log() << __FUNCTION__ << " -> FixSniperZoom applied";
+			spd::log()->info("{} -> FixSniperZoom applied", __FUNCTION__);
 	}
 
 	// Fix the "focus animation" not looking as strong as when triggered with a controller
@@ -415,7 +414,7 @@ void Init_KeyboardMouseTweaks()
 		pattern = hook::pattern("7C ? C6 06 ? EB ? C7 46 ? ? ? ? ? EB ? DD D8 83 3D");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
 
-		Logging::Log() << __FUNCTION__ << " -> FixSniperFocus applied";
+		spd::log()->info("{} -> FixSniperFocus applied", __FUNCTION__);
 	}
 
 	// Hooks to allow toggling sprint instead of needing to hold it
@@ -483,74 +482,52 @@ void Init_KeyboardMouseTweaks()
 		ReadCall(jmp_Init_KeyIconMapping, Init_KeyIconMapping);
 		InjectHook(jmp_Init_KeyIconMapping, Init_KeyIconMapping_Hook);
 
-		Logging::Log() << __FUNCTION__ << " -> FallbackToEnglishKeyIcons enabled";
+		spd::log()->info("{} -> FallbackToEnglishKeyIcons applied", __FUNCTION__);
 
 		if (pConfig->bVerboseLog)
 		{
-			char logBuf[100];
-
-			Logging::Log() << "+------------------+------------------+";
-			Logging::Log() << "| Keyboard/locale info:               |";
-
 			// KeyboardLayout
 			wchar_t KeyboardLayoutBuff[25];
-
 			HKL userKeyboardLayout = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));
 			int userKeyboardLayoutID = PRIMARYLANGID(LOWORD(userKeyboardLayout));
 			LCIDToLocaleName(userKeyboardLayoutID, KeyboardLayoutBuff, ARRAYSIZE(KeyboardLayoutBuff), 0);
 
-			sprintf(logBuf, "%-28s%9ws", "| KeyboardLayout: ", KeyboardLayoutBuff);
-			Logging::Log() << logBuf << " |";
-
 			// UserDefaultLCID
 			wchar_t UserDefaultLCIDBuff[25];
-
 			LCIDToLocaleName(GetUserDefaultLCID(), UserDefaultLCIDBuff, ARRAYSIZE(UserDefaultLCIDBuff), 0);
-
-			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLCID: ", UserDefaultLCIDBuff);
-			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultLCID
 			wchar_t SystemDefaultLCIDBuff[25];
-
 			LCIDToLocaleName(GetSystemDefaultLCID(), SystemDefaultLCIDBuff, ARRAYSIZE(SystemDefaultLCIDBuff), 0);
-
-			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLCID: ", SystemDefaultLCIDBuff);
-			Logging::Log() << logBuf << " |";
 
 			// UserDefaultUILanguage
 			wchar_t UserDefaultUILanguageBuf[100];
-
 			GetLocaleInfo(GetUserDefaultUILanguage(), LOCALE_SNAME, UserDefaultUILanguageBuf, 100);
-
-			sprintf(logBuf, "%-28s%9ws", "| UserDefaultUILanguage: ", UserDefaultUILanguageBuf);
-			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultUILanguage
 			wchar_t SystemDefaultUILanguageBuf[100];
-
 			GetLocaleInfo(GetSystemDefaultUILanguage(), LOCALE_SNAME, SystemDefaultUILanguageBuf, 100);
-
-			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultUILanguage: ", SystemDefaultUILanguageBuf);
-			Logging::Log() << logBuf << " |";
 
 			// UserDefaultLangID
 			wchar_t UserDefaultLangIDBuf[100];
-
 			GetLocaleInfo(GetUserDefaultLangID(), LOCALE_SNAME, UserDefaultLangIDBuf, 100);
-
-			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLangID: ", UserDefaultLangIDBuf);
-			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultLangID
 			wchar_t SystemDefaultLangIDBuf[100];
-
 			GetLocaleInfo(GetSystemDefaultLangID(), LOCALE_SNAME, SystemDefaultLangIDBuf, 100);
 
-			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLangID: ", SystemDefaultLangIDBuf);
-			Logging::Log() << logBuf << " |";
-
-			Logging::Log() << "+------------------+------------------+";
+			// Log
+			spd::log()->info("+------------------+------------------+");
+			spd::log()->info("| Keyboard/locale info                |");
+			spd::log()->info("+------------------+------------------+");
+			spd::log()->info("| KeyboardLayout:           | {:>7} |", WstrToStr(KeyboardLayoutBuff));
+			spd::log()->info("| UserDefaultLCID:          | {:>7} |", WstrToStr(UserDefaultLCIDBuff));
+			spd::log()->info("| SystemDefaultLCID:        | {:>7} |", WstrToStr(SystemDefaultLCIDBuff));
+			spd::log()->info("| UserDefaultUILanguage:    | {:>7} |", WstrToStr(UserDefaultUILanguageBuf));
+			spd::log()->info("| SystemDefaultUILanguage:  | {:>7} |", WstrToStr(SystemDefaultUILanguageBuf));
+			spd::log()->info("| UserDefaultLangID:        | {:>7} |", WstrToStr(UserDefaultLangIDBuf));
+			spd::log()->info("| SystemDefaultLangID:      | {:>7} |", WstrToStr(SystemDefaultLangIDBuf));
+			spd::log()->info("+------------------+------------------+");
 		}
 	}
 }

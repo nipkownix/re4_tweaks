@@ -1,5 +1,5 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include <d3d9.h>
 #include "Settings.h"
@@ -7,6 +7,7 @@
 #include "imgui\imgui_impl_win32.h"
 #include "imgui\imgui_impl_dx9.h"
 #include "input.hpp"
+#include "Utils.h"
 
 ConsoleOutput con;
 
@@ -205,7 +206,7 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
-    std::string name = str_to_utf8(std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide"));
+    std::string name = StrToUTF8(std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide"));
     ImGui::Begin(name.data());
     ImGui::End();
     Draw(name.data());

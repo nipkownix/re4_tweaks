@@ -1,9 +1,8 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
 #include "input.hpp"
-#include "Logging/Logging.h"
 
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
@@ -388,5 +387,5 @@ void Init_MouseTurning()
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	
 	if (pConfig->bUseMouseTurning)
-		Logging::Log() << __FUNCTION__ << " -> MouseTurning enabled";
+		spd::log()->info("{} -> MouseTurning enabled", __FUNCTION__);
 }

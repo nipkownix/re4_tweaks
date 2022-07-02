@@ -1,11 +1,12 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
-#include "..\Wrappers\wrapper.h"
+#include "..\wrappers\wrapper.h"
 #include "Settings.h"
 #include "Game.h"
-#include "Logging/Logging.h"
 #include "input.hpp"
+#include "gitparams.h"
+#include "resource.h"
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -29,26 +30,34 @@ void Init_Main()
 {
 	con.AddLogChar("Big ironic thanks to QLOC S.A.");
 
-	Init_Logging();
-
-	// Install input-related hooks and populate keymap
-	pInput->Init_Input();
-
-	// Read re4_tweaks settings
-	pConfig->ReadSettings();
-
 	// Get game pointers and version info
 	if (!Init_Game())
 		return;
 
-	Logging::Log() << "Game version = " << GameVersion();
-
-	// Log re4_tweaks settings
-	LogSettings();
-
 	// Make sure steam_appid.txt exists
 	HandleAppID();
+
+	// Initial logging
+	std::string commit = GIT_CUR_COMMIT;
+	commit.resize(8);
+
+	spd::log()->info("Starting re4_tweaks v{0}-{1}-{2}", APP_VERSION, commit, GIT_BRANCH);
+	spd::LogProcessNameAndPID();
+	spd::log()->info("Running from: \"{}\"", rootPath);
+	spd::log()->info("Game version: {}", GameVersion());
+
+	// Populate keymap (needed before we ReadSettings(), otherwise, parsing hotkeys will fail)
+	pInput->PopulateKeymap();
+
+	// Read re4_tweaks settings
+	pConfig->ReadSettings();
+
+	// Log re4_tweaks settings
+	pConfig->LogSettings();
 	
+	// Install input-related hooks
+	pInput->InstallHooks();
+
 	// Various display-related tweaks
 	Init_DisplayTweaks();
 
@@ -100,13 +109,19 @@ void LoadRealDLL(HMODULE hModule)
 	// Read WrappedDLLPath from .ini file
 	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
 
-	char userDllPath[256] = {};
+	char userDllPath[MAX_PATH] = {};
 
 	GetPrivateProfileStringA("MISC", "WrappedDLLPath", "", userDllPath, 256, iniPath.c_str());
 
 	if (strlen(userDllPath) > 0)
 	{
-		wrappedDllPath = userDllPath;
+		char result[MAX_PATH] = {};
+
+		strcat(result, rootPath.c_str());
+		strcat(result, userDllPath);
+
+		wrappedDllPath = result;
+
 		// User has specified a DLL to wrap, make sure it exists first:
 		if (GetFileAttributesA(wrappedDllPath) == 0xFFFFFFFF)
 			wrappedDllPath = nullptr;

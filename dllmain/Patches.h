@@ -2,14 +2,9 @@
 #include <d3d9.h>
 #include <imgui/imgui.h>
 
-#define VERBOSE
-
 extern std::string WrapperName;
 extern std::string rootPath;
 extern HWND hWindow;
-
-// LoggingInit
-void LogSettings();
 
 // Init functions
 void Init_60fpsFixes();
@@ -23,7 +18,6 @@ bool Init_Game();
 void Init_HandleLimits();
 void Init_KeyboardMouseTweaks();
 void Init_MouseTurning();
-void Init_Logging();
 void Init_MathReimpl();
 void Init_Misc();
 void Init_QTEfixes();
@@ -62,7 +56,6 @@ extern EndSceneHook esHook;
 // cfgMenu
 void cfgMenuRender();
 void ShowCfgMenuTip();
-std::string str_to_utf8(std::string const& str);
 
 extern bool bCfgMenuOpen;
 extern bool bWaitingForHotkey;

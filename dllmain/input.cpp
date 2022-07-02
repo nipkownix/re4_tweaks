@@ -4,15 +4,18 @@
  */
 
 #include "input.hpp"
+#include "dllmain.h"
 #include "Patches.h"
 #include <algorithm>
 #include <unordered_map>
 #include <Windows.h>
 #include <cassert>
-#include "../external/Hooking/Hook.h"
+#include "../external/eHooking/Hook.h"
 #include "Settings.h"
 #include <iomanip>
 #include <array>
+#include "spdlog/fmt/bin_to_hex.h"
+#include "Utils.h"
 
 std::shared_ptr<class input> pInput;
 
@@ -53,7 +56,7 @@ std::shared_ptr<input> input::register_window(window_handle window)
 
 	if (insert.second || insert.first->second.expired())
 	{
-		Logging::Log() << __FUNCTION__ << " -> Starting input capture for window " << window << " ...";
+		spd::log()->info("{0} -> Starting input capture for window {1}", __FUNCTION__, window);
 
 		const auto instance = std::make_shared<input>(window);
 
@@ -326,10 +329,10 @@ bool input::is_combo_pressed(std::vector<uint32_t>* KeyVector) const
 	bool isComboPressed = KeyVector->size() > 0;
 	for (auto& key : *KeyVector)
 	{
-		if (!pInput->is_key_down(key) || bStateChanged)
+		if (!is_key_down(key) || bStateChanged)
 			isComboPressed = false;
 
-		if (pInput->is_key_released(key) && bStateChanged)
+		if (is_key_released(key) && bStateChanged)
 			bStateChanged = false;
 	}
 
@@ -429,6 +432,8 @@ bool input::is_any_mouse_button_released() const
 
 std::string input::KeyMap_getSTR(int keyINT)
 {
+	assert(!_keyboardStringMap.empty());
+
 	if (!_keyboardStringMap.count(keyINT))
 		return std::string();
 
@@ -437,6 +442,7 @@ std::string input::KeyMap_getSTR(int keyINT)
 
 int input::KeyMap_getVK(std::string keySTR)
 {
+	assert(!_keyboardVKMap.empty());
 
 	if (!_keyboardVKMap.count(keySTR))
 		return 0;
@@ -446,28 +452,12 @@ int input::KeyMap_getVK(std::string keySTR)
 
 int input::KeyMap_getDIK(std::string keySTR)
 {
+	assert(!_keyboardDIKMap.empty());
 
 	if (!_keyboardDIKMap.count(keySTR))
 		return 0;
 
 	return _keyboardDIKMap[keySTR];
-}
-
-std::string WstrToStr(const std::wstring& wstr)
-{
-	const int BUFF_SIZE = 7;
-	if (MB_CUR_MAX >= BUFF_SIZE) throw std::invalid_argument("BUFF_SIZE too small");
-	std::string result;
-	bool shifts = std::wctomb(nullptr, 0);  // reset the conversion state
-	for (const wchar_t wc : wstr)
-	{
-		std::array<char, BUFF_SIZE> buffer;
-		const int ret = std::wctomb(buffer.data(), wc);
-		if (ret < 0) throw std::invalid_argument("inconvertible wide characters in the current locale");
-		buffer[ret] = '\0';  // make 'buffer' contain a C-style string
-		result = result + std::string(buffer.data());
-	}
-	return result;
 }
 
 void ClearKeyboardBuffer(int key_code, BYTE* keyboard_state)
@@ -525,14 +515,14 @@ void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
 	while (waitingforkey) {
 		for (unsigned int Key1 = 0; Key1 < ARRAYSIZE(_keys); Key1++)
 		{
-			while (is_key_down(Key1)) {
+			while (pInput->is_key_down(Key1)) {
 				HotkeyVK1 = Key1;
 
 				if (supportsCombo)
 				{
 					for (unsigned int Key2 = 0; Key2 < ARRAYSIZE(_keys); Key2++)
 					{
-						if (is_key_down(Key2) && (Key2 != Key1))
+						if (pInput->is_key_down(Key2) && (Key2 != Key1))
 						{
 							HotkeyVK2 = Key2;
 						}
@@ -676,8 +666,8 @@ FARPROC p_GetMessageA = nullptr;
 void InstallGetMessageA_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking GetMessageA...";
-
+		spd::log()->info("Hooking GetMessageA...");
+		
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_GetMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageA"), "GetMessageA", HookGetMessageA));
 
@@ -717,7 +707,7 @@ FARPROC p_GetMessageW = nullptr;
 void InstallGetMessageW_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking GetMessageW...";
+		spd::log()->info("Hooking GetMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_GetMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageW"), "GetMessageW", HookGetMessageW));
@@ -749,7 +739,7 @@ FARPROC p_PeekMessageA = nullptr;
 void InstallPeekMessageA_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking PeekMessageA...";
+		spd::log()->info("Hooking PeekMessageA...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PeekMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageA"), "PeekMessageA", HookPeekMessageA));
@@ -781,7 +771,7 @@ FARPROC p_PeekMessageW = nullptr;
 void InstallPeekMessageW_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking PeekMessageW...";
+		spd::log()->info("Hooking PeekMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PeekMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageW"), "PeekMessageW", HookPeekMessageW));
@@ -803,7 +793,7 @@ FARPROC p_PostMessageA = nullptr;
 void InstallPostMessageA_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking PostMessageA...";
+		spd::log()->info("Hooking PostMessageA...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PostMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageA"), "PostMessageA", HookPostMessageA));
@@ -824,7 +814,7 @@ FARPROC p_PostMessageW = nullptr;
 void InstallPostMessageW_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking PostMessageW...";
+		spd::log()->info("Hooking PostMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PostMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageW"), "PostMessageW", HookPostMessageW));
@@ -832,12 +822,19 @@ void InstallPostMessageW_Hook()
 	PostMessageW_orig = (decltype(PostMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_PostMessageW, nullptr, nullptr);
 }
 
+template <typename I> std::string n2hexstr(I w, size_t hex_len = sizeof(I) << 1) {
+	static const char* digits = "0123456789ABCDEF";
+	std::string rc(hex_len, '0');
+	for (size_t i = 0, j = (hex_len - 1) * 4; i < hex_len; ++i, j -= 4)
+		rc[i] = digits[(w >> j) & 0x0f];
+	return rc;
+}
+
 BOOL(WINAPI* RegisterRawInputDevices_orig)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
 BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << __FUNCTION__ << " > Redirecting " << "RegisterRawInputDevices" << '(' << "pRawInputDevices = " << pRawInputDevices << ", uiNumDevices = " << uiNumDevices << ", cbSize = " << cbSize << ')' << " ...";
-
+		spd::log()->info("{0} -> Redirecting RegisterRawInputDevices (pRawInputDevices = {1}, uiNumDevices = {2}, cbSize = {3})", __FUNCTION__, n2hexstr((int)pRawInputDevices), uiNumDevices, cbSize);
 
 	for (UINT i = 0; i < uiNumDevices; ++i)
 	{
@@ -845,18 +842,15 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 
 		if (pConfig->bVerboseLog)
 		{
-			Logging::Log() << __FUNCTION__ << " > Dumping device registration at index " << i << ":";
-			Logging::Log() << __FUNCTION__ << "  +-----------------------------------------+-----------------------------------------+";
-			Logging::Log() << __FUNCTION__ << "  | Parameter                               | Value                                   |";
-			Logging::Log() << __FUNCTION__ << "  +-----------------------------------------+-----------------------------------------+";
-			Logging::Log() << __FUNCTION__ << "  | UsagePage                               | " << std::setw(39) << std::hex << device.usUsagePage << std::dec << " |";
-			Logging::Log() << __FUNCTION__ << "  | Usage                                   | " << std::setw(39) << std::hex << device.usUsage << std::dec << " |";
-			Logging::Log() << __FUNCTION__ << "  | Flags                                   | " << std::setw(39) << std::hex << device.dwFlags << std::dec << " |";
-			if (device.hwndTarget != NULL) 
-				Logging::Log() << __FUNCTION__ << "  | TargetWindow                            | " << std::setw(39) << device.hwndTarget << " |";
-			else
-				Logging::Log() << __FUNCTION__ << "  | TargetWindow                            |                                    NULL |";
-			Logging::Log() << __FUNCTION__ << "  +-----------------------------------------+-----------------------------------------+";
+			spd::log()->info("{0} -> Dumping device registration at index {1}:", __FUNCTION__, i);
+			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
+			spd::log()->info("| Parameter                               | Value                                   |");
+			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
+			spd::log()->info("| UsagePage                               | {:>39} |", n2hexstr((int)device.usUsagePage));
+			spd::log()->info("| Usage                                   | {:>39} |", n2hexstr((int)device.usUsage));
+			spd::log()->info("| Flags                                   | {:>39} |", n2hexstr((int)device.dwFlags));
+			spd::log()->info("| TargetWindow                            | {:>39} |", n2hexstr((int)device.hwndTarget));
+			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
 		}
 
 		if (device.usUsagePage != 1 || device.hwndTarget == nullptr)
@@ -867,7 +861,7 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 
 	if (!RegisterRawInputDevices_orig(pRawInputDevices, uiNumDevices, cbSize))
 	{
-		Logging::Log() << __FUNCTION__ << " failed with error code " << GetLastError() << '.';
+		spd::log()->info("{0} -> Failed with error code {1}", __FUNCTION__, GetLastError());
 		return FALSE;
 	}
 
@@ -878,7 +872,7 @@ FARPROC p_RegisterRawInputDevices = nullptr;
 void InstallRegisterRawInputDevices_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking RegisterRawInputDevices...";
+		spd::log()->info("Hooking RegisterRawInputDevices...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_RegisterRawInputDevices, Hook::HotPatch(Hook::GetProcAddress(h_user32, "RegisterRawInputDevices"), "RegisterRawInputDevices", HookRegisterRawInputDevices));
@@ -900,7 +894,7 @@ FARPROC p_ClipCursor = nullptr;
 void InstallClipCursor_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking ClipCursor...";
+		spd::log()->info("Hooking ClipCursor...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_ClipCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "ClipCursor"), "ClipCursor", HookClipCursor));
@@ -926,7 +920,7 @@ FARPROC p_SetCursorPos = nullptr;
 void InstallSetCursorPos_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking SetCursorPos...";
+		spd::log()->info("Hooking SetCursorPos...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_SetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "SetCursorPos"), "SetCursorPos", HookSetCursorPos));
@@ -953,7 +947,7 @@ FARPROC p_GetCursorPos = nullptr;
 void InstallGetCursorPos_Hook()
 {
 	if (pConfig->bVerboseLog)
-		Logging::Log() << "Hooking GetCursorPos...";
+		spd::log()->info("Hooking GetCursorPos...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_GetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetCursorPos"), "GetCursorPos", HookGetCursorPos));
@@ -961,10 +955,11 @@ void InstallGetCursorPos_Hook()
 	GetCursorPos_orig = (decltype(GetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetCursorPos, nullptr, nullptr);
 }
 
-void input::Init_Input()
+void input::PopulateKeymap()
 {
 	// Populate string map
-	Logging::Log() << "Populating keymap...";
+
+	spd::log()->info("Populating keymap");
 
 	std::string keystring;
 	for (int i = 0; i < 256; ++i)
@@ -1067,14 +1062,17 @@ void input::Init_Input()
 		_keyboardVKMap[i->second] = i->first;
 
 	// Populate DIK map, so we can get DIK from str
-	for (int i = 0; i < 256; ++i) 
+	for (int i = 0; i < 256; ++i)
 	{
 		unsigned int DIK = MapVirtualKeyEx(i, /*MAPVK_VK_TO_VSC*/0, GetKeyboardLayout(0)) & 0xFF;
 
 		_keyboardDIKMap.insert(_keyboardDIKMap.end(), std::pair<std::string, unsigned int>(_keyboardStringMap[i], DIK));
 	}
+}
 
-	Logging::Log() << "Hooking input-related APIs...";
+void input::InstallHooks()
+{
+	spd::log()->info("Hooking input-related APIs...");
 
 	InstallGetMessageA_Hook();
 	InstallGetMessageW_Hook();

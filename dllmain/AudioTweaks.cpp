@@ -1,5 +1,5 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"

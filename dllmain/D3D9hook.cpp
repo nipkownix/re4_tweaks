@@ -1,15 +1,14 @@
-#include "stdafx.h"
+#include "dllmain.h"
 #include "D3D9Hook.h"
 #include <iostream>
 #include <imgui/imgui_impl_dx9.h>
-#include <Logging/Logging.h>
 #include "Patches.h"
 #include "Settings.h"
 
 static IDirect3D9* (WINAPI* orgDirect3DCreate9)(UINT SDKVersion);
 static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 {
-	Logging::Log() << __FUNCTION__ << " -> Creating IDirect3D9 object...";
+	spd::log()->info("{} -> Creating IDirect3D9 object", __FUNCTION__);
 
 	IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
 	return new hook_Direct3D9(d3dInterface);

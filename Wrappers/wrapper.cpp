@@ -20,7 +20,7 @@
 #include <iostream>
 #include <algorithm>
 #include <fstream>
-//#include "Logging\Logging.h"
+#include <log.h>
 
 // Forces Nvidia and AMD high performance graphics
 extern "C" { _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001; }
@@ -80,21 +80,21 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0
 			HMODULE dll = nullptr; \
 			if (ProxyDll && _strcmpi(ProxyDll, DllName) != 0) \
 			{ \
-				std::cout << "Loading '" << ProxyDll << "' as real dll..." << std::endl; \
+				spd::log()->info("Loading '{}' as real dll", ProxyDll); \
 				dll = LoadLibraryA(ProxyDll); \
 				if (!dll) \
 				{ \
-					std::cout << "Error: Failed to load '" << ProxyDll << "'!" << std::endl; \
+					spd::log()->info("Error: Failed to load '{}' !", ProxyDll); \
 				} \
 			} \
 			if (!dll && _strcmpi(Name, DllName) != 0) \
 			{ \
-				std::cout << "Loading '" << Name << "'..." << std::endl; \
+				spd::log()->info("Loading '{}'", Name); \
 				dll = LoadLibraryA(Name); \
 			} \
 			if (!dll) \
 			{ \
-				std::cout << "Loading '" << Name << "' from System32..." << std::endl; \
+				spd::log()->info("Loading '{}' from System32...", Name); \
 				GetSystemDirectoryA(path, MAX_PATH); \
 				strcat_s(path, MAX_PATH, "\\"); \
 				strcat_s(path, MAX_PATH, Name); \
@@ -107,7 +107,7 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0
 			} \
 			else \
 			{ \
-				std::cout << "Error: Failed to load wrapper for '" << Name << "'!" << std::endl; \
+				spd::log()->info("Error: Failed to load wrapper for '{}'!", Name); \
 			} \
 			return dll; \
 		} \
@@ -139,6 +139,7 @@ namespace Wrapper
 }
 
 #include "wrapper.h"
+#include <log.h>
 
 __declspec(naked) HRESULT __stdcall Wrapper::_jmpaddrvoid()
 {
@@ -245,11 +246,11 @@ HMODULE Wrapper::GetWrapperType(const char *ProxyDll, const char *WrapperMode, c
 
 	if (!WrapperName)
 	{
-		//Logging::Log() << "Warning. Wrapper mode not found!";
+		spd::log()->info("Warning. Wrapper mode not found!");
 		return nullptr;
 	}
 
-	//Logging::Log() << "Wrapping '" << WrapperName << "'...";
+	spd::log()->info("Wrapping '{}'", WrapperName);
 
 	// Check dll name and load correct wrapper
 #define CHECK_FOR_WRAPPER(dllName) \
