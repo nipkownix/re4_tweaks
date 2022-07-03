@@ -1,18 +1,14 @@
-#include "stdafx.h"
+#include "dllmain.h"
 #include "D3D9Hook.h"
 #include <iostream>
-#include "EndSceneHook.h"
 #include <imgui/imgui_impl_dx9.h>
-#include <Logging/Logging.h>
 #include "Patches.h"
-#include "ConsoleWnd.h"
 #include "Settings.h"
-#include "WndProcHook.h"
 
 static IDirect3D9* (WINAPI* orgDirect3DCreate9)(UINT SDKVersion);
 static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 {
-	Logging::Log() << __FUNCTION__ << " -> Creating IDirect3D9 object...";
+	spd::log()->info("{} -> Creating IDirect3D9 object", __FUNCTION__);
 
 	IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
 	return new hook_Direct3D9(d3dInterface);
@@ -126,7 +122,7 @@ HMONITOR hook_Direct3D9::GetAdapterMonitor(UINT Adapter)
 HRESULT hook_Direct3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
 {
 	// Force v-sync off
-	if (cfg.bDisableVsync)
+	if (pConfig->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	IDirect3DDevice9* device = nullptr;
@@ -243,7 +239,7 @@ UINT hook_Direct3DDevice9::GetNumberOfSwapChains(void)
 HRESULT hook_Direct3DDevice9::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
 	// Force v-sync off
-	if (cfg.bDisableVsync)
+	if (pConfig->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	ImGui_ImplDX9_InvalidateDeviceObjects(); // Reset ImGui objects to prevent freezing
@@ -504,7 +500,7 @@ HRESULT hook_Direct3DDevice9::BeginScene()
 HRESULT hook_Direct3DDevice9::EndScene()
 {
 	// Used to render our ImGui interface
-	EndScene_hook(m_direct3DDevice9);
+	esHook.EndScene_hook(m_direct3DDevice9);
 
 	return m_direct3DDevice9->EndScene();
 }

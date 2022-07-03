@@ -1,13 +1,13 @@
 #include <iostream>
-#include "stdafx.h"
-#include <d3d9.h>
 #include "dllmain.h"
+#include "Patches.h"
+#include <d3d9.h>
 #include "Settings.h"
-#include "ConsoleWnd.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_impl_win32.h"
 #include "imgui\imgui_impl_dx9.h"
 #include "input.hpp"
+#include "Utils.h"
 
 ConsoleOutput con;
 
@@ -30,7 +30,7 @@ bool ParseConsoleKeyCombo(std::string_view in_combo)
 
 void ConsoleBinding()
 {
-    if (_input->is_combo_pressed(&ConsoleCombo))
+    if (pInput->is_combo_pressed(&ConsoleCombo))
         bConsoleOpen = !bConsoleOpen;
 }
 
@@ -206,7 +206,7 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
-    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide");
+    std::string name = StrToUTF8(std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide"));
     ImGui::Begin(name.data());
     ImGui::End();
     Draw(name.data());

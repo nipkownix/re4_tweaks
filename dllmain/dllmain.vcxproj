@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -22,13 +22,19 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
+    <LocalDebuggerCommand>$(BIO4_BIN)\bio4.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(BIO4_BIN)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
+    <LocalDebuggerCommand>$(BIO4_BIN)\bio4.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(BIO4_BIN)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -48,20 +54,20 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\ModUtils;..\external\injector\include;..\external\inireader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>del gitparams.h
@@ -75,11 +81,12 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\ModUtils;..\external\injector\include;..\external\inireader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -88,8 +95,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       </AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>del gitparams.h
@@ -101,9 +107,9 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\external\Hooking\Hook.cpp" />
-    <ClCompile Include="..\external\Hooking\HotPatch.cpp" />
-    <ClCompile Include="..\external\Hooking\IATPatch.cpp" />
+    <ClCompile Include="..\external\eHooking\Hook.cpp" />
+    <ClCompile Include="..\external\eHooking\HotPatch.cpp" />
+    <ClCompile Include="..\external\eHooking\IATPatch.cpp" />
     <ClCompile Include="..\external\imgui\imgui.cpp" />
     <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
@@ -112,12 +118,14 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="..\external\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\external\Logging\Logging.cpp" />
     <ClCompile Include="..\external\miniz\miniz.c" />
-    <ClCompile Include="..\external\ModUtils\Patterns.cpp" />
-    <ClCompile Include="..\includes\stdafx.cpp" />
+    <ClCompile Include="..\external\ModUtils\Patterns.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
+    </ClCompile>
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="60fpsFixes.cpp" />
+    <ClCompile Include="AudioTweaks.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="ControllerTweaks.cpp" />
     <ClCompile Include="D3D9hook.cpp" />
@@ -129,10 +137,10 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="KeyboardMouseTweaks.cpp" />
     <ClCompile Include="LAApatch.cpp" />
-    <ClCompile Include="LoggingInit.cpp" />
     <ClCompile Include="Misc.cpp" />
     <ClCompile Include="MouseTurning.cpp" />
     <ClCompile Include="QTEFixes.cpp" />
+    <ClCompile Include="MathReimpl.cpp" />
     <ClCompile Include="RoomInfo.cpp" />
     <ClCompile Include="cfgMenu.cpp" />
     <ClCompile Include="HandleLimits.cpp" />
@@ -140,13 +148,14 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="Sofdec.cpp" />
     <ClCompile Include="FilterXXFixes.cpp" />
     <ClCompile Include="UltrawideFix.cpp" />
+    <ClCompile Include="Utils.cpp" />
     <ClCompile Include="WndProcHook.cpp" />
     <ClCompile Include="ToolMenu.cpp" />
     <ClCompile Include="ToolMenuDebug.cpp" />
     <ClCompile Include="ToolMenuLights.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\external\Hooking\Hook.h" />
+    <ClInclude Include="..\external\eHooking\Hook.h" />
     <ClInclude Include="..\external\imgui\imconfig.h" />
     <ClInclude Include="..\external\imgui\imgui.h" />
     <ClInclude Include="..\external\imgui\imgui_impl_dx9.h" />
@@ -163,7 +172,6 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\external\injector\include\injector\hooking.hpp" />
     <ClInclude Include="..\external\injector\include\injector\injector.hpp" />
     <ClInclude Include="..\external\injector\include\injector\utility.hpp" />
-    <ClInclude Include="..\external\Logging\Logging.h" />
     <ClInclude Include="..\external\miniz\miniz.h" />
     <ClInclude Include="..\external\ModUtils\DelimStringReader.h" />
     <ClInclude Include="..\external\ModUtils\HookInit.hpp" />
@@ -173,11 +181,12 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\external\ModUtils\ModuleList.hpp" />
     <ClInclude Include="..\external\ModUtils\Patterns.h" />
     <ClInclude Include="..\external\ModUtils\Trampoline.h" />
+    <ClInclude Include="..\external\spdlog\include\spdlog\spdlog.h" />
     <ClInclude Include="..\includes\exception.hpp" />
     <ClInclude Include="..\includes\faprolight.hpp" />
     <ClInclude Include="..\includes\hashes.h" />
+    <ClInclude Include="..\includes\log.h" />
     <ClInclude Include="..\includes\sffont.hpp" />
-    <ClInclude Include="..\includes\stdafx.h" />
     <ClInclude Include="..\settings\settings_string.h" />
     <ClInclude Include="..\Wrappers\bcrypt.h" />
     <ClInclude Include="..\Wrappers\cryptsp.h" />
@@ -204,23 +213,16 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\Wrappers\wsock32.h" />
     <ClInclude Include="..\Wrappers\x3daudio1_7.h" />
     <ClInclude Include="..\Wrappers\xinput1_3.h" />
-    <ClInclude Include="ConsoleWnd.h" />
     <ClInclude Include="D3D9hook.h" />
-    <ClInclude Include="EndSceneHook.h" />
+    <ClInclude Include="dllmain.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameFlags.h" />
-    <ClInclude Include="dllmain.h" />
-    <ClInclude Include="cfgMenu.h" />
     <ClInclude Include="gitparams.h" />
     <ClInclude Include="input.hpp" />
-    <ClInclude Include="KeyboardMouseTweaks.h" />
-    <ClInclude Include="LAApatch.h" />
-    <ClInclude Include="LoggingInit.h" />
-    <ClInclude Include="MouseTurning.h" />
     <ClInclude Include="Patches.h" />
     <ClInclude Include="Settings.h" />
-    <ClInclude Include="WndProcHook.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dllmain.rc" />

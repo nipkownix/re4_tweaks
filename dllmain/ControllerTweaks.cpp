@@ -1,10 +1,6 @@
 #include <iostream>
-#include "stdafx.h"
 #include "dllmain.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
-#include "KeyboardMouseTweaks.h"
-#include "Logging/Logging.h"
 #include "Patches.h"
 
 uintptr_t* ptrAimSpeedFldAddr;
@@ -24,8 +20,8 @@ void Init_ControllerTweaks()
 			{
 				double aim_spd_val = *(double*)ptrAimSpeedFldAddr;
 
-				if ((GetLastUsedDevice() == LastDevice::XinputController) || (GetLastUsedDevice() == LastDevice::DinputController))
-					aim_spd_val /= cfg.fControllerSensitivity;
+				if (pConfig->bOverrideControllerSensitivity && ((LastUsedDevice() == InputDevices::XinputController) || (LastUsedDevice() == InputDevices::DinputController)))
+					aim_spd_val /= pConfig->fControllerSensitivity;
 
 				_asm {fld aim_spd_val}
 			}
@@ -34,15 +30,15 @@ void Init_ControllerTweaks()
 		pattern = hook::pattern("DD 05 ? ? ? ? DC F9 DD 05 ? ? ? ? DC FA D9 01");
 		injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-		if (cfg.fControllerSensitivity != 1.0f)
-			Logging::Log() << __FUNCTION__ << " -> Controller sensitivity changes applied";
+		if (pConfig->bOverrideControllerSensitivity)
+			spd::log()->info("{} -> Controller sensitivity changes applied", __FUNCTION__);
 	}
 
 	// Deadzone tweaks
 	{
 		// Nop the extra deadzones that were added for Xinput inside PadRead
 		// No idea why this even exists since PadXinputRead also has deadzones for both sticks already. Oh well.
-		if (cfg.bRemoveExtraXinputDeadzone)
+		if (pConfig->bRemoveExtraXinputDeadzone)
 		{
 			auto pattern = hook::pattern("C6 46 ? ? 8A 46 ? 3A C1 7D ? 81 4E ? ? ? ? ? EB"); // RS X
 			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 4, true);
@@ -59,7 +55,12 @@ void Init_ControllerTweaks()
 		g_XInputDeadzone_RS = (int*)*pattern.count(1).get(0).get<uint32_t>(3);
 
 		// Calculate new PadXinputRead deadzone
-		*g_XInputDeadzone_LS = (int)(cfg.fXinputDeadzone * 7849); // 7849 and 8689 are the default values
-		*g_XInputDeadzone_RS = (int)(cfg.fXinputDeadzone * 8689);
+		if (pConfig->bOverrideXinputDeadzone)
+		{
+			*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * 7849); // 7849 and 8689 are the default values
+			*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * 8689);
+
+			spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
+		}
 	}
 }

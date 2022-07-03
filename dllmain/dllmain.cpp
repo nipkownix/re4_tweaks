@@ -1,13 +1,12 @@
 #include <iostream>
-#include "stdafx.h"
 #include "dllmain.h"
-#include "..\Wrappers\wrapper.h"
-#include "Settings.h"
-#include "ConsoleWnd.h"
-#include "LoggingInit.h"
-#include "Game.h"
 #include "Patches.h"
-#include "Logging/Logging.h"
+#include "..\wrappers\wrapper.h"
+#include "Settings.h"
+#include "Game.h"
+#include "input.hpp"
+#include "gitparams.h"
+#include "resource.h"
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -31,26 +30,42 @@ void Init_Main()
 {
 	con.AddLogChar("Big ironic thanks to QLOC S.A.");
 
+	// Get game pointers and version info
 	if (!Init_Game())
 		return;
 
-	Logging::Log() << "Game version = " << GameVersion();
-
-	// Log re4_tweaks settings
-	LogSettings();
-
 	// Make sure steam_appid.txt exists
 	HandleAppID();
+
+	// Initial logging
+	std::string commit = GIT_CUR_COMMIT;
+	commit.resize(8);
+
+	spd::log()->info("Starting re4_tweaks v{0}-{1}-{2}", APP_VERSION, commit, GIT_BRANCH);
+	spd::LogProcessNameAndPID();
+	spd::log()->info("Running from: \"{}\"", rootPath);
+	spd::log()->info("Game version: {}", GameVersion());
+
+	// Populate keymap (needed before we ReadSettings(), otherwise, parsing hotkeys will fail)
+	pInput->PopulateKeymap();
+
+	// Read re4_tweaks settings
+	pConfig->ReadSettings();
+
+	// Log re4_tweaks settings
+	pConfig->LogSettings();
 	
+	// Install input-related hooks
+	pInput->InstallHooks();
+
 	// Various display-related tweaks
 	Init_DisplayTweaks();
+
+	Init_AudioTweaks();
 
 	Init_KeyboardMouseTweaks();
 
 	Init_ControllerTweaks();
-
-	// Install input-related hooks
-	Init_Input();
 
 	// Install a WndProc hook and register the resulting hWnd for input
 	Init_WndProcHook();
@@ -65,6 +80,8 @@ void Init_Main()
 	Init_60fpsFixes();
 
 	Init_Misc();
+
+	Init_MathReimpl();
 
 	Init_ExceptionHandler();
 }
@@ -88,9 +105,23 @@ void LoadRealDLL(HMODULE hModule)
 	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());
 
 	const char* wrappedDllPath = nullptr;
-	if (cfg.sWrappedDllPath.size())
+
+	// Read WrappedDLLPath from .ini file
+	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+
+	char userDllPath[MAX_PATH] = {};
+
+	GetPrivateProfileStringA("MISC", "WrappedDLLPath", "", userDllPath, 256, iniPath.c_str());
+
+	if (strlen(userDllPath) > 0)
 	{
-		wrappedDllPath = cfg.sWrappedDllPath.c_str();
+		char result[MAX_PATH] = {};
+
+		strcat(result, rootPath.c_str());
+		strcat(result, userDllPath);
+
+		wrappedDllPath = result;
+
 		// User has specified a DLL to wrap, make sure it exists first:
 		if (GetFileAttributesA(wrappedDllPath) == 0xFFFFFFFF)
 			wrappedDllPath = nullptr;
@@ -111,10 +142,6 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		g_module_handle = hModule;
 
 		StorePath(hModule);
-
-		Init_Logging();
-
-		cfg.ReadSettings();
 
 		LoadRealDLL(hModule);
 

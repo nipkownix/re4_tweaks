@@ -1,18 +1,16 @@
 #include <iostream>
-#include "stdafx.h"
 #include "dllmain.h"
 #include "Settings.h"
-#include "Logging/Logging.h"
 #include "Patches.h"
 
 void Init_HandleLimits()
 {
 	// SFD size
-	if (cfg.bAllowHighResolutionSFD)
+	if (pConfig->bAllowHighResolutionSFD)
 		Init_sofdec();
 
 	// vertex buffers
-	if (cfg.bRaiseVertexAlloc)
+	if (pConfig->bRaiseVertexAlloc)
 	{
 		auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
 		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 800000, true);  // 400000 -> 800000
@@ -36,11 +34,11 @@ void Init_HandleLimits()
 		pattern = hook::pattern("81 80 ? ? ? ? ? ? ? ? A1 ? ? ? ? 8B 90 ? ? ? ? 03 D2");
 		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(6), 0x00340000, true);
 
-		Logging::Log() << __FUNCTION__ << " -> RaiseVertexAlloc applied";
+		spd::log()->info("{} -> RaiseVertexAlloc applied", __FUNCTION__);
 	}
 
 	// Inventory screen mem
-	if (cfg.bRaiseInventoryAlloc)
+	if (pConfig->bRaiseInventoryAlloc)
 	{
 		const int SSOldSize = 0x34AC00;
 		const int SSNewSize = 0x2000000;
@@ -103,6 +101,6 @@ void Init_HandleLimits()
 		pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 00 AC 34 00");
 		injector::WriteMemory<int>(pattern.count(1).get(0).get<uint32_t>(9), SSNewSize, true); // 0x00719817
 
-		Logging::Log() << __FUNCTION__ << " -> RaiseInventoryAlloc applied";
+		spd::log()->info("{} -> RaiseInventoryAlloc applied", __FUNCTION__);
 	}
 }

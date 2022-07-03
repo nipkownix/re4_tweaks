@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\includes\stdafx.cpp">
-      <Filter>includes</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
@@ -100,18 +97,6 @@
     <ClCompile Include="Game.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\Hooking\Hook.cpp">
-      <Filter>external\Hooking</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\Hooking\HotPatch.cpp">
-      <Filter>external\Hooking</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\Hooking\IATPatch.cpp">
-      <Filter>external\Hooking</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\Logging\Logging.cpp">
-      <Filter>external\Logging</Filter>
-    </ClCompile>
     <ClCompile Include="EndSceneHook.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
@@ -124,20 +109,32 @@
     <ClCompile Include="DisplayTweaks.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="LoggingInit.cpp">
-      <Filter>dllmain</Filter>
-    </ClCompile>
     <ClCompile Include="..\external\miniz\miniz.c">
       <Filter>external\miniz</Filter>
     </ClCompile>
     <ClCompile Include="D3D9hook.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="AudioTweaks.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="MathReimpl.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\eHooking\Hook.cpp">
+      <Filter>external\eHooking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\eHooking\HotPatch.cpp">
+      <Filter>external\eHooking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\eHooking\IATPatch.cpp">
+      <Filter>external\eHooking</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\includes\stdafx.h">
-      <Filter>includes</Filter>
-    </ClInclude>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
       <Filter>external\inireader</Filter>
     </ClInclude>
@@ -258,15 +255,6 @@
     <ClInclude Include="GameFlags.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="dllmain.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="WndProcHook.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="cfgMenu.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="Settings.h">
       <Filter>dllmain</Filter>
     </ClInclude>
@@ -297,15 +285,6 @@
     <ClInclude Include="..\settings\settings_string.h">
       <Filter>settings</Filter>
     </ClInclude>
-    <ClInclude Include="ConsoleWnd.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyboardMouseTweaks.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="MouseTurning.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="..\includes\faprolight.hpp">
       <Filter>includes</Filter>
     </ClInclude>
@@ -314,9 +293,6 @@
     </ClInclude>
     <ClInclude Include="..\includes\hashes.h">
       <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="LAApatch.h">
-      <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="..\includes\exception.hpp">
       <Filter>includes</Filter>
@@ -336,19 +312,7 @@
     <ClInclude Include="Game.h">
       <Filter>dllmain</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\Hooking\Hook.h">
-      <Filter>external\Hooking</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\Logging\Logging.h">
-      <Filter>external\Logging</Filter>
-    </ClInclude>
-    <ClInclude Include="EndSceneHook.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
     <ClInclude Include="gitparams.h">
-      <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="LoggingInit.h">
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="Patches.h">
@@ -358,6 +322,21 @@
       <Filter>external\miniz</Filter>
     </ClInclude>
     <ClInclude Include="D3D9hook.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\log.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\spdlog\include\spdlog\spdlog.h">
+      <Filter>external\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\eHooking\Hook.h">
+      <Filter>external\eHooking</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="dllmain.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
@@ -392,14 +371,14 @@
     <Filter Include="external\ImGui">
       <UniqueIdentifier>{8009d333-9eac-43b4-a9eb-014433e845ab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external\Hooking">
-      <UniqueIdentifier>{f4636442-5897-4e0e-9752-b925ff5f3fef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\Logging">
-      <UniqueIdentifier>{3655761d-1436-4c7c-a4e9-91cc9ba19b7e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="external\miniz">
       <UniqueIdentifier>{f29fc87e-d8bd-43de-a3ca-d1bd4402fcdf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\spdlog">
+      <UniqueIdentifier>{48f971d6-b079-4f4c-ba5b-392b6ab453e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\eHooking">
+      <UniqueIdentifier>{f4636442-5897-4e0e-9752-b925ff5f3fef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

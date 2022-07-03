@@ -1,15 +1,12 @@
 #include <iostream>
-#include "stdafx.h"
+#include "dllmain.h"
+#include "Patches.h"
 #include <d3d9.h>
 #include <shellapi.h>
-#include "dllmain.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
-#include "LAApatch.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_impl_win32.h"
 #include "imgui\imgui_impl_dx9.h"
-#include "WndProcHook.h"
 
 LAApatch laa;
 
@@ -59,7 +56,9 @@ void LAApatch::LAARender()
 		ImGui::TextWrapped("Your game executable is missing the 4GB/LAA patch, this will likely cause issues with mods that require increased memory.\n\nDo you want re4_tweaks to patch the game EXE for you? (requires relaunch!)");
 
 		ImGui::Spacing();
-		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 225);
+		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 225, ImGui::GetWindowHeight() - 45));
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
 
 		if (ImGui::Button("Yes", ImVec2(104, 35)))
 		{
@@ -150,6 +149,8 @@ void LAApatch::LAARender()
 			LAA_State = LAADialogState::NotShowing;
 		}
 
+		ImGui::PopStyleColor();
+
 		ImGui::End();
 	}
 	else if (LAA_State == LAADialogState::Finished)
@@ -173,6 +174,8 @@ void LAApatch::LAARender()
 
 		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 113);
 
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
+
 		if (ImGui::Button("OK", ImVec2(104, 35)))
 		{
 			LAA_State = LAADialogState::NotShowing;
@@ -185,6 +188,8 @@ void LAApatch::LAARender()
 				return;
 			}
 		}
+
+		ImGui::PopStyleColor();
 
 		ImGui::End();
 	}

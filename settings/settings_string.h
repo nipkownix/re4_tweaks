@@ -12,6 +12,9 @@ FixUltraWideAspectRatio = true
 ; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
 DisableVsync = false
 
+; Forces game to run at normal 100% DPI scaling, fixes resolution issues for players that have above 100% DPI scaling set.
+FixDPIScale = true
+
 ; Allows the game to use non-60Hz refresh rates in fullscreen, fixing the black screen issue people have
 ; when starting it.
 FixDisplayMode = true
@@ -20,6 +23,16 @@ FixDisplayMode = true
 ; Requires FixDisplayMode to be enabled.
 ; -1 will make it try to use the current refresh rate as reported by Windows.
 CustomRefreshRate = -1
+
+; Overrides the color of the laser sights.
+; Values used here are RGB, in that order.
+; Note: The game's vanilla config.ini contains a setting to change the alpha/opacity of the laser,
+; but since it doesn't work, we don't include it here.
+OverrideLaserColor = false
+RainbowLaser = false
+LaserR = 255
+LaserG = 0
+LaserB = 0
 
 ; Restores a transparency effect that is missing from the item pickup screeen.
 RestorePickupTransparency = true
@@ -53,6 +66,15 @@ WindowPositionY = -1
 ; Remember the last window position. This automatically updates the "WindowPositionX" and "WindowPositionY" values.
 RememberWindowPos = false
 
+[AUDIO]
+; Allows seperate adjustment of background music/sound effect/cutscene volume
+; VolumeCutscene will also affect volume of merchant screen dialogue, as that seems to be handled the same way as cutscenes.
+; Min 0, max 100.
+VolumeMaster = 100
+VolumeBGM = 100
+VolumeSE = 100
+VolumeCutscene = 100
+
 [MOUSE]
 ; Makes it so the mouse turns the character instead of controlling the camera.
 ; "Modern" aiming mode in the game's settings is recomended.
@@ -70,7 +92,7 @@ UseRawMouseInput = true
 ; When using the "Modern" mouse setting, the game locks the camera position to the aiming position, making both move together.
 ; Although this is the expected behavior in most games, some people might prefer to keep the original camera behavior while also having the benefits from "Modern" aiming.
 ; Enabling this will also restore the horizontal aiming sway that was lost when the devs implemented "Modern" aiming.
-UnlockCameraFromAim = false
+DetachCameraFromAim = false
 
 ; Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.
 FixSniperZoom = true
@@ -84,23 +106,6 @@ FixSniperFocus = true
 FixRetryLoadMouseSelector = true
 
 [KEYBOARD]
-; Key bindings for flipping items in the inventory screen when using keyboard and mouse.
-; Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is
-; possible using a controller.
-FlipItemUp    = HOME
-FlipItemDown  = END
-FlipItemLeft  = INSERT
-FlipItemRight = PAGEUP
-
-; Key bindings for QTE keys when playing with keyboard and mouse.
-; Unlike the "official" way of rebinding keys through usr_input.ini, this
-; option also changes the on-screen prompt to properly match the selected key.
-QTE_key_1 = D
-QTE_key_2 = A
-
-; Changes sprint key to act like a toggle instead of needing to be held.
-UseSprintToggle = false
-
 ; Game will turn keys invisible for certain unsupported keyboard languages
 ; Enabling this should make game use English keys for unsupported ones instead
 ; (if game supports your current language it should still use it however)
@@ -114,7 +119,7 @@ ControllerSensitivity = 1.0
 ; Removes unnecessary deadzones that were added for Xinput controllers.
 RemoveExtraXinputDeadzone = true
 
-; Change the Xinput controller deadzone.
+; Change the Xinput controller deadzone. (Unrelated to the previous option)
 ; The game's default is 1, but that seems unnecessarily large, so we default to 0.4 instead.
 ; Min 0.0, max 3.5.
 XinputDeadzone = 0.4
@@ -134,10 +139,30 @@ FixQTE = true
 ; Fixes difference between 30/60FPS on physics applied to Ashley.
 FixAshleyBustPhysics = true
 
+; Replaces older math functions in the game with much more optimized equivalents.
+; Experimental, can hopefully improve framerate in some areas that had dips.
+EnableFastMath = true
+
+; Forces game to fully cache all models in the level after loading in.
+; May help with framerate drops when viewing a model for the first time.
+; (not fully tested, could cause issues if level has many models to load!)
+PrecacheModels = false
+
 [MISC]
 ; Path to DLL to wrap, comment or leave empty to wrap system DLL
 ; (only set this if you need re4_tweaks to 'chain-load' another DLL that makes use of the same filename)
 ;WrappedDLLPath = 
+
+; Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.
+; May cause weird visuals in cutscenes.
+; Possible costume values:
+; Leon: Jacket, Normal, Vest, RPD, Mafia
+; Ashley: Normal, Popstar, Armor
+; Ada: RE2, Spy, Normal
+OverrideCostumes = false
+LeonCostume = Jacket
+AshleyCostume = Normal
+AdaCostume = Normal
 
 ; Unlocks the JP-only classic camera angles during Ashley's segment.
 AshleyJPCameraAngles = false
@@ -161,6 +186,17 @@ SilenceArmoredAshley = false
 ; Allows Ashley to Suplex enemies in very specific situations.
 ; (previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)
 AllowAshleySuplex = false
+
+; Allows quickturning character to camera direction when wielding Matilda
+; (only effective if MouseTurning is disabled)
+AllowMatildaQuickturn = true
+
+; Fixes the Ditman glitch, which would allow players to increase their walk speed.
+; Not recommended, but mod makers may be interested in enabling this (see Bin32/re4_tweaks/setting_overrides/overrides_info.txt)
+FixDitmanGlitch = false
+
+; Changes sprint key to act like a toggle instead of needing to be held.
+UseSprintToggle = false
 
 ; Disables most of the QTEs, making them pass automatically.
 DisableQTE = false
@@ -191,7 +227,7 @@ RaiseInventoryAlloc = true
 
 [HOTKEYS]
 ; Key combinations for various re4_tweaks features
-; All keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names
+; Most keys can be combined (requiring multiple to be pressed at the same time) by using + symbol between key names
 ; (see top of Settings.cpp file for possible key names to use)
 
 ; Key combination to open the re4_tweaks config menu
@@ -199,6 +235,22 @@ ConfigMenu = F1
 
 ; Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)
 Console = F2
+
+; Key bindings for flipping items in the inventory screen when using keyboard and mouse.
+; Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is
+; possible using a controller.
+; * Key combinations not supported
+FlipItemUp    = HOME
+FlipItemDown  = END
+FlipItemLeft  = INSERT
+FlipItemRight = PAGEUP
+
+; Key bindings for QTE keys when playing with keyboard and mouse.
+; Unlike the "official" way of rebinding keys through usrpInput.ini, this
+; option also changes the on-screen prompt to properly match the selected key.
+; * Key combinations not supported
+QTE_key_1 = D
+QTE_key_2 = A
 
 ; Key combination to make the "tool menu" debug menu appear
 ; Requires EnableDebugMenu to be enabled.
@@ -220,13 +272,14 @@ IgnoreFPSWarning = false
 
 [IMGUI]
 ; Scale the font used in the configuration menu.
-; Min 1.0, max 1.3.
+; Min 1.0, max 1.25.
 FontSize = 1.000
 
 ; Disables the "Press key to open the configuration menu" tooltip.
 DisableMenuTip = false
 
-[LOG]
+[DEBUG]
 ; Logs extra information.
 VerboseLog = false
+NeverHideCursor = false
 )"""";

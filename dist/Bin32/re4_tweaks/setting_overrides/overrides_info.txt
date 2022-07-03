@@ -1,0 +1,12 @@
+Setting INIs stored in this folder will override any settings in the main re4_tweaks INI.
+(INIs are read from this folder alphabetically, and recursively across sub-directories in this folder)
+
+This should be useful if you're creating a mod that depends on a certain re4_tweaks feature to always be enabled/disabled.
+In that case you can ship a "Bin32\re4_tweaks\setting_overrides\MyCoolMod.ini" with your mod which includes the setting values you require.
+(recommend including the full folder structure with your mod, Bin32 -> re4_tweaks -> setting_overrides, only the folders themselves & your override INI are needed)
+
+Any settings in your override-INI will always override the users saved INI file, so please make sure to only include settings that your mod actually requires!
+(in other words, please try to keep your override-INI trimmed down to the minimum settings needed)
+
+This will also allow settings to be preserved across any re4_tweaks updates that might have changed the INI file.
+You can use this to your advantage to keep your own personal settings saved too, just copy your re4_tweaks INI into this folder!

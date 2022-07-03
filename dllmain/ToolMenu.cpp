@@ -1,11 +1,10 @@
 #include <iostream>
-#include "stdafx.h"
-#include "GameFlags.h"
 #include "dllmain.h"
+#include "GameFlags.h"
 #include "Game.h"
-#include "ConsoleWnd.h"
 #include "Settings.h"
 #include "input.hpp"
+#include "Utils.h"
 
 // Light tool externs
 void LightTool_GetPointers();
@@ -162,7 +161,7 @@ void __cdecl gameDebug_recreation(void* a1)
 
 			if (toolMenuKeyCombo.size() > 0)
 			{
-				bool openToolMenu = _input->is_combo_pressed(&toolMenuKeyCombo);
+				bool openToolMenu = pInput->is_combo_pressed(&toolMenuKeyCombo);
 
 				isOnlyDebugComboPressed = openToolMenu; // seperate bools to be safe...
 			}

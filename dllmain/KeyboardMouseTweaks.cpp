@@ -1,13 +1,10 @@
 #include <iostream>
-#include "stdafx.h"
 #include "dllmain.h"
+#include "Patches.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
-#include "MouseTurning.h"
-#include "KeyboardMouseTweaks.h"
-#include "Logging/Logging.h"
-#include "WndProcHook.h"
 #include "input.hpp"
+#include "../external/eHooking/Hook.h"
+#include "Utils.h"
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
@@ -16,9 +13,6 @@ uintptr_t ptrRetryLoadDLGstate;
 
 static uint32_t* ptrMouseDeltaX;
 static uint32_t* ptrMouseDeltaY;
-static uint32_t* ptrLastUsedController;
-static uint32_t* ptrMouseSens;
-static uint32_t* ptrMouseAimMode;
 
 int iMinFocusTime;
 
@@ -29,38 +23,6 @@ bool ParseJetSkiTrickCombo(std::string_view in_combo)
 	jetSkiTrickCombo.clear();
 	jetSkiTrickCombo = ParseKeyCombo(in_combo);
 	return jetSkiTrickCombo.size() > 0;
-}
-
-LastDevice GetLastUsedDevice()
-{
-	// 0 = Keyboard?
-	// 1 = Mouse
-	// 2 = Xinput Controller
-	// 3 = Dinput Controller
-
-	switch (*(int32_t*)(ptrLastUsedController))
-	{
-	case 0:
-		return LastDevice::Keyboard;
-	case 1:
-		return LastDevice::Mouse;
-	case 2:
-		return LastDevice::XinputController;
-	case 3:
-		return LastDevice::DinputController;
-	default:
-		return LastDevice::Keyboard;
-	}
-}
-
-int g_MOUSE_SENS()
-{
-	return *(int8_t*)(ptrMouseSens);
-}
-
-int intMouseAimingMode()
-{
-	return *(int8_t*)(ptrMouseAimMode);
 }
 
 uint8_t* g_KeyIconData = nullptr;
@@ -160,22 +122,56 @@ void Init_KeyIconMapping_Hook()
 	memcpy(g_KeyIconData, KeyIconData_US, sizeof(KeyIconData_US));
 }
 
+int(WINAPI* ShowCursor_orig)(BOOL bShow);
+int WINAPI ShowCursor_hook(BOOL bShow)
+{
+	// Never hide the cursor. Call it using true instead, to avoid any potential weirdness.
+	while (ShowCursor_orig(TRUE) < 0);
+	return 0;
+}
+
+FARPROC p_ShowCursor = nullptr;
+void InstallShowCursor_hook()
+{
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking ShowCursor...");
+
+	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+	InterlockedExchangePointer((PVOID*)&p_ShowCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "ShowCursor"), "ShowCursor", ShowCursor_hook));
+
+	ShowCursor_orig = (decltype(ShowCursor_orig))InterlockedCompareExchangePointer((PVOID*)&p_ShowCursor, nullptr, nullptr);
+}
+
+HCURSOR(WINAPI* SetCursor_orig)(HCURSOR hCursor);
+HCURSOR WINAPI SetCursor_hook(HCURSOR hCursor)
+{
+	// Simply set it to the regular arrow cursor.
+	return SetCursor_orig(LoadCursor(NULL, IDC_ARROW));
+}
+
+FARPROC p_SetCursor = nullptr;
+void InstallSetCursor_hook()
+{
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking SetCursor...");
+
+	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+	InterlockedExchangePointer((PVOID*)&p_SetCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "SetCursor"), "SetCursor", SetCursor_hook));
+
+	SetCursor_orig = (decltype(SetCursor_orig))InterlockedCompareExchangePointer((PVOID*)&p_SetCursor, nullptr, nullptr);
+}
+
 void Init_KeyboardMouseTweaks()
 {
 	Init_MouseTurning();
 
-	// LastUsedController pointer
-	auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
-	ptrLastUsedController = *pattern.count(1).get(0).get<uint32_t*>(1);
-
-	// g_MOUSE_SENS pointer
-	pattern = hook::pattern("0F B6 05 ? ? ? ? 89 85 ? ? ? ? DB 85 ? ? ? ? DC 35");
-	ptrMouseSens = *pattern.count(1).get(0).get<uint32_t*>(3);
-
-	// Aiming mode pointer
-	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
-	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
-
+	// Useful when debugging/breakpointing
+	if (pConfig->bNeverHideCursor)
+	{
+		InstallShowCursor_hook();
+		InstallSetCursor_hook();
+	}
+	auto pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
 	// X mouse delta adjustments
 	{
 		pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
@@ -184,8 +180,8 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (cfg.bUseRawMouseInput)
-					*(int32_t*)(ptrMouseDeltaX) = (int32_t)((_input->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
+				if (pConfig->bUseRawMouseInput)
+					*(int32_t*)(ptrMouseDeltaX) = (int32_t)((pInput->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
 				else
 					*(int32_t*)(ptrMouseDeltaX) = (int32_t)regs.eax;
 			}
@@ -200,15 +196,15 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (cfg.bUseRawMouseInput)
-					*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((_input->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
+				if (pConfig->bUseRawMouseInput)
+					*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((pInput->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
 				else
 					*(int32_t*)(ptrMouseDeltaY) = (int32_t)regs.eax;
 			}
 		}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		if (cfg.bUseRawMouseInput)
-			Logging::Log() << __FUNCTION__ << " -> Raw mouse input enabled";
+		if (pConfig->bUseRawMouseInput)
+			spd::log()->info("{} -> Raw mouse input enabled", __FUNCTION__);
 	}
 
 	// Prevent some negative mouse acceleration from being applied
@@ -239,13 +235,13 @@ void Init_KeyboardMouseTweaks()
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
 
-				if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+				if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
 				{
-					if (cfg.bUseRawMouseInput)
+					if (pConfig->bUseRawMouseInput)
 					{
-						// Force aiming mode to "Modern". This seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
-						if (intMouseAimingMode() == 0x00)
-							*(int8_t*)(ptrMouseAimMode) = 0x01;
+						// Force aiming mode to "Modern". Our patch seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
+						if (GetMouseAimingMode() == MouseAimingModes::Classic)
+							SetMouseAimingMode(MouseAimingModes::Modern);
 
 						// Clear both flags so we skip the section that does the actual negative acceleration
 						regs.ef &= ~(1 << regs.zero_flag);
@@ -261,38 +257,29 @@ void Init_KeyboardMouseTweaks()
 		injector::MakeInline<PlWepLockCtrlHook>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(7));
 	}
 
-
 	// Disable camera lock on "Modern" mouse setting
 	{
 		struct CameraLockCmp
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				int aimingMode = *(int8_t*)(ptrMouseAimMode);
-
 				// Mimic what CMP does, since we're overwriting it.
-				if (aimingMode > 0)
+				if (GetMouseAimingMode() == MouseAimingModes::Modern)
 				{
 					// Clear both flags
 					regs.ef &= ~(1 << regs.zero_flag);
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
-				else if (aimingMode < 0)
-				{
-					// ZF = 0, CF = 1
-					regs.ef &= ~(1 << regs.zero_flag);
-					regs.ef |= (1 << regs.carry_flag);
-				}
-				else if (aimingMode == 0)
+				else if (GetMouseAimingMode() == MouseAimingModes::Classic)
 				{
 					// ZF = 1, CF = 0
 					regs.ef |= (1 << regs.zero_flag);
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
 
-				if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+				if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
 				{
-					if (cfg.bUnlockCameraFromAim)
+					if (pConfig->bDetachCameraFromAim)
 					{
 						// Make the game think the aiming mode is "Classic"
 						regs.ef |= (1 << regs.zero_flag);
@@ -311,10 +298,9 @@ void Init_KeyboardMouseTweaks()
 		pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? D9 05");
 		injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
-		if (cfg.bUnlockCameraFromAim)
-			Logging::Log() << __FUNCTION__ << " -> Camera lock released";
+		if (pConfig->bDetachCameraFromAim)
+			spd::log()->info("{} -> DetachCameraFromAim applied", __FUNCTION__);
 	}
-
 
 	// Inventory item flip binding
 	{
@@ -325,16 +311,18 @@ void Init_KeyboardMouseTweaks()
 			void operator()(injector::reg_pack& regs)
 			{
 				regs.eax = *(int32_t*)ptrInvMovAddr;
-
-				if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemLeft.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemRight.data(), true)))
+				
+				// input::is_key_pressed doesn't seem work reliably here. Not sure why, but using GetAsyncKeyState is fine since this code only runs if 
+				// the player is moving something in the inventory.
+				if ((GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemLeft)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemRight)) & 1))
 					regs.eax = 0x00300000;
 
-				else if (_input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemUp.data(), true)) || _input->is_key_pressed(cfg.KeyMap(cfg.sFlipItemDown.data(), true)))
+				else if ((GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemUp)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemDown)) & 1))
 					regs.eax = 0x00C00000;
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		Logging::Log() << __FUNCTION__ << " -> Keyboard inventory item flipping enabled";
+		spd::log()->info("{} -> Keyboard inventory item flipping enabled", __FUNCTION__);
 	}
 
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
@@ -356,7 +344,7 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (cfg.bFixRetryLoadMouseSelector)
+				if (pConfig->bFixRetryLoadMouseSelector)
 				{
 					if (*(int32_t*)ptrRetryLoadDLGstate != 1)
 					{
@@ -370,8 +358,8 @@ void Init_KeyboardMouseTweaks()
 			}
 		}; injector::MakeInline<MouseMenuSelector>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	
-		if (cfg.bFixRetryLoadMouseSelector)
-			Logging::Log() << __FUNCTION__ << " -> FixRetryLoadMouseSelector applied";
+		if (pConfig->bFixRetryLoadMouseSelector)
+			spd::log()->info("{} -> FixRetryLoadMouseSelector applied", __FUNCTION__);
 	}
 
 	// Fix camera after zooming with the sniper
@@ -382,17 +370,17 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!cfg.bFixSniperZoom)
+				if (!pConfig->bFixSniperZoom)
 					*(int32_t*)ptrRifleMovAddr = regs.eax;
 			}
 		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		if (cfg.bFixSniperZoom)
-			Logging::Log() << __FUNCTION__ << " -> FixSniperZoom applied";
+		if (pConfig->bFixSniperZoom)
+			spd::log()->info("{} -> FixSniperZoom applied", __FUNCTION__);
 	}
 
 	// Fix the "focus animation" not looking as strong as when triggered with a controller
-	if (cfg.bFixSniperFocus)
+	if (pConfig->bFixSniperFocus)
 	{
 		pattern = hook::pattern("8B F1 8B 4D ? 57 85 C9 74 ? D9 56 ? 88 56");
 		struct FixScopeZoomFocus
@@ -403,7 +391,7 @@ void Init_KeyboardMouseTweaks()
 				regs.ecx = *(int32_t*)(regs.ebp + 0x8);
 
 				// This makes it so the focus animation has to play for at least X ammount of time
-				if ((GetLastUsedDevice() == LastDevice::Keyboard) || (GetLastUsedDevice() == LastDevice::Mouse))
+				if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
 				{
 					if (regs.ecx == 1)
 					{
@@ -426,7 +414,7 @@ void Init_KeyboardMouseTweaks()
 		pattern = hook::pattern("7C ? C6 06 ? EB ? C7 46 ? ? ? ? ? EB ? DD D8 83 3D");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
 
-		Logging::Log() << __FUNCTION__ << " -> FixSniperFocus applied";
+		spd::log()->info("{} -> FixSniperFocus applied", __FUNCTION__);
 	}
 
 	// Hooks to allow toggling sprint instead of needing to hold it
@@ -439,7 +427,7 @@ void Init_KeyboardMouseTweaks()
 			{
 				regs.eax &= 1; // Code we overwrote
 
-				if (!cfg.bUseSprintToggle)
+				if (!pConfig->bUseSprintToggle)
 					regs.edx ^= regs.edx;
 			}
 		}; injector::MakeInline<SprintToggleHook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -452,7 +440,7 @@ void Init_KeyboardMouseTweaks()
 			{
 				regs.eax = regs.ecx; // Code we overwrote
 
-				if (!cfg.bUseSprintToggle)
+				if (!pConfig->bUseSprintToggle)
 					regs.eax &= 0x40;
 			}
 		}; injector::MakeInline<SprintToggleHook2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -468,7 +456,7 @@ void Init_KeyboardMouseTweaks()
 				uint8_t* esiUpdate = ((uint8_t*)regs.esi) + 0x50E;
 				*esiUpdate = *esiUpdate + 1; // code we patched over
 
-				if (_input->is_combo_down(&jetSkiTrickCombo))
+				if (pInput->is_combo_down(&jetSkiTrickCombo))
 				{
 					// Jet-ski combo pressed - skip the RT/LT checks when we return
 					// TODO: find better method of skipping these checks, changing return addr for MakeInline like this seems hacky
@@ -480,7 +468,7 @@ void Init_KeyboardMouseTweaks()
 		}; injector::MakeInline<JetSkiTrickHook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
-	if (cfg.bFallbackToEnglishKeyIcons)
+	if (pConfig->bFallbackToEnglishKeyIcons)
 	{
 		// Get pointer to key icon data buffer
 		pattern = hook::pattern("53 56 57 68 00 04 00 00 6A 00 68 ? ? ? ?");
@@ -494,74 +482,52 @@ void Init_KeyboardMouseTweaks()
 		ReadCall(jmp_Init_KeyIconMapping, Init_KeyIconMapping);
 		InjectHook(jmp_Init_KeyIconMapping, Init_KeyIconMapping_Hook);
 
-		Logging::Log() << __FUNCTION__ << " -> FallbackToEnglishKeyIcons enabled";
+		spd::log()->info("{} -> FallbackToEnglishKeyIcons applied", __FUNCTION__);
 
-		if (cfg.bVerboseLog)
+		if (pConfig->bVerboseLog)
 		{
-			char logBuf[100];
-
-			Logging::Log() << "+------------------+------------------+";
-			Logging::Log() << "| Keyboard/locale info:               |";
-
 			// KeyboardLayout
 			wchar_t KeyboardLayoutBuff[25];
-
 			HKL userKeyboardLayout = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));
 			int userKeyboardLayoutID = PRIMARYLANGID(LOWORD(userKeyboardLayout));
 			LCIDToLocaleName(userKeyboardLayoutID, KeyboardLayoutBuff, ARRAYSIZE(KeyboardLayoutBuff), 0);
 
-			sprintf(logBuf, "%-28s%9ws", "| KeyboardLayout: ", KeyboardLayoutBuff);
-			Logging::Log() << logBuf << " |";
-
 			// UserDefaultLCID
 			wchar_t UserDefaultLCIDBuff[25];
-
 			LCIDToLocaleName(GetUserDefaultLCID(), UserDefaultLCIDBuff, ARRAYSIZE(UserDefaultLCIDBuff), 0);
-
-			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLCID: ", UserDefaultLCIDBuff);
-			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultLCID
 			wchar_t SystemDefaultLCIDBuff[25];
-
 			LCIDToLocaleName(GetSystemDefaultLCID(), SystemDefaultLCIDBuff, ARRAYSIZE(SystemDefaultLCIDBuff), 0);
-
-			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLCID: ", SystemDefaultLCIDBuff);
-			Logging::Log() << logBuf << " |";
 
 			// UserDefaultUILanguage
 			wchar_t UserDefaultUILanguageBuf[100];
-
 			GetLocaleInfo(GetUserDefaultUILanguage(), LOCALE_SNAME, UserDefaultUILanguageBuf, 100);
-
-			sprintf(logBuf, "%-28s%9ws", "| UserDefaultUILanguage: ", UserDefaultUILanguageBuf);
-			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultUILanguage
 			wchar_t SystemDefaultUILanguageBuf[100];
-
 			GetLocaleInfo(GetSystemDefaultUILanguage(), LOCALE_SNAME, SystemDefaultUILanguageBuf, 100);
-
-			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultUILanguage: ", SystemDefaultUILanguageBuf);
-			Logging::Log() << logBuf << " |";
 
 			// UserDefaultLangID
 			wchar_t UserDefaultLangIDBuf[100];
-
 			GetLocaleInfo(GetUserDefaultLangID(), LOCALE_SNAME, UserDefaultLangIDBuf, 100);
-
-			sprintf(logBuf, "%-28s%9ws", "| UserDefaultLangID: ", UserDefaultLangIDBuf);
-			Logging::Log() << logBuf << " |";
 
 			// SystemDefaultLangID
 			wchar_t SystemDefaultLangIDBuf[100];
-
 			GetLocaleInfo(GetSystemDefaultLangID(), LOCALE_SNAME, SystemDefaultLangIDBuf, 100);
 
-			sprintf(logBuf, "%-28s%9ws", "| SystemDefaultLangID: ", SystemDefaultLangIDBuf);
-			Logging::Log() << logBuf << " |";
-
-			Logging::Log() << "+------------------+------------------+";
+			// Log
+			spd::log()->info("+------------------+------------------+");
+			spd::log()->info("| Keyboard/locale info                |");
+			spd::log()->info("+------------------+------------------+");
+			spd::log()->info("| KeyboardLayout:           | {:>7} |", WstrToStr(KeyboardLayoutBuff));
+			spd::log()->info("| UserDefaultLCID:          | {:>7} |", WstrToStr(UserDefaultLCIDBuff));
+			spd::log()->info("| SystemDefaultLCID:        | {:>7} |", WstrToStr(SystemDefaultLCIDBuff));
+			spd::log()->info("| UserDefaultUILanguage:    | {:>7} |", WstrToStr(UserDefaultUILanguageBuf));
+			spd::log()->info("| SystemDefaultUILanguage:  | {:>7} |", WstrToStr(SystemDefaultUILanguageBuf));
+			spd::log()->info("| UserDefaultLangID:        | {:>7} |", WstrToStr(UserDefaultLangIDBuf));
+			spd::log()->info("| SystemDefaultLangID:      | {:>7} |", WstrToStr(SystemDefaultLangIDBuf));
+			spd::log()->info("+------------------+------------------+");
 		}
 	}
 }

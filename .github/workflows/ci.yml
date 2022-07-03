@@ -42,12 +42,31 @@ jobs:
         shell: bash
         run: |
           head -n -1 settings/settings_string.h | tail -n +3 > dinput8.ini
+          
+      - name: Copy game data files
+        shell: bash
+        run: |
+          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Debug/re4_tweaks/
+          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Release/re4_tweaks/
+          cp -r dist/Bin32/re4_tweaks/ Debug/
+          cp -r dist/Bin32/re4_tweaks/ Release/
+          cp dinput8.ini Debug/
+          cp dinput8.ini Release/
 
-      - name: Upload
+      - name: Upload Debug
         uses: actions/upload-artifact@v2
         with:
           path: |
+            Debug/re4_tweaks/
             Debug/dinput8.dll
+            Debug/dinput8.ini
+          name: re4_tweaks_debug_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
+
+      - name: Upload Release
+        uses: actions/upload-artifact@v2
+        with:
+          path: |
+            Release/re4_tweaks/
             Release/dinput8.dll
-            dinput8.ini
-          name: re4_tweaks_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
+            Release/dinput8.ini
+          name: re4_tweaks_release_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}

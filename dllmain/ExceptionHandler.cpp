@@ -1,9 +1,8 @@
 #include <iostream>
-#include "stdafx.h"
 #include "dllmain.h"
+#include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
-#include "ConsoleWnd.h"
 #include <exception.hpp>
 #include "miniz/miniz.h"
 

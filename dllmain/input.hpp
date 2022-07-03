@@ -38,6 +38,11 @@ public:
 
 	bool _ignore_shortcuts = false;
 
+	static std::string KeyMap_getSTR(int keyINT);
+	static int KeyMap_getVK(std::string keySTR);
+	static int KeyMap_getDIK(std::string keySTR);
+	static void set_hotkey(std::string* cfgHotkey, bool supportsCombo);
+
 	// Before accessing input data with any of the member functions below, first call "lock()" and keep the returned object alive while accessing it.
 
 	bool is_key_down(unsigned int keycode) const;
@@ -78,6 +83,12 @@ public:
 		return delta;
 	}
 
+	void clear_mouse_delta()
+	{
+		_raw_mouse_delta[0] = 0;
+		_raw_mouse_delta[1] = 0;
+	}
+
 	/// <summary>
 	/// Returns the character input as captured by 'WM_CHAR' for the current frame.
 	/// </summary>
@@ -107,22 +118,14 @@ public:
 	void next_frame();
 
 	/// <summary>
-	/// Generates a human-friendly text representation of the specified <paramref name="keycode"/>.
-	/// </summary>
-	/// <param name="keycode">The virtual key code to use.</param>
-	static std::string key_name(unsigned int keycode);
-	/// <summary>
-	/// Generates a human-friendly text representation of the specified <paramref name="key"/> shortcut.
-	/// </summary>
-	/// <param name="key">The shortcut, consisting of the [virtual key code, Ctrl, Shift, Alt].</param>
-	static std::string key_name(const unsigned int key[4]);
-
-	/// <summary>
 	/// Internal window message procedure. This looks for input messages and updates state for the corresponding windows accordingly.
 	/// </summary>
 	/// <param name="message_data">A pointer to a <see cref="MSG"/> with the message data.</param>
 	/// <returns><c>true</c> if the called should ignore this message, or <c>false</c> if it should pass it on to the application.</returns>
 	static bool handle_window_message(const void *message_data);
+
+	void PopulateKeymap();
+	void InstallHooks();
 
 private:
 	std::shared_mutex _mutex;
@@ -142,4 +145,4 @@ private:
 	std::wstring _text_input;
 };
 
-extern std::shared_ptr<class input> _input;
+extern std::shared_ptr<class input> pInput;

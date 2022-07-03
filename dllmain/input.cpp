@@ -4,22 +4,31 @@
  */
 
 #include "input.hpp"
+#include "dllmain.h"
+#include "Patches.h"
 #include <algorithm>
 #include <unordered_map>
 #include <Windows.h>
 #include <cassert>
-#include "../external/Hooking/Hook.h"
-#include "ConsoleWnd.h"
+#include "../external/eHooking/Hook.h"
 #include "Settings.h"
 #include <iomanip>
-#include "MouseTurning.h"
+#include <array>
+#include "spdlog/fmt/bin_to_hex.h"
+#include "Utils.h"
 
-std::shared_ptr<class input> _input;
+std::shared_ptr<class input> pInput;
 
 extern HMODULE g_module_handle;
 static std::shared_mutex s_windows_mutex;
 static std::unordered_map<HWND, unsigned int> s_raw_input_windows;
 static std::unordered_map<HWND, std::weak_ptr<input>> s_windows;
+
+static std::unordered_map<unsigned int, std::string> _keyboardStringMap;
+
+static std::unordered_map<std::string, unsigned int> _keyboardVKMap;
+static std::unordered_map<std::string, unsigned int> _keyboardDIKMap;
+
 
 input::input(window_handle window)
 	: _window(window)
@@ -47,7 +56,7 @@ std::shared_ptr<input> input::register_window(window_handle window)
 
 	if (insert.second || insert.first->second.expired())
 	{
-		Logging::Log() << __FUNCTION__ << " -> Starting input capture for window " << window << " ...";
+		spd::log()->info("{0} -> Starting input capture for window {1}", __FUNCTION__, window);
 
 		const auto instance = std::make_shared<input>(window);
 
@@ -320,10 +329,10 @@ bool input::is_combo_pressed(std::vector<uint32_t>* KeyVector) const
 	bool isComboPressed = KeyVector->size() > 0;
 	for (auto& key : *KeyVector)
 	{
-		if (!_input->is_key_down(key) || bStateChanged)
+		if (!is_key_down(key) || bStateChanged)
 			isComboPressed = false;
 
-		if (_input->is_key_released(key) && bStateChanged)
+		if (is_key_released(key) && bStateChanged)
 			bStateChanged = false;
 	}
 
@@ -344,7 +353,7 @@ bool input::is_combo_down(std::vector<uint32_t>* KeyVector) const
 	bool isComboDown = KeyVector->size() > 0;
 	for (auto& key : *KeyVector)
 	{
-		if (!_input->is_key_down(key) || bStateChanged)
+		if (!pInput->is_key_down(key) || bStateChanged)
 			isComboDown = false;
 	}
 
@@ -421,6 +430,149 @@ bool input::is_any_mouse_button_released() const
 	return false;
 }
 
+std::string input::KeyMap_getSTR(int keyINT)
+{
+	assert(!_keyboardStringMap.empty());
+
+	if (!_keyboardStringMap.count(keyINT))
+		return std::string();
+
+	return _keyboardStringMap[keyINT];
+}
+
+int input::KeyMap_getVK(std::string keySTR)
+{
+	assert(!_keyboardVKMap.empty());
+
+	if (!_keyboardVKMap.count(keySTR))
+		return 0;
+
+	return _keyboardVKMap[keySTR];
+}
+
+int input::KeyMap_getDIK(std::string keySTR)
+{
+	assert(!_keyboardDIKMap.empty());
+
+	if (!_keyboardDIKMap.count(keySTR))
+		return 0;
+
+	return _keyboardDIKMap[keySTR];
+}
+
+void ClearKeyboardBuffer(int key_code, BYTE* keyboard_state)
+{
+	unsigned int scan_code = MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
+
+	wchar_t chars[5];
+	int code = 0;
+	do {
+		code = ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
+	} while (code < 0);
+}
+
+std::string get_str_from_VK(int key_code) {
+
+	unsigned int scan_code = MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
+
+	uint8_t keyStates[256];
+	memset(keyStates, 1, 256); // all pressed
+
+	wchar_t chars[5];
+	int code = ToUnicode(key_code, scan_code, keyStates, chars, 4, 0);
+
+	if (code == -1) {
+		// dead key
+		if (chars[0] == 0 || iswcntrl(chars[0])) {
+			return std::string();
+		}
+		code = 1;
+	}
+
+	// Avoid stuff like ´´ or ~~
+	ClearKeyboardBuffer(key_code, keyStates);
+
+	if (code <= 0 || (code == 1 && iswcntrl(chars[0]))) {
+		return std::string();
+	}
+
+	return WstrToStr(chars);
+}
+
+void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
+{
+	int HotkeyVK1 = 0;
+	int HotkeyVK2 = 0;
+
+	std::string OrigHotkeyCombo = *cfgHotkey;
+	std::string FinalHotkeyCombo;
+
+	// Hacky way to change ImGui's current button label
+	*cfgHotkey = "Press any key...";
+
+	bool waitingforkey = true;
+
+	while (waitingforkey) {
+		for (unsigned int Key1 = 0; Key1 < ARRAYSIZE(_keys); Key1++)
+		{
+			while (pInput->is_key_down(Key1)) {
+				HotkeyVK1 = Key1;
+
+				if (supportsCombo)
+				{
+					for (unsigned int Key2 = 0; Key2 < ARRAYSIZE(_keys); Key2++)
+					{
+						if (pInput->is_key_down(Key2) && (Key2 != Key1))
+						{
+							HotkeyVK2 = Key2;
+						}
+					}
+				}
+				waitingforkey = false;
+			}
+		}
+	}
+
+	// Clear the second hotkey if they're the same.
+	// I've had that happen before due to deadkey weirdness.
+	if (HotkeyVK1 == HotkeyVK2)
+		HotkeyVK2 = 0;
+
+	#ifdef VERBOSE
+	con.AddConcatLog("HotkeyVK1 = ", HotkeyVK1);
+	con.AddConcatLog("HotkeyVK2 = ", HotkeyVK2);
+	#endif
+
+	// Check if our KeyMap function is able to identify the key names, restore the original combo if not.
+	// As of now, there's no popup informing the user that the key is unsupported. TODO: Add popup?
+	if (HotkeyVK2 > 0)
+	{
+		if (KeyMap_getSTR(HotkeyVK1).empty() || KeyMap_getSTR(HotkeyVK2).empty())
+		{
+			*cfgHotkey = OrigHotkeyCombo;
+			return;
+		}
+		else
+			FinalHotkeyCombo = KeyMap_getSTR(HotkeyVK1) + "+" + KeyMap_getSTR(HotkeyVK2);
+	}
+	else
+	{
+		if (KeyMap_getSTR(HotkeyVK1).empty())
+		{
+			*cfgHotkey = OrigHotkeyCombo;
+			return;
+		}
+		else
+			FinalHotkeyCombo = KeyMap_getSTR(HotkeyVK1);
+	}
+
+	#ifdef VERBOSE
+	con.AddConcatLog("FinalHotkeyCombo = ", FinalHotkeyCombo.c_str());
+	#endif
+
+	*cfgHotkey = FinalHotkeyCombo;
+}
+
 void input::next_frame()
 {
 	_frame_count++;
@@ -459,60 +611,6 @@ void input::next_frame()
 		(GetAsyncKeyState(VK_SNAPSHOT) & 0x8000) != 0)
 		(_keys[VK_SNAPSHOT] = 0x88),
 		(_keys_time[VK_SNAPSHOT] = time);
-}
-
-std::string input::key_name(unsigned int keycode)
-{
-	if (keycode >= 256)
-		return std::string();
-
-	static const char *keyboard_keys_german[256] = {
-		"", "Left Mouse", "Right Mouse", "Cancel", "Middle Mouse", "X1 Mouse", "X2 Mouse", "", "Backspace", "Tab", "", "", "Clear", "Enter", "", "",
-		"Shift", "Control", "Alt", "Pause", "Caps Lock", "", "", "", "", "", "", "Escape", "", "", "", "",
-		"Leertaste", "Bild auf", "Bild ab", "Ende", "Pos 1", "Left Arrow", "Up Arrow", "Right Arrow", "Down Arrow", "Select", "", "", "Druck", "Einfg", "Entf", "Hilfe",
-		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "", "", "", "", "", "",
-		"", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-		"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Left Windows", "Right Windows", "Apps", "", "Sleep",
-		"Numpad 0", "Numpad 1", "Numpad 2", "Numpad 3", "Numpad 4", "Numpad 5", "Numpad 6", "Numpad 7", "Numpad 8", "Numpad 9", "Numpad *", "Numpad +", "", "Numpad -", "Numpad ,", "Numpad /",
-		"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16",
-		"F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", "", "", "", "", "", "", "", "",
-		"Num Lock", "Scroll Lock", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"Left Shift", "Right Shift", "Left Control", "Right Control", "Left Menu", "Right Menu", "Browser Back", "Browser Forward", "Browser Refresh", "Browser Stop", "Browser Search", "Browser Favorites", "Browser Home", "Volume Mute", "Volume Down", "Volume Up",
-		"Next Track", "Previous Track", "Media Stop", "Media Play/Pause", "Mail", "Media Select", "Launch App 1", "Launch App 2", "", "", u8"Ü", "OEM +", "OEM ,", "OEM -", "OEM .", "OEM #",
-		u8"Ö", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "", "", "", "", u8"OEM ß", "OEM ^", u8"OEM ´", u8"Ä", "OEM 8",
-		"", "", "OEM <", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "Attn", "CrSel", "ExSel", "Erase EOF", "Play", "Zoom", "", "PA1", "OEM Clear", ""
-	};
-	static const char *keyboard_keys_international[256] = {
-		"", "Left Mouse", "Right Mouse", "Cancel", "Middle Mouse", "X1 Mouse", "X2 Mouse", "", "Backspace", "Tab", "", "", "Clear", "Enter", "", "",
-		"Shift", "Control", "Alt", "Pause", "Caps Lock", "", "", "", "", "", "", "Escape", "", "", "", "",
-		"Space", "Page Up", "Page Down", "End", "Home", "Left Arrow", "Up Arrow", "Right Arrow", "Down Arrow", "Select", "", "", "Print Screen", "Insert", "Delete", "Help",
-		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "", "", "", "", "", "",
-		"", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-		"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Left Windows", "Right Windows", "Apps", "", "Sleep",
-		"Numpad 0", "Numpad 1", "Numpad 2", "Numpad 3", "Numpad 4", "Numpad 5", "Numpad 6", "Numpad 7", "Numpad 8", "Numpad 9", "Numpad *", "Numpad +", "", "Numpad -", "Numpad Decimal", "Numpad /",
-		"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16",
-		"F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", "", "", "", "", "", "", "", "",
-		"Num Lock", "Scroll Lock", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"Left Shift", "Right Shift", "Left Control", "Right Control", "Left Menu", "Right Menu", "Browser Back", "Browser Forward", "Browser Refresh", "Browser Stop", "Browser Search", "Browser Favorites", "Browser Home", "Volume Mute", "Volume Down", "Volume Up",
-		"Next Track", "Previous Track", "Media Stop", "Media Play/Pause", "Mail", "Media Select", "Launch App 1", "Launch App 2", "", "", "OEM ;", "OEM +", "OEM ,", "OEM -", "OEM .", "OEM /",
-		"OEM ~", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "", "", "", "", "OEM [", "OEM \\", "OEM ]", "OEM '", "OEM 8",
-		"", "", "OEM <", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "Attn", "CrSel", "ExSel", "Erase EOF", "Play", "Zoom", "", "PA1", "OEM Clear", ""
-	};
-
-	const LANGID language = LOWORD(GetKeyboardLayout(0));
-
-	return ((language & 0xFF) == LANG_GERMAN) ?
-		keyboard_keys_german[keycode] : keyboard_keys_international[keycode];
-}
-std::string input::key_name(const unsigned int key[4])
-{
-	assert(key[0] != VK_CONTROL && key[0] != VK_SHIFT && key[0] != VK_MENU);
-
-	return (key[1] ? "Ctrl + " : std::string()) + (key[2] ? "Shift + " : std::string()) + (key[3] ? "Alt + " : std::string()) + key_name(key[0]);
 }
 
 static inline bool is_blocking_mouse_input()
@@ -567,9 +665,9 @@ BOOL WINAPI HookGetMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 FARPROC p_GetMessageA = nullptr;
 void InstallGetMessageA_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking GetMessageA...";
-
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking GetMessageA...");
+		
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_GetMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageA"), "GetMessageA", HookGetMessageA));
 
@@ -608,8 +706,8 @@ BOOL WINAPI HookGetMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 FARPROC p_GetMessageW = nullptr;
 void InstallGetMessageW_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking GetMessageW...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking GetMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_GetMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageW"), "GetMessageW", HookGetMessageW));
@@ -640,8 +738,8 @@ BOOL WINAPI HookPeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 FARPROC p_PeekMessageA = nullptr;
 void InstallPeekMessageA_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking PeekMessageA...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking PeekMessageA...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PeekMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageA"), "PeekMessageA", HookPeekMessageA));
@@ -672,8 +770,8 @@ BOOL WINAPI HookPeekMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 FARPROC p_PeekMessageW = nullptr;
 void InstallPeekMessageW_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking PeekMessageW...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking PeekMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PeekMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageW"), "PeekMessageW", HookPeekMessageW));
@@ -694,8 +792,8 @@ BOOL WINAPI HookPostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 FARPROC p_PostMessageA = nullptr;
 void InstallPostMessageA_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking PostMessageA...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking PostMessageA...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PostMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageA"), "PostMessageA", HookPostMessageA));
@@ -715,8 +813,8 @@ BOOL WINAPI HookPostMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 FARPROC p_PostMessageW = nullptr;
 void InstallPostMessageW_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking PostMessageW...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking PostMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_PostMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageW"), "PostMessageW", HookPostMessageW));
@@ -727,28 +825,24 @@ void InstallPostMessageW_Hook()
 BOOL(WINAPI* RegisterRawInputDevices_orig)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
 BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << __FUNCTION__ << " > Redirecting " << "RegisterRawInputDevices" << '(' << "pRawInputDevices = " << pRawInputDevices << ", uiNumDevices = " << uiNumDevices << ", cbSize = " << cbSize << ')' << " ...";
-
+	if (pConfig->bVerboseLog)
+		spd::log()->info("{0} -> Redirecting RegisterRawInputDevices (pRawInputDevices = {1}, uiNumDevices = {2}, cbSize = {3})", __FUNCTION__, IntToHexStr(pRawInputDevices), uiNumDevices, cbSize);
 
 	for (UINT i = 0; i < uiNumDevices; ++i)
 	{
 		const auto &device = pRawInputDevices[i];
 
-		if (cfg.bVerboseLog)
+		if (pConfig->bVerboseLog)
 		{
-			Logging::Log() << __FUNCTION__ << " > Dumping device registration at index " << i << ":";
-			Logging::Log() << __FUNCTION__ << "  +-----------------------------------------+-----------------------------------------+";
-			Logging::Log() << __FUNCTION__ << "  | Parameter                               | Value                                   |";
-			Logging::Log() << __FUNCTION__ << "  +-----------------------------------------+-----------------------------------------+";
-			Logging::Log() << __FUNCTION__ << "  | UsagePage                               | " << std::setw(39) << std::hex << device.usUsagePage << std::dec << " |";
-			Logging::Log() << __FUNCTION__ << "  | Usage                                   | " << std::setw(39) << std::hex << device.usUsage << std::dec << " |";
-			Logging::Log() << __FUNCTION__ << "  | Flags                                   | " << std::setw(39) << std::hex << device.dwFlags << std::dec << " |";
-			if (device.hwndTarget != NULL) 
-				Logging::Log() << __FUNCTION__ << "  | TargetWindow                            | " << std::setw(39) << device.hwndTarget << " |";
-			else
-				Logging::Log() << __FUNCTION__ << "  | TargetWindow                            |                                    NULL |";
-			Logging::Log() << __FUNCTION__ << "  +-----------------------------------------+-----------------------------------------+";
+			spd::log()->info("{0} -> Dumping device registration at index {1}:", __FUNCTION__, i);
+			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
+			spd::log()->info("| Parameter                               | Value                                   |");
+			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
+			spd::log()->info("| UsagePage                               | {:>39} |", IntToHexStr(device.usUsagePage));
+			spd::log()->info("| Usage                                   | {:>39} |", IntToHexStr(device.usUsage));
+			spd::log()->info("| Flags                                   | {:>39} |", IntToHexStr(device.dwFlags));
+			spd::log()->info("| TargetWindow                            | {:>39} |", IntToHexStr(device.hwndTarget));
+			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
 		}
 
 		if (device.usUsagePage != 1 || device.hwndTarget == nullptr)
@@ -759,7 +853,7 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 
 	if (!RegisterRawInputDevices_orig(pRawInputDevices, uiNumDevices, cbSize))
 	{
-		Logging::Log() << __FUNCTION__ << " failed with error code " << GetLastError() << '.';
+		spd::log()->info("{0} -> Failed with error code {1}", __FUNCTION__, GetLastError());
 		return FALSE;
 	}
 
@@ -769,8 +863,8 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 FARPROC p_RegisterRawInputDevices = nullptr;
 void InstallRegisterRawInputDevices_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking RegisterRawInputDevices...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking RegisterRawInputDevices...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_RegisterRawInputDevices, Hook::HotPatch(Hook::GetProcAddress(h_user32, "RegisterRawInputDevices"), "RegisterRawInputDevices", HookRegisterRawInputDevices));
@@ -791,8 +885,8 @@ BOOL WINAPI HookClipCursor(const RECT *lpRect)
 FARPROC p_ClipCursor = nullptr;
 void InstallClipCursor_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking ClipCursor...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking ClipCursor...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_ClipCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "ClipCursor"), "ClipCursor", HookClipCursor));
@@ -817,8 +911,8 @@ BOOL WINAPI HookSetCursorPos(int X, int Y)
 FARPROC p_SetCursorPos = nullptr;
 void InstallSetCursorPos_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking SetCursorPos...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking SetCursorPos...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_SetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "SetCursorPos"), "SetCursorPos", HookSetCursorPos));
@@ -844,8 +938,8 @@ BOOL WINAPI HookGetCursorPos(LPPOINT lpPoint)
 FARPROC p_GetCursorPos = nullptr;
 void InstallGetCursorPos_Hook()
 {
-	if (cfg.bVerboseLog)
-		Logging::Log() << "Hooking GetCursorPos...";
+	if (pConfig->bVerboseLog)
+		spd::log()->info("Hooking GetCursorPos...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
 	InterlockedExchangePointer((PVOID*)&p_GetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetCursorPos"), "GetCursorPos", HookGetCursorPos));
@@ -853,9 +947,124 @@ void InstallGetCursorPos_Hook()
 	GetCursorPos_orig = (decltype(GetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetCursorPos, nullptr, nullptr);
 }
 
-void Init_Input()
+void input::PopulateKeymap()
 {
-	Logging::Log() << "Hooking input-related APIs...";
+	// Populate string map
+
+	spd::log()->info("Populating keymap");
+
+	std::string keystring;
+	for (int i = 0; i < 256; ++i)
+	{
+		keystring = get_str_from_VK(i);
+
+		_keyboardStringMap.insert(_keyboardStringMap.end(), std::pair<unsigned int, std::string>(i, keystring));
+		keystring = "";
+	}
+
+	_keyboardStringMap[0x1B] = "ESCAPE";
+	_keyboardStringMap[0x70] = "F1";
+	_keyboardStringMap[0x71] = "F2";
+	_keyboardStringMap[0x72] = "F3";
+	_keyboardStringMap[0x73] = "F4";
+	_keyboardStringMap[0x74] = "F5";
+	_keyboardStringMap[0x75] = "F6";
+	_keyboardStringMap[0x76] = "F7";
+	_keyboardStringMap[0x77] = "F8";
+	_keyboardStringMap[0x78] = "F9";
+	_keyboardStringMap[0x79] = "F10";
+	_keyboardStringMap[0x7A] = "F11";
+	_keyboardStringMap[0x7B] = "F12";
+	_keyboardStringMap[0x7C] = "F13";
+	_keyboardStringMap[0x7D] = "F14";
+	_keyboardStringMap[0x7E] = "F15";
+	_keyboardStringMap[0x08] = "BACKSPACE";
+	_keyboardStringMap[0x20] = "SPACE";
+	_keyboardStringMap[0x2D] = "INSERT";
+	_keyboardStringMap[0x23] = "END";
+	_keyboardStringMap[0x24] = "HOME";
+	_keyboardStringMap[0x22] = "PAGEDOWN";
+	_keyboardStringMap[0x21] = "PAGEUP";
+	_keyboardStringMap[0x2E] = "DELETE";
+	_keyboardStringMap[0x0D] = "ENTER";
+	_keyboardStringMap[0x09] = "TAB";
+	_keyboardStringMap[0x14] = "CAPSLOCK";
+	_keyboardStringMap[0x5D] = "APPS";
+	_keyboardStringMap[0x15] = "KANA";
+	_keyboardStringMap[0x19] = "KANJI";
+	_keyboardStringMap[0x1C] = "CONVERT";
+	_keyboardStringMap[0x1D] = "NONCONVERT";
+	_keyboardStringMap[0x2C] = "PRINTSCR";
+	_keyboardStringMap[0x91] = "SCROLL";
+	_keyboardStringMap[0x13] = "PAUSE";
+
+	// Numpad
+	_keyboardStringMap[0x90] = "NUMLOCK";
+	_keyboardStringMap[0x6F] = "NUMPAD_/";
+	_keyboardStringMap[0x6C] = "NUMPAD_ENTER";
+	_keyboardStringMap[0x6A] = "NUMPAD_*";
+	_keyboardStringMap[0x6D] = "NUMPAD_-";
+	_keyboardStringMap[0x6B] = "NUMPAD_+";
+	_keyboardStringMap[0x6E] = "NUMPAD_.";
+	_keyboardStringMap[0x60] = "NUMPAD_0";
+	_keyboardStringMap[0x61] = "NUMPAD_1";
+	_keyboardStringMap[0x62] = "NUMPAD_2";
+	_keyboardStringMap[0x63] = "NUMPAD_3";
+	_keyboardStringMap[0x64] = "NUMPAD_4";
+	_keyboardStringMap[0x65] = "NUMPAD_5";
+	_keyboardStringMap[0x66] = "NUMPAD_6";
+	_keyboardStringMap[0x67] = "NUMPAD_7";
+	_keyboardStringMap[0x68] = "NUMPAD_8";
+	_keyboardStringMap[0x68] = "NUMPAD_9";
+
+	// Arrow keys
+	_keyboardStringMap[0x26] = "UP";
+	_keyboardStringMap[0x28] = "DOWN";
+	_keyboardStringMap[0x25] = "LEFT";
+	_keyboardStringMap[0x27] = "RIGHT";
+
+	// Shift
+	_keyboardStringMap[0x10] = "SHIFT";
+	_keyboardStringMap[0xA0] = "LSHIFT";
+	_keyboardStringMap[0xA1] = "RSHIFT";
+
+	// Control
+	_keyboardStringMap[0x11] = "CTRL";
+	_keyboardStringMap[0xA2] = "LCTRL";
+	_keyboardStringMap[0xA3] = "RCTRL";
+
+	// Alt
+	_keyboardStringMap[0x12] = "ALT";
+	_keyboardStringMap[0xA4] = "LALT";
+	_keyboardStringMap[0xA5] = "RALT";
+
+	// Winkey
+	_keyboardStringMap[0x5B] = "LWIN";
+	_keyboardStringMap[0x5C] = "RWIN";
+
+	// Mouse
+	_keyboardStringMap[VK_LBUTTON] = "LMOUSE";
+	_keyboardStringMap[VK_RBUTTON] = "RMOUSE";
+	_keyboardStringMap[VK_MBUTTON] = "MMOUSE";
+	_keyboardStringMap[VK_XBUTTON1] = "MOUSE4";
+	_keyboardStringMap[VK_XBUTTON2] = "MOUSE5";
+
+	// Copy string map to vk map, inverting the items, so we can get VK from str
+	for (std::unordered_map<unsigned int, std::string>::iterator i = _keyboardStringMap.begin(); i != _keyboardStringMap.end(); ++i)
+		_keyboardVKMap[i->second] = i->first;
+
+	// Populate DIK map, so we can get DIK from str
+	for (int i = 0; i < 256; ++i)
+	{
+		unsigned int DIK = MapVirtualKeyEx(i, /*MAPVK_VK_TO_VSC*/0, GetKeyboardLayout(0)) & 0xFF;
+
+		_keyboardDIKMap.insert(_keyboardDIKMap.end(), std::pair<std::string, unsigned int>(_keyboardStringMap[i], DIK));
+	}
+}
+
+void input::InstallHooks()
+{
+	spd::log()->info("Hooking input-related APIs...");
 
 	InstallGetMessageA_Hook();
 	InstallGetMessageW_Hook();

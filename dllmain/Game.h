@@ -122,6 +122,58 @@ enum class KEY_BTN : unsigned __int64
 	KEY_SUDRL = 0xF0000000000000,
 };
 
+enum class InputDevices
+{
+	// 0 = Keyboard?
+	// 1 = Mouse
+	// 2 = Xinput Controller
+	// 3 = Dinput Controller
+	
+	Keyboard,
+	Mouse,
+	XinputController,
+	DinputController
+};
+
+enum class MouseAimingModes : std::uint8_t
+{
+	Classic,
+	Modern
+};
+
+enum class CharacterID : std::uint8_t
+{
+	Leon,
+	Ashley,
+	Ada,
+	HUNK,
+	Krauser,
+	Wesker
+};
+
+enum class LeonCostumes
+{
+	Jacket,
+	Normal,
+	Vest,
+	RPD,
+	Mafia
+};
+
+enum class AshleyCostumes
+{
+	Normal,
+	Popstar,
+	Armor
+};
+
+enum class AdaCostumes
+{
+	RE2,
+	Spy,
+	Normal
+};
+
 enum EM_BE_FLAG : uint8_t
 {
   EM_BE_FLAG_ALIVE = 0x1,
@@ -266,10 +318,10 @@ struct __declspec(align(4)) GLOBALS
   uint8_t field_4FC5;
   uint8_t field_4FC6;
   uint8_t field_4FC7;
-  uint8_t curPlType_4FC8;
-  uint8_t field_4FC9;
+  uint8_t curPlType_4FC8; // 0: Leon; 1: Ashley; 2: Ada; 3: HUNK; 4: Krauser; 5: Wesker
+  uint8_t plCostume_4FC9; // Leon {0: Jacket, 1: Normal, 2: Vest, 3: RPD, 4: Mafia } || Ashley {0: Normal, 1: Popstar, 2: Armor} || Ada { 0:RE2, 1:Spy, 2:RE2 again?, 3:Normal } || HUNK { 0:Normal } | Krauser { 0:Normal } | Wesker { 0:Normal }
   uint8_t field_4FCA;
-  uint8_t field_4FCB;
+  uint8_t Costume_subchar_4FCB; // Ashley {0: Normal, 1: Popstar, 2: Armor}
   uint16_t field_4FCC;
   uint16_t field_4FCE;
   float field_4FD0;
@@ -298,7 +350,7 @@ struct __declspec(align(4)) GLOBALS
   uint32_t field_52E8;
   uint32_t flags_KEY_LOCK_52EC[5];
   uint8_t gap5300[12];
-  int field_530C;
+  uint32_t frameCounter_530C;
   uint32_t freeData_5310[64];
   EM_LIST emList_5410[256]; 
   uint8_t gap7410[4100];
@@ -341,7 +393,6 @@ struct __declspec(align(4)) GLOBALS
 };
 static_assert(sizeof(GLOBALS) == 0x86A0, "sizeof(GLOBALS)"); // TODO: find if this size is correct
 
-
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];
 	uint32_t knife40; // 200 
@@ -382,44 +433,127 @@ struct SYSTEM_SAVE
   uint8_t gap94[12];
 };
 static_assert(sizeof(SYSTEM_SAVE) == 0xA0, "sizeof(SYSTEM_SAVE)"); // TODO: find if this size is correct
- 
-//#pragma pack(push, 1)
-struct __declspec(align(4)) cPlayer // unsure if correct name!
+
+#pragma pack(push, 1)
+struct MOTION_INFO
 {
-	/* 0x000 */ uint8_t unk0[0x94];
-	/* 0x094 */ float X;
-	/* 0x098 */ float Y;
-	/* 0x09C */ float Z;
-	/* 0x0A0 */ float unkA0;
-	/* 0x0A4 */ float Angle;
-	/* 0x0A8 */ uint8_t unkA8[0x54];
-	/* 0x0FC */ uint8_t actid0FC;
-	/* 0x0FD */ uint8_t actid0FD;
-	/* 0x0FE */ uint8_t actid0FE;
-	/* 0x0FF */ uint8_t actid0FF;
-	/* 0x100 */ uint8_t unk100[0x198];
-	/* 0x298 */ float speed;
-	/* 0x320  */ uint8_t unk1[0x88];
-	/* 0x324 */ int32_t health; /* low than 2400 */
-	/* 0x328 */ int32_t reserv; /* reserve */
-	/* 0x32C */ int32_t invtime; /* 0x8000 is well */  
-	/* 0x330  */ uint8_t unk330[0x90];
-	/* 0x3C0  */ int32_t actobjptr; 
-	/* 0x7B0  */ uint8_t unk7B0[0x3F0];
-	/* 0x7B4  */ float burntime;
-	/* 0x7B8  */uint8_t unk7B8[0x2C]; // 7B8+2C=7E4 Calc
-	/* 0x7E4  */ float modelptr;
-	/* 0x7E8  */ uint8_t unk7E8[0x8];
-	/* 0x7F0 */ int eliteflag; /* like chain man = 04 */
-	/* 0x7F4  */uint8_t unk7F4[0x614];
-	/* goes to E08 */
+  int fcvDataPtr_0;
+  uint32_t* animDataPtr_4;
+  int16_t field_8;
+  int field_A;
+  int16_t field_E;
+  int field_10;
+  int16_t field_14;
+  int field_16;
+  int16_t field_1A;
+  int field_1C;
+  float frameCount_20;
+  float frameCurrent_24;
+  float frameCurrent_Backup_28;
+  float framePrev_2C;
+  uint8_t numAnimNodes_30;
+  uint8_t unk_31[3];
+  int animNodeAddrs_34;
+  void* animDescPtr_38;
+  uint16_t field_3C;
+  uint16_t field_3E;
+  uint16_t motionFlags_40;
+  uint16_t field_42;
+  uint32_t flags_44;
+  Vec field_48;
+  Vec field_54;
+  Vec field_60;
+  float field_6C;
+  float field_70;
+  float field_74;
+  float field_78;
+  float field_7C;
+  float field_80;
+  Vec field_84;
+  Vec field_90;
+  Vec field_9C;
+  uint16_t* field_A8;
+  int16_t field_AC;
+  int16_t field_AE;
+  int16_t field_B0;
+  int16_t flags_B2;
+  int field_B4;
+  float cur_frame_B8;
+  uint16_t numFrames_BC;
+  uint8_t unk_BE[2];
+  float speed_C0;
+  uint8_t field_C4;
+  uint8_t field_C5;
+  uint8_t unk_C6[2];
+  float field_C8;
+  uint8_t* field_CC;
 };
-//#pragma pack(pop)
-// int a = sizeof(cPlayer);
-static_assert(sizeof(cPlayer) == 0xE08, "sizeof(cPlayer)"); // TODO: find if this size is correct
+static_assert(sizeof(MOTION_INFO) == 0xD0, "sizeof(MOTION_INFO)");
+
+struct cPlWep
+{
+  uint8_t unk_0[32];
+  uint8_t field_20;
+  uint8_t field_21;
+  uint8_t unk_22[1];
+  uint8_t field_23;
+  uint8_t field_24;
+  uint8_t unk_25[1];
+  uint8_t flags_26;
+  uint8_t unk_27[1];
+  float field_28;
+  float field_2C;
+  float field_30;
+  void* wep0_ptr_34;
+  void* wep1_ptr_38;
+  uint8_t unk_3C[4];
+  uint8_t field_40;
+  uint8_t unk_41[1];
+  char field_42;
+  uint8_t field_43;
+  Vec field_44;
+};
+static_assert(sizeof(cPlWep) == 0x50, "sizeof(cPlWep)");
+
+struct cPlayer // unsure if correct name!
+{
+  /* 0x000 */ uint8_t unk0[0x94];
+  /* 0x094 */ float X;
+  /* 0x098 */ float Y;
+  /* 0x09C */ float Z;
+  /* 0x0A0 */ float unkA0;
+  /* 0x0A4 */ float Angle;
+  /* 0x0A8 */ uint8_t unk_A8[0x1D8 - 0xA8];
+  /* 0x1D8 */ MOTION_INFO MotInfo_1D8;
+  /* 0x2A8 */ uint8_t unk_2A8[0x7D8 - 0x2A8];
+  /* 0x7D8 */ cPlWep* plWep_7D8;
+  /* goes to 7F0+ */
+};
+#pragma pack(pop)
+static_assert(sizeof(cPlayer) == 0x7DC, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
+
+struct DatTblEntry
+{
+  /* 0x00 */ char name_0[48];
+  /* 0x30 */ uint32_t flags_30;
+  /* 0x34 */ uint8_t* data_34;
+  /* 0x38 */ void* unk_38;
+};
+static_assert(sizeof(DatTblEntry) == 0x3C, "sizeof(DatTblEntry)");
+
+struct DatTbl
+{
+  /* 0x00 */ int count_0;
+  /* 0x04 */ DatTblEntry* entries_4;
+};
+static_assert(sizeof(DatTbl) == 8, "sizeof(DatTbl)");
 
 std::string GameVersion();
 bool GameVersionIsDebug();
+InputDevices LastUsedDevice();
+int g_MOUSE_SENS();
+MouseAimingModes GetMouseAimingMode();
+void SetMouseAimingMode(MouseAimingModes newMode);
 
 GLOBALS* GlobalPtr();
 DAMAGE* DamagePtr();
