@@ -123,7 +123,7 @@ void LAApatch::LAARender()
 					}
 					else
 					{
-						BOOL result_moveFile1 = MoveFileA(module_path.c_str(), module_path_bak.c_str());
+						BOOL result_moveFile1 = MoveFileExA(module_path.c_str(), module_path_bak.c_str(), MOVEFILE_REPLACE_EXISTING);
 						BOOL result_moveFile2 = MoveFileA(module_path_new.c_str(), module_path.c_str());
 						if (!result_moveFile1)
 							LAA_ErrorNum = 3;

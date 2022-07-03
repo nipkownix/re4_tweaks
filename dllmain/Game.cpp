@@ -48,6 +48,14 @@ GLOBALS* GlobalPtr()
 	return *pG_ptr;
 }
 
+DAMAGE* pD_ptr = nullptr;
+DAMAGE* DamagePtr() {
+	if (!pD_ptr)
+		return nullptr;
+
+	return pD_ptr;
+}
+
 SYSTEM_SAVE** pSys_ptr = nullptr;
 SYSTEM_SAVE* SystemSavePtr()
 {
@@ -60,10 +68,25 @@ SYSTEM_SAVE* SystemSavePtr()
 cPlayer** pPL_ptr = nullptr;
 cPlayer* PlayerPtr()
 {
-	if (!pPL_ptr)
+	if (*pPL_ptr == nullptr)
+		return nullptr;
+
+	if (**(int**)pPL_ptr < 0x10000)
 		return nullptr;
 
 	return *pPL_ptr;
+}
+
+cPlayer** pAS_ptr = nullptr;
+cPlayer* AshleyPtr()
+{
+	if (*pAS_ptr == nullptr)
+		return nullptr;
+
+	if (**(int**)pAS_ptr < 0x10000)
+		return nullptr;
+
+	return *pAS_ptr;
 }
 
 uint8_t** g_GameSave_BufPtr = nullptr;
@@ -88,7 +111,7 @@ bool Init_Game()
 		gameVersion = "1.1.0";
 	}
 	else {
-		MessageBoxA(NULL, "This version of RE4 is not supported.\nre4_tweaks will be disabled.", "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
+		::MessageBoxA(NULL, "This version of RE4 is not supported.\nre4_tweaks will be disabled.", "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
 		return false;
 	}
 
@@ -120,6 +143,10 @@ bool Init_Game()
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
 	pG_ptr = *pattern.count(1).get(0).get<GLOBALS**>(1);
 
+	// pDamage pointer
+	pattern = hook::pattern("8A 8B C3 4F 00 00 89 45 0C");
+	pD_ptr = *pattern.count(1).get(0).get<DAMAGE*>(-0xB);
+
 	// pSys pointer
 	pattern = hook::pattern("00 80 00 00 83 C4 ? E8 ? ? ? ? A1 ? ? ? ?");
 	pSys_ptr = *pattern.count(1).get(0).get<SYSTEM_SAVE**>(13);
@@ -127,6 +154,10 @@ bool Init_Game()
 	// pPL pointer
 	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");
 	pPL_ptr = *pattern.count(1).get(0).get<cPlayer**>(1);
+
+	// pAS pointer
+	pattern = hook::pattern("A8 02 74 16 8B 15");
+	pAS_ptr = *pattern.count(1).get(0).get<cPlayer**>(6);
 
 	// g_GameSave_BufPtr pointer (not actual name)
 	pattern = hook::pattern("89 15 ? ? ? ? C7 05 ? ? ? ? A0 FA 0F 00");
