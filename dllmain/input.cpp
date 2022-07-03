@@ -822,19 +822,11 @@ void InstallPostMessageW_Hook()
 	PostMessageW_orig = (decltype(PostMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_PostMessageW, nullptr, nullptr);
 }
 
-template <typename I> std::string n2hexstr(I w, size_t hex_len = sizeof(I) << 1) {
-	static const char* digits = "0123456789ABCDEF";
-	std::string rc(hex_len, '0');
-	for (size_t i = 0, j = (hex_len - 1) * 4; i < hex_len; ++i, j -= 4)
-		rc[i] = digits[(w >> j) & 0x0f];
-	return rc;
-}
-
 BOOL(WINAPI* RegisterRawInputDevices_orig)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
 BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
 	if (pConfig->bVerboseLog)
-		spd::log()->info("{0} -> Redirecting RegisterRawInputDevices (pRawInputDevices = {1}, uiNumDevices = {2}, cbSize = {3})", __FUNCTION__, n2hexstr((int)pRawInputDevices), uiNumDevices, cbSize);
+		spd::log()->info("{0} -> Redirecting RegisterRawInputDevices (pRawInputDevices = {1}, uiNumDevices = {2}, cbSize = {3})", __FUNCTION__, IntToHexStr(pRawInputDevices), uiNumDevices, cbSize);
 
 	for (UINT i = 0; i < uiNumDevices; ++i)
 	{
@@ -846,10 +838,10 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
 			spd::log()->info("| Parameter                               | Value                                   |");
 			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
-			spd::log()->info("| UsagePage                               | {:>39} |", n2hexstr((int)device.usUsagePage));
-			spd::log()->info("| Usage                                   | {:>39} |", n2hexstr((int)device.usUsage));
-			spd::log()->info("| Flags                                   | {:>39} |", n2hexstr((int)device.dwFlags));
-			spd::log()->info("| TargetWindow                            | {:>39} |", n2hexstr((int)device.hwndTarget));
+			spd::log()->info("| UsagePage                               | {:>39} |", IntToHexStr(device.usUsagePage));
+			spd::log()->info("| Usage                                   | {:>39} |", IntToHexStr(device.usUsage));
+			spd::log()->info("| Flags                                   | {:>39} |", IntToHexStr(device.dwFlags));
+			spd::log()->info("| TargetWindow                            | {:>39} |", IntToHexStr(device.hwndTarget));
 			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
 		}
 
