@@ -39,6 +39,18 @@ void SetMouseAimingMode(MouseAimingModes newMode)
 	return;
 }
 
+static uint32_t* ptrKey_btn_on;
+uint64_t  Key_btn_on()
+{
+	return *(uint64_t*)(ptrKey_btn_on);
+}
+
+static uint32_t* ptrKey_btn_trg;
+uint64_t  Key_btn_trg()
+{
+	return *(uint64_t*)(ptrKey_btn_trg);
+}
+
 GLOBALS** pG_ptr = nullptr;
 GLOBALS* GlobalPtr()
 {
@@ -138,6 +150,14 @@ bool Init_Game()
 	// Mouse aiming mode pointer
 	pattern = hook::pattern("80 3D ? ? ? ? ? 0F B6 05");
 	ptrMouseAimMode = *pattern.count(1).get(0).get<uint32_t*>(2);
+
+	// Pointer to Key_btn_on
+	pattern = hook::pattern("A1 ? ? ? ? 33 C9 83 E0 ? 83 3D");
+	ptrKey_btn_on = *pattern.count(1).get(0).get<uint32_t*>(1);
+
+	// Pointer to Key_btn_trg
+	pattern = hook::pattern("A1 ? ? ? ? 25 ? ? ? ? 0B C1 74 ? 88 0D");
+	ptrKey_btn_trg = *pattern.count(1).get(0).get<uint32_t*>(1);
 
 	// Grab pointer to pG (pointer to games Global struct)
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");

@@ -118,6 +118,16 @@ void ImGui_ItemSeparator()
 	drawList->AddLine(ImVec2(p0.x, p0.y), ImVec2(p0.x + ImGui::GetContentRegionAvail().x, p0.y), ImGui::GetColorU32(ImGuiCol_Separator));
 }
 
+void ImGui_ItemSeparator2()
+{
+	// ImGui::Separator() doesn't work inside tables?
+
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImVec2 p0 = ImGui::GetCursorScreenPos();
+
+	drawList->AddRectFilled(ImVec2(p0.x, p0.y), ImVec2(p0.x + ImGui::GetContentRegionAvail().x, p0.y + 3), ImColor(150, 10, 40));
+}
+
 void cfgMenuRender()
 {
 	ImGui::SetNextWindowSizeConstraints(ImVec2(940, 640), ImVec2(1280, 720));
@@ -448,7 +458,7 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Allows game to use non - 60Hz refresh rates in fullscreen, fixing the black screen issue people have when starting the game.");
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui_ItemSeparator();
+						ImGui_ItemSeparator2();
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::Text("CustomRefreshRate");
@@ -670,8 +680,8 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Whether to use a borderless-window when using windowed-mode.");
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui_ItemSeparator();
-						ImGui::Spacing();
+						ImGui_ItemSeparator2();
+						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::TextWrapped("Position to draw the game window when using windowed mode.");
 						ImGui::TextWrapped("-1 will use the games default (usually places it at 0,0)");
@@ -935,6 +945,41 @@ void cfgMenuRender()
 					ImGui::Dummy(ImVec2(10, 25));
 					column0_lastY = ImGui::GetCursorPos().y;
 
+					// AllowReloadWithoutAiming_kbm
+					{
+						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
+
+						static float bgHeight = 0;
+						ImGui_ItemBG(bgHeight, itmbgColor);
+
+						if (ImGui::Checkbox("AllowReloadWithoutAiming", &pConfig->bAllowReloadWithoutAiming_kbm))
+						{
+							pConfig->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+
+						ImGui::TextWrapped("Removes the need to be aiming the weapon before you can reload it.");
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui_ItemSeparator2();
+						ImGui::Dummy(ImVec2(10, 10));
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("ReloadWithoutZoom", &pConfig->bReloadWithoutZoom_kbm);
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Don't zoom in when reloading without aiming.");
+						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks somes animation quirks when the reload ends.");
+
+						bgHeight = ImGui::GetCursorPos().y;
+					}
+
+					ImGui::Dummy(ImVec2(10, 25));
+					column1_lastY = ImGui::GetCursorPos().y;
+
 					ImGui::EndTable();
 				}
 			}
@@ -1039,6 +1084,43 @@ void cfgMenuRender()
 
 					ImGui::Dummy(ImVec2(10, 25));
 					column0_lastY = ImGui::GetCursorPos().y;
+
+					// AllowReloadWithoutAiming_controller
+					{
+						ImGui::TableSetColumnIndex(1);
+						ImGui::SetCursorPosY(column1_lastY);
+
+						static float bgHeight = 0;
+						ImGui_ItemBG(bgHeight, itmbgColor);
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AllowReloadWithoutAiming", &pConfig->bAllowReloadWithoutAiming_controller);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Removes the need to be aiming the weapon before you can reload it.");
+						ImGui::TextWrapped("Warning: this will also change the reload button based on your current controller config type, since the original button is used for sprinting when not aiming.");
+						
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("New reload button (Xinput):");
+						ImGui::BulletText("Config Type I: B");
+						ImGui::BulletText("Config Type II & III: X");
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui_ItemSeparator2();
+						ImGui::Dummy(ImVec2(10, 10));
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("ReloadWithoutZoom", &pConfig->bReloadWithoutZoom_controller);
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Don't zoom in when reloading without aiming.");
+						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks somes animation quirks when the reload ends.");
+
+						bgHeight = ImGui::GetCursorPos().y;
+					}
+
+					ImGui::Dummy(ImVec2(10, 25));
+					column1_lastY = ImGui::GetCursorPos().y;
 
 					ImGui::EndTable();
 				}
