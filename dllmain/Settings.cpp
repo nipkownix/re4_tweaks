@@ -180,6 +180,8 @@ void Config::ReadSettings(std::string_view ini_path)
 
 	// KEYBOARD
 	pConfig->bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons);
+	pConfig->bAllowReloadWithoutAiming_kbm = iniReader.ReadBoolean("KEYBOARD", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_kbm);
+	pConfig->bReloadWithoutZoom_kbm = iniReader.ReadBoolean("KEYBOARD", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_kbm);
 
 	// CONTROLLER
 	pConfig->bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity);
@@ -191,6 +193,8 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone);
 	pConfig->fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", pConfig->fXinputDeadzone);
 	pConfig->fXinputDeadzone = fmin(fmax(pConfig->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
+	pConfig->bAllowReloadWithoutAiming_controller = iniReader.ReadBoolean("CONTROLLER", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_controller);
+	pConfig->bReloadWithoutZoom_controller = iniReader.ReadBoolean("CONTROLLER", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_controller);
 
 	// FRAME RATE
 	pConfig->bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed);
@@ -386,6 +390,8 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 	// KEYBOARD
 	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons);
+	iniReader.WriteBoolean("KEYBOARD", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_kbm);
+	iniReader.WriteBoolean("KEYBOARD", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_kbm);
 
 	// CONTROLLER
 	iniReader.WriteBoolean("CONTROLLER", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity);
@@ -393,6 +399,8 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone);
 	iniReader.WriteBoolean("CONTROLLER", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone);
 	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", pConfig->fXinputDeadzone);
+	iniReader.WriteBoolean("CONTROLLER", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_controller);
+	iniReader.WriteBoolean("CONTROLLER", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_controller);
 
 	// FRAME RATE
 	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed);
@@ -508,6 +516,8 @@ void Config::LogSettings()
 	// KEYBOARD
 	spd::log()->info("+ KEYBOARD-----------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_kbm ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_kbm ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// CONTROLLER
@@ -517,6 +527,8 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "XinputDeadzone", pConfig->fXinputDeadzone);
+	spd::log()->info("| {:<30} | {:>15} |", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_controller ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_controller ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FRAME RATE

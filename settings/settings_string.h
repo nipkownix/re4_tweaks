@@ -111,6 +111,13 @@ FixRetryLoadMouseSelector = true
 ; (if game supports your current language it should still use it however)
 FallbackToEnglishKeyIcons = true
 
+; Removes the need to be aiming the weapon before you can reload it.
+AllowReloadWithoutAiming = true
+
+; Don't zoom in when reloading without aiming.
+; Not usually recomended, since the zooming in and out masks somes animation quirks when the reload ends.
+ReloadWithoutZoom = false
+
 [CONTROLLER]
 ; Change the controller sensitivity. For some reason the vanilla game doesn't have an option to change it for controllers, only for the mouse.
 ; Min 0.5, max 4.0.
@@ -123,6 +130,18 @@ RemoveExtraXinputDeadzone = true
 ; The game's default is 1, but that seems unnecessarily large, so we default to 0.4 instead.
 ; Min 0.0, max 3.5.
 XinputDeadzone = 0.4
+
+; Removes the need to be aiming the weapon before you can reload it.
+; Warning: this will also change the reload button based on your current controller config type, 
+; since the original button is used for sprinting when not aiming.
+; New reload button (Xinput):
+; Config Type I: B
+; Config Type II & III: X
+AllowReloadWithoutAiming = false
+
+; Don't zoom in when reloading without aiming.
+; Not usually recomended, since the zooming in and out masks somes animation quirks when the reload ends.
+ReloadWithoutZoom = false
 
 [FRAME RATE]
 ; Fixes the speed of falling items in 60 FPS, making them not fall at double speed.

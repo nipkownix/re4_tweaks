@@ -141,6 +141,13 @@ enum class MouseAimingModes : std::uint8_t
 	Modern
 };
 
+enum class keyConfigTypes : std::uint8_t
+{
+	TypeI,
+	TypeII,
+	TypeIII
+};
+
 enum class CharacterID : std::uint8_t
 {
 	Leon,
@@ -411,7 +418,7 @@ struct SYSTEM_SAVE
   uint8_t languageId_8;
   uint8_t violenceLevel_9;
   uint8_t field_A;
-  uint8_t field_B;
+  keyConfigTypes keyConfigType_B;
   uint8_t soundMode_C;
   uint8_t adasReportNo_D;
   uint8_t field_E;
@@ -554,6 +561,8 @@ InputDevices LastUsedDevice();
 int g_MOUSE_SENS();
 MouseAimingModes GetMouseAimingMode();
 void SetMouseAimingMode(MouseAimingModes newMode);
+uint64_t Key_btn_on();
+uint64_t Key_btn_trg();
 
 GLOBALS* GlobalPtr();
 DAMAGE* DamagePtr();

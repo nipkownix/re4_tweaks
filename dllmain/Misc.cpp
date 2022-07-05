@@ -3,6 +3,7 @@
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
+#include "input.hpp"
 
 static uint32_t* ptrGameFrameRate;
 
@@ -425,6 +426,52 @@ void Install_LangLogHook()
 		injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
 }
 
+
+bool *PlReloadDirect;
+bool cPlayer__keyReload_hook()
+{
+	bool isAiming = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
+	KEY_BTN key = KEY_BTN::KEY_B; // Default key: (Xinput A)
+	bool bReloadWithoutZoom = false;
+
+	switch (LastUsedDevice()) {
+		case InputDevices::DinputController:
+		case InputDevices::XinputController:
+			if (pConfig->bAllowReloadWithoutAiming_controller)
+			{
+				// Change controller reload key, since the default is also used for sprinting when not aiming
+				switch (SystemSavePtr()->keyConfigType_B) {
+					case keyConfigTypes::TypeI:
+						key = KEY_BTN::KEY_CANCEL; // Xinput B
+						break;
+					case keyConfigTypes::TypeII:
+					case keyConfigTypes::TypeIII:
+						key = KEY_BTN::KEY_Y; // Xinput X
+						break;
+				}
+
+				bReloadWithoutZoom = (pConfig->bReloadWithoutZoom_controller && !isAiming);
+
+				isAiming = true; // Pass aim check
+			}
+			break;
+		case InputDevices::Keyboard:
+		case InputDevices::Mouse:
+			if (pConfig->bAllowReloadWithoutAiming_kbm)
+			{
+				bReloadWithoutZoom = (pConfig->bReloadWithoutZoom_kbm && !isAiming);
+				isAiming = true; // Pass aim check
+			}
+			break;
+	}
+
+	*PlReloadDirect = bReloadWithoutZoom;
+
+	bool hasPressedReload = ((Key_btn_trg() & (uint64_t)key) == (uint64_t)key);
+
+	return (isAiming && hasPressedReload);
+}
+
 void Init_Misc()
 {
 	// Check if the exe is LAA
@@ -432,6 +479,17 @@ void Init_Misc()
 	{
 		spd::log()->info("Non-LAA executable detected!");
 		laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
+	}
+
+	// Hook cPlayer::keyReload to allow reloading without aiming
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? 84 C0 74 3A 8B 86 ? ? ? ? 39 58 ? 74 ? 8B 40");
+
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cPlayer__keyReload_hook, PATCH_JUMP);
+
+		// PlReloadDirect is used to skip the camera change when you press the aim button (checked in cPlayer::isKamae)
+		pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? 3C ? 74 ? 3C ? 74 ? B8 ? ? ? ? C3");
+		PlReloadDirect = (bool*)*pattern.count(1).get(0).get<uint32_t*>(2);
 	}
 
 	// Hook cPlayer::weaponInit so we can add code to fix ditman glitch

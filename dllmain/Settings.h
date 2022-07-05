@@ -45,6 +45,8 @@ public:
 
 	// KEYBOARD
 	bool bFallbackToEnglishKeyIcons = true;
+	bool bAllowReloadWithoutAiming_kbm = true;
+	bool bReloadWithoutZoom_kbm = false;
 
 	// CONTROLLER
 	bool bOverrideControllerSensitivity = false;
@@ -52,6 +54,8 @@ public:
 	bool bRemoveExtraXinputDeadzone = true;
 	bool bOverrideXinputDeadzone = true;
 	float fXinputDeadzone = 0.4f;
+	bool bAllowReloadWithoutAiming_controller = false;
+	bool bReloadWithoutZoom_controller = false;
 
 	// FRAME RATE
 	bool bFixFallingItemsSpeed = true;
