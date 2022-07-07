@@ -17,6 +17,7 @@ public:
 	bool bStretchVideos = false;
 	bool bRemove16by10BlackBars = true;
 	bool bReplaceFramelimiter = true;
+	bool bMultithreadFix = false;
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
 	int iCustomRefreshRate = -1;

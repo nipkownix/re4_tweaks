@@ -1,4 +1,5 @@
 #include <iostream>
+#include <mutex>
 #include "dllmain.h"
 #include "Patches.h"
 #include "Game.h"
@@ -155,6 +156,103 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 	GlobalPtr()->deltaTime_70 = float((timeElapsed / 1000) * 30.0);
 
 	SetThreadAffinityMask(curThread, prevAffinityMask);
+}
+
+std::recursive_mutex g_D3DMutex;
+
+void __cdecl D3D_LockMutex_Hook() // hooks 0x9391C0
+{
+	g_D3DMutex.lock();
+}
+
+void __cdecl D3D_UnlockMutex_Hook() // hooks 0x9391D0
+{
+	g_D3DMutex.unlock();
+}
+
+int(__stdcall* D3DXCreateTextureFromFileInMemoryEx_Orig)(
+	int a1,
+	int a2,
+	int a3,
+	int a4,
+	int a5,
+	int a6,
+	int a7,
+	int a8,
+	int a9,
+	int a10,
+	int a11,
+	int a12,
+	int a13,
+	int a14,
+	int a15);
+
+int __stdcall D3DXCreateTextureFromFileInMemoryEx_Hook(
+	int a1,
+	int a2,
+	int a3,
+	int a4,
+	int a5,
+	int a6,
+	int a7,
+	int a8,
+	int a9,
+	int a10,
+	int a11,
+	int a12,
+	int a13,
+	int a14,
+	int a15)
+{
+	auto ret = D3DXCreateTextureFromFileInMemoryEx_Orig(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+	D3D_UnlockMutex_Hook();
+	return ret;
+}
+
+void Init_MultithreadFix()
+{
+	// Clear D3DCREATE_MULTITHREADED flag from D3D CreateDevice call for slight FPS improvement
+	auto pattern = hook::pattern("68 ? ? ? ? 68 ? ? ? ? 6A 44 56 8B 35");
+	auto ptr_CreateDevice_BehaviorFlags = pattern.count(1).get(0).get<uint8_t>(0xB);
+	Patch(ptr_CreateDevice_BehaviorFlags, uint8_t(*ptr_CreateDevice_BehaviorFlags & ~D3DCREATE_MULTITHREADED));
+
+	// Game has a pair of nullsubs that are always called just before graphics-threading related code is used
+	// Kinda seems like they were meant to be a pair of funcs for locking/unlocking a mutex, but that's just a guess.
+	// Restore these so that flag removal above can be made more stable
+	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? A3 ? ? ? ? 89 1D ? ? ? ? A3 ? ? ? ? E8 ? ? ? ? 8B 35");
+	auto ptr_D3D_LockMutex = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
+	InjectHook(ptr_D3D_LockMutex, D3D_LockMutex_Hook);
+
+	pattern = hook::pattern("E8 ? ? ? ? 68 ? ? ? ? FF 15 ? ? ? ? A1 ? ? ? ? 50 FF 15");
+	auto ptr_D3D_UnlockMutex = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
+	InjectHook(ptr_D3D_UnlockMutex, D3D_UnlockMutex_Hook);
+
+	// Game calls D3D_LockDevice before D3DXCreateTextureFromFileInMemoryEx
+	// LockDevice returns pointer to D3D device, so they probably used that as a quick way to retrieve it, but forgot/didn't care about using UnlockDevice afterward
+	// Hook the misbehaving calls so we can add UnlockMutex calls to them
+	// (not sure if this is safest way to do it though - game seems to do something with the ptr returned by D3DXCreate...
+	// maybe UnlockMutex should be after it's finished with that ptr, would be harder to patch in tho...)
+	pattern = hook::pattern("53 E8 ? ? ? ? 50 E8 ? ? ? ? 8B 36 8B 0E 8D 55 ?");
+	auto ptr_caller1 = pattern.count(1).get(0).get<uint32_t>(7); // 0x98009D
+	ReadCall(ptr_caller1, D3DXCreateTextureFromFileInMemoryEx_Orig);
+	InjectHook(ptr_caller1, D3DXCreateTextureFromFileInMemoryEx_Hook);
+
+	pattern = hook::pattern("57 E8 ? ? ? ? 50 E8 ? ? ? ? 8B 06 8B 10 8B 52 ? 8D 4D ?"); // 0x980234 & 0x981049
+	InjectHook(pattern.count(2).get(0).get<uint32_t>(7), D3DXCreateTextureFromFileInMemoryEx_Hook);
+	InjectHook(pattern.count(2).get(1).get<uint32_t>(7), D3DXCreateTextureFromFileInMemoryEx_Hook);
+
+	pattern = hook::pattern("53 E8 ? ? ? ? 50 E8 ? ? ? ? 8B 36 8B 0E 8D 55 ? 52"); // 0x9E4B82, unused?
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(7), D3DXCreateTextureFromFileInMemoryEx_Hook);
+
+	pattern = hook::pattern("57 E8 ? ? ? ? 50 E8 ? ? ? ? 8D 4D ? 8B F8 8B 06 8B 10 8B 52 ?"); // 0x9E6619
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(7), D3DXCreateTextureFromFileInMemoryEx_Hook);
+
+	// Lone UnlockMutex call at 0x955792 - doesn't have a LockMutex call before it for some reason
+	// this would cause game crash on startup, and skipping it caused game crash on exit - nopping it instead seems to fix both
+	pattern = hook::pattern("89 0D ? ? ? ? A3 ? ? ? ? 89 99 ? ? ? ? 89 99 ? ? ? ? E8 ? ? ? ?");
+	Nop(pattern.count(1).get(0).get<uint8_t>(0x17), 5);
+
+	spd::log()->info("MultithreadFix applied");
 }
 
 void Init_DisplayTweaks()
@@ -484,5 +582,11 @@ void Init_DisplayTweaks()
 	if (pConfig->bFixDPIScale)
 	{
 		SetProcessDPIAware();
+	}
+
+	// Multithread flag removal + deadlock fixes
+	if (pConfig->bMultithreadFix)
+	{
+		Init_MultithreadFix();
 	}
 }
