@@ -178,7 +178,7 @@ void __cdecl gameDebug_recreation(void* a1)
 		{
 			cPlayer* pPL = PlayerPtr();
 			if (pPL)
-				eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->X, pPL->Y, pPL->Z, pPL->Angle);
+				eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->X, pPL->Y, pPL->Z, pPL->rotation);
 		}
 	}
 

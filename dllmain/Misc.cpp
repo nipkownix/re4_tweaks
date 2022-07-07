@@ -427,7 +427,6 @@ void Install_LangLogHook()
 		injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
 }
 
-
 bool *PlReloadDirect;
 bool cPlayer__keyReload_hook()
 {

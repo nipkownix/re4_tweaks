@@ -18,6 +18,9 @@ void EnableClipCursor(HWND window)
 	if (pConfig->bNeverHideCursor)
 		return;
 
+	if (window != GetForegroundWindow())
+		return;
+
 	RECT rect;
 	GetClientRect(window, &rect);
 
@@ -139,6 +142,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case WM_CLOSE:
+			DisableClipCursor(false);
 			ExitProcess(0);
 			break;
 	}
