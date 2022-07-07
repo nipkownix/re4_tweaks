@@ -110,6 +110,9 @@ uint8_t* GameSavePtr()
 	return *g_GameSave_BufPtr;
 }
 
+// Original game funcs
+bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
+
 bool Init_Game()
 {
 	// Detect game version
@@ -182,6 +185,10 @@ bool Init_Game()
 	// g_GameSave_BufPtr pointer (not actual name)
 	pattern = hook::pattern("89 15 ? ? ? ? C7 05 ? ? ? ? A0 FA 0F 00");
 	g_GameSave_BufPtr = *pattern.count(1).get(0).get<uint8_t**>(2);
+
+	// Pointer to the original KeyOnCheck
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), game_KeyOnCheck_0);
 
 	return true;
 }

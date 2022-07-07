@@ -529,7 +529,7 @@ struct cPlayer // unsure if correct name!
   /* 0x098 */ float Y;
   /* 0x09C */ float Z;
   /* 0x0A0 */ float unkA0;
-  /* 0x0A4 */ float Angle;
+  /* 0x0A4 */ float rotation;
   /* 0x0A8 */ uint8_t unk_A8[0x1D8 - 0xA8];
   /* 0x1D8 */ MOTION_INFO MotInfo_1D8;
   /* 0x2A8 */ uint8_t unk_2A8[0x7D8 - 0x2A8];
@@ -573,3 +573,6 @@ uint8_t* GameSavePtr();
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0
+
+// Original game funcs
+extern bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);

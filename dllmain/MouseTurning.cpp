@@ -7,33 +7,13 @@
 uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
 
-uintptr_t ptrPSVECAdd;
-uintptr_t ptrAfterTurnRightAnimHook;
-uintptr_t ptrAfterTurnLeftAnimHook;
-uintptr_t ptrAfterMotionMoveHook1;
-uintptr_t ptrAfterMotionMoveHook2;
-
 static uint32_t* ptrMouseDeltaX;
-static uint32_t* ptrMovInputState;
 
-uint32_t* ptrCharRotationBase;
 uint32_t* ptrCamXPosAddr;
-
-bool isTurn;
-
-DWORD _EAX;
-DWORD _ECX;
-DWORD _ESP;
 
 int intMouseDeltaX()
 {
-	// TODO: Maybe we'd get smoother results if we calculated the delta ourselves instead of using what the game provides.
 	return *(int32_t*)(ptrMouseDeltaX);
-}
-
-int intMovInputState()
-{
-    return *(int8_t*)(ptrMovInputState);
 }
 
 std::vector<uint32_t> mouseTurnModifierCombo;
@@ -75,144 +55,6 @@ bool isMouseTurnEnabled()
 	return state;
 }
 
-// Enable the turning animation if the mouse is moving and we're not
-// trying to walk backwards / forwards, or run.
-void __declspec(naked) TurnRightAnimHook()
-{
-	_asm
-	{
-		mov _EAX, eax
-		mov _ECX, ecx
-		mov _ESP, esp
-	}
-
-	if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
-	{
-		if (isMouseTurnEnabled() && (intMouseDeltaX() > 0))
-			if ((intMovInputState() != 0x01) && (intMovInputState() != 0x02) && (intMovInputState() != 0x41) && (intMovInputState() != 0x42))
-				_EAX = 0x1;
-	}
-
-	_asm
-	{
-		mov eax, _EAX
-		mov ecx, _ECX
-		mov esp, _ESP
-
-		add esp, 0x8
-		test al, al
-
-		jmp ptrAfterTurnRightAnimHook
-	}
-}
-
-// Enable the turning animation if the mouse is moving and we're not
-// trying to walk backwards / forwards, or run.
-void __declspec(naked) TurnLeftAnimHook()
-{
-	_asm
-	{
-		mov _EAX, eax
-		mov _ECX, ecx
-		mov _ESP, esp
-	}
-
-	if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
-	{
-		if (isMouseTurnEnabled() && (intMouseDeltaX() < 0))
-			if ((intMovInputState() != 0x01) && (intMovInputState() != 0x02) && (intMovInputState() != 0x41) && (intMovInputState() != 0x42))
-				_EAX = 0x1;
-	}
-
-	_asm
-	{
-		mov eax, _EAX
-		mov ecx, _ECX
-		mov esp, _ESP
-
-		add esp, 0x8
-		test al, al
-
-		jmp ptrAfterTurnLeftAnimHook
-	}
-}
-
-// Only allow MotionMove to change the character's position if we're not trying to do so with the mouse
-void __declspec(naked) MotionMoveHook1()
-{
-	_asm
-	{
-		mov _EAX, eax
-		mov _ECX, ecx
-		mov _ESP, esp
-	}
-
-	if ((LastUsedDevice() == InputDevices::XinputController) || (LastUsedDevice() == InputDevices::DinputController))
-	{
-		_asm {call ptrPSVECAdd}
-	}
-	else
-	{
-		if (isMouseTurnEnabled())
-		{
-			if (isTurn && (intMovInputState() != 0x00))
-				_asm {call ptrPSVECAdd}
-			else if (!isTurn)
-				_asm {call ptrPSVECAdd}
-		}
-		else
-			_asm {call ptrPSVECAdd}
-	}
-
-	_asm
-	{
-		mov eax, _EAX
-		mov ecx, _ECX
-		mov esp, _ESP
-
-		jmp ptrAfterMotionMoveHook1
-	}
-}
-
-// Only allow MotionMove to change the character's rotation if we're not trying to do so with the mouse
-void __declspec(naked) MotionMoveHook2()
-{
-	_asm
-	{
-		mov _EAX, eax
-		mov _ECX, ecx
-		mov _ESP, esp
-	}
-
-	if ((LastUsedDevice() == InputDevices::XinputController) || (LastUsedDevice() == InputDevices::DinputController))
-	{
-		_asm {call ptrPSVECAdd}
-	}
-	else
-	{
-		if (isMouseTurnEnabled())
-		{
-			if (isTurn && (intMouseDeltaX() == 0))
-				_asm {call ptrPSVECAdd}
-			else if (!isTurn)
-				_asm {call ptrPSVECAdd}
-		}
-		else
-			_asm {call ptrPSVECAdd}
-	}
-
-	isTurn = false;
-
-	_asm
-	{
-		mov eax, _EAX
-		mov ecx, _ECX
-		mov esp, _ESP
-
-		jmp ptrAfterMotionMoveHook2
-	}
-}
-
 void MouseTurn()
 {
 	float SpeedMulti = 900;
@@ -221,7 +63,36 @@ void MouseTurn()
 	if (GetMouseAimingMode() == MouseAimingModes::Classic)
 		SpeedMulti = 1300;
 
-	*(float*)(*ptrCharRotationBase + 0xA4) += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnSensitivity;
+	PlayerPtr()->rotation += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnSensitivity;
+}
+
+bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
+{
+	// Enable the turning animation/action if the mouse is moving
+
+	bool ret = false;
+	bool isMovingMouse = false;
+
+	if (a1 == KEY_BTN::KEY_LEFT)
+		isMovingMouse = (intMouseDeltaX() < 0);
+	else if (a1 == KEY_BTN::KEY_RIGHT)
+		isMovingMouse = (intMouseDeltaX() > 0);
+
+	switch (LastUsedDevice()) {
+		case InputDevices::DinputController:
+		case InputDevices::XinputController:
+			ret = game_KeyOnCheck_0(a1);
+			break;
+		case InputDevices::Keyboard:
+		case InputDevices::Mouse:
+			if (isMouseTurnEnabled() && isMovingMouse)
+				ret = true;
+			else
+				ret = game_KeyOnCheck_0(a1);
+			break;
+	}
+
+	return ret;
 }
 
 void GetMouseTurnPointers()
@@ -231,12 +102,6 @@ void GetMouseTurnPointers()
 
 	pattern = hook::pattern("A2 ? ? ? ? EB ? DD D8 8B 0D ? ? ? ? 8B 81 ? ? ? ? A9");
 	ptrCamXmovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
-
-	pattern = hook::pattern("A1 ? ? ? ? 25 ? ? ? ? 33 C9 0B C1 74 ? B8 ? ? ? ? C3");
-	ptrMovInputState = *pattern.count(1).get(0).get<uint32_t*>(1);
-
-	pattern = hook::pattern("A1 ? ? ? ? D9 80 ? ? ? ? 51 8D 90 ? ? ? ? D9 1C ? E8 ? ? ? ? 83 C4 ? 84 C0 0F 85 ? ? ? ? 8B 45 ? 8B 7D");
-	ptrCharRotationBase = *pattern.count(1).get(0).get<uint32_t*>(1);
 }
 
 void Init_MouseTurning()
@@ -267,62 +132,50 @@ void Init_MouseTurning()
 		}
 	}; injector::MakeInline<CameraPositionWriter>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-	// Turning animations
 	// Trigger left turn
-	pattern = hook::pattern("83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 8A 86");
-	ptrAfterTurnLeftAnimHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
-	injector::MakeNOP(pattern.get_first(0), 5);
-	injector::MakeJMP(pattern.get_first(0), TurnLeftAnimHook, true);
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 8A 86");
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyOnCheck_hook, PATCH_CALL);
 
 	// Trigger right turn
-	pattern = hook::pattern("83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
-	ptrAfterTurnRightAnimHook = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
-	injector::MakeNOP(pattern.get_first(0), 5);
-	injector::MakeJMP(pattern.get_first(0), TurnRightAnimHook, true);
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyOnCheck_hook, PATCH_CALL);
 
-	// MotionMove hook 1
-	pattern = hook::pattern("E8 ? ? ? ? 8D 83 ? ? ? ? 50 8D 8D");
-	ptrAfterMotionMoveHook1 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
-	injector::MakeNOP(pattern.get_first(0), 5);
-	injector::MakeJMP(pattern.get_first(0), MotionMoveHook1, true);
-
-	// MotionMove hook 2
-	pattern = hook::pattern("E8 ? ? ? ? 81 A3 ? ? ? ? ? ? ? ? 8B 0D");
-	ptrPSVECAdd = injector::GetBranchDestination(pattern.get_first(0)).as_int();
-	ptrAfterMotionMoveHook2 = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(5);
-	injector::MakeNOP(pattern.get_first(0), 5);
-	injector::MakeJMP(pattern.get_first(0), MotionMoveHook2, true);
-
-	// Actual turning
-	// pl_R1_Turn
-	pattern = hook::pattern("0F B6 86 ? ? ? ? 83 F8 ? 0F 87 ? ? ? ? 53 33 DB FF 24 85 ? ? ? ? 8B 86 ? ? ? ? 8B 88");
-	struct TurnHookStill
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			regs.eax = *(int8_t*)(regs.esi + 0xFE);
-
-			if (isMouseTurnEnabled() && (LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
-				MouseTurn();
-		}
-	}; injector::MakeInline<TurnHookStill>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
-
-	// pl_R1_Turn180
-	pattern = hook::pattern("0F B6 86 ? ? ? ? 33 DB 2B C3 74 ? 48 74 ? 8B 16");
-	injector::MakeInline<TurnHookStill>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
-
-	// Makes it so the full animation is played after mousedelta is past a certain value
+	// pl_R1_Turn (left and right separated) TODO: Combine them?
 	pattern = hook::pattern("A1 ? ? ? ? 83 E0 ? 33 C9 0B C1 75 ? 89 9E");
 	struct pl_R1_Turn_left
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			regs.eax = intMovInputState();
+			// Code we replaced
+			regs.eax = (uint32_t)Key_btn_on();
 
-			if (isMouseTurnEnabled() && (intMouseDeltaX() < -8))
-				regs.eax = 0x8;
+			switch (LastUsedDevice()) {
+			case InputDevices::DinputController:
+			case InputDevices::XinputController:
+				break;
+			case InputDevices::Keyboard:
+			case InputDevices::Mouse:
+				// Get pointer to cModel->MotInfo_1D8
+				MOTION_INFO* mi_ptr = (MOTION_INFO*)(regs.esi + 0x1D8);
 
-			isTurn = true;
+				// Check if default key is being pressed
+				bool isPressingDefaultKey = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT);
+
+				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
+				if (isPressingDefaultKey && (mi_ptr->motionFlags_40 == 4))
+					regs.eax = 0;
+				else if (isMouseTurnEnabled() && (intMouseDeltaX() < -8) && !isPressingDefaultKey)
+				{
+					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
+					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
+					mi_ptr->motionFlags_40 = 4;
+
+					regs.eax = 0x8;
+
+					MouseTurn();
+				}
+				break;
+			}
 		}
 	}; injector::MakeInline<pl_R1_Turn_left>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
@@ -331,14 +184,51 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			regs.eax = intMovInputState();
+			// Code we replaced
+			regs.eax = (uint32_t)Key_btn_on();
 
-			if (isMouseTurnEnabled() && (intMouseDeltaX() > 8))
-				regs.eax = 0x4;
+			switch (LastUsedDevice()) {
+			case InputDevices::DinputController:
+			case InputDevices::XinputController:
+				break;
+			case InputDevices::Keyboard:
+			case InputDevices::Mouse:
+				// Get pointer to cModel->MotInfo_1D8
+				MOTION_INFO* mi_ptr = (MOTION_INFO*)(regs.esi + 0x1D8);
 
-			isTurn = true;
+				// Check if default key is being pressed
+				bool isPressingDefaultKey = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT);
+
+				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
+				if (isPressingDefaultKey && (mi_ptr->motionFlags_40 == 4))
+					regs.eax = 0;
+				else if (isMouseTurnEnabled() && (intMouseDeltaX() > 8) && !isPressingDefaultKey)
+				{
+					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
+					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
+					mi_ptr->motionFlags_40 = 4;
+
+					regs.eax = 0x4;
+
+					MouseTurn();
+				}
+				break;
+			}
 		}
 	}; injector::MakeInline<pl_R1_Turn_right>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+	// pl_R1_Turn180
+	pattern = hook::pattern("0F B6 86 ? ? ? ? 33 DB 2B C3 74 ? 48 74 ? 8B 16");
+	struct TurnHook180
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.eax = *(int8_t*)(regs.esi + 0xFE);
+
+			if (isMouseTurnEnabled() && (LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
+				MouseTurn();
+		}
+	}; injector::MakeInline<TurnHook180>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 	// Walk/Run struct
 	struct TurnHookWalkRun
@@ -385,7 +275,7 @@ void Init_MouseTurning()
 				regs.eax = 0x8;
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-	
+
 	if (pConfig->bUseMouseTurning)
 		spd::log()->info("{} -> MouseTurning enabled", __FUNCTION__);
 }
