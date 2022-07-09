@@ -354,7 +354,7 @@ NeverHideCursor = false
 ; Passes the actual elapsed frametime to the game instead of a fixed 30/60FPS frametime
 ; Should help reduce slowdown in-game when FPS fails to reach the games framerate setting
 ; (experimental, certain things may act strange when using non-fixed frametime, especially audio)
-DisableFixedFrametime = false
+UseDynamicFrametime = false
 
 ; Disables any kind of framelimiting
 ; useful for comparing "true" FPS/frametime when making performance-related changes

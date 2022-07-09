@@ -160,11 +160,11 @@ void FramelimiterHook(uint8_t isAliveEvt_result)
 		// (similar to https://github.com/nipkownix/re4_tweaks/pull/25)
 		// but it's not known how well the game works with values that aren't 0.5 (60fps) or 1 (30fps)
 		// so for now we'll just work pretty much the same as the game itself, unless DisableFixedFrametime is set
-		if (!pConfig->bDisableFixedFrametime)
+		if (!pConfig->bUseDynamicFrametime)
 			timeElapsed = TargetFrametime;
 	}
-	float deltaTime = float((timeElapsed / 1000) * 30.0);
-	GlobalPtr()->deltaTime_70 = deltaTime;
+
+	GlobalPtr()->deltaTime_70 = float((timeElapsed / 1000) * 30.0);
 
 	SetThreadAffinityMask(curThread, prevAffinityMask);
 }
@@ -185,17 +185,11 @@ void Init_DisplayTweaks()
 		pattern = hook::pattern("8D 85 ? ? ? ? 50 FF D3 DF AD ? ? ? ? 8D 8D");
 		framelimiterEnd = pattern.count(1).get(0).get<uint8_t>(0); // 654B0A
 
-		struct CallFramelimiter
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				// al contains result of EventMgr::IsAliveEvt
-				FramelimiterHook(uint8_t(regs.eax));
-			}
-		};
+		Nop(framelimiterStart, framelimiterEnd - framelimiterStart);
 
-		// Inject CallFramelimiter hook and nop rest of old framelimiter code
-		injector::MakeInline<CallFramelimiter>(framelimiterStart, framelimiterEnd);
+		Patch(framelimiterStart, uint8_t(0x50)); // push eax (pass return value of EventMgr::IsAliveEvt)
+		InjectHook(framelimiterStart + 1, FramelimiterHook, PATCH_CALL);
+		Patch(framelimiterStart + 1 + 5, { 0x83, 0xc4, 0x04 }); // add esp, 4 (needed to allow WinMain to exit properly)
 	}
 
 	// Fix broken effects
