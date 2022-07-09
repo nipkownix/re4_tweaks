@@ -178,6 +178,7 @@ enum class AdaCostumes
 {
 	RE2,
 	Spy,
+	RE2_d, // duplicated?
 	Normal
 };
 
