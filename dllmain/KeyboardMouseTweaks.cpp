@@ -180,10 +180,13 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
+				double deltaX = 0;
 				if (pConfig->bUseRawMouseInput)
-					*(int32_t*)(ptrMouseDeltaX) = (int32_t)((pInput->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS());
+					deltaX = (pInput->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS();
 				else
-					*(int32_t*)(ptrMouseDeltaX) = (int32_t)regs.eax;
+					deltaX = double(int(regs.eax));
+
+				*(int32_t*)(ptrMouseDeltaX) = int32_t(deltaX / GlobalPtr()->deltaTime_70);
 			}
 		}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
@@ -196,10 +199,13 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
+				double deltaY = 0;
 				if (pConfig->bUseRawMouseInput)
-					*(int32_t*)(ptrMouseDeltaY) = -(int32_t)((pInput->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
+					deltaY = -((pInput->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
 				else
-					*(int32_t*)(ptrMouseDeltaY) = (int32_t)regs.eax;
+					deltaY = double(int(regs.eax));
+
+				*(int32_t*)(ptrMouseDeltaY) = int32_t(deltaY / GlobalPtr()->deltaTime_70);
 			}
 		}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
