@@ -132,6 +132,7 @@ public:
 	// DEBUG
 	bool bVerboseLog = false;
 	bool bNeverHideCursor = false;
+	bool bDisableFixedFrametime = false;
 	bool bDisableFramelimiting = false;
 
 	bool HasUnsavedChanges = false;

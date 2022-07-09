@@ -79,8 +79,7 @@ BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight,
 
 double FramelimiterFrequency = 0;
 double FramelimiterCurTicks = 0;
-double FramelimiterTargetFrametime = 0;
-bool FramelimiterLoop()
+double FramelimiterLoop(double targetFrametime)
 {
 	// Framelimiter based on FPS_ACCURATE code from
 	// https://github.com/ThirteenAG/d3d9-wrapper/blob/c1480b0c1b40e0ba7b55b8660bd67f911a967421/source/dllmain.cpp#L46
@@ -88,17 +87,17 @@ bool FramelimiterLoop()
 	QueryPerformanceCounter(&counter);
 	double millis_current = (double)counter.QuadPart / FramelimiterFrequency;
 	double millis_delta = millis_current - FramelimiterCurTicks;
-	if (FramelimiterTargetFrametime <= millis_delta)
+	if (targetFrametime <= millis_delta)
 	{
 		FramelimiterCurTicks = millis_current;
-		return true;
+		return millis_delta;
 	}
-	else if (FramelimiterTargetFrametime - millis_delta > 2.0) // > 2ms
+	else if (targetFrametime - millis_delta > 2.0) // > 2ms
 		Sleep(1); // Sleep for ~1ms
 	else
 		Sleep(0); // yield thread's time-slice (does not actually sleep)
 
-	return false;
+	return 0;
 }
 
 void FramelimiterHook(uint8_t isAliveEvt_result)
@@ -126,23 +125,47 @@ void FramelimiterHook(uint8_t isAliveEvt_result)
 
 	int gameFramerate = GameVariableFrameRate();
 
-	FramelimiterTargetFrametime = 1000.0 / (double)gameFramerate;
+	// The games IsAliveEvt check seems to (indirectly) result in framelimiter loop limiting to 60FPS
+	// maybe a remnant of some time when more framerate options were available?
+	if (isAliveEvt_result && gameFramerate != 30)
+		gameFramerate = 60;
 
-	// Game seems to check IsAliveEvt to decide whether to skip framelimiter entirely... kinda weird
-	bool skipFramelimiter = isAliveEvt_result && gameFramerate != 30;
+	double TargetFrametime = 1000.0 / (double)gameFramerate;
+
+	double timeElapsed = 0;
 	if (pConfig->bDisableFramelimiting)
-		skipFramelimiter = true; // todo: update deltaTime_70 with actual frametime elapsed...
+	{
+		// If framelimiter is disabled, we'll have to figure out elapsed time outside of the FramelimiterLoop fn
+		// (allows DisableFixedFrametime to work properly with framelimiting disabled)
+		LARGE_INTEGER counter;
+		QueryPerformanceCounter(&counter);
+		double millis_current = (double)counter.QuadPart / FramelimiterFrequency;
+		timeElapsed = millis_current - FramelimiterCurTicks;
+		FramelimiterCurTicks = millis_current;
+	}
+	else
+		while ((timeElapsed = FramelimiterLoop(TargetFrametime)) == 0);
 
-	if (!skipFramelimiter)
-		while (!FramelimiterLoop());
-
-	// TODO: using the actual time elapsed since last frame instead of FramelimiterTargetFrametime would solve slowdown issues
-	// (similar to https://github.com/nipkownix/re4_tweaks/pull/25)
-	// but it's not known how well the game works with values that aren't 0.5 (60fps) or 1 (30fps)
-	// so for now we'll just work pretty much the same as the game itself
-
-	float deltaTime = float((FramelimiterTargetFrametime / 1000) * 30.0);
+	// Not really sure what the second part of IsAliveEvt check is doing
+	// Seems to skip setting timeElapsed to the fixed FramelimiterTargetFrametime at least
+	// Guess that means the true timeElapsed gets passed to the game? (after being limited to 60 like above)
+	if (isAliveEvt_result && gameFramerate != 30)
+	{
+		if (timeElapsed > 33.333333333333333)
+			timeElapsed = 33.333333333333333;
+	}
+	else
+	{
+		// TODO: using the actual time elapsed since last frame instead of FramelimiterTargetFrametime would solve slowdown issues
+		// (similar to https://github.com/nipkownix/re4_tweaks/pull/25)
+		// but it's not known how well the game works with values that aren't 0.5 (60fps) or 1 (30fps)
+		// so for now we'll just work pretty much the same as the game itself, unless DisableFixedFrametime is set
+		if (!pConfig->bDisableFixedFrametime)
+			timeElapsed = TargetFrametime;
+	}
+	float deltaTime = float((timeElapsed / 1000) * 30.0);
 	GlobalPtr()->deltaTime_70 = deltaTime;
+
 	SetThreadAffinityMask(curThread, prevAffinityMask);
 }
 

@@ -361,6 +361,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	// DEBUG
 	pConfig->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", pConfig->bVerboseLog);
 	pConfig->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", pConfig->bNeverHideCursor);
+	pConfig->bDisableFixedFrametime = iniReader.ReadBoolean("DEBUG", "DisableFixedFrametime", pConfig->bDisableFixedFrametime);
 	pConfig->bDisableFramelimiting = iniReader.ReadBoolean("DEBUG", "DisableFramelimiting", pConfig->bDisableFramelimiting);
 }
 
@@ -703,5 +704,6 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "VerboseLog", pConfig->bVerboseLog ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "NeverHideCursor", pConfig->bNeverHideCursor ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableFramelimiting", pConfig->bDisableFramelimiting ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableFixedFrametime", pConfig->bDisableFixedFrametime ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 }
