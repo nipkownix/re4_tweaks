@@ -3,6 +3,7 @@
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
+#include <timeapi.h>
 
 int g_UserRefreshRate;
 
@@ -76,8 +77,101 @@ BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight,
 	return MoveWindow(hWnd, windowX, windowY, nWidth, nHeight, bRepaint);
 }
 
+double FramelimiterFrequency = 0;
+double FramelimiterCurTicks = 0;
+double FramelimiterTargetFrametime = 0;
+bool FramelimiterLoop()
+{
+	// Framelimiter based on FPS_ACCURATE code from
+	// https://github.com/ThirteenAG/d3d9-wrapper/blob/c1480b0c1b40e0ba7b55b8660bd67f911a967421/source/dllmain.cpp#L46
+	LARGE_INTEGER counter;
+	QueryPerformanceCounter(&counter);
+	double millis_current = (double)counter.QuadPart / FramelimiterFrequency;
+	double millis_delta = millis_current - FramelimiterCurTicks;
+	if (FramelimiterTargetFrametime <= millis_delta)
+	{
+		FramelimiterCurTicks = millis_current;
+		return true;
+	}
+	else if (FramelimiterTargetFrametime - millis_delta > 2.0) // > 2ms
+		Sleep(1); // Sleep for ~1ms
+	else
+		Sleep(0); // yield thread's time-slice (does not actually sleep)
+
+	return false;
+}
+
+void FramelimiterHook(uint8_t isAliveEvt_result)
+{
+	// Change thread to core 0 before running QueryPerformance* funcs, game does this, so guess we should too
+	HANDLE curThread = GetCurrentThread();
+	DWORD_PTR prevAffinityMask = SetThreadAffinityMask(curThread, 0);
+
+	static bool framelimiterInited = false;
+	if (!framelimiterInited)
+	{
+		LARGE_INTEGER result;
+		QueryPerformanceFrequency(&result);
+		FramelimiterFrequency = (double)result.QuadPart / 1000.0;
+
+		QueryPerformanceCounter(&result);
+		FramelimiterCurTicks = (double)result.QuadPart / FramelimiterFrequency;
+
+		typedef MMRESULT(__stdcall* timeBeginPeriod_Fn) (UINT Period);
+		timeBeginPeriod_Fn timeBeginPeriod_actual = (timeBeginPeriod_Fn)GetProcAddress(LoadLibraryA("winmm.dll"), "timeBeginPeriod");
+		timeBeginPeriod_actual(1);
+
+		framelimiterInited = true;
+	}
+
+	int gameFramerate = GameVariableFrameRate();
+
+	FramelimiterTargetFrametime = 1000.0 / (double)gameFramerate;
+
+	// Game seems to check IsAliveEvt to decide whether to skip framelimiter entirely... kinda weird
+	bool skipFramelimiter = isAliveEvt_result && gameFramerate != 30;
+	if (pConfig->bDisableFramelimiting)
+		skipFramelimiter = true; // todo: update deltaTime_70 with actual frametime elapsed...
+
+	if (!skipFramelimiter)
+		while (!FramelimiterLoop());
+
+	// TODO: using the actual time elapsed since last frame instead of FramelimiterTargetFrametime would solve slowdown issues
+	// (similar to https://github.com/nipkownix/re4_tweaks/pull/25)
+	// but it's not known how well the game works with values that aren't 0.5 (60fps) or 1 (30fps)
+	// so for now we'll just work pretty much the same as the game itself
+
+	float deltaTime = float((FramelimiterTargetFrametime / 1000) * 30.0);
+	GlobalPtr()->deltaTime_70 = deltaTime;
+	SetThreadAffinityMask(curThread, prevAffinityMask);
+}
+
 void Init_DisplayTweaks()
 {
+	if (pConfig->bReplaceFramelimiter)
+	{
+		// nop beginning of framelimiter code (sets up thread affinity to 1 core for some reason)
+		auto pattern = hook::pattern("6A 00 FF 15 ? ? ? ? 50 FF D7 8D 8D");
+		Nop(pattern.count(1).get(0).get<uint8_t>(0), 0x16); // 6549C3
+
+		pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 84 C0 74 ? E8 ? ? ? ? 83 F8 1E");
+		uint8_t* framelimiterStart = pattern.count(1).get(0).get<uint8_t>(0xA); // 654A1E
+		pattern = hook::pattern("8D 85 ? ? ? ? 50 FF D3 DF AD ? ? ? ? 8D 8D");
+		uint8_t* framelimiterEnd = pattern.count(1).get(0).get<uint8_t>(0); // 654B0A
+
+		struct CallFramelimiter
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// al contains result of EventMgr::IsAliveEvt
+				FramelimiterHook(uint8_t(regs.eax));
+			}
+		};
+
+		// Inject CallFramelimiter hook and nop rest of old framelimiter code
+		injector::MakeInline<CallFramelimiter>(framelimiterStart, framelimiterEnd);
+	}
+
 	// Fix broken effects
 	Init_FilterXXFixes();
 

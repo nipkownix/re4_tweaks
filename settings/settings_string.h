@@ -26,6 +26,10 @@ Remove16by10BlackBars = false
 ; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
 DisableVsync = false
 
+; Replaces the games 60/30FPS framelimiter with our own version which can reduce CPU usage quite a bit
+; (experimental, not known if the new framelimiter performs the same as the old one yet)
+ReplaceFramelimiter = false
+
 ; Forces game to run at normal 100% DPI scaling, fixes resolution issues for players that have above 100% DPI scaling set.
 FixDPIScale = true
 
@@ -346,4 +350,9 @@ DisableMenuTip = false
 ; Logs extra information.
 VerboseLog = false
 NeverHideCursor = false
+
+; Disables any kind of framelimiting
+; useful for comparing "true" FPS/frametime when making performance-related changes
+; (requires ReplaceFramelimiter = true, recommend DisableVSync too)
+DisableFramelimiting = false
 )"""";
