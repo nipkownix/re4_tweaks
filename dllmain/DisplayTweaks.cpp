@@ -78,29 +78,8 @@ BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight,
 }
 
 double FramelimiterFrequency = 0;
-double FramelimiterCurTicks = 0;
-double FramelimiterLoop(double targetFrametime)
-{
-	// Framelimiter based on FPS_ACCURATE code from
-	// https://github.com/ThirteenAG/d3d9-wrapper/blob/c1480b0c1b40e0ba7b55b8660bd67f911a967421/source/dllmain.cpp#L46
-	LARGE_INTEGER counter;
-	QueryPerformanceCounter(&counter);
-	double millis_current = (double)counter.QuadPart / FramelimiterFrequency;
-	double millis_delta = millis_current - FramelimiterCurTicks;
-	if (targetFrametime <= millis_delta)
-	{
-		FramelimiterCurTicks = millis_current;
-		return millis_delta;
-	}
-	else if (targetFrametime - millis_delta > 2.0) // > 2ms
-		Sleep(1); // Sleep for ~1ms
-	else
-		Sleep(0); // yield thread's time-slice (does not actually sleep)
-
-	return 0;
-}
-
-void FramelimiterHook(uint8_t isAliveEvt_result)
+double FramelimiterPrevTicks = 0;
+void Framelimiter_Hook(uint8_t isAliveEvt_result)
 {
 	// Change thread to core 0 before running QueryPerformance* funcs, game does this, so guess we should too
 	HANDLE curThread = GetCurrentThread();
@@ -114,7 +93,7 @@ void FramelimiterHook(uint8_t isAliveEvt_result)
 		FramelimiterFrequency = (double)result.QuadPart / 1000.0;
 
 		QueryPerformanceCounter(&result);
-		FramelimiterCurTicks = (double)result.QuadPart / FramelimiterFrequency;
+		FramelimiterPrevTicks = (double)result.QuadPart / FramelimiterFrequency;
 
 		typedef MMRESULT(__stdcall* timeBeginPeriod_Fn) (UINT Period);
 		timeBeginPeriod_Fn timeBeginPeriod_actual = (timeBeginPeriod_Fn)GetProcAddress(LoadLibraryA("winmm.dll"), "timeBeginPeriod");
@@ -133,18 +112,27 @@ void FramelimiterHook(uint8_t isAliveEvt_result)
 	double TargetFrametime = 1000.0 / (double)gameFramerate;
 
 	double timeElapsed = 0;
-	if (pConfig->bDisableFramelimiting)
+	double timeCurrent = 0;
+	do
 	{
-		// If framelimiter is disabled, we'll have to figure out elapsed time outside of the FramelimiterLoop fn
-		// (allows UseDynamicFrametime to work properly with framelimiting disabled)
+		// Framelimiter based on FPS_ACCURATE code from
+		// https://github.com/ThirteenAG/d3d9-wrapper/blob/c1480b0c1b40e0ba7b55b8660bd67f911a967421/source/dllmain.cpp#L46
+
 		LARGE_INTEGER counter;
 		QueryPerformanceCounter(&counter);
-		double millis_current = (double)counter.QuadPart / FramelimiterFrequency;
-		timeElapsed = millis_current - FramelimiterCurTicks;
-		FramelimiterCurTicks = millis_current;
+		timeCurrent = (double)counter.QuadPart / FramelimiterFrequency;
+		timeElapsed = timeCurrent - FramelimiterPrevTicks;
+
+		if (TargetFrametime <= timeElapsed || pConfig->bDisableFramelimiting)
+			break;
+		else if (TargetFrametime - timeElapsed > 2.0) // > 2ms
+			Sleep(1); // Sleep for ~1ms
+		else
+			Sleep(0); // yield thread's time-slice (does not actually sleep)
 	}
-	else
-		while ((timeElapsed = FramelimiterLoop(TargetFrametime)) == 0);
+	while (TargetFrametime > timeElapsed);
+
+	FramelimiterPrevTicks = timeCurrent;
 
 	// Not really sure what the second part of IsAliveEvt check is doing
 	// Seems to skip setting timeElapsed to the fixed FramelimiterTargetFrametime at least
@@ -188,7 +176,7 @@ void Init_DisplayTweaks()
 		Nop(framelimiterStart, framelimiterEnd - framelimiterStart);
 
 		Patch(framelimiterStart, uint8_t(0x50)); // push eax (pass return value of EventMgr::IsAliveEvt)
-		InjectHook(framelimiterStart + 1, FramelimiterHook, PATCH_CALL);
+		InjectHook(framelimiterStart + 1, Framelimiter_Hook, PATCH_CALL);
 		Patch(framelimiterStart + 1 + 5, { 0x83, 0xc4, 0x04 }); // add esp, 4 (needed to allow WinMain to exit properly)
 	}
 
