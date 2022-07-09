@@ -173,14 +173,17 @@ void Init_DisplayTweaks()
 {
 	if (pConfig->bReplaceFramelimiter)
 	{
-		// nop beginning of framelimiter code (sets up thread affinity to 1 core for some reason)
-		auto pattern = hook::pattern("6A 00 FF 15 ? ? ? ? 50 FF D7 8D 8D");
-		Nop(pattern.count(1).get(0).get<uint8_t>(0), 0x16); // 6549C3
+		// nop beginning of framelimiter code (sets up thread affinity to core 0)
+		auto pattern = hook::pattern("A3 ? ? ? ? 6A 00 FF 15 ? ? ? ? 50 FF");
+		uint8_t* framelimiterStart = pattern.count(1).get(0).get<uint8_t>(5);
+		pattern = hook::pattern("E8 ? ? ? ? 85 C0 75 ? D9 EE EB ?");
+		uint8_t* framelimiterEnd = pattern.count(1).get(0).get<uint8_t>(0);
+		Nop(framelimiterStart, framelimiterEnd - framelimiterStart); // 6549C3 to 6549D9 (1.1.0)
 
 		pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 84 C0 74 ? E8 ? ? ? ? 83 F8 1E");
-		uint8_t* framelimiterStart = pattern.count(1).get(0).get<uint8_t>(0xA); // 654A1E
+		framelimiterStart = pattern.count(1).get(0).get<uint8_t>(0xA); // 654A1E
 		pattern = hook::pattern("8D 85 ? ? ? ? 50 FF D3 DF AD ? ? ? ? 8D 8D");
-		uint8_t* framelimiterEnd = pattern.count(1).get(0).get<uint8_t>(0); // 654B0A
+		framelimiterEnd = pattern.count(1).get(0).get<uint8_t>(0); // 654B0A
 
 		struct CallFramelimiter
 		{
