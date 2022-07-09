@@ -479,6 +479,23 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
 					}
 
+					// ReplaceFramelimiter
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("ReplaceFramelimiter", &pConfig->bReplaceFramelimiter))
+						{
+							pConfig->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version which can reduce CPU usage quite a bit.");
+						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
+					}
+
 					// FixDPIScale
 					{
 						ImGui_ColumnSwitch();
