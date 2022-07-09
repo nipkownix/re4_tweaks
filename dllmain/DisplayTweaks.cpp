@@ -136,7 +136,7 @@ void FramelimiterHook(uint8_t isAliveEvt_result)
 	if (pConfig->bDisableFramelimiting)
 	{
 		// If framelimiter is disabled, we'll have to figure out elapsed time outside of the FramelimiterLoop fn
-		// (allows DisableFixedFrametime to work properly with framelimiting disabled)
+		// (allows UseDynamicFrametime to work properly with framelimiting disabled)
 		LARGE_INTEGER counter;
 		QueryPerformanceCounter(&counter);
 		double millis_current = (double)counter.QuadPart / FramelimiterFrequency;
@@ -159,7 +159,7 @@ void FramelimiterHook(uint8_t isAliveEvt_result)
 		// TODO: using the actual time elapsed since last frame instead of FramelimiterTargetFrametime would solve slowdown issues
 		// (similar to https://github.com/nipkownix/re4_tweaks/pull/25)
 		// but it's not known how well the game works with values that aren't 0.5 (60fps) or 1 (30fps)
-		// so for now we'll just work pretty much the same as the game itself, unless DisableFixedFrametime is set
+		// so for now we'll just work pretty much the same as the game itself, unless UseDynamicFrametime is set
 		if (!pConfig->bUseDynamicFrametime)
 			timeElapsed = TargetFrametime;
 	}

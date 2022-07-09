@@ -26,7 +26,7 @@ Remove16by10BlackBars = false
 ; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
 DisableVsync = false
 
-; Replaces the games 60/30FPS framelimiter with our own version which can reduce CPU usage quite a bit
+; Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.
 ; (experimental, not known if the new framelimiter performs the same as the old one yet)
 ReplaceFramelimiter = false
 
@@ -351,13 +351,13 @@ DisableMenuTip = false
 VerboseLog = false
 NeverHideCursor = false
 
-; Passes the actual elapsed frametime to the game instead of a fixed 30/60FPS frametime
-; Should help reduce slowdown in-game when FPS fails to reach the games framerate setting
+; Passes the actual elapsed frametime to the game instead of a fixed 30/60FPS frametime.
+; Should help reduce slowdown in-game when FPS fails to reach the games framerate setting.
 ; (experimental, certain things may act strange when using non-fixed frametime, especially audio)
 UseDynamicFrametime = false
 
-; Disables any kind of framelimiting
-; useful for comparing "true" FPS/frametime when making performance-related changes
-; (requires ReplaceFramelimiter = true, recommend DisableVSync too)
+; Disables any kind of framelimiting.
+; Useful for comparing "true" FPS/frametime when making performance-related changes.
+; (requires ReplaceFramelimiter = true, recommend DisableVsync too)
 DisableFramelimiting = false
 )"""";

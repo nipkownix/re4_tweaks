@@ -492,7 +492,7 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version which can reduce CPU usage quite a bit.");
+						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
 						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
 					}
 
