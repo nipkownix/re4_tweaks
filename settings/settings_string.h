@@ -115,7 +115,7 @@ FallbackToEnglishKeyIcons = true
 AllowReloadWithoutAiming = true
 
 ; Don't zoom in when reloading without aiming.
-; Not usually recomended, since the zooming in and out masks somes animation quirks when the reload ends.
+; Not usually recomended, since the zooming in and out masks some animation quirks when the reload ends.
 ReloadWithoutZoom = false
 
 [CONTROLLER]

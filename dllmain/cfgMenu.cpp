@@ -972,7 +972,7 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Don't zoom in when reloading without aiming.");
-						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks somes animation quirks when the reload ends.");
+						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks some animation quirks when the reload ends.");
 
 						bgHeight = ImGui::GetCursorPos().y;
 					}
@@ -1114,7 +1114,7 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Don't zoom in when reloading without aiming.");
-						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks somes animation quirks when the reload ends.");
+						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks some animation quirks when the reload ends.");
 
 						bgHeight = ImGui::GetCursorPos().y;
 					}
@@ -1318,7 +1318,12 @@ void cfgMenuRender()
 						if (ImGui::IsItemEdited())
 						{
 							pConfig->HasUnsavedChanges = true;
-							pConfig->CostumeOverride.Ada = (AdaCostumes)iCostumeComboAda;
+
+							// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
+							if (iCostumeComboAda == 2)
+								pConfig->CostumeOverride.Ada = (AdaCostumes)(iCostumeComboAda + 1);
+							else
+								pConfig->CostumeOverride.Ada = (AdaCostumes)iCostumeComboAda;
 						}
 						ImGui::PopItemWidth();
 						ImGui::EndDisabled();

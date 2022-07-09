@@ -299,17 +299,12 @@ BYTE __stdcall j_PlSetCostume_Hook()
 		GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Leon;
 		GlobalPtr()->Costume_subchar_4FCB = (uint8_t)pConfig->CostumeOverride.Ashley;
 		break;
-	case CharacterID::Ashley:
+	case CharacterID::Ashley: // When playing as Ashley in the castle section
 		// GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ashley; <- Disabled for being very unreliable. Crashed on me many times, and when it didn't Ashley had parts of her body invisible. TODO: Fix this oe day.
 		break;
 	case CharacterID::Ada:
 	{
-		// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-		uint8_t costumeID = (uint8_t)pConfig->CostumeOverride.Ada;
-		if (costumeID == 2)
-			costumeID++;
-
-		GlobalPtr()->plCostume_4FC9 = costumeID;
+		GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ada;
 		break;
 	}
 	default:
@@ -674,7 +669,9 @@ void Init_Misc()
 		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), j_PlSetCostume_Hook);
 
 		// Separate Ways and Assignment Ada don't call PlSetCostume. Instead, the costume is set at titleAda and titleSub.
-		struct AdaCosStruct
+		// titleAda/Separate Ways
+		pattern = hook::pattern("C6 81 ? ? ? ? ? 8B 15 ? ? ? ? 6A ? C6 82 ? ? ? ? ? A1 ? ? ? ? 80 78");
+		struct AdaCosStructSW
 		{
 			void operator()(injector::reg_pack& regs)
 			{
@@ -682,12 +679,7 @@ void Init_Misc()
 					GlobalPtr()->plCostume_4FC9 = (uint8_t)AdaCostumes::Normal;
 				else
 				{
-					// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-					uint8_t costumeID = (uint8_t)pConfig->CostumeOverride.Ada;
-					if (costumeID == 2)
-						costumeID++;
-
-					GlobalPtr()->plCostume_4FC9 = costumeID;
+					GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ada;
 
 					#ifdef VERBOSE
 					con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
@@ -695,15 +687,27 @@ void Init_Misc()
 					#endif
 				}
 			}
-		}; 
-		
-		// titleAda
-		pattern = hook::pattern("C6 81 ? ? ? ? ? 8B 15 ? ? ? ? 6A ? C6 82 ? ? ? ? ? A1 ? ? ? ? 80 78");
-		injector::MakeInline<AdaCosStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+		}; injector::MakeInline<AdaCosStructSW>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
-		// titleSub
+		// titleSub/Assignment Ada
 		pattern = hook::pattern("C6 ? ? ? ? ? ? E8 ? ? ? ? 6A ? 68 ? ? ? ? 6A ? 89 46 ? E8 ? ? ? ? 8B 15");
-		injector::MakeInline<AdaCosStruct>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+		struct AdaCosStructAA
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!pConfig->bOverrideCostumes)
+					GlobalPtr()->plCostume_4FC9 = (uint8_t)AdaCostumes::Spy;
+				else
+				{
+					GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ada;
+
+					#ifdef VERBOSE
+					con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
+					con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+					#endif
+				}
+			}
+		}; injector::MakeInline<AdaCosStructAA>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 		// The Mercenaries also sets costumes using titleSub.
 		pattern = hook::pattern("C6 46 ? ? 88 4E ? E8 ? ? ? ? 6A ? 6A ? 6A ? 6A ? 6A ? 6A ? E8");
