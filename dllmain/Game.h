@@ -523,22 +523,278 @@ struct cPlWep
 };
 static_assert(sizeof(cPlWep) == 0x50, "sizeof(cPlWep)");
 
-struct cPlayer // unsure if correct name!
+class cUnit
 {
-  /* 0x000 */ uint8_t unk0[0x94];
-  /* 0x094 */ float X;
-  /* 0x098 */ float Y;
-  /* 0x09C */ float Z;
-  /* 0x0A0 */ float unkA0;
-  /* 0x0A4 */ float rotation;
-  /* 0x0A8 */ uint8_t unk_A8[0x1D8 - 0xA8];
-  /* 0x1D8 */ MOTION_INFO MotInfo_1D8;
-  /* 0x2A8 */ uint8_t unk_2A8[0x7D8 - 0x2A8];
-  /* 0x7D8 */ cPlWep* plWep_7D8;
-  /* goes to 7F0+ */
+public:
+	uint32_t be_flag_4;
+	cUnit* nextUnit_8;
+
+	virtual ~cUnit() = 0;
+	virtual void beginEvent(uint32_t) = 0;
+	virtual void endEvent(uint32_t) = 0;
+};
+static_assert(sizeof(cUnit) == 0xC, "sizeof(cUnit)");
+
+class cCoord : public cUnit
+{
+public:
+	Mtx mtx_C;
+	Mtx prevMtx_3C;
+	cCoord* parent_6C;
+	Vec field_70;
+	Vec field_7C;
+	Vec field_88;
+	Vec position_94;
+	Vec rotation_A0;
+	Vec scale_AC;
+
+	virtual void matUpdate() = 0;
+};
+static_assert(sizeof(cCoord) == 0xB8, "sizeof(cCoord)");
+
+class cModel;
+
+struct cAtariInfo
+{
+	Vec field_0;
+	float field_C;
+	float field_10;
+	float field_14;
+	int16_t field_18;
+	uint16_t flags_1A;
+	float field_1C;
+	float field_20;
+	int16_t field_24;
+	int16_t field_26;
+	cModel* field_28;
+	float field_2C;
+	uint8_t unk_30[24];
+	cAtariInfo* nextInfo_48;
+};
+static_assert(sizeof(cAtariInfo) == 0x4C, "sizeof(cAtariInfo)");
+
+struct cLightInfo
+{
+	Mtx* field_0;
+	DWORD field_4;
+	DWORD field_8;
+	DWORD field_C;
+	Vec position_10;
+	Vec rotation_1C;
+	Vec scale_28;
+	int32_t field_34;
+	int32_t field_38;
+	int32_t field_3C;
+	int32_t field_40;
+	int32_t field_44;
+	int32_t field_48;
+	int32_t field_4C;
+	uint8_t field_50;
+	uint8_t field_51;
+	uint8_t partNo_52;
+	uint8_t field_53;
+	int32_t field_54;
+	Vec field_58;
+	Vec field_64;
+	float field_70;
+};
+static_assert(sizeof(cLightInfo) == 0x74, "sizeof(cLightInfo)");
+
+class cModel : public cCoord
+{
+public:
+	float field_B8;
+	float field_BC;
+	float field_C0;
+	Mtx mtx_C4;
+	/*cParts* */void* childParts_F4;
+	uint32_t field_F8;
+	uint8_t r_no_0_FC;
+	uint8_t r_no_1_FD;
+	uint8_t r_no_2_FE;
+	uint8_t r_no_3_FF;
+	uint8_t ID_100;
+	uint8_t type_101;
+	uint8_t nParts_102;
+	uint8_t alphaCompareRef_103;
+	Vec speed_104;
+	Vec oldPos_110;
+	Vec field_11C;
+	Vec* field_128;
+	uint8_t unk_12C;
+	uint8_t gxScaleIdx_12D;
+	uint8_t field_12E;
+	uint8_t field_12F;
+	cModel* pCldShMd_130;
+	uint8_t shdCol_134;
+	uint8_t cullMode_135;
+	uint8_t field_136;
+	uint8_t field_137;
+	uint8_t field_138;
+	uint8_t field_139;
+	uint8_t field_13A;
+	uint8_t field_13B;
+	int32_t field_13C;
+	Vec field70_backup_140;
+	int32_t field_14C;
+	int32_t field_150;
+	float deltaTimeRelated_154;
+	float field_158;
+	/*cModelInfo* */ void* pModInfo_15C;
+	/*cModelInfo* */ void* pShMdIfo_160;
+	cLightInfo lightInfo_164;
+	MOTION_INFO MotInfo_1D8;
+	MOTION_INFO* nextMotInfoToBlend_2A8;
+	uint8_t* plMirrorData_2AC;
+	uint32_t* field_2B0;
+	cAtariInfo atariInfo_2B4;
+	int32_t field_300;
+	int32_t field_304;
+	void* fs_tbl_308;
+	int32_t field_30C;
+	int32_t flags_310;
+	int32_t field_314;
+	float field_318;
+	int32_t field_31C;
+	uint8_t field_320;
+	uint8_t field_321;
+	uint8_t field_322;
+	uint8_t field_323;
+
+	virtual void move() = 0;
+	virtual void setNoSuspend(uint32_t) = 0;
+};
+static_assert(sizeof(cModel) == 0x324, "sizeof(cModel)");
+
+struct YARARE_INFO /* yarare: "to suffer damage; to be deceived" */
+{
+	Vec field_0;
+	Vec field_C;
+	float field_18;
+	float field_1C;
+	float field_20;
+	int16_t field_24;
+	int16_t partNo_26;
+	float dmgInfoRelated_28;
+	float field_2C;
+	YARARE_INFO* nextInfo_30;
+};
+
+struct cDmgInfo
+{
+	float field_0;
+	uint8_t field_4;
+	uint8_t field_5;
+	uint8_t wepId_6;
+	uint8_t field_7;
+	Vec field_8;
+	float field_14;
+	YARARE_INFO* yarareInfo_18;
+};
+
+class cEm : public cModel
+{
+public:
+	int16_t HpCur_324;
+	int16_t HpMax_326;
+	cDmgInfo dmgInfo_328;
+	YARARE_INFO yarareInfo_344;
+	float playerDistance_378;
+	float field_37C;
+	void* espDataPtr_380;
+	void* field_384;
+	Vec field_388;
+	char field_394;
+	uint8_t field_395;
+	uint8_t unk_396[2];
+	int(__cdecl* emScenarioFn_398)(cEm*);
+	uint8_t unk_39C[4];
+	uint8_t emSetDie_FlagIdx_3A0;
+	uint8_t field_3A1;
+	uint8_t unk_3A2[2];
+	Vec motionMove2Vec_3A4;
+	Vec field_3B0;
+	float field_3BC;
+	cEm* curInteractingModel_3C0;
+	uint8_t routeCkField_3C4;
+	uint8_t field_3C5[2];
+	uint8_t routeCkField_3C7;
+	uint8_t unk_3C8[1];
+	uint8_t field_3C9;
+	uint8_t unk_3CA[2];
+	uint32_t flags_3CC;
+	uint32_t flags_3D0;
+	float Guard_r_3D4;
+	uint8_t characterNum_3D8;
+	uint8_t field_3D9;
+	uint8_t unk_3DA[4];
+	uint16_t field_3DE;
+	uint16_t field_3E0;
+	uint16_t field_3E2;
+	uint16_t field_3E4;
+	uint8_t unk_3E6[2];
+	uint32_t flags_3E8;
+	Vec field_3EC;
+	Vec field_3F8;
+	int32_t field_404;
+
+	virtual void setItem(int16_t a2, int16_t a3, int16_t a4, int16_t a5, int8_t a6) = 0;
+	virtual void setNoItem() = 0;
+	virtual bool checkThrow() = 0;
+};
+static_assert(sizeof(cEm) == 0x408, "sizeof(cEm)");
+
+class cPlayer : public cEm
+{
+public:
+  uint8_t unk_408[0x7D8 - 0x408];
+  cPlWep* plWep_7D8;
+  uint8_t unk_7DC[0x908 - 0x7DC];
+  /* goes to at least 0x908 */
+
+  virtual void construct2() = 0;
+  virtual int checkXbutton() = 0;
+  virtual int setModel() = 0;
+  virtual void setMotion() = 0;
+  virtual void setRightHand(uint32_t a2) = 0;
+  virtual void setLeftHand(uint32_t a2) = 0;
+  virtual void setFace(uint32_t a2) = 0;
+  virtual void setHead(uint32_t a2, void* a3) = 0;
+  virtual void setHead(DWORD) = 0;
+  virtual void setWound() = 0;
+  virtual void moveMatCalcBefore() = 0;
+  virtual void initCloth() = 0;
+  virtual void moveCloth() = 0;
 };
 #pragma pack(pop)
-static_assert(sizeof(cPlayer) == 0x7DC, "sizeof(cPlayer)"); // TODO: nowhere near the correct size!
+static_assert(sizeof(cPlayer) == 0x908, "sizeof(cPlayer)"); // TODO: need to figure out proper size
+
+template<class T>
+class cManager
+{
+public:
+	T* itemPtr_4;
+	uint32_t itemCount_8;
+	uint32_t itemSize_C;
+	uint8_t unk_10;
+	T* unk_14;
+	uint32_t unk_18;
+
+	T* operator[](uint32_t i)
+	{
+		if (i >= itemCount_8)
+			return nullptr;
+		return (T*)(((uint8_t*)itemPtr_4) + (i * itemSize_C));
+	}
+
+	virtual ~cManager() = 0;
+	virtual void* memAlloc() = 0;
+	virtual void memFree(void* mem) = 0;
+	virtual void memClear(void* mem, size_t size) = 0;
+	virtual void log(int a1, int a2, ...) = 0;
+	virtual void destroy(T* work) = 0;
+	virtual int construct(T* result, uint32_t type) = 0;
+};
 
 struct DatTblEntry
 {
@@ -571,6 +827,7 @@ SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
+cManager<cEm>* EmMgrPtr();
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

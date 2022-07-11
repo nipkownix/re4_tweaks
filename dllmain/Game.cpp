@@ -110,6 +110,12 @@ uint8_t* GameSavePtr()
 	return *g_GameSave_BufPtr;
 }
 
+cManager<cEm>* EmMgr_ptr = nullptr;
+cManager<cEm>* EmMgrPtr()
+{
+	return EmMgr_ptr;
+}
+
 // Original game funcs
 bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
@@ -190,6 +196,10 @@ bool Init_Game()
 	// Pointer to the original KeyOnCheck
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), game_KeyOnCheck_0);
+
+	// pointer to EmMgr (instance of cManager<cEm>)
+	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
+	EmMgr_ptr = *pattern.count(1).get(0).get<cManager<cEm>*>(0xD);
 
 	return true;
 }

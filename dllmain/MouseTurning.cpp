@@ -63,7 +63,7 @@ void MouseTurn()
 	if (GetMouseAimingMode() == MouseAimingModes::Classic)
 		SpeedMulti = 1300;
 
-	PlayerPtr()->rotation += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnSensitivity;
+	PlayerPtr()->rotation_A0.y += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnSensitivity;
 }
 
 bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
