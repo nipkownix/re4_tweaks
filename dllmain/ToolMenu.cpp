@@ -261,6 +261,14 @@ void ToolMenu_Exit()
 
 void ToolMenu_GoldMax()
 {
+	auto& emMgr = *EmMgrPtr();
+	for (uint32_t i = 0; i < emMgr.itemCount_8; i++)
+	{
+		cEm* item = emMgr[i];
+		// TODO: filter based on item->ID_100
+		item->MotInfo_1D8.speed_C0 *= 2;
+	}
+
 	GlobalPtr()->money_4FA8 = 99999999;
 
 	ToolMenu_Exit();
