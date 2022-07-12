@@ -7,6 +7,7 @@
 #include "input.hpp"
 #include "gitparams.h"
 #include "resource.h"
+#include "Trainer.h"
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -88,6 +89,8 @@ void Init_Main()
 		Init_HDProject();
 
 	Init_ExceptionHandler();
+
+	Trainer_Init();
 }
 
 void StorePath(HMODULE hModule)

@@ -136,6 +136,9 @@
     <ClCompile Include="HDProject.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="Trainer.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
@@ -340,6 +343,9 @@
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="dllmain.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="Trainer.h">
       <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>

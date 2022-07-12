@@ -12,6 +12,7 @@
 #include <hashes.h>
 #include "input.hpp"
 #include "resource.h"
+#include "Trainer.h"
 
 EndSceneHook esHook;
 
@@ -278,6 +279,8 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ImGuipInputUpdate();
 
 	ImGui::NewFrame();
+
+	Trainer_Update();
 
 	// Check if the configuration menu binding has been pressed
 	cfgMenuBinding();

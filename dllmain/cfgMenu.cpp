@@ -1654,6 +1654,11 @@ void cfgMenuRender()
 					// cEm list
 					{
 						ImGui_ColumnSwitch();
+
+						bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+						if (ImGui::Checkbox("Invincible", &invincibility))
+							FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), invincibility);
+
 						ImGui::Text("cEmMgr");
 						ImGui::Text("Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
 
@@ -1703,34 +1708,19 @@ void cfgMenuRender()
 
 								ImGui::SameLine();
 
-								// hacky way of restoring atariinfo flags after game has had a chance to run cEmXX::move
-								static uint16_t atariFlagBackup = 0;
-								static bool atariFlagBackupSet = false;
-								if (atariFlagBackupSet)
-								{
-									em->atariInfo_2B4.flags_1A = atariFlagBackup;
-									atariFlagBackupSet = false;
-								}
 								if (ImGui::Button("Paste position"))
 								{
 									em->position_94 = copyPosition;
 									em->oldPos_110 = copyPosition;
 
-									// disable collision, until next frame restores it
-									atariFlagBackup = em->atariInfo_2B4.flags_1A;
-									atariFlagBackupSet = true;
-
-									em->atariInfo_2B4.flags_1A &= ~0x100;
+									// temporarily disable atariInfo collision, prevents colliding with map
+									uint16_t flagBackup = em->atariInfo_2B4.flags_1A;
+									em->atariInfo_2B4.flags_1A = 0;
 
 									em->matUpdate();
-								}
+									em->move();
 
-								static uint16_t playerAtariFlagBackup = 0;
-								static bool playerAtariFlagBackupSet = false;
-								if (playerAtariFlagBackupSet)
-								{
-									PlayerPtr()->atariInfo_2B4.flags_1A = playerAtariFlagBackup;
-									playerAtariFlagBackupSet = false;
+									em->atariInfo_2B4.flags_1A = flagBackup;
 								}
 
 								cPlayer* player = PlayerPtr();
@@ -1741,11 +1731,14 @@ void cfgMenuRender()
 										player->position_94 = em->position_94;
 										player->oldPos_110 = em->position_94;
 
-										playerAtariFlagBackup = player->atariInfo_2B4.flags_1A;
-										playerAtariFlagBackupSet = true;
+										// temporarily disable atariInfo collision, prevents colliding with map
+										uint16_t flagBackup = player->atariInfo_2B4.flags_1A;
+										player->atariInfo_2B4.flags_1A = 0;
 
-										player->atariInfo_2B4.flags_1A &= ~0x100;
 										player->matUpdate();
+										player->move();
+
+										player->atariInfo_2B4.flags_1A = flagBackup;
 									}
 								}
 

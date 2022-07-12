@@ -547,3 +547,12 @@ inline bool FlagIsSet(uint32_t* flagValues, uint32_t flagIndex)
 {
 	return flagValues[(flagIndex / 32)] & (0x80000000 >> (flagIndex & 31));
 }
+
+inline void FlagSet(uint32_t* flagValues, uint32_t flagIndex, bool state)
+{
+	uint32_t flag = (0x80000000 >> (flagIndex & 31));
+	if (state)
+		flagValues[(flagIndex / 32)] |= flag;
+	else
+		flagValues[(flagIndex / 32)] &= ~flag;
+}
