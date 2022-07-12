@@ -1644,6 +1644,12 @@ void cfgMenuRender()
 				{
 					ImGui_ColumnInit();
 
+#ifdef _DEBUG
+					static bool showEmPointers = true;
+#else
+					static bool showEmPointers = false;
+#endif
+
 					auto& emMgr = *EmMgrPtr();
 					// cEm list
 					{
@@ -1659,7 +1665,10 @@ void cfgMenuRender()
 								if (em.IsValid())
 								{
 									char tmpBuf[256];
-									sprintf(tmpBuf, "#%d: %s : type %x : flags %x", i, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
+									if(showEmPointers)
+										sprintf(tmpBuf, "#%d:0x%x c%s (type %x) flags %x", i, (uint32_t)&em, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
+									else
+										sprintf(tmpBuf, "#%d c%s (type %x) flags %x", i, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
 									const bool is_selected = (emIdx == i);
 									if (ImGui::Selectable(tmpBuf, is_selected))
 										emIdx = i;
@@ -1672,6 +1681,8 @@ void cfgMenuRender()
 							}
 							ImGui::EndListBox();
 						}
+
+						ImGui::Checkbox("Show memory addresses", &showEmPointers);
 					}
 
 					// cEm info
@@ -1681,19 +1692,82 @@ void cfgMenuRender()
 						{
 							cEm* em = emMgr[emIdx];
 							{
-								ImGui::Text("cEm #%d (%s : type %x) properties:", emIdx, cEmMgr::EmIdToName(em->ID_100).c_str(), int(em->type_101));
+								if(showEmPointers)
+									ImGui::Text("#%d:0x%x c%s (type %x)", emIdx, em, cEmMgr::EmIdToName(em->ID_100).c_str(), int(em->type_101));
+								else
+									ImGui::Text("#%d c%s (type %x)", emIdx, cEmMgr::EmIdToName(em->ID_100).c_str(), int(em->type_101));
 
-								if (ImGui::BeginListBox("BehaviorFlags"))
+								static Vec copyPosition = { 0 };
+								if (ImGui::Button("Copy position"))
+									copyPosition = em->position_94;
+
+								ImGui::SameLine();
+
+								// hacky way of restoring atariinfo flags after game has had a chance to run cEmXX::move
+								static uint16_t atariFlagBackup = 0;
+								static bool atariFlagBackupSet = false;
+								if (atariFlagBackupSet)
 								{
-									bool bits[32] = { 0 };
+									em->atariInfo_2B4.flags_1A = atariFlagBackup;
+									atariFlagBackupSet = false;
+								}
+								if (ImGui::Button("Paste position"))
+								{
+									em->position_94 = copyPosition;
+									em->oldPos_110 = copyPosition;
+
+									// disable collision, until next frame restores it
+									atariFlagBackup = em->atariInfo_2B4.flags_1A;
+									atariFlagBackupSet = true;
+
+									em->atariInfo_2B4.flags_1A &= ~0x100;
+
+									em->matUpdate();
+								}
+
+								static uint16_t playerAtariFlagBackup = 0;
+								static bool playerAtariFlagBackupSet = false;
+								if (playerAtariFlagBackupSet)
+								{
+									PlayerPtr()->atariInfo_2B4.flags_1A = playerAtariFlagBackup;
+									playerAtariFlagBackupSet = false;
+								}
+
+								cPlayer* player = PlayerPtr();
+								if (em != player)
+								{
+									if (ImGui::Button("Move player to object"))
+									{
+										player->position_94 = em->position_94;
+										player->oldPos_110 = em->position_94;
+
+										playerAtariFlagBackup = player->atariInfo_2B4.flags_1A;
+										playerAtariFlagBackupSet = true;
+
+										player->atariInfo_2B4.flags_1A &= ~0x100;
+										player->matUpdate();
+									}
+								}
+
+								if (ImGui::BeginListBox("Flags"))
+								{
+									bool collisionEnabled = (em->atariInfo_2B4.flags_1A & 0x100) == 0x100;
+									if (ImGui::Checkbox("MapCollision", &collisionEnabled))
+									{
+										if (collisionEnabled)
+											em->atariInfo_2B4.flags_1A |= 0x100;
+										else
+											em->atariInfo_2B4.flags_1A &= ~0x100;
+									}
+
 									for (int i = 0; i < 32; i++)
 									{
-										bits[i] = (em->be_flag_4 & (1 << i)) != 0;
+										bool bitSet = (em->be_flag_4 & (1 << i)) != 0;
 
 										std::string lbl = cUnit::GetBeFlagName(i);
-										if (ImGui::Checkbox(lbl.c_str(), &bits[i]))
+										if (ImGui::Checkbox(lbl.c_str(), &bitSet))
 										{
-											if (bits[i])
+											if (bitSet)
 												em->be_flag_4 = em->be_flag_4 | (1 << i);
 											else
 												em->be_flag_4 = em->be_flag_4 & ~(1 << i);
