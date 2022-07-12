@@ -76,9 +76,9 @@ void SetHotkeyThread(std::string* cfgHotkey)
 	return;
 }
 
-bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4 &activeCol, 
-	const ImVec4 &inactiveCol, MenuTab tabID, const char* icon, const ImColor iconColor,
-	const ImColor textColor, const ImVec2 &size = ImVec2(0, 0))
+bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCol,
+	const ImVec4& inactiveCol, MenuTab tabID, const char* icon, const ImColor iconColor,
+	const ImColor textColor, const ImVec2& size = ImVec2(0, 0))
 {
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
@@ -101,7 +101,7 @@ void ImGui_ItemBG(float RowSize, ImColor bgCol)
 {
 	// Works best when used inside a table
 
-	ImDrawList * drawList = ImGui::GetWindowDrawList();
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	ImVec2 p0 = ImGui::GetCursorScreenPos();
 	float top = ImGui::GetCursorPosY();
 
@@ -112,7 +112,7 @@ void ImGui_ItemSeparator()
 {
 	// ImGui::Separator() doesn't work inside tables?
 
-	ImDrawList * drawList = ImGui::GetWindowDrawList();
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	ImVec2 p0 = ImGui::GetCursorScreenPos();
 
 	drawList->AddLine(ImVec2(p0.x, p0.y), ImVec2(p0.x + ImGui::GetContentRegionAvail().x, p0.y), ImGui::GetColorU32(ImGuiCol_Separator));
@@ -128,11 +128,70 @@ void ImGui_ItemSeparator2()
 	drawList->AddRectFilled(ImVec2(p0.x, p0.y), ImVec2(p0.x + ImGui::GetContentRegionAvail().x, p0.y + 3), ImColor(150, 10, 40));
 }
 
+ImColor itmbgColor = ImColor(25, 20, 20, 166);
+int itemIdx = -1;
+float columnLastY[2] = { 0,0 };
+void ImGui_ColumnInit()
+{
+	itemIdx = -1;
+	columnLastY[0] = columnLastY[1] = 0;
+
+	ImGui::TableNextColumn();
+}
+
+std::vector<float> bgHeightsPerTab[int(MenuTab::NumTabs)]; // item heights, per-tab
+void ImGui_ColumnSwitch()
+{
+	auto& bgHeights = bgHeightsPerTab[int(Tab)];
+	if (itemIdx >= 0)
+	{
+		// Store bgheight of previous item, so we can use it as a BG height.
+		// (ImGui really should have a way to simply get the current row/cell height of a table instead...
+		if (bgHeights.size() > size_t(itemIdx))
+			bgHeights[itemIdx] = ImGui::GetCursorPos().y;
+		else
+			bgHeights.push_back(ImGui::GetCursorPos().y);
+
+		ImGui::Dummy(ImVec2(10, 25));
+		columnLastY[itemIdx % 2] = ImGui::GetCursorPos().y;
+	}
+
+	itemIdx++;
+	ImGui::TableSetColumnIndex(itemIdx % 2);
+
+	if (itemIdx > 1) // 0/1 are first item on column, no need to restore lastY
+		ImGui::SetCursorPosY(columnLastY[itemIdx % 2]);
+
+	float bgHeight = 0;
+	if (bgHeights.size() > size_t(itemIdx))
+		bgHeight = bgHeights[itemIdx];
+	else
+		bgHeight = 0;
+
+	ImGui_ItemBG(bgHeight, itmbgColor);
+}
+
+void ImGui_ColumnFinish()
+{
+	if (itemIdx >= 0)
+	{
+		auto& bgHeights = bgHeightsPerTab[int(Tab)];
+
+		// Store bgheight of previous item
+		if (bgHeights.size() > size_t(itemIdx))
+			bgHeights[itemIdx] = ImGui::GetCursorPos().y;
+		else
+			bgHeights.push_back(ImGui::GetCursorPos().y);
+	}
+
+	ImGui::Dummy(ImVec2(10, 25));
+}
+
 void cfgMenuRender()
 {
 	ImGui::SetNextWindowSizeConstraints(ImVec2(940, 640), ImVec2(1280, 720));
 
-	ImGui::Begin("cfgMenu", nullptr,  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("cfgMenu", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar);
 	{
 		auto pos = ImGui::GetWindowPos();
 		auto draw = ImGui::GetWindowDrawList();
@@ -283,7 +342,7 @@ void cfgMenuRender()
 				// Tips
 				if (pConfig->HasUnsavedChanges)
 				{
-					const char *txt = "You have unsaved changes!";
+					const char* txt = "You have unsaved changes!";
 
 					ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - 35, ImGui::GetContentRegionAvail().y / 2));
 					ImGui::SameLine();
@@ -315,23 +374,15 @@ void cfgMenuRender()
 
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(16.f, 16.f));
 
-			ImColor itmbgColor = ImColor(25, 20, 20, 166);
-
 			if (Tab == MenuTab::Display)
 			{
 				if (ImGui::BeginTable("Display", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// FOVAdditional
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("FOVAdditional", &pConfig->bEnableFOV))
 						{
@@ -355,21 +406,11 @@ void cfgMenuRender()
 
 						if (!pConfig->bEnableFOV)
 							pConfig->fFOVAdditional = 0.0f;
-
-						// Store current pos, so we can use it as a BG height.
-						// (ImGui really should have a way to simply get the current row/cell height of a table instead...
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// Aspect ratio tweaks
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::Spacing();
 						ImGui::TextWrapped("Aspect ratio tweaks");
@@ -416,20 +457,11 @@ void cfgMenuRender()
 							NeedsToRestart = true;
 						}
 						ImGui::TextWrapped("Removes top and bottom black bars that are present when playing in 16:10. Will crop a few pixels from each side of the screen.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// DisableVsync
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("DisableVsync", &pConfig->bDisableVsync))
 						{
@@ -441,20 +473,28 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
+					// ReplaceFramelimiter
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("ReplaceFramelimiter", &pConfig->bReplaceFramelimiter))
+						{
+							pConfig->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
+						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
+					}
 
 					// FixDPIScale
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("FixDPIScale", &pConfig->bFixDPIScale))
 						{
@@ -466,20 +506,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Forces game to run at normal 100%% DPI scaling, fixes resolution issues for players that have above 100%% DPI scaling set.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// FixDisplayMode
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("FixDisplayMode", &pConfig->bFixDisplayMode))
 						{
@@ -516,20 +547,11 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Determines a custom refresh rate for the game to use.");
 						ImGui::TextWrapped("Requires FixDisplayMode to be enabled.");
 						ImGui::TextWrapped("-1 will make it try to use the current refresh rate as reported by Windows.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// OverrideLaserColor
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("OverrideLaserColor", &pConfig->bOverrideLaserColor);
 
@@ -553,20 +575,11 @@ void cfgMenuRender()
 
 						if (!pConfig->bOverrideLaserColor)
 							pConfig->bRainbowLaser = false;
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// RestorePickupTransparency
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RestorePickupTransparency", &pConfig->bRestorePickupTransparency);
 
@@ -574,20 +587,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Restores transparency on the item pickup screeen.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// DisableBrokenFilter03
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DisableBrokenFilter03", &pConfig->bDisableBrokenFilter03);
 
@@ -596,20 +600,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("This filter was originally meant to add an extra glow effect on certain fire sources, but it was broken when the game was ported to the Xbox 360, making the entire image have an orange tint overlay applied to it.");
 						ImGui::TextWrapped("(if you're using the HD Project, you should disable this option)");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// FixBlurryImage
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixBlurryImage", &pConfig->bFixBlurryImage);
 
@@ -617,20 +612,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Fixes a problem related to a vertex buffer that caused the image to be slightly blurred, making the image much sharper and clearer.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// DisableFilmGrain
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DisableFilmGrain", &pConfig->bDisableFilmGrain);
 
@@ -638,20 +624,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Disables the film grain overlay that is present in most sections of the game.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-					
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// EnableGCBlur
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("EnableGCBlur", &pConfig->bEnableGCBlur))
 						{
@@ -663,20 +640,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Restores DoF blurring from the GC version, which was removed/unimplemented in later ports.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// EnableGCScopeBlur
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("EnableGCScopeBlur", &pConfig->bEnableGCScopeBlur))
 						{
@@ -688,20 +656,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Restores outer-scope blurring when using a scope, which was removed/unimplemented in later ports.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// WindowBorderless
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("WindowBorderless", &pConfig->bWindowBorderless))
 						{
@@ -732,32 +691,22 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &pConfig->bRememberWindowPos);
 						ImGui::TextWrapped("Remember the last window position. This automatically updates the \"X Pos\" and \"Y Pos\" values above.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
-			
+
 			if (Tab == MenuTab::Audio)
 			{
 				if (ImGui::BeginTable("Display", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// Audio volume
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::Spacing();
 						ImGui::TextWrapped("Adjust the volume of the game");
@@ -782,29 +731,22 @@ void cfgMenuRender()
 							pConfig->HasUnsavedChanges = true;
 							AudioTweaks_UpdateVolume();
 						}
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
-						
+
 			if (Tab == MenuTab::Mouse)
 			{
 				if (ImGui::BeginTable("Mouse", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// UseMouseTurning
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UseMouseTurning", &pConfig->bUseMouseTurning);
 
@@ -821,19 +763,11 @@ void cfgMenuRender()
 						ImGui::SliderFloat("Sensitivity Slider", &pConfig->fTurnSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// UseRawMouseInput
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UseRawMouseInput", &pConfig->bUseRawMouseInput);
 
@@ -843,20 +777,11 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Makes the game use Raw Input for aiming and turning (if MouseTurning is enabled).");
 						ImGui::TextWrapped("Greatly improves mouse input by removing negative/positive accelerations that were being applied both by the game and by Direct Input.");
 						ImGui::TextWrapped("This option automatically enables the game's \"Modern\" aiming mode, and is incompatible with the \"Classic\" mode.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// DetachCameraFromAim
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DetachCameraFromAim", &pConfig->bDetachCameraFromAim);
 
@@ -866,20 +791,11 @@ void cfgMenuRender()
 						ImGui::TextWrapped("When using the \"Modern\" mouse setting, the game locks the camera position to the aiming position, making both move together.");
 						ImGui::TextWrapped("Although this is the expected behavior in most games, some people might prefer to keep the original camera behavior while also having the benefits from \"Modern\" aiming.");
 						ImGui::TextWrapped("Enabling this will also restore the horizontal aiming sway that was lost when the devs implemented \"Modern\" aiming.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// FixSniperZoom
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixSniperZoom", &pConfig->bFixSniperZoom);
 
@@ -887,20 +803,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Prevents the camera from being randomly displaced after you zoom with a sniper rifle when using keyboard and mouse.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// FixSniperFocus
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("FixSniperFocus", &pConfig->bFixSniperFocus))
 						{
@@ -913,20 +820,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("When zooming in and out with the sniper rifle, this option makes the \"focus\" animation look similar to how it looks like with a controller.");
 						ImGui::TextWrapped("Requires EnableGCBlur to be enabled.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// FixRetryLoadMouseSelector
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixRetryLoadMouseSelector", &pConfig->bFixRetryLoadMouseSelector);
 
@@ -935,13 +833,9 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Prevents the game from overriding your selection in the \"Retry / Load\" screen when moving the mouse before confirming an action.");
 						ImGui::TextWrapped("This bug usually causes people to return to the main menu by mistake, when they actually wanted to just restart from the last checkpoint.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
@@ -950,17 +844,11 @@ void cfgMenuRender()
 			{
 				if (ImGui::BeginTable("Keyboard", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// FallbackToEnglishKeyIcons
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("FallbackToEnglishKeyIcons", &pConfig->bFallbackToEnglishKeyIcons))
 						{
@@ -973,19 +861,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::TextWrapped("Game will turn keys invisible for certain unsupported keyboard languages, enabling this should make game use English keys for unsupported ones instead (requires game restart)");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// AllowReloadWithoutAiming_kbm
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("AllowReloadWithoutAiming", &pConfig->bAllowReloadWithoutAiming_kbm))
 						{
@@ -1007,14 +887,10 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Don't zoom in when reloading without aiming.");
-						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks some animation quirks when the reload ends.");
-
-						bgHeight = ImGui::GetCursorPos().y;
+						ImGui::TextWrapped("Not usually recommended, since the zooming in and out masks some animation quirks when the reload ends.");
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
@@ -1023,17 +899,11 @@ void cfgMenuRender()
 			{
 				if (ImGui::BeginTable("Controller", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// OverrideControllerSensitivity
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("OverrideControllerSensitivity", &pConfig->bOverrideControllerSensitivity);
 
@@ -1052,19 +922,11 @@ void cfgMenuRender()
 
 						if (!pConfig->bOverrideControllerSensitivity)
 							pConfig->fControllerSensitivity = 1.0f;
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// RemoveExtraXinputDeadzone
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RemoveExtraXinputDeadzone", &pConfig->bRemoveExtraXinputDeadzone);
 
@@ -1072,20 +934,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Removes unnecessary deadzones that were added for Xinput controllers.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// EnableDeadzoneOverride
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("EnableDeadzoneOverride", &pConfig->bOverrideXinputDeadzone);
 
@@ -1113,20 +966,11 @@ void cfgMenuRender()
 
 						if (!pConfig->bOverrideXinputDeadzone)
 							pConfig->fXinputDeadzone = 1.0f;
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// AllowReloadWithoutAiming_controller
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AllowReloadWithoutAiming", &pConfig->bAllowReloadWithoutAiming_controller);
 
@@ -1135,7 +979,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Removes the need to be aiming the weapon before you can reload it.");
 						ImGui::TextWrapped("Warning: this will also change the reload button based on your current controller config type, since the original button is used for sprinting when not aiming.");
-						
+
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("New reload button (Xinput):");
 						ImGui::BulletText("Config Type I: B");
@@ -1149,14 +993,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Don't zoom in when reloading without aiming.");
-						ImGui::TextWrapped("Not usually recomended, since the zooming in and out masks some animation quirks when the reload ends.");
+						ImGui::TextWrapped("Not usually recommended, since the zooming in and out masks some animation quirks when the reload ends.");
 
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
@@ -1165,17 +1006,11 @@ void cfgMenuRender()
 			{
 				if (ImGui::BeginTable("Framerate", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// FixFallingItemsSpeed
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixFallingItemsSpeed", &pConfig->bFixFallingItemsSpeed);
 
@@ -1183,19 +1018,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Fixes the speed of falling items in 60 FPS, making them not fall at double speed.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// FixTurningSpeed
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixTurningSpeed", &pConfig->bFixTurningSpeed);
 
@@ -1203,20 +1030,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Fixes speed of backwards turning when using framerates other than 30FPS.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// FixQTE
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixQTE", &pConfig->bFixQTE);
 
@@ -1225,20 +1043,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs.");
 						ImGui::TextWrapped("This fix makes QTEs that involve rapid button presses much more forgiving.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// FixAshleyBustPhysics
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixAshleyBustPhysics", &pConfig->bFixAshleyBustPhysics);
 
@@ -1246,20 +1055,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Fixes difference between 30/60FPS on physics applied to Ashley.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// EnableFastMath
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("EnableFastMath", &pConfig->bEnableFastMath))
 						{
@@ -1272,20 +1072,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Replaces older math functions in the game with much more optimized equivalents.");
 						ImGui::TextWrapped("Experimental, can hopefully improve framerate in some areas that had dips.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// PrecacheModels
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("PrecacheModels", &pConfig->bPrecacheModels);
 
@@ -1296,13 +1087,9 @@ void cfgMenuRender()
 						ImGui::TextWrapped("May help with framerate drops when viewing a model for the first time.");
 						ImGui::TextWrapped("(not fully tested, could cause issues if level has many models to load!)");
 						ImGui::TextWrapped("Changes take effect on next level load.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
@@ -1311,17 +1098,11 @@ void cfgMenuRender()
 			{
 				if (ImGui::BeginTable("Misc", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// OverrideCostumes
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &pConfig->bOverrideCostumes);
 
@@ -1362,19 +1143,11 @@ void cfgMenuRender()
 						}
 						ImGui::PopItemWidth();
 						ImGui::EndDisabled();
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// AshleyJPCameraAngles
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &pConfig->bAshleyJPCameraAngles);
 
@@ -1382,20 +1155,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// ViolenceLevelOverride
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::Text("ViolenceLevelOverride");
 
@@ -1404,7 +1168,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allows overriding the level of violence in the game.");
 						ImGui::TextWrapped("Use -1 to leave as games default, 0 for low-violence mode (as used in JP/GER version), or 2 for full violence.");
-						
+
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::PushItemWidth(100);
 						if (ImGui::InputInt("Violence Level Override", &pConfig->iViolenceLevelOverride))
@@ -1419,20 +1183,11 @@ void cfgMenuRender()
 							NeedsToRestart = true; // unfortunately required as game only reads pSys from savegame during first loading screen...
 						}
 						ImGui::PopItemWidth();
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// AllowSellingHandgunSilencer
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("AllowSellingHandgunSilencer", &pConfig->bAllowSellingHandgunSilencer))
 						{
@@ -1444,20 +1199,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// AllowMafiaLeonCutscenes
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("AllowMafiaLeonCutscenes", &pConfig->bAllowMafiaLeonCutscenes))
 						{
@@ -1469,20 +1215,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allows the game to display Leon's mafia outfit (\"Special 2\") on cutscenes.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// SilenceArmoredAshley
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &pConfig->bSilenceArmoredAshley);
 
@@ -1491,20 +1228,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
 						ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// AllowAshleySuplex
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &pConfig->bAllowAshleySuplex);
 
@@ -1513,20 +1241,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allows Ashley to Suplex enemies in very specific situations.");
 						ImGui::TextWrapped("(previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// AllowMatildaQuickturn
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &pConfig->bAllowMatildaQuickturn);
 
@@ -1535,20 +1254,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
 						ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// FixDitmanGlitch
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &pConfig->bFixDitmanGlitch);
 
@@ -1556,20 +1266,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Fixes the Ditman glitch, which would allow players to increase their walk speed.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// UseSprintToggle
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &pConfig->bUseSprintToggle);
 
@@ -1577,20 +1278,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// DisableQTE
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &pConfig->bDisableQTE);
 
@@ -1598,20 +1290,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// AutomaticMashingQTE
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &pConfig->bAutomaticMashingQTE);
 
@@ -1619,20 +1302,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// SkipIntroLogos
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("SkipIntroLogos", &pConfig->bSkipIntroLogos);
 
@@ -1640,20 +1314,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// EnableDebugMenu
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("EnableDebugMenu", &pConfig->bEnableDebugMenu))
 						{
@@ -1668,13 +1333,9 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Can be opened with the LT+LS button combination (or CTRL+F3 on keyboard by default).");
 						ImGui::TextWrapped("If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.");
 						ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
@@ -1683,17 +1344,11 @@ void cfgMenuRender()
 			{
 				if (ImGui::BeginTable("Memory", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// AllowHighResolutionSFD
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("AllowHighResolutionSFD", &pConfig->bAllowHighResolutionSFD))
 						{
@@ -1706,19 +1361,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.");
 						ImGui::TextWrapped("Not tested beyond 1920x1080.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// RaiseVertexAlloc
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("RaiseVertexAlloc", &pConfig->bRaiseVertexAlloc))
 						{
@@ -1731,20 +1378,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allocate more memory for some vertex buffers.");
 						ImGui::TextWrapped("This prevents a crash that can happen when playing with a high FOV.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// RaiseInventoryAlloc
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						if (ImGui::Checkbox("RaiseInventoryAlloc", &pConfig->bRaiseInventoryAlloc))
 						{
@@ -1756,13 +1394,9 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 			}
@@ -1791,17 +1425,11 @@ void cfgMenuRender()
 
 				if (ImGui::BeginTable("Hotkeys", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
-					float column0_lastY = 0;
-					float column1_lastY = 0;
-
-					ImGui::TableNextColumn();
+					ImGui_ColumnInit();
 
 					// cfgMenu 
 					{
-						ImGui::TableSetColumnIndex(0); // First item on column0, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::TextWrapped("Key combination to open the re4_tweaks config menu");
 						ImGui::Dummy(ImVec2(10, 10));
@@ -1817,19 +1445,11 @@ void cfgMenuRender()
 						ImGui::SameLine();
 
 						ImGui::TextWrapped("Open config menu");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// Console
 					{
-						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::TextWrapped("Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)");
 						ImGui::Dummy(ImVec2(10, 10));
@@ -1845,20 +1465,11 @@ void cfgMenuRender()
 						ImGui::SameLine();
 
 						ImGui::TextWrapped("Open console");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// Inv flip 
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::TextWrapped("Key bindings for flipping items in the inventory screen when using keyboard and mouse.");
 						ImGui::Dummy(ImVec2(10, 10));
@@ -1867,7 +1478,7 @@ void cfgMenuRender()
 						ImGui::Spacing();
 						ImGui::BulletText("Key combinations not supported");
 						ImGui::Spacing();
-						
+
 						if (ImGui::BeginTable("inv flip", 2))
 						{
 							ImGui::TableNextColumn();
@@ -1921,20 +1532,11 @@ void cfgMenuRender()
 
 							ImGui::EndTable();
 						}
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// QTE 
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::TextWrapped("Key bindings for QTE keys when playing with keyboard and mouse.");
 						ImGui::Dummy(ImVec2(10, 10));
@@ -1972,20 +1574,11 @@ void cfgMenuRender()
 
 							ImGui::EndTable();
 						}
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// Debug menu
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::TextWrapped("Key combination to make the \"tool menu\" debug menu appear.");
 						ImGui::Dummy(ImVec2(10, 10));
@@ -2004,20 +1597,11 @@ void cfgMenuRender()
 						ImGui::SameLine();
 
 						ImGui::TextWrapped("Open debug menu");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
 
 					// MouseTurningModifier
 					{
-						ImGui::TableSetColumnIndex(1);
-						ImGui::SetCursorPosY(column1_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::TextWrapped("MouseTurning camera modifier.");
 						ImGui::Dummy(ImVec2(10, 10));
@@ -2036,20 +1620,11 @@ void cfgMenuRender()
 						ImGui::SameLine();
 
 						ImGui::TextWrapped("MouseTurning modifier");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
-
-					ImGui::Dummy(ImVec2(10, 25));
-					column1_lastY = ImGui::GetCursorPos().y;
 
 					// JetSkiTricks 
 					{
-						ImGui::TableSetColumnIndex(0);
-						ImGui::SetCursorPosY(column0_lastY);
-
-						static float bgHeight = 0;
-						ImGui_ItemBG(bgHeight, itmbgColor);
+						ImGui_ColumnSwitch();
 
 						ImGui::TextWrapped("Key combination for jump tricks during Jet-ski sequence (normally RT+LT on controller)");
 						ImGui::Dummy(ImVec2(10, 10));
@@ -2065,13 +1640,9 @@ void cfgMenuRender()
 						ImGui::SameLine();
 
 						ImGui::TextWrapped("Trick while riding Jet-ski");
-
-						bgHeight = ImGui::GetCursorPos().y;
 					}
 
-					ImGui::Dummy(ImVec2(10, 25));
-					column0_lastY = ImGui::GetCursorPos().y;
-
+					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
 				ImGui::PopStyleColor();
