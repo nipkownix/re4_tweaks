@@ -93,6 +93,16 @@ void Trainer_Init()
 		patch_PlGachaMove.SetPatch(PlGachaMove, { 0xC3 });
 		flagPatches.push_back(patch_PlGachaMove);
 	}
+
+	// DBG_EM_WEAK
+	{
+		// LifeDownSet2 patch
+		auto pattern = hook::pattern("0F BF 86 24 03 00 00 3B C7 7D");
+		auto LifeDownSet2_jg = pattern.count(1).get(0).get<uint8_t>(9);
+		FlagPatch patch_LifeDownSet2(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_EM_WEAK));
+		patch_LifeDownSet2.SetPatch(LifeDownSet2_jg, { 0x90, 0x90 });
+		flagPatches.push_back(patch_LifeDownSet2);
+	}
 }
 
 void Trainer_Update()

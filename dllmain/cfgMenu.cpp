@@ -1659,6 +1659,12 @@ void cfgMenuRender()
 						if (ImGui::Checkbox("Invincible", &invincibility))
 							FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), invincibility);
 
+						ImGui::SameLine();
+
+						bool weakEnemies = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_EM_WEAK));
+						if (ImGui::Checkbox("1-Shot Enemies", &weakEnemies))
+							FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_EM_WEAK), weakEnemies);
+
 						ImGui::Text("cEmMgr");
 						ImGui::Text("Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
 
