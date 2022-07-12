@@ -5,6 +5,56 @@
 std::string gameVersion;
 bool gameIsDebugBuild = false;
 
+std::unordered_map<int, std::string> EmNames =
+{
+	{0x00, "Player"},
+	{0x50, "EmObj"},
+	{0x51, "EmDoor"},
+	{0x52, "EmWep"},
+	{0x53, "EmBox"},
+	//0x54 unused?
+	{0x55, "EmRack"},
+	{0x56, "EmWindow"},
+	{0x57, "EmTorch"},
+	{0x58, "EmBarrel"},
+	{0x59, "EmTree"},
+	{0x5A, "EmRock"},
+	{0x5B, "EmSwitch"},
+	{0x5C, "EmItem"},
+	{0x5D, "EmHit"},
+	{0x5E, "EmBarred"},
+	{0x5F, "EmMine"},
+	{0x60, "EmShield"},
+	{0x61, "EmBar"},
+};
+
+// a lot missing from here sadly ;_;
+std::unordered_map<int, std::string> UnitBeFlagNames =
+{
+	{ 0x1, "Alive1" },
+	{ 0x2, "Trans" },
+	{ 0x20, "Move" },
+	{ 0x200, "Alive200" },
+	{ 0x800, "NoSuspend" }
+};
+
+std::string cEmMgr::EmIdToName(int id)
+{
+	if (EmNames.count(id))
+		return EmNames[id];
+	std::stringstream ss;
+	ss << "Em" << std::setfill('0') << std::setw(2) << id;
+	return ss.str();
+}
+
+std::string cUnit::GetBeFlagName(int flagIndex)
+{
+	int flagValue = (1 << flagIndex);
+	if (UnitBeFlagNames.count(flagValue))
+		return UnitBeFlagNames[flagValue];
+	return "Bit" + std::to_string(flagIndex);
+}
+
 std::string GameVersion()
 {
 	return gameVersion;
@@ -110,8 +160,8 @@ uint8_t* GameSavePtr()
 	return *g_GameSave_BufPtr;
 }
 
-cManager<cEm>* EmMgr_ptr = nullptr;
-cManager<cEm>* EmMgrPtr()
+cEmMgr* EmMgr_ptr = nullptr;
+cEmMgr* EmMgrPtr()
 {
 	return EmMgr_ptr;
 }
@@ -199,7 +249,7 @@ bool Init_Game()
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
-	EmMgr_ptr = *pattern.count(1).get(0).get<cManager<cEm>*>(0xD);
+	EmMgr_ptr = *pattern.count(1).get(0).get<cEmMgr*>(0xD);
 
 	return true;
 }

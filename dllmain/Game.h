@@ -532,6 +532,8 @@ public:
 	virtual ~cUnit() = 0;
 	virtual void beginEvent(uint32_t) = 0;
 	virtual void endEvent(uint32_t) = 0;
+
+	static std::string GetBeFlagName(int flagIndex);
 };
 static_assert(sizeof(cUnit) == 0xC, "sizeof(cUnit)");
 
@@ -551,6 +553,34 @@ public:
 	virtual void matUpdate() = 0;
 };
 static_assert(sizeof(cCoord) == 0xB8, "sizeof(cCoord)");
+
+class cParts : public cCoord
+{
+public:
+	Vec field_B8;
+	Mtx mtx_C4;
+	cParts* nextParts_F4;
+	Mtx mat_F8;
+	Vec field_128;
+	Vec field_134;
+	float cloth_Lp_dist_140;
+	float cloth_Rp_dist_144;
+	float cloth_ULp_dist_148;
+	float cloth_unk_dist_14C;
+	Vec field_150;
+	Vec field_15C;
+	Vec field_168;
+	Vec field_174;
+	Vec field_180;
+	Vec field_18C;
+	uint32_t flags_198;
+	uint8_t unk_19C[4];
+	uint16_t field_1A0;
+	uint16_t field_1A2;
+	uint8_t unk_1A4[28];
+	DWORD flags_1C0;
+	uint8_t unk_1C4[20];
+};
 
 class cModel;
 
@@ -607,7 +637,7 @@ public:
 	float field_BC;
 	float field_C0;
 	Mtx mtx_C4;
-	/*cParts* */void* childParts_F4;
+	cParts* childParts_F4;
 	uint32_t field_F8;
 	uint8_t r_no_0_FC;
 	uint8_t r_no_1_FD;
@@ -741,6 +771,24 @@ public:
 	virtual void setItem(int16_t a2, int16_t a3, int16_t a4, int16_t a5, int8_t a6) = 0;
 	virtual void setNoItem() = 0;
 	virtual bool checkThrow() = 0;
+
+	inline bool IsValid()
+	{
+		return (be_flag_4 & 0x601) != 0;
+	}
+
+	int PartCount()
+	{
+		int i = 0;
+		cParts* part = childParts_F4;
+		while (part != nullptr)
+		{
+			i++;
+			part = part->nextParts_F4;
+		}
+		return i;
+	}
+
 };
 static_assert(sizeof(cEm) == 0x408, "sizeof(cEm)");
 
@@ -774,17 +822,21 @@ class cManager
 {
 public:
 	T* itemPtr_4;
-	uint32_t itemCount_8;
+	uint32_t maxItemCount_8;
 	uint32_t itemSize_C;
 	uint8_t unk_10;
 	T* unk_14;
 	uint32_t unk_18;
+	uint32_t itemCount_1C; // TODO: unsure if this is part of cManager or maybe the c*Mgr (cEmMgr etc) classes that inherit it
+
+	T* get(uint32_t i)
+	{
+		return (T*)(((uint8_t*)itemPtr_4) + (i * itemSize_C));
+	}
 
 	T* operator[](uint32_t i)
 	{
-		if (i >= itemCount_8)
-			return nullptr;
-		return (T*)(((uint8_t*)itemPtr_4) + (i * itemSize_C));
+		return get(i);
 	}
 
 	virtual ~cManager() = 0;
@@ -794,6 +846,48 @@ public:
 	virtual void log(int a1, int a2, ...) = 0;
 	virtual void destroy(T* work) = 0;
 	virtual int construct(T* result, uint32_t type) = 0;
+};
+
+// NOTE: valid cEms can be anywhere from itemPtr[0] to itemPtr[maxItemCount], invalid/unused ones can also occur anywhere inside there
+// use cEm::IsValid() to check for validity and skip over invalid cEms if needed
+class cEmMgr : public cManager<cEm>
+{
+public:
+	struct Iterator
+	{
+		using iterator_category = std::forward_iterator_tag;
+		using difference_type = std::ptrdiff_t;
+		using value_type = cEm;
+		using pointer = cEm*;
+		using reference = cEm&;
+
+		Iterator(pointer ptr, int size) : m_ptr(ptr), m_ptr_size(size) {}
+
+		reference operator*() const { return *m_ptr; }
+		pointer operator->() { return m_ptr; }
+		Iterator& operator++() { increment(); return *this; }
+		Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+		friend bool operator== (const Iterator& a, const Iterator& b) { return a.m_ptr == b.m_ptr; };
+		friend bool operator!= (const Iterator& a, const Iterator& b) { return a.m_ptr != b.m_ptr; };
+
+	private:
+		void increment() { m_ptr = (pointer)(((uint8_t*)m_ptr) + m_ptr_size); }
+		pointer m_ptr;
+		pointer m_end_ptr;
+		int m_ptr_size = sizeof(value_type);
+	};
+
+	Iterator begin() { return Iterator(get(0), itemSize_C); }
+	Iterator end() { return Iterator(get(maxItemCount_8), itemSize_C); }
+	int count() { return maxItemCount_8; }
+	int count_valid() { int i = 0; for (auto& em : *this) if (em.IsValid()) i++; return i; }
+
+	cEm* operator[](uint32_t i)
+	{
+		return get(i);
+	}
+
+	static std::string EmIdToName(int id);
 };
 
 struct DatTblEntry
@@ -827,7 +921,7 @@ SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
-cManager<cEm>* EmMgrPtr();
+cEmMgr* EmMgrPtr();
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

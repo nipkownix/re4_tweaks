@@ -28,6 +28,7 @@ enum class MenuTab
 	Misc,
 	Memory,
 	Hotkeys,
+	Trainer,
 	NumTabs,
 };
 
@@ -267,6 +268,11 @@ void cfgMenuRender()
 			// Hotkeys
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
 			ImGui_TabButton("##hotkeys", "Hotkeys", active, inactive, MenuTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
+			ImGui::Spacing();
+
+			// Trainer
+			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
+			ImGui_TabButton("##trainer", "Trainer", active, inactive, MenuTab::Trainer, ICON_FA_SHOE_PRINTS, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
@@ -473,23 +479,6 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
-					}
-
-					// ReplaceFramelimiter
-					{
-						ImGui_ColumnSwitch();
-
-						if (ImGui::Checkbox("ReplaceFramelimiter", &pConfig->bReplaceFramelimiter))
-						{
-							pConfig->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
-						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
 					}
 
 					// FixDPIScale
@@ -1646,6 +1635,141 @@ void cfgMenuRender()
 					ImGui::EndTable();
 				}
 				ImGui::PopStyleColor();
+			}
+
+			if (Tab == MenuTab::Trainer)
+			{
+				static int emIdx = -1;
+				if (ImGui::BeginTable("Trainer", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				{
+					ImGui_ColumnInit();
+
+					auto& emMgr = *EmMgrPtr();
+					// cEm list
+					{
+						ImGui_ColumnSwitch();
+						ImGui::Text("cEmMgr");
+						ImGui::Text("Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
+
+						if (ImGui::BeginListBox("", ImVec2(320,450)))
+						{
+							int i = 0;
+							for (auto& em : emMgr)
+							{
+								if (em.IsValid())
+								{
+									char tmpBuf[256];
+									sprintf(tmpBuf, "#%d: %s : type %x : flags %x", i, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
+									const bool is_selected = (emIdx == i);
+									if (ImGui::Selectable(tmpBuf, is_selected))
+										emIdx = i;
+									// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+									if (is_selected)
+										ImGui::SetItemDefaultFocus();
+								}
+
+								i++;
+							}
+							ImGui::EndListBox();
+						}
+					}
+
+					// cEm info
+					{
+						ImGui_ColumnSwitch();
+						if (emIdx >= 0)
+						{
+							cEm* em = emMgr[emIdx];
+							{
+								ImGui::Text("cEm #%d (%s : type %x) properties:", emIdx, cEmMgr::EmIdToName(em->ID_100).c_str(), int(em->type_101));
+
+								if (ImGui::BeginListBox("BehaviorFlags"))
+								{
+									bool bits[32] = { 0 };
+									for (int i = 0; i < 32; i++)
+									{
+										bits[i] = (em->be_flag_4 & (1 << i)) != 0;
+
+										std::string lbl = cUnit::GetBeFlagName(i);
+										if (ImGui::Checkbox(lbl.c_str(), &bits[i]))
+										{
+											if (bits[i])
+												em->be_flag_4 = em->be_flag_4 | (1 << i);
+											else
+												em->be_flag_4 = em->be_flag_4 & ~(1 << i);
+										}
+									}
+									ImGui::EndListBox();
+								}
+
+								if (ImGui::InputFloat3("Position", (float*)&em->position_94, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+									em->matUpdate();
+
+								if (ImGui::InputFloat3("Rotation", (float*)&em->rotation_A0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+									em->matUpdate();
+
+								if (ImGui::InputFloat3("Scale", (float*)&em->scale_AC, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+									em->matUpdate();
+
+								ImGui::InputFloat("MotInfo.Speed", &em->MotInfo_1D8.speed_C0, 0.1f);
+
+								int hpCur = em->HpCur_324;
+								if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+									em->HpCur_324 = hpCur;
+
+								int hpMax = em->HpMax_326;
+								if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+									em->HpMax_326 = hpMax;
+
+								ImGui::Text("Parts count: %d", em->PartCount());
+
+								ImGui::Dummy(ImVec2(10, 25));
+
+								// works, but unsure what to display atm
+								/*
+								static int partIdx = -1;
+								if (ImGui::BeginListBox("Test"))
+								{
+									int i = 0;
+									cParts* part = em->childParts_F4;
+									while (part != nullptr)
+									{
+										sprintf(tmpBuf, "#%d", i);
+										const bool is_selected = (partIdx == i);
+										if (ImGui::Selectable(tmpBuf, is_selected))
+											partIdx = i;
+										// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+										if (is_selected)
+											ImGui::SetItemDefaultFocus();
+
+										i++;
+										part = part->nextParts_F4;
+									}
+									ImGui::EndListBox();
+								}*/
+
+								ImGui_ItemSeparator();
+
+								ImGui::Dummy(ImVec2(10, 25));
+
+								ImGui::Text("Modification:");
+								static float addPosition[3] = { 0 };
+								ImGui::InputFloat3("PositionChange", addPosition, "%.3f");
+								if (ImGui::Button("Apply"))
+								{
+									em->position_94.x += addPosition[0];
+									em->position_94.y += addPosition[1];
+									em->position_94.z += addPosition[2];
+									em->matUpdate();
+								}
+							}
+						}
+					}
+
+
+					ImGui_ColumnFinish();
+					ImGui::EndTable();
+				}
 			}
 
 			ImGui::PopStyleVar();
