@@ -1711,6 +1711,17 @@ void cfgMenuRender()
 							ImGui::TextWrapped("Makes most enemies die in 1 hit.");
 						}
 
+						// Inf Ammo
+						{
+							ImGui_ColumnSwitch();
+
+							bool infAmmo = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET));
+							if (ImGui::Checkbox("Infinite Ammo", &infAmmo))
+								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET), infAmmo);
+
+							ImGui::TextWrapped("Prevents game from removing bullets after firing.");
+						}
+
 						ImGui_ColumnFinish();
 						ImGui::EndTable();
 					}
@@ -1723,6 +1734,7 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnInit();
 
+						static bool onlyShowValidEms = true;
 #ifdef _DEBUG
 						static bool showEmPointers = true;
 #else
@@ -1741,7 +1753,7 @@ void cfgMenuRender()
 								int i = 0;
 								for (auto& em : emMgr)
 								{
-									if (em.IsValid())
+									if (!onlyShowValidEms || em.IsValid())
 									{
 										char tmpBuf[256];
 										if (showEmPointers)
@@ -1761,7 +1773,8 @@ void cfgMenuRender()
 								ImGui::EndListBox();
 							}
 
-							ImGui::Checkbox("Show memory addresses", &showEmPointers);
+							ImGui::Checkbox("Show addresses", &showEmPointers); ImGui::SameLine();
+							ImGui::Checkbox("Active instances only", &onlyShowValidEms);
 						}
 
 						// cEm info
@@ -1782,25 +1795,33 @@ void cfgMenuRender()
 
 									ImGui::SameLine();
 
+									static uint16_t AtariFlagBackup = 0;
+									static bool AtariFlagBackupSet = false;
+									if (AtariFlagBackupSet)
+									{
+										em->atariInfo_2B4.flags_1A = AtariFlagBackup;
+										AtariFlagBackupSet = false;
+									}
 									if (ImGui::Button("Paste position"))
 									{
 										em->position_94 = copyPosition;
 										em->oldPos_110 = copyPosition;
 
 										// temporarily disable atariInfo collision, prevents colliding with map
-										uint16_t flagBackup = em->atariInfo_2B4.flags_1A;
+										// TODO: some reason using em->move() isn't enough to bypass collision for some Em's
+										// as workaround we let game render another frame and then restore flags above
+										AtariFlagBackup = em->atariInfo_2B4.flags_1A;
+										AtariFlagBackupSet = true;
 										em->atariInfo_2B4.flags_1A = 0;
 
 										em->matUpdate();
 										em->move();
-
-										em->atariInfo_2B4.flags_1A = flagBackup;
 									}
 
 									cPlayer* player = PlayerPtr();
 									if (em != player)
 									{
-										if (ImGui::Button("Move player to object"))
+										if (ImGui::Button("Teleport player"))
 										{
 											player->position_94 = em->position_94;
 											player->oldPos_110 = em->position_94;
@@ -1813,6 +1834,21 @@ void cfgMenuRender()
 											player->move();
 
 											player->atariInfo_2B4.flags_1A = flagBackup;
+										}
+										ImGui::SameLine();
+
+										if (ImGui::Button("Move to player"))
+										{
+											em->position_94 = player->position_94;
+											em->oldPos_110 = player->position_94;
+
+											// temporarily disable atariInfo collision, prevents colliding with map
+											AtariFlagBackup = em->atariInfo_2B4.flags_1A;
+											AtariFlagBackupSet = true;
+											em->atariInfo_2B4.flags_1A = 0;
+
+											em->matUpdate();
+											em->move();
 										}
 									}
 

@@ -103,6 +103,21 @@ void Trainer_Init()
 		patch_LifeDownSet2.SetPatch(LifeDownSet2_jg, { 0x90, 0x90 });
 		flagPatches.push_back(patch_LifeDownSet2);
 	}
+
+	// DBG_INF_BULLET
+	{
+		auto pattern = hook::pattern("0B D1 66 89 57 08");
+		auto cItemMgr__trigger_0_mov = pattern.count(1).get(0).get<uint8_t>(2);
+		FlagPatch patch_cItemMgr__trigger_0(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET));
+		patch_cItemMgr__trigger_0.SetPatch(cItemMgr__trigger_0_mov, { 0x90, 0x90, 0x90, 0x90 });
+		flagPatches.push_back(patch_cItemMgr__trigger_0);
+
+		pattern = hook::pattern("4A 66 89 50 02");
+		auto cItemMgr__dump_0_mov = pattern.count(1).get(0).get<uint8_t>(1);
+		FlagPatch patch_cItemMgr__dump_0(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET));
+		patch_cItemMgr__dump_0.SetPatch(cItemMgr__dump_0_mov, { 0x90, 0x90, 0x90, 0x90 });
+		flagPatches.push_back(patch_cItemMgr__dump_0);
+	}
 }
 
 void Trainer_Update()

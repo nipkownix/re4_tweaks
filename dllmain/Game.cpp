@@ -31,11 +31,16 @@ std::unordered_map<int, std::string> EmNames =
 // a lot missing from here sadly ;_;
 std::unordered_map<int, std::string> UnitBeFlagNames =
 {
-	{ 0x1, "Alive1" },
+	{ 0x1, "Alive" },
 	{ 0x2, "Trans" },
+	{ 0X10, "CastShadow" },
 	{ 0x20, "Move" },
-	{ 0x200, "Alive200" },
-	{ 0x800, "NoSuspend" }
+	//{ 0x200, "Alive200" }, // maybe dead flag? setting it seems to set bit10, which unsets a bunch of flags including Alive
+	{ 0x800, "NoSuspend" },
+	{ 0x4000, "DisableAnimation" },
+	{ 0x8000, "DisableLighting" },
+	{ 0x20000, "UseSimpleLighting" },
+	{ 0x1000000, "ColorCorrectLighting" }, // unsure, seems to adjust lighting color though
 };
 
 std::string cEmMgr::EmIdToName(int id)
