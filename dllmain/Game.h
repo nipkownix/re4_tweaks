@@ -839,27 +839,15 @@ public:
 		return get(i);
 	}
 
-	virtual ~cManager() = 0;
-	virtual void* memAlloc() = 0;
-	virtual void memFree(void* mem) = 0;
-	virtual void memClear(void* mem, size_t size) = 0;
-	virtual void log(int a1, int a2, ...) = 0;
-	virtual void destroy(T* work) = 0;
-	virtual int construct(T* result, uint32_t type) = 0;
-};
-
-// NOTE: valid cEms can be anywhere from itemPtr[0] to itemPtr[maxItemCount], invalid/unused ones can also occur anywhere inside there
-// use cEm::IsValid() to check for validity and skip over invalid cEms if needed
-class cEmMgr : public cManager<cEm>
-{
-public:
+	// iterator is kinda unnecessary.. was going to use it to only iterate through valid items, but found a better way for that instead
+	// the codes already written up now though, not much point in removing it?
 	struct Iterator
 	{
 		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;
-		using value_type = cEm;
-		using pointer = cEm*;
-		using reference = cEm&;
+		using value_type = T;
+		using pointer = T*;
+		using reference = T&;
 
 		Iterator(pointer ptr, int size) : m_ptr(ptr), m_ptr_size(size) {}
 
@@ -880,12 +868,22 @@ public:
 	Iterator begin() { return Iterator(get(0), itemSize_C); }
 	Iterator end() { return Iterator(get(maxItemCount_8), itemSize_C); }
 	int count() { return maxItemCount_8; }
-	int count_valid() { int i = 0; for (auto& em : *this) if (em.IsValid()) i++; return i; }
 
-	cEm* operator[](uint32_t i)
-	{
-		return get(i);
-	}
+	virtual ~cManager() = 0;
+	virtual void* memAlloc() = 0;
+	virtual void memFree(void* mem) = 0;
+	virtual void memClear(void* mem, size_t size) = 0;
+	virtual void log(int a1, int a2, ...) = 0;
+	virtual void destroy(T* work) = 0;
+	virtual int construct(T* result, uint32_t type) = 0;
+};
+
+// NOTE: valid cEms can be anywhere from itemPtr[0] to itemPtr[maxItemCount], invalid/unused ones can also occur anywhere inside there
+// use cEm::IsValid() to check for validity and skip over invalid cEms if needed
+class cEmMgr : public cManager<cEm>
+{
+public:
+	int count_valid() { int i = 0; for (auto& em : *this) if (em.IsValid()) i++; return i; }
 
 	static std::string EmIdToName(int id);
 };

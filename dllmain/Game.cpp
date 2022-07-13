@@ -33,14 +33,22 @@ std::unordered_map<int, std::string> UnitBeFlagNames =
 {
 	{ 0x1, "Alive" },
 	{ 0x2, "Trans" },
-	{ 0X10, "CastShadow" },
+	{ 0x8, "AlternateAmbLightColor" }, // checked by LightSetModel, didn't notice any change
+	{ 0x10, "DrawFootShadow" },
 	{ 0x20, "Move" },
-	//{ 0x200, "Alive200" }, // maybe dead flag? setting it seems to set bit10, which unsets a bunch of flags including Alive
-	{ 0x800, "NoSuspend" },
-	{ 0x4000, "DisableAnimation" },
+	{ 0x200, "Dead" }, // maybe dead flag? setting it seems to set Destruct flag, which unsets a bunch of flags including Alive
+	{ 0x400, "Destruct" }, // checked by cManager<cEm>::dieCheck, calls destructor if set
+	{ 0x800, "NoSuspend" }, // keep running even if suspend game flag is set
+	{ 0x1000, "IgnoreDrawDistance" }, // looks like ModelTrans sets distance to 999999 if set
+	{ 0x2000, "ContiguousParts" }, // optimization? checked by cModel::getPartsPtr
+								   // seems to skip following nextParts_F4 pointers and accesses part by index directly if set
+	{ 0x4000, "DisableAnimation" }, // code for this doesn't actually seem anim/motion related, but anims do get disabled by it...
 	{ 0x8000, "DisableLighting" },
 	{ 0x20000, "UseSimpleLighting" },
-	{ 0x1000000, "ColorCorrectLighting" }, // unsure, seems to adjust lighting color though
+	{ 0x100000, "ClothNoScaleApply" }, // PenClothMove3
+	{ 0x200000, "ClothReset" }, // PenClothMove3
+	{ 0x1000000, "UseGlobalIllumination" }, // unsure, seems to adjust lighting color though
+	//{ 0x8000000, "InvertShadowFlagBit6" }, // commonModelTrans, seems to invert check for flag 0x40 / bit6
 };
 
 std::string cEmMgr::EmIdToName(int id)
