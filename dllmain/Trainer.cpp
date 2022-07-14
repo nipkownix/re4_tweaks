@@ -59,6 +59,13 @@ std::vector<FlagPatch> flagPatches;
 
 void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 {
+	// Game sometimes uses hardcoded stack-based EM_LIST to spawn certain enemies
+	// In those cases, 0xA & 0x1C usually are left untouched, resulting in random stack data being used
+	// To protect against that, we'll only allow param extensions from emData that came from pG->emList_5410
+	GLOBALS* pG = GlobalPtr();
+	if (emData < pG->emList_5410 || emData >= &pG->emList_5410[256])
+		return;
+
 	if (emData->useExtendedParams_A != 1)
 		return;
 
@@ -74,7 +81,7 @@ void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 		{
 			// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
 			// make sure we update that as well
-			Vec* scale_bk_498 = (Vec*)(((uint8_t*)em) + 0x498);
+			Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
 			*scale_bk_498 = em->scale_AC;
 		}
 	}

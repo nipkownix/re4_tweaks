@@ -1897,7 +1897,7 @@ void cfgMenuRender()
 										{
 											// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
 											// make sure we update that as well
-											Vec* scale_bk_498 = (Vec*)(((uint8_t*)em) + 0x498);
+											Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
 											*scale_bk_498 = em->scale_AC;
 										}
 										em->matUpdate();
@@ -1915,7 +1915,7 @@ void cfgMenuRender()
 
 									ImGui::Text("Parts count: %d", em->PartCount());
 									if (em->emListIndex_3A0 != 255)
-										ImGui::Text("ESL index: %d (offset 0x%x)", int(em->emListIndex_3A0), int(em->emListIndex_3A0) * 0x20);
+										ImGui::Text("ESL: %s @ #%d (offset 0x%x)", getEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
 
 									ImGui::Dummy(ImVec2(10, 25));
 

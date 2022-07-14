@@ -314,7 +314,7 @@ struct __declspec(align(4)) GLOBALS
   uint8_t field_4FAF;
   uint16_t prevRoomId_4FB0;
   uint8_t field_4FB2;
-  uint8_t field_4FB3;
+  char curEmListNumber_4FB3;
   uint16_t playerHp_4FB4;
   uint16_t playerHpFull_4FB6;
   int16_t ashleyHp_4FB8;
@@ -929,6 +929,7 @@ uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 
 bool IsGanado(int id); // same as games IsGanado func
+const char* getEmListName(int emListNumber);
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0
