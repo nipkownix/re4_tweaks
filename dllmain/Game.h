@@ -197,7 +197,7 @@ struct EM_LIST
   char set_3;
   uint32_t em_flag_4;
   int16_t hp_8;
-  uint8_t gapA;
+  uint8_t useExtendedParams_A; // normally unused, if set to 1 then our hooks in Trainer.cpp will read from percentage vars below
   char charaId_B;
   int16_t posX_C;
   int16_t posY_E;
@@ -927,6 +927,8 @@ cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
+
+bool IsGanado(int id); // same as games IsGanado func
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

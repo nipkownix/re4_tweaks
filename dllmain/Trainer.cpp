@@ -57,21 +57,10 @@ struct FlagPatch
 
 std::vector<FlagPatch> flagPatches;
 
-bool IsGanado(int id) // same as games IsGanado func
-{
-	if (id == 0x4B || id == 0x4E)
-		return 0;
-	if ((unsigned int)(id - 0x40) <= 0xF)
-		return 1;
-	if (id < 0x10)
-		return 0;
-	return id <= 0x20;
-}
-
 void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 {
-	//emData->percentageMotionSpeed_1C = 400;
-	//emData->percentageScale_1E = 400;
+	if (emData->useExtendedParams_A != 1)
+		return;
 
 	if (emData->percentageMotionSpeed_1C)
 		em->MotInfo_1D8.speed_C0 = float(double(emData->percentageMotionSpeed_1C) / 100.0f);

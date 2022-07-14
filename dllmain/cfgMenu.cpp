@@ -1892,7 +1892,16 @@ void cfgMenuRender()
 										em->matUpdate();
 
 									if (ImGui::InputFloat3("Scale", (float*)&em->scale_AC, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+									{
+										if (IsGanado(em->ID_100))
+										{
+											// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
+											// make sure we update that as well
+											Vec* scale_bk_498 = (Vec*)(((uint8_t*)em) + 0x498);
+											*scale_bk_498 = em->scale_AC;
+										}
 										em->matUpdate();
+									}
 
 									ImGui::InputFloat("MotInfo.Speed", &em->MotInfo_1D8.speed_C0, 0.1f);
 
