@@ -1735,6 +1735,7 @@ void cfgMenuRender()
 						ImGui_ColumnInit();
 
 						static bool onlyShowValidEms = true;
+						static bool onlyShowESLSpawned = false;
 #ifdef _DEBUG
 						static bool showEmPointers = true;
 #else
@@ -1747,6 +1748,8 @@ void cfgMenuRender()
 							ImGui_ColumnSwitch();
 
 							ImGui::Text("Em Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
+							ImGui::SameLine();
+							ImGui::Checkbox("ESL-spawned only", &onlyShowESLSpawned);
 
 							if (ImGui::BeginListBox("", ImVec2(320, 420)))
 							{
@@ -1755,17 +1758,20 @@ void cfgMenuRender()
 								{
 									if (!onlyShowValidEms || em.IsValid())
 									{
-										char tmpBuf[256];
-										if (showEmPointers)
-											sprintf(tmpBuf, "#%d:0x%x c%s (type %x) flags %x", i, (uint32_t)&em, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
-										else
-											sprintf(tmpBuf, "#%d c%s (type %x) flags %x", i, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
-										const bool is_selected = (emIdx == i);
-										if (ImGui::Selectable(tmpBuf, is_selected))
-											emIdx = i;
-										// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-										if (is_selected)
-											ImGui::SetItemDefaultFocus();
+										if (!onlyShowESLSpawned || em.IsSpawnedByESL())
+										{
+											char tmpBuf[256];
+											if (showEmPointers)
+												sprintf(tmpBuf, "#%d:0x%x c%s (type %x) flags %x", i, (uint32_t)&em, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
+											else
+												sprintf(tmpBuf, "#%d c%s (type %x) flags %x", i, cEmMgr::EmIdToName(em.ID_100).c_str(), int(em.type_101), int(em.be_flag_4));
+											const bool is_selected = (emIdx == i);
+											if (ImGui::Selectable(tmpBuf, is_selected))
+												emIdx = i;
+											// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+											if (is_selected)
+												ImGui::SetItemDefaultFocus();
+										}
 									}
 
 									i++;
@@ -1899,6 +1905,8 @@ void cfgMenuRender()
 										em->HpMax_326 = hpMax;
 
 									ImGui::Text("Parts count: %d", em->PartCount());
+									if (em->emListIndex_3A0 != 255)
+										ImGui::Text("ESL index: %d (offset 0x%x)", int(em->emListIndex_3A0), int(em->emListIndex_3A0) * 0x20);
 
 									ImGui::Dummy(ImVec2(10, 25));
 

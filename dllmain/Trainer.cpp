@@ -57,11 +57,93 @@ struct FlagPatch
 
 std::vector<FlagPatch> flagPatches;
 
+bool IsGanado(int id) // same as games IsGanado func
+{
+	if (id == 0x4B || id == 0x4E)
+		return 0;
+	if ((unsigned int)(id - 0x40) <= 0xF)
+		return 1;
+	if (id < 0x10)
+		return 0;
+	return id <= 0x20;
+}
+
+void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
+{
+	//emData->percentageMotionSpeed_1C = 400;
+	//emData->percentageScale_1E = 400;
+
+	if (emData->percentageMotionSpeed_1C)
+		em->MotInfo_1D8.speed_C0 = float(double(emData->percentageMotionSpeed_1C) / 100.0f);
+
+	if (emData->percentageScale_1E)
+	{
+		auto scalePercent = float(double(emData->percentageScale_1E) / 100.0f);
+		em->scale_AC.x = em->scale_AC.y = em->scale_AC.z = scalePercent;
+
+		if (IsGanado(em->ID_100))
+		{
+			// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
+			// make sure we update that as well
+			Vec* scale_bk_498 = (Vec*)(((uint8_t*)em) + 0x498);
+			*scale_bk_498 = em->scale_AC;
+		}
+	}
+}
+
+cEm* (__cdecl* EmSetEvent)(EM_LIST* emData);
+cEm* __cdecl EmSetEvent_Hook(EM_LIST* emData)
+{
+	cEm* result = EmSetEvent(emData);
+	// TODO: check if result == errEm
+
+	SetEmListParamExtensions(result, emData);
+	return result;
+}
+
+cEm* (__cdecl* EmSetFromList2)(unsigned int em_list_no, int a2);
+cEm* __cdecl EmSetFromList2_Hook(unsigned int em_list_no, int a2)
+{
+	cEm* result = EmSetFromList2(em_list_no, a2);
+	SetEmListParamExtensions(result, &GlobalPtr()->emList_5410[em_list_no]);
+
+	return result;
+}
+
+void __fastcall EmSetFromList_Hook(cEm* em, uint32_t unused)
+{
+	SetEmListParamExtensions(em, &GlobalPtr()->emList_5410[em->emListIndex_3A0]);
+	em->move(); // code we patched to jump here
+}
+
+void __declspec(naked) EmSetFromList_Hook_Trampoline()
+{
+	__asm
+	{
+		mov ecx, eax
+		jmp EmSetFromList_Hook
+	}
+}
+
 void Trainer_Init()
 {
 	GLOBALS* globals = GlobalPtr();
 	if (!globals)
 		return;
+
+	auto pattern = hook::pattern("52 66 89 45 E4 66 89 4D F6 E8");
+	auto EmSetEvent_thunk = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(9)).as_int();
+	ReadCall(EmSetEvent_thunk, EmSetEvent);
+	InjectHook(EmSetEvent_thunk, EmSetEvent_Hook, PATCH_JUMP);
+
+	pattern = hook::pattern("6A 01 6A 32 E8 ? ? ? ? 83 C4 20");
+	auto EmSetFromList2_thunk = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(4)).as_int();
+	ReadCall(EmSetFromList2_thunk, EmSetFromList2);
+	InjectHook(EmSetFromList2_thunk, EmSetFromList2_Hook, PATCH_JUMP);
+
+	pattern = hook::pattern("D9 98 7C 03 00 00 8B 42 10");
+	auto EmSetFromList_mov = pattern.count(1).get(0).get<uint8_t>(6);
+	InjectHook(EmSetFromList_mov, EmSetFromList_Hook_Trampoline, PATCH_CALL);
 
 	// DBG_PL_NOHIT
 	{

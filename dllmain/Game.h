@@ -207,7 +207,9 @@ struct EM_LIST
   int16_t rotZ_16;
   int16_t roomId_18;
   int16_t guardRadius_1A;
-  uint8_t gap1C[4];
+  // add some new fields inside normally unused padding, gets read by our Em* hooks in Trainer.cpp
+  uint16_t percentageMotionSpeed_1C;
+  uint16_t percentageScale_1E;
 };
 static_assert(sizeof(EM_LIST) == 0x20, "sizeof(EM_LIST)"); // TODO: find if this size is correct
 
@@ -739,7 +741,7 @@ public:
 	uint8_t unk_396[2];
 	int(__cdecl* emScenarioFn_398)(cEm*);
 	uint8_t unk_39C[4];
-	uint8_t emSetDie_FlagIdx_3A0;
+	uint8_t emListIndex_3A0;
 	uint8_t field_3A1;
 	uint8_t unk_3A2[2];
 	Vec motionMove2Vec_3A4;
@@ -775,6 +777,11 @@ public:
 	inline bool IsValid()
 	{
 		return (be_flag_4 & 0x601) != 0;
+	}
+
+	inline bool IsSpawnedByESL()
+	{
+		return IsValid() && emListIndex_3A0 != 255;
 	}
 
 	int PartCount()

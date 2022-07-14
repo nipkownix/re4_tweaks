@@ -33,7 +33,7 @@ std::unordered_map<int, std::string> UnitBeFlagNames =
 {
 	{ 0x1, "Alive" },
 	{ 0x2, "Trans" },
-	{ 0x8, "AlternateAmbLightColor" }, // checked by LightSetModel, didn't notice any change
+	{ 0x8, "AltAmbientLightColor" }, // checked by LightSetModel, didn't notice any change
 	{ 0x10, "DrawFootShadow" },
 	{ 0x20, "Move" },
 	{ 0x200, "Dead" }, // maybe dead flag? setting it seems to set Destruct flag, which unsets a bunch of flags including Alive
@@ -47,7 +47,7 @@ std::unordered_map<int, std::string> UnitBeFlagNames =
 	{ 0x20000, "UseSimpleLighting" },
 	{ 0x100000, "ClothNoScaleApply" }, // PenClothMove3
 	{ 0x200000, "ClothReset" }, // PenClothMove3
-	{ 0x1000000, "UseGlobalIllumination" }, // unsure, seems to adjust lighting color though
+	{ 0x1000000, "ApplyGlobalIllumination" }, // unsure, seems to adjust lighting color though
 	//{ 0x8000000, "InvertShadowFlagBit6" }, // commonModelTrans, seems to invert check for flag 0x40 / bit6
 };
 
