@@ -186,6 +186,8 @@ void Init_KeyboardMouseTweaks()
 				else
 					deltaX = double(int(regs.eax));
 
+				deltaX = deltaX * 0.5; // halve delta value to make it match the slower 60FPS speed that most people are used to
+
 				*(int32_t*)(ptrMouseDeltaX) = int32_t(deltaX / GlobalPtr()->deltaTime_70);
 			}
 		}; injector::MakeInline<MouseDeltaX>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -204,6 +206,8 @@ void Init_KeyboardMouseTweaks()
 					deltaY = -((pInput->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
 				else
 					deltaY = double(int(regs.eax));
+
+				deltaY = deltaY * 0.5; // halve delta value to make it match the slower 60FPS speed that most people are used to
 
 				*(int32_t*)(ptrMouseDeltaY) = int32_t(deltaY / GlobalPtr()->deltaTime_70);
 			}
