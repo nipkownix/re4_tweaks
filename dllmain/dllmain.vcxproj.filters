@@ -37,7 +37,7 @@
     <ClCompile Include="FilterXXFixes.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="UltrawideFix.cpp">
+    <ClCompile Include="AspectRatioTweaks.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\imgui.cpp">

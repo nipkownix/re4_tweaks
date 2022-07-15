@@ -84,9 +84,8 @@ void Init_DisplayTweaks()
 	// Install a D3D9 hook
 	Init_D3D9Hook();
 
-	// Fix aspect ratio when playing in ultra-wide. Only 21:9 was tested.
-	if (pConfig->bFixUltraWideAspectRatio)
-		Init_UltraWideFix();
+	// Aspect ratio-related tweaks
+	Init_AspectRatioTweaks();
 
 	// Hook function that loads the FOV
 	{

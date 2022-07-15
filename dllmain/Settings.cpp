@@ -133,7 +133,12 @@ void Config::ReadSettings(std::string_view ini_path)
 	else
 		pConfig->bEnableFOV = false;
 
-	pConfig->bFixUltraWideAspectRatio = iniReader.ReadBoolean("DISPLAY", "FixUltraWideAspectRatio", pConfig->bFixUltraWideAspectRatio);
+	pConfig->bUltraWideAspectSupport = iniReader.ReadBoolean("DISPLAY", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport);
+	pConfig->bSideAlignHUD = iniReader.ReadBoolean("DISPLAY", "SideAlignHUD", pConfig->bSideAlignHUD);
+	pConfig->bStretchFullscreenImages = iniReader.ReadBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
+	pConfig->bStretchVideos = iniReader.ReadBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
+	pConfig->bRemove16by10BlackBars = iniReader.ReadBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
+
 	pConfig->bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
 	pConfig->bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
 	pConfig->bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
@@ -350,7 +355,13 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 	// DISPLAY
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", pConfig->fFOVAdditional);
-	iniReader.WriteBoolean("DISPLAY", "FixUltraWideAspectRatio", pConfig->bFixUltraWideAspectRatio);
+
+	iniReader.WriteBoolean("DISPLAY", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport);
+	iniReader.WriteBoolean("DISPLAY", "SideAlignHUD", pConfig->bSideAlignHUD);
+	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
+	iniReader.WriteBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
+	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
+	
 	iniReader.WriteBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
 	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
@@ -472,7 +483,11 @@ void Config::LogSettings()
 	// DISPLAY
 	spd::log()->info("+ DISPLAY------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "FOVAdditional", pConfig->fFOVAdditional);
-	spd::log()->info("| {:<30} | {:>15} |", "FixUltraWideAspectRatio", pConfig->bFixUltraWideAspectRatio ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SideAlignHUD", pConfig->bSideAlignHUD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "StretchFullscreenImages", pConfig->bStretchFullscreenImages ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "StretchVideos", pConfig->bStretchVideos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableVsync", pConfig->bDisableVsync ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", pConfig->bFixDPIScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", pConfig->bFixDisplayMode ? "true" : "false");

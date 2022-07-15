@@ -364,23 +364,46 @@ void cfgMenuRender()
 					ImGui::Dummy(ImVec2(10, 25));
 					column0_lastY = ImGui::GetCursorPos().y;
 
-					// FixUltraWideAspectRatio
+					// Aspect ratio tweaks
 					{
 						ImGui::TableSetColumnIndex(1); // First item on column1, no need to restore lastY
 
 						static float bgHeight = 0;
 						ImGui_ItemBG(bgHeight, itmbgColor);
 
-						if (ImGui::Checkbox("FixUltraWideAspectRatio", &pConfig->bFixUltraWideAspectRatio))
-						{
-							pConfig->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
+						ImGui::Spacing();
+						ImGui::TextWrapped("Aspect ratio tweaks");
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::TextWrapped("Fixes the incorrect aspect ratio when playing in ultrawide resolutions, preventing the image from being cut off and the HUD appearing off-screen. Only tested in 21:9.");
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UltraWideAspectSupport", &pConfig->bUltraWideAspectSupport);
+						ImGui::TextWrapped("Fixes the incorrect aspect ratio when playing in ultrawide resolutions, preventing the image from being cut off and the HUD appearing off-screen.");
+
+						ImGui::Dummy(ImVec2(10, 10));
+
+						ImGui::BeginDisabled(!pConfig->bUltraWideAspectSupport);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("SideAlignHUD", &pConfig->bSideAlignHUD);
+						ImGui::TextWrapped("Moves the HUD to the right side of the screen. (Requires restart or game load to take effect!)");
+
+						ImGui::Spacing();
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("StretchFullscreenImages", &pConfig->bStretchFullscreenImages);
+						ImGui::TextWrapped("Streches some images to fit the screen, such as the images shown when reading \"Files\".");
+
+						ImGui::Spacing();
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("StretchVideos", &pConfig->bStretchVideos);
+						ImGui::TextWrapped("Streches pre-rendered videos to fit the screen.");
+						ImGui::EndDisabled();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui_ItemSeparator2();
+						ImGui::Dummy(ImVec2(10, 10));
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("Remove16by10BlackBars", &pConfig->bRemove16by10BlackBars);
+						ImGui::TextWrapped("Removes top and bottom black bars that are present when playing in 16:10. Will crop a few pixels from each side of the screen.");
 
 						bgHeight = ImGui::GetCursorPos().y;
 					}

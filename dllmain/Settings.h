@@ -9,7 +9,11 @@ public:
 	// DISPLAY
 	float fFOVAdditional = 0.0f;
 	bool bEnableFOV = false;
-	bool bFixUltraWideAspectRatio = true;
+	bool bUltraWideAspectSupport = true;
+	bool bSideAlignHUD = true;
+	bool bStretchFullscreenImages = false;
+	bool bStretchVideos = false;
+	bool bRemove16by10BlackBars = true;
 	bool bDisableVsync = false;
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
@@ -120,6 +124,13 @@ public:
 	bool bNeverHideCursor = false;
 
 	bool HasUnsavedChanges = false;
+
+	float fdbg1 = 1.0f;
+	float fdbg2 = 1.0f;
+	float fdbg3 = 1.0f;
+	float fdbg4 = 1.0f;
+	float fdbg5 = 1.0f;
+	float fdbg6 = 1.0f;
 
 	void ReadSettings();
 	void ReadSettings(std::string_view ini_path);

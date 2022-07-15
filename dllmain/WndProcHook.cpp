@@ -10,6 +10,8 @@ HWND hWindow;
 
 static uint32_t* ptrMouseDeltaX;
 
+bool bIsMoving;
+
 int curPosX;
 int curPosY;
 
@@ -19,6 +21,9 @@ void EnableClipCursor(HWND window)
 		return;
 
 	if (window != GetForegroundWindow())
+		return;
+
+	if (bIsMoving)
 		return;
 
 	RECT rect;
@@ -99,8 +104,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			curPosY = (int)(short)HIWORD(lParam);   // vertical position 
 			break;
 
+		case WM_ENTERSIZEMOVE:
+			bIsMoving = true;
+			break;
+
 		case WM_EXITSIZEMOVE:
+			bIsMoving = false;
+
 			EnableClipCursor(hWindow);
+
 			if (pConfig->bRememberWindowPos)
 			{
 				// Write new window position

@@ -6,8 +6,22 @@ FOVAdditional = 0.0
 
 ; Fixes the incorrect aspect ratio when playing in ultrawide resolutions, 
 ; preventing the image from being cut off and the HUD appearing off-screen.
-; Only tested in 21:9.
-FixUltraWideAspectRatio = true
+UltraWideAspectSupport = true
+
+; Moves the HUD to the right side of the screen when when playing in ultrawide.
+SideAlignHUD = true
+
+; Streches some images to fit the screen, such as the images shown when reading "Files".
+; Only relevant if playing in ultrawide or if Remove16by10BlackBars is enabled.
+StretchFullscreenImages = false
+
+; Streches pre-rendered videos to fit the screen.
+; Only relevant if playing in ultrawide or if Remove16by10BlackBars is enabled.
+StretchVideos = false
+
+; Removes top and bottom black bars that are present when playing in 16:10.
+; Will crop a few pixels from each side of the screen.
+Remove16by10BlackBars = false
 
 ; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
 DisableVsync = false
