@@ -112,7 +112,7 @@ uint8_t* GameSavePtr()
 
 // Original game funcs
 bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
-void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float unk1, float unk2);
+void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
 
 bool Init_Game()
 {

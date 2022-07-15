@@ -13,68 +13,78 @@ float fDefaultAspectRatio = 1.333333373f;
 float fDefaultEsp18Height = 0.375f;
 float fDefaultHudPosX = 217.0f;
 
+double fDefaultMapIconsPos = 320.0;
+double fNewMapIconsPos;
+
 float fGameWidth;
 float fGameHeight;
 float fGameDisplayAspectRatio;
 
-static uint32_t* ptrEngineWidthScale;
-static uint32_t* ptrEngineTextWidthScale;
-static uint32_t* ptrAspectRatio;
-static uint32_t* ptrEsp18Height;
-
-void __cdecl C_MTXOrtho_messageTrans_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float unk1, float unk2)
+void __cdecl C_MTXOrtho_messageTrans_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far)
 {
-	// I think this should be 1.777777791f, but 1.666667f looks better for some reason?
-	float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
+	if (bIsUltrawide || bIs16by10)
+	{
+		// I think this should be 1.777777791f, but 1.666667f looks better for some reason?
+		float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
 
-	float fUIPosOffset = (((480.0f * fNewAspectRatio) - 512.0f) / 2.0f);
+		float fUIPosOffset = (((480.0f * fNewAspectRatio) - 512.0f) / 2.0f);
 
-	PosX += fUIPosOffset;
-	NegX -= fUIPosOffset;
+		PosX += fUIPosOffset;
+		NegX -= fUIPosOffset;
+	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, unk1, unk2);
+	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
-void __cdecl C_MTXOrtho_sub_1484C50_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float unk1, float unk2)
+void __cdecl C_MTXOrtho_sub_1484C50_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far)
 {
-	float fUIPosOffset = (fGameWidth - fGameHeight * (16.0f / 9.0f)) / 2.0f;
+	if (bIsUltrawide || bIs16by10)
+	{
+		float fUIPosOffset = (fGameWidth - fGameHeight * (16.0f / 9.0f)) / 2.0f;
 
-	PosX += fUIPosOffset;
-	NegX -= fUIPosOffset;
+		PosX += fUIPosOffset;
+		NegX -= fUIPosOffset;
+	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, unk1, unk2);
+	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
-void __cdecl C_MTXOrtho_DrawTexture_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float unk1, float unk2)
+void __cdecl C_MTXOrtho_DrawTexture_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far)
 {
-	// Game's default behavior is stretching, so we simply return
-	if (pConfig->bStretchFullscreenImages)
-		return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, unk1, unk2);
+	if (bIsUltrawide || bIs16by10)
+	{
+		// Game's default behavior is stretching, so we simply return
+		if (pConfig->bStretchFullscreenImages)
+			return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 
-	float fNewAspectRatio = (fGameDisplayAspectRatio / 1.6666f);
+		float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
 
-	float fUIPosOffset = (((480.0f * fNewAspectRatio) - 512.0f) / 2.0f);
+		float fUIPosOffset = (((480.0f * fNewAspectRatio) - 512.0f) / 2.0f);
 
-	PosX += fUIPosOffset;
-	NegX -= fUIPosOffset;
+		PosX += fUIPosOffset;
+		NegX -= fUIPosOffset;
+	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, unk1, unk2);
+	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
-void __cdecl C_MTXOrtho_cSofdec_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float unk1, float unk2)
+void __cdecl C_MTXOrtho_cSofdec_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far)
 {
-	// Game's default behavior is stretching, so we simply return
-	if (pConfig->bStretchVideos)
-		return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, unk1, unk2);
+	if (bIsUltrawide || bIs16by10)
+	{
+		// Game's default behavior is stretching, so we simply return
+		if (pConfig->bStretchVideos)
+			return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 
-	float fNewAspectRatio = (fGameDisplayAspectRatio / 1.6666f);
+		float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
 
-	float fUIPosOffset = (((480.0f * fNewAspectRatio) - 512.0f) / 2.0f);
+		float fUIPosOffset = (((480.0f * fNewAspectRatio) - 512.0f) / 2.0f);
 
-	PosX += fUIPosOffset;
-	NegX -= fUIPosOffset;
+		PosX += fUIPosOffset;
+		NegX -= fUIPosOffset;
+	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, unk1, unk2);
+	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
 void Init_AspectRatioTweaks()
@@ -147,14 +157,17 @@ void Init_AspectRatioTweaks()
 		}
 	}; injector::MakeInline<AddBgColor_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
+
 	pattern = hook::pattern("DC 0D ? ? ? ? DE F9 D9 5D F8 8B 10 8B 92 ? ? ? ? FF D2 EB 22 8B 0D ? ? ? ? 8D 70 04");
-	ptrEngineWidthScale = *pattern.count(1).get(0).get<uint32_t*>(2);
+	static uint32_t* ptrEngineWidthScale = *pattern.count(1).get(0).get<uint32_t*>(2);
 
 	pattern = hook::pattern("D9 05 ? ? ? ? D9 5C 24 04 D9 80 ? ? ? ? D9 1C 24 E8 ? ? ? ? 8B CE E8 ? ? ? ? 8B 46 04");
-	ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(2);
+	static uint32_t* ptrAspectRatio = *pattern.count(1).get(0).get<uint32_t*>(2);
 
 	pattern = hook::pattern("DC 0D ? ? ? ? D9 9D ? ? ? ? D9 85 ? ? ? ? D9 5C 24 ? D9 5C 24");
-	ptrEsp18Height = *pattern.count(1).get(0).get<uint32_t*>(2);
+	static uint32_t* ptrEsp18Height = *pattern.count(1).get(0).get<uint32_t*>(2);
+
+	static uint32_t* ptrMapIconsPos = hook::pattern("DD 05 ? ? ? ? DC C9 D9 C9 D8 6D ? DC 05 ? ? ? ? D9").count(1).get(0).get<uint32_t>(15);
 
 	// Hook D3D_SetupPresentationGlobals so we can calculate and write the new aspect ratio values
 	pattern = hook::pattern("A3 ? ? ? ? 89 0D ? ? ? ? 5E 5B 8B E5 5D C3");
@@ -182,10 +195,10 @@ void Init_AspectRatioTweaks()
 			float fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
 			float fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
 
-			// Fix Esp18 height
-			double fNewEsp18Height = 0.50068 / fNewAspectRatio;
+			double fMapIconsPosOffset = 0.040 * ((double)fGameWidth - ((double)fDefaultEngineAspectRatio * (double)fGameHeight));
+			fNewMapIconsPos = fDefaultMapIconsPos + fMapIconsPosOffset;
 
-			con.AddLogFloat(fGameDisplayAspectRatio);
+			double fNewEsp18Height = 0.50068 / fNewAspectRatio;
 
 			// if ultrawide/super ultrawide or 16:10
 			if ((bIsUltrawide && pConfig->bUltraWideAspectSupport) ||
@@ -195,8 +208,11 @@ void Init_AspectRatioTweaks()
 				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
 				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
 				con.AddConcatLog("fNewEsp18Height = ", fNewEsp18Height);
+				con.AddConcatLog("fMapIconsPosOffset = ", fMapIconsPosOffset);
+				con.AddConcatLog("fNewMapIconsPos = ", fNewMapIconsPos);
 				#endif
 
+				injector::WriteMemory(ptrMapIconsPos, &fNewMapIconsPos, true);
 				injector::WriteMemory(ptrEsp18Height, static_cast<double>(-fNewEsp18Height), true);
 				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fNewEngineWidthScale), true);
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fNewAspectRatio), true);
@@ -207,6 +223,7 @@ void Init_AspectRatioTweaks()
 				con.AddLogChar("Wrote default aspect ratio values");
 				#endif
 
+				injector::WriteMemory(ptrMapIconsPos, &fDefaultMapIconsPos, true);
 				injector::WriteMemory(ptrEsp18Height, static_cast<double>(-fDefaultEsp18Height), true);
 				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
