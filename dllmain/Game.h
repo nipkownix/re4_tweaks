@@ -577,4 +577,4 @@ uint8_t* GameSavePtr();
 
 // Original game funcs
 extern bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
-extern void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float unk1, float unk2);
+extern void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
