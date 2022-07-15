@@ -122,7 +122,7 @@ void Init_sofdec()
 		}
 	}; injector::MakeInline<SFDRes>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-	// Write new pointers
+	// Write new pointers to cSofdec::setCamera
 	pattern = hook::pattern("D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 5C 24 ? D9 05 ? ? ? ? D9 1C ? 50 E8 ? ? ? ? 8D 4D ? 6A ? 51 E8 ? ? ? ? 8D 55 ? 52 8D 45 ? 50 8D 4D ? 51 56 E8 ? ? ? ? 8B 4D ? 33 CD");
 	injector::WriteMemory(pattern.get_first(2), &newMovPosX, true);
 	injector::WriteMemory(pattern.get_first(12), &newMovNegX, true);

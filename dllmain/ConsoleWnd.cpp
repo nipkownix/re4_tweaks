@@ -149,6 +149,16 @@ void Draw(const char* title, bool* p_open = NULL)
         return;
     }
 
+    if (ImGui::CollapsingHeader("Sliders"))
+    {
+        ImGui::SliderFloat("dbg1", &pConfig->fdbg1, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("dbg2", &pConfig->fdbg2, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("dbg3", &pConfig->fdbg3, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("dbg4", &pConfig->fdbg4, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("dbg5", &pConfig->fdbg5, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("dbg6", &pConfig->fdbg6, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+    }
+
     // Options menu
     if (ImGui::BeginPopup("Options"))
     {
@@ -195,6 +205,7 @@ void Draw(const char* title, bool* p_open = NULL)
         ImGui::SetScrollHereY(1.0f);
 
     ImGui::EndChild();
+
     ImGui::End();
 }
 

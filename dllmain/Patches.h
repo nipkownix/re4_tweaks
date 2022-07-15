@@ -8,6 +8,7 @@ extern HWND hWindow;
 
 // Init functions
 void Init_60fpsFixes();
+void Init_AspectRatioTweaks();
 void Init_AudioTweaks();
 void Init_ControllerTweaks();
 void Init_D3D9Hook();
@@ -24,7 +25,6 @@ void Init_QTEfixes();
 void Init_sofdec();
 void Init_ToolMenu();
 void Init_ToolMenuDebug();
-void Init_UltraWideFix();
 void Init_WndProcHook();
 
 // Hotkey bindings and parsing
