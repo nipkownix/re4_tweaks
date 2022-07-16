@@ -1693,9 +1693,9 @@ void cfgMenuRender()
 						// Invincibility
 						{
 							ImGui_ColumnSwitch();
-							bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
+							bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 							if (ImGui::Checkbox("Invincibility", &invincibility))
-								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH), invincibility);
+								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2), invincibility);
 
 							ImGui::TextWrapped("Prevents taking hits from enemies & automatically skips grabs.");
 						}
@@ -1722,15 +1722,15 @@ void cfgMenuRender()
 							ImGui::TextWrapped("Prevents game from removing bullets after firing.");
 						}
 
-						// Keypad Movement
+						// Numpad Movement
 						{
 							ImGui_ColumnSwitch();
 
-							bool keypadMovement = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
-							if (ImGui::Checkbox("Keypad Movement", &keypadMovement))
-								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), keypadMovement);
+							bool numpadMovement = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+							if (ImGui::Checkbox("Numpad Movement", &numpadMovement))
+								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), numpadMovement);
 
-							ImGui::TextWrapped("Allows noclip-style movement via keypad.");
+							ImGui::TextWrapped("Allows noclip-style movement via numpad.");
 						}
 
 						ImGui_ColumnFinish();

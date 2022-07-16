@@ -142,6 +142,7 @@ void Trainer_Init()
 	if (!globals)
 		return;
 
+	// Hook ESL-loading functions so we can add extended scale/speed parameters
 	auto pattern = hook::pattern("52 66 89 45 E4 66 89 4D F6 E8");
 	auto EmSetEvent_thunk = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(9)).as_int();
 	ReadCall(EmSetEvent_thunk, EmSetEvent);
@@ -156,33 +157,40 @@ void Trainer_Init()
 	auto EmSetFromList_mov = pattern.count(1).get(0).get<uint8_t>(6);
 	InjectHook(EmSetFromList_mov, EmSetFromList_Hook_Trampoline, PATCH_CALL);
 
-	// DBG_PL_NOHIT
+	if (!GameVersionIsDebug())
+	{
+		// Remove bzero call that clears debug flags every frame for some reason
+		pattern = hook::pattern("83 C0 60 6A 10 50 E8");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 5, true);
+	}
+
+	// DBG_NO_DEATH2
 	{
 		// EmAtkHitCk patch
 		auto pattern = hook::pattern("05 88 00 00 00 50 53 57 E8");
 		auto EmAtkHitCk_thunk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(8));
-		FlagPatch patch_EmAtkHitCk(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
+		FlagPatch patch_EmAtkHitCk(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 		patch_EmAtkHitCk.SetPatch((uint8_t*)EmAtkHitCk_thunk.as_int(), {0x33, 0xC0, 0xC3});
 		flagPatches.push_back(patch_EmAtkHitCk);
 
 		// LifeDownSet2 patch
 		pattern = hook::pattern("0F 85 ? ? ? ? A1 ? ? ? ? 66 83 B8 B4 4F 00 00 00 7F");
 		auto LifeDownSet2_jg = pattern.count(1).get(0).get<uint8_t>(0x13);
-		FlagPatch patch_LifeDownSet2(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
+		FlagPatch patch_LifeDownSet2(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 		patch_LifeDownSet2.SetPatch(LifeDownSet2_jg, { 0x90, 0x90 });
 		flagPatches.push_back(patch_LifeDownSet2);
 
 		// PlGachaGet patch
 		pattern = hook::pattern("A1 ? ? ? ? 8B 15 ? ? ? ? 80 BA 98 4F 00 00 03");
 		auto PlGachaGet = pattern.count(1).get(0).get<uint8_t>(0);
-		FlagPatch patch_PlGachaGet(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
+		FlagPatch patch_PlGachaGet(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 		patch_PlGachaGet.SetPatch(PlGachaGet, { 0xB8, 0x7F, 0x00, 0x00, 0x00, 0xC3 });
 		flagPatches.push_back(patch_PlGachaGet);
 
 		// PlGachaMove patch (prevents button prompt when grabbed)
 		pattern = hook::pattern("57 8B 3D ? ? ? ? 6A 00 6A 00 6A 11 6A 0B");
 		auto PlGachaMove = pattern.count(1).get(0).get<uint8_t>(0);
-		FlagPatch patch_PlGachaMove(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
+		FlagPatch patch_PlGachaMove(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 		patch_PlGachaMove.SetPatch(PlGachaMove, { 0xC3 });
 		flagPatches.push_back(patch_PlGachaMove);
 	}
@@ -220,6 +228,7 @@ void Trainer_Update()
 		flagPatch.Update();
 	}
 
+	// Handle numpad-movement
 	if (FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT)))
 	{
 		cPlayer* player = PlayerPtr();
@@ -233,8 +242,10 @@ void Trainer_Update()
 			pInput->is_key_released(0x64) ||
 			pInput->is_key_released(0x66) ||
 			pInput->is_key_released(0x61) ||
-			pInput->is_key_released(0x67))
+			pInput->is_key_released(0x67) ||
+			pInput->is_key_released(0x65))
 		{
+			// Restore collision flags
 			player->atariInfo_2B4.flags_1A = atariInfoFlagBackup;
 			atariInfoFlagSet = false;
 		}
@@ -280,19 +291,16 @@ void Trainer_Update()
 		if (positionModded)
 		{
 			player->position_94.x += positionMod.x;
-			player->oldPos_110.x += positionMod.x;
 			player->position_94.y += positionMod.y;
-			player->oldPos_110.y += positionMod.y;
 			player->position_94.z += positionMod.z;
-			player->oldPos_110.z += positionMod.z;
+
+			// Backup original collision flags and then unset collision-enabled bit
 			if (!atariInfoFlagSet)
 			{
 				atariInfoFlagBackup = player->atariInfo_2B4.flags_1A;
 				atariInfoFlagSet = true;
 			}
 			player->atariInfo_2B4.flags_1A &= ~0x100;
-			player->matUpdate();
-			player->move();
 		}
 	}
 }
