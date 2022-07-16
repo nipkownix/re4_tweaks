@@ -33,27 +33,41 @@ void Init_60fpsFixes()
 {
 	// Fix the speed of falling items
 	{
-		struct TreasureAmmoSpeed
+		// Treasure
 		{
-			void operator()(injector::reg_pack& regs)
+			auto pattern = hook::pattern("DC 25 ? ? ? ? 6A ? 83 EC ? 8D BE ? ? ? ? D9 9E ? ? ? ? B9");
+			struct TreasureSpeed
 			{
-				float vanillaMulti = 10.0;
-				float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
+				void operator()(injector::reg_pack& regs)
+				{
+					float vanillaMulti = 10.0f;
+					float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
 
-				if (pConfig->bFixFallingItemsSpeed)
-					_asm {fsub newMulti}
-				else
-					_asm {fsub vanillaMulti}
-			}
-		}; 
-
-		// Treasure items
-		auto pattern = hook::pattern("DC 25 ? ? ? ? 6A ? 83 EC ? 8D BE ? ? ? ? D9 9E ? ? ? ? B9");
-		injector::MakeInline<TreasureAmmoSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+					if (pConfig->bFixFallingItemsSpeed)
+						_asm {fsub newMulti}
+					else
+						_asm {fsub vanillaMulti}
+				}
+			}; injector::MakeInline<TreasureSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		}
 
 		// Ammo boxes
-		pattern = hook::pattern("DC 0D ? ? ? ? D8 83 ? ? ? ? D9 9B ? ? ? ? D9 83");
-		injector::MakeInline<TreasureAmmoSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+		{
+			auto pattern = hook::pattern("DC 0D ? ? ? ? D8 83 ? ? ? ? D9 9B ? ? ? ? D9 83");
+			struct AmmoBoxSpeed
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					float vanillaMulti = 10.0f;
+					float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
+
+					if (pConfig->bFixFallingItemsSpeed)
+						_asm {fmul newMulti}
+					else
+						_asm {fmul vanillaMulti}
+				}
+			}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+		}
 	}
 
 	// Fix character backwards turning speed
