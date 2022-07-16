@@ -5,7 +5,7 @@
 #define APP_NAME				"re4_tweaks"
 #define APP_MAJOR				1
 #define APP_MINOR				7
-#define APP_BUILDNUMBER			6
+#define APP_BUILDNUMBER			7
 #define APP_REVISION			0
 #define APP_COMPANYNAME			"nipkow"
 #define APP_DESCRPTION			"Fixes and tweaks for the UHD port of Resident Evil 4"
