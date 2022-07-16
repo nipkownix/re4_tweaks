@@ -98,7 +98,7 @@ bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCo
 	auto p0 = ImGui::GetItemRectMin();
 	auto p1 = ImGui::GetItemRectMax();
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + 10.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 8.0f), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 8.0f), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret)
 		Tab = tabID;
@@ -119,7 +119,7 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	auto p0 = ImGui::GetItemRectMin();
 	auto p1 = ImGui::GetItemRectMax();
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + 10.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 8.0f), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 8.0f), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret)
 		CurTrainerTab = tabID;
@@ -244,8 +244,8 @@ void cfgMenuRender()
 
 			ImColor icn_color = ImColor(230, 15, 95);
 
-			ImVec4 active = ImVec4(150.0f / 255.0f, 10.0f / 255.0f, 40.0f / 255.0f, 255.0f / 255.0f);
-			ImVec4 inactive = ImVec4(31.0f / 255.0f, 30.0f / 255.0f, 31.0f / 255.0f, 0.0f / 255.0f);
+			ImColor active = ImColor(150, 10, 40, 255);
+			ImColor inactive = ImColor(31, 30, 31, 0);
 
 			// cfgMenu title
 			ImGui::SetCursorPos(ImVec2(12, 25));
@@ -301,7 +301,47 @@ void cfgMenuRender()
 
 			// Trainer
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
-			ImGui_TabButton("##trainer", "Trainer", active, inactive, MenuTab::Trainer, ICON_FA_SHOE_PRINTS, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
+
+			if (!pConfig->bUseTrainer)
+			{
+				if (ImGui_TabButton("##trainer", "Trainer", active, inactive, MenuTab::Trainer, ICON_FA_SHOE_PRINTS, ImColor(255, 255, 255, 60), ImColor(255, 255, 255, 60), ImVec2(172, 31)))
+					ImGui::OpenPopup("Trainer menu");
+
+				// Always center this window when appearing
+				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+				if (ImGui::BeginPopupModal("Trainer menu", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+				{
+					ImGui::Text("Warning: this section contains cheats & patches that may ruin your game experience,\nor break things in the game.\n\nAre you sure you want to use the trainer menu?\n\n");
+					ImGui::Separator();
+
+					ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 265, ImGui::GetCursorPos().y));
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
+
+					if (ImGui::Button("Yes", ImVec2(120, 0)))
+					{ 
+						pConfig->bUseTrainer = true;
+						pConfig->WriteSettings();
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::SetItemDefaultFocus();
+					ImGui::SameLine();
+
+					if (ImGui::Button("Cancel", ImVec2(120, 0))) 
+					{ 
+						Tab = MenuTab::Display;
+						ImGui::CloseCurrentPopup(); 
+					}
+
+					ImGui::PopStyleColor();
+					ImGui::EndPopup();
+				}
+			
+			}
+			else
+				ImGui_TabButton("##trainer", "Trainer", active, inactive, MenuTab::Trainer, ICON_FA_SHOE_PRINTS, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
@@ -1670,8 +1710,8 @@ void cfgMenuRender()
 			{
 				ImColor icn_color = ImColor(230, 15, 95);
 
-				ImVec4 active = ImVec4(150.0f / 255.0f, 10.0f / 255.0f, 40.0f / 255.0f, 255.0f / 255.0f);
-				ImVec4 inactive = ImVec4(31.0f / 255.0f, 30.0f / 255.0f, 31.0f / 255.0f, 0.0f / 255.0f);
+				ImColor active = ImColor(150, 10, 40, 255);
+				ImColor inactive = ImColor(31, 30, 31, 0);
 
 				// Patches
 				ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, ImVec2(172, 31));

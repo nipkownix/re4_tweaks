@@ -316,6 +316,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->fFontSize = fmin(fmax(pConfig->fFontSize, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
 	pConfig->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", pConfig->bDisableMenuTip);
+	pConfig->bUseTrainer = iniReader.ReadBoolean("IMGUI", "UseTrainer", pConfig->bUseTrainer);
 
 	// DEBUG
 	pConfig->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", pConfig->bVerboseLog);
@@ -471,6 +472,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSize", pConfig->fFontSize);
+	iniReader.WriteBoolean("IMGUI", "UseTrainer", pConfig->bUseTrainer);
 
 	pConfig->HasUnsavedChanges = false;
 
@@ -620,6 +622,7 @@ void Config::LogSettings()
 	spd::log()->info("+ IMGUI--------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "FontSize", pConfig->fFontSize);
 	spd::log()->info("| {:<30} | {:>15} |", "DisableMenuTip", pConfig->bDisableMenuTip ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UseTrainer", pConfig->bUseTrainer ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// DEBUG

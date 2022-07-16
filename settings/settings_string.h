@@ -311,6 +311,9 @@ FontSize = 1.000
 ; Disables the "Press key to open the configuration menu" tooltip.
 DisableMenuTip = false
 
+; Allows the use of the "Trainer" tab
+UseTrainer = false
+
 [DEBUG]
 ; Logs extra information.
 VerboseLog = false
