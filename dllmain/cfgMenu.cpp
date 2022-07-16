@@ -9,6 +9,7 @@
 #include "Patches.h"
 #include <hashes.h>
 #include "Utils.h"
+#include "Trainer.h"
 
 bool bCfgMenuOpen;
 bool NeedsToRestart;
@@ -1726,11 +1727,23 @@ void cfgMenuRender()
 						{
 							ImGui_ColumnSwitch();
 
-							bool numpadMovement = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
-							if (ImGui::Checkbox("Numpad Movement", &numpadMovement))
-								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), numpadMovement);
+							bool DisablePlayerCollision = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+							if (ImGui::Checkbox("Disable Player Collision", &DisablePlayerCollision))
+								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), DisablePlayerCollision);
 
-							ImGui::TextWrapped("Allows noclip-style movement via numpad.");
+							ImGui::TextWrapped("Disables collision (no-clip).");
+
+							ImGui::Spacing();
+
+							ImGui::BeginDisabled(!DisablePlayerCollision);
+							ImGui::Checkbox("Numpad Movement", &bUseNumpadMovement);
+							ImGui::TextWrapped("Allows noclip movement via numpad.");
+
+							ImGui::Spacing();
+
+							ImGui::Checkbox("Use Mouse Wheel", &bUseMouseWheelUPDOWN);
+							ImGui::TextWrapped("Allows using the mouse wheel to go up and down.");
+							ImGui::EndDisabled();
 						}
 
 						ImGui_ColumnFinish();

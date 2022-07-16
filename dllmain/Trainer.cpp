@@ -4,6 +4,9 @@
 #include "Settings.h"
 #include "input.hpp"
 
+bool bUseNumpadMovement;
+bool bUseMouseWheelUPDOWN;
+
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
 // Unfortunately, most existing trainer-like-mods for the game are done as code patches
@@ -228,64 +231,74 @@ void Trainer_Update()
 		flagPatch.Update();
 	}
 
-	// Handle numpad-movement
+	cPlayer* player = PlayerPtr();
+	if (!player)
+		return;
+
+	static uint16_t atariInfoFlagBackup = 0;
+	static bool atariInfoFlagSet = false;
 	if (FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT)))
 	{
-		cPlayer* player = PlayerPtr();
-		if (!player)
-			return;
-
-		static uint16_t atariInfoFlagBackup = 0;
-		static bool atariInfoFlagSet = false;
-		if (pInput->is_key_released(0x68) ||
-			pInput->is_key_released(0x62) ||
-			pInput->is_key_released(0x64) ||
-			pInput->is_key_released(0x66) ||
-			pInput->is_key_released(0x61) ||
-			pInput->is_key_released(0x67) ||
-			pInput->is_key_released(0x65))
+		// Backup original collision flags and then unset collision-enabled bit
+		if (!atariInfoFlagSet)
 		{
-			// Restore collision flags
-			player->atariInfo_2B4.flags_1A = atariInfoFlagBackup;
-			atariInfoFlagSet = false;
+			atariInfoFlagBackup = player->atariInfo_2B4.flags_1A;
+			atariInfoFlagSet = true;
 		}
+		player->atariInfo_2B4.flags_1A &= ~0x100;
 
 		Vec positionMod { 0 };
 		bool positionModded = false;
 
-		if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
+		// Handle numpad-movement
+		if (bUseNumpadMovement)
 		{
-			positionMod.x = 100;
-			positionModded = true;
+			if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
+			{
+				positionMod.x = 100;
+				positionModded = true;
+			}
+			if (pInput->is_key_down(0x62)) //VK_NUMPAD_2
+			{
+				positionMod.x = -100;
+				positionModded = true;
+			}
+			if (pInput->is_key_down(0x64)) //VK_NUMPAD_4
+			{
+				positionMod.z = -100;
+				positionModded = true;
+			}
+			if (pInput->is_key_down(0x66)) //VK_NUMPAD_6
+			{
+				positionMod.z = 100;
+				positionModded = true;
+			}
+			if (pInput->is_key_down(0x61)) //VK_NUMPAD_1
+			{
+				positionMod.y = -100;
+				positionModded = true;
+			}
+			if (pInput->is_key_down(0x67)) //VK_NUMPAD_7
+			{
+				positionMod.y = 100;
+				positionModded = true;
+			}
 		}
-		if (pInput->is_key_down(0x62)) //VK_NUMPAD_2
+
+		// Handle mouse wheel
+		if (bUseMouseWheelUPDOWN)
 		{
-			positionMod.x = -100;
-			positionModded = true;
-		}
-		if (pInput->is_key_down(0x64)) //VK_NUMPAD_4
-		{
-			positionMod.z = -100;
-			positionModded = true;
-		}
-		if (pInput->is_key_down(0x66)) //VK_NUMPAD_6
-		{
-			positionMod.z = 100;
-			positionModded = true;
-		}
-		if (pInput->is_key_down(0x61)) //VK_NUMPAD_1
-		{
-			positionMod.y = -100;
-			positionModded = true;
-		}
-		if (pInput->is_key_down(0x67)) //VK_NUMPAD_7
-		{
-			positionMod.y = 100;
-			positionModded = true;
-		}
-		if (pInput->is_key_down(0x65)) // VK_NUMPAD_5
-		{
-			positionModded = true; // keep collision disabled if 5 held
+			if (pInput->mouse_wheel_delta() > 0) // Mouse wheel up
+			{
+				positionMod.y = pInput->mouse_wheel_delta() * 200.0f;
+				positionModded = true;
+			}
+
+			if (pInput->mouse_wheel_delta() < 0) // Mouse wheel down
+			{
+				positionMod.y = -pInput->mouse_wheel_delta() * -200.0f;
+				positionModded = true;
+			}
 		}
 
 		if (positionModded)
@@ -293,14 +306,11 @@ void Trainer_Update()
 			player->position_94.x += positionMod.x;
 			player->position_94.y += positionMod.y;
 			player->position_94.z += positionMod.z;
-
-			// Backup original collision flags and then unset collision-enabled bit
-			if (!atariInfoFlagSet)
-			{
-				atariInfoFlagBackup = player->atariInfo_2B4.flags_1A;
-				atariInfoFlagSet = true;
-			}
-			player->atariInfo_2B4.flags_1A &= ~0x100;
 		}
+	}
+	else if (atariInfoFlagSet) // Restore collision flags
+	{
+		player->atariInfo_2B4.flags_1A = atariInfoFlagBackup;
+		atariInfoFlagSet = false;
 	}
 }
