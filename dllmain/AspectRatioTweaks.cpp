@@ -121,8 +121,7 @@ void Init_AspectRatioTweaks()
 			regs.ecx = *(uint32_t*)(regs.eax + 0x48);
 			regs.edx = *(uint32_t*)(regs.ecx + 0x7C);
 
-			if ((pConfig->bUltraWideAspectSupport && bIsUltrawide && pConfig->bSideAlignHUD) ||
-				(pConfig->bRemove16by10BlackBars && bIs16by10))
+			if ((pConfig->bSideAlignHUD && bIsUltrawide) || bIs16by10)
 			{
 				// I honestly don't understand this pointer and/or the data structure it points to
 				float* fInitialHudPosX = (float*)(regs.ecx + regs.edx + 0x1C);
@@ -188,9 +187,6 @@ void Init_AspectRatioTweaks()
 			fGameHeight = (float)regs.ecx;
 			fGameDisplayAspectRatio = fGameWidth / fGameHeight;
 
-			bIsUltrawide = fGameDisplayAspectRatio > 2.2f;
-			bIs16by10 = fGameDisplayAspectRatio == 1.6f;
-
 			float fNewEngineAspectRatio = fGameDisplayAspectRatio / fDefaultEngineAspectRatio;
 			float fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
 			float fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
@@ -201,9 +197,12 @@ void Init_AspectRatioTweaks()
 			double fNewEsp18Height = 0.50068 / fNewAspectRatio;
 
 			// if ultrawide/super ultrawide or 16:10
-			if ((bIsUltrawide && pConfig->bUltraWideAspectSupport) ||
-				(bIs16by10 && pConfig->bRemove16by10BlackBars))
+			if (((fGameDisplayAspectRatio > 2.2f) && pConfig->bUltraWideAspectSupport) ||
+				((fGameDisplayAspectRatio == 1.6f) && pConfig->bRemove16by10BlackBars))
 			{
+				bIsUltrawide = fGameDisplayAspectRatio > 2.2f;
+				bIs16by10 = fGameDisplayAspectRatio == 1.6f;
+
 				#ifdef VERBOSE
 				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
 				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
@@ -219,6 +218,9 @@ void Init_AspectRatioTweaks()
 			}
 			else
 			{
+				bIsUltrawide = false;
+				bIs16by10 = false;
+
 				#ifdef VERBOSE
 				con.AddLogChar("Wrote default aspect ratio values");
 				#endif
