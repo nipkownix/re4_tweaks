@@ -1693,9 +1693,9 @@ void cfgMenuRender()
 						// Invincibility
 						{
 							ImGui_ColumnSwitch();
-							bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+							bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
 							if (ImGui::Checkbox("Invincibility", &invincibility))
-								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), invincibility);
+								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH), invincibility);
 
 							ImGui::TextWrapped("Prevents taking hits from enemies & automatically skips grabs.");
 						}
@@ -1720,6 +1720,17 @@ void cfgMenuRender()
 								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET), infAmmo);
 
 							ImGui::TextWrapped("Prevents game from removing bullets after firing.");
+						}
+
+						// Keypad Movement
+						{
+							ImGui_ColumnSwitch();
+
+							bool keypadMovement = FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+							if (ImGui::Checkbox("Keypad Movement", &keypadMovement))
+								FlagSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), keypadMovement);
+
+							ImGui::TextWrapped("Allows noclip-style movement via keypad.");
 						}
 
 						ImGui_ColumnFinish();
@@ -1749,7 +1760,7 @@ void cfgMenuRender()
 
 							ImGui::Text("Em Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
 							ImGui::SameLine();
-							ImGui::Checkbox("ESL-spawned only", &onlyShowESLSpawned);
+							ImGui::Checkbox("Show addresses", &showEmPointers);
 
 							if (ImGui::BeginListBox("", ImVec2(320, 420)))
 							{
@@ -1779,8 +1790,8 @@ void cfgMenuRender()
 								ImGui::EndListBox();
 							}
 
-							ImGui::Checkbox("Show addresses", &showEmPointers); ImGui::SameLine();
-							ImGui::Checkbox("Active instances only", &onlyShowValidEms);
+							ImGui::Checkbox("Active", &onlyShowValidEms); ImGui::SameLine();
+							ImGui::Checkbox("ESL-spawned", &onlyShowESLSpawned);
 						}
 
 						// cEm info
@@ -1913,6 +1924,7 @@ void cfgMenuRender()
 									if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
 										em->HpMax_326 = hpMax;
 
+									ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
 									ImGui::Text("Parts count: %d", em->PartCount());
 									if (em->emListIndex_3A0 != 255)
 										ImGui::Text("ESL: %s @ #%d (offset 0x%x)", getEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));

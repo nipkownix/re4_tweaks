@@ -727,6 +727,16 @@ struct cDmgInfo
 class cEm : public cModel
 {
 public:
+	enum class Routine0 : uint8_t
+	{
+		// r0 values that are used by pretty much all cEms
+		// (other r* values are usually defined per-cEm though)
+		Init,
+		Move,
+		Damage,
+		Die
+	};
+
 	int16_t HpCur_324;
 	int16_t HpMax_326;
 	cDmgInfo dmgInfo_328;

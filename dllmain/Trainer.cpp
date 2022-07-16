@@ -2,6 +2,7 @@
 #include "dllmain.h"
 #include "Game.h"
 #include "Settings.h"
+#include "input.hpp"
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
@@ -36,7 +37,7 @@ struct FlagPatch
 	void Update()
 	{
 		bool value = CurValue();
-		if(value == prevFlagValue)
+		if (value == prevFlagValue)
 			return; // flag not changed, no need to do anything
 
 		auto& data = value ? patchData : origData;
@@ -66,8 +67,20 @@ void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 	if (emData < pG->emList_5410 || emData >= &pG->emList_5410[256])
 		return;
 
+	//emData->percentageMotionSpeed_1C = 200;
+	//emData->percentageScale_1E = 150;
+	//emData->useExtendedParams_A = 1;
+
 	if (emData->useExtendedParams_A != 1)
 		return;
+
+	if (!emData->percentageMotionSpeed_1C && !emData->percentageScale_1E)
+		return;
+
+	// let it run the cEm's EmXX_R0_init function before we apply changes
+	// (since that has a good chance of overwriting scale value)
+	if (em->r_no_0_FC == uint8_t(cEm::Routine0::Init))
+		em->move();
 
 	if (emData->percentageMotionSpeed_1C)
 		em->MotInfo_1D8.speed_C0 = float(double(emData->percentageMotionSpeed_1C) / 100.0f);
@@ -75,7 +88,9 @@ void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 	if (emData->percentageScale_1E)
 	{
 		auto scalePercent = float(double(emData->percentageScale_1E) / 100.0f);
-		em->scale_AC.x = em->scale_AC.y = em->scale_AC.z = scalePercent;
+		em->scale_AC.x *= scalePercent;
+		em->scale_AC.y *= scalePercent;
+		em->scale_AC.z *= scalePercent;
 
 		if (IsGanado(em->ID_100))
 		{
@@ -146,28 +161,28 @@ void Trainer_Init()
 		// EmAtkHitCk patch
 		auto pattern = hook::pattern("05 88 00 00 00 50 53 57 E8");
 		auto EmAtkHitCk_thunk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(8));
-		FlagPatch patch_EmAtkHitCk(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+		FlagPatch patch_EmAtkHitCk(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
 		patch_EmAtkHitCk.SetPatch((uint8_t*)EmAtkHitCk_thunk.as_int(), {0x33, 0xC0, 0xC3});
 		flagPatches.push_back(patch_EmAtkHitCk);
 
 		// LifeDownSet2 patch
 		pattern = hook::pattern("0F 85 ? ? ? ? A1 ? ? ? ? 66 83 B8 B4 4F 00 00 00 7F");
 		auto LifeDownSet2_jg = pattern.count(1).get(0).get<uint8_t>(0x13);
-		FlagPatch patch_LifeDownSet2(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+		FlagPatch patch_LifeDownSet2(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
 		patch_LifeDownSet2.SetPatch(LifeDownSet2_jg, { 0x90, 0x90 });
 		flagPatches.push_back(patch_LifeDownSet2);
 
 		// PlGachaGet patch
 		pattern = hook::pattern("A1 ? ? ? ? 8B 15 ? ? ? ? 80 BA 98 4F 00 00 03");
 		auto PlGachaGet = pattern.count(1).get(0).get<uint8_t>(0);
-		FlagPatch patch_PlGachaGet(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+		FlagPatch patch_PlGachaGet(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
 		patch_PlGachaGet.SetPatch(PlGachaGet, { 0xB8, 0x7F, 0x00, 0x00, 0x00, 0xC3 });
 		flagPatches.push_back(patch_PlGachaGet);
 
 		// PlGachaMove patch (prevents button prompt when grabbed)
 		pattern = hook::pattern("57 8B 3D ? ? ? ? 6A 00 6A 00 6A 11 6A 0B");
 		auto PlGachaMove = pattern.count(1).get(0).get<uint8_t>(0);
-		FlagPatch patch_PlGachaMove(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+		FlagPatch patch_PlGachaMove(globals->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH));
 		patch_PlGachaMove.SetPatch(PlGachaMove, { 0xC3 });
 		flagPatches.push_back(patch_PlGachaMove);
 	}
@@ -203,5 +218,81 @@ void Trainer_Update()
 	for (auto& flagPatch : flagPatches)
 	{
 		flagPatch.Update();
+	}
+
+	if (FlagIsSet(GlobalPtr()->flags_DEBUG_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT)))
+	{
+		cPlayer* player = PlayerPtr();
+		if (!player)
+			return;
+
+		static uint16_t atariInfoFlagBackup = 0;
+		static bool atariInfoFlagSet = false;
+		if (pInput->is_key_released(0x68) ||
+			pInput->is_key_released(0x62) ||
+			pInput->is_key_released(0x64) ||
+			pInput->is_key_released(0x66) ||
+			pInput->is_key_released(0x61) ||
+			pInput->is_key_released(0x67))
+		{
+			player->atariInfo_2B4.flags_1A = atariInfoFlagBackup;
+			atariInfoFlagSet = false;
+		}
+
+		Vec positionMod { 0 };
+		bool positionModded = false;
+
+		if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
+		{
+			positionMod.x = 100;
+			positionModded = true;
+		}
+		if (pInput->is_key_down(0x62)) //VK_NUMPAD_2
+		{
+			positionMod.x = -100;
+			positionModded = true;
+		}
+		if (pInput->is_key_down(0x64)) //VK_NUMPAD_4
+		{
+			positionMod.z = -100;
+			positionModded = true;
+		}
+		if (pInput->is_key_down(0x66)) //VK_NUMPAD_6
+		{
+			positionMod.z = 100;
+			positionModded = true;
+		}
+		if (pInput->is_key_down(0x61)) //VK_NUMPAD_1
+		{
+			positionMod.y = -100;
+			positionModded = true;
+		}
+		if (pInput->is_key_down(0x67)) //VK_NUMPAD_7
+		{
+			positionMod.y = 100;
+			positionModded = true;
+		}
+		if (pInput->is_key_down(0x65)) // VK_NUMPAD_5
+		{
+			positionModded = true; // keep collision disabled if 5 held
+		}
+
+		if (positionModded)
+		{
+			player->position_94.x += positionMod.x;
+			player->oldPos_110.x += positionMod.x;
+			player->position_94.y += positionMod.y;
+			player->oldPos_110.y += positionMod.y;
+			player->position_94.z += positionMod.z;
+			player->oldPos_110.z += positionMod.z;
+			if (!atariInfoFlagSet)
+			{
+				atariInfoFlagBackup = player->atariInfo_2B4.flags_1A;
+				atariInfoFlagSet = true;
+			}
+			player->atariInfo_2B4.flags_1A &= ~0x100;
+			player->matUpdate();
+			player->move();
+		}
 	}
 }
