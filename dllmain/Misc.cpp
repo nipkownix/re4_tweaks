@@ -426,22 +426,24 @@ bool *PlReloadDirect;
 bool cPlayer__keyReload_hook()
 {
 	bool isAiming = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
-	KEY_BTN key = KEY_BTN::KEY_B; // Default key: (Xinput A)
 	bool bReloadWithoutZoom = false;
+	KEY_BTN reloadKey{};
 
 	switch (LastUsedDevice()) {
 		case InputDevices::DinputController:
 		case InputDevices::XinputController:
+			reloadKey = KEY_BTN::KEY_B; // Default key: Xinput A
+
 			if (pConfig->bAllowReloadWithoutAiming_controller)
 			{
 				// Change controller reload key, since the default is also used for sprinting when not aiming
 				switch (SystemSavePtr()->keyConfigType_B) {
 					case keyConfigTypes::TypeI:
-						key = KEY_BTN::KEY_CANCEL; // Xinput B
+						reloadKey = KEY_BTN::KEY_CANCEL; // Xinput B
 						break;
 					case keyConfigTypes::TypeII:
 					case keyConfigTypes::TypeIII:
-						key = KEY_BTN::KEY_Y; // Xinput X
+						reloadKey = KEY_BTN::KEY_Y; // Xinput X
 						break;
 				}
 
@@ -452,6 +454,8 @@ bool cPlayer__keyReload_hook()
 			break;
 		case InputDevices::Keyboard:
 		case InputDevices::Mouse:
+			reloadKey = KEY_BTN::KEY_RELOCKON; // Default key: R
+
 			if (pConfig->bAllowReloadWithoutAiming_kbm)
 			{
 				bReloadWithoutZoom = (pConfig->bReloadWithoutZoom_kbm && !isAiming);
@@ -462,7 +466,7 @@ bool cPlayer__keyReload_hook()
 
 	*PlReloadDirect = bReloadWithoutZoom;
 
-	bool hasPressedReload = ((Key_btn_trg() & (uint64_t)key) == (uint64_t)key);
+	bool hasPressedReload = ((Key_btn_trg() & (uint64_t)reloadKey) == (uint64_t)reloadKey);
 
 	return (isAiming && hasPressedReload);
 }
