@@ -220,6 +220,8 @@ void Config::ReadSettings(std::string_view ini_path)
 		if (buf == "Vest") pConfig->CostumeOverride.Leon = LeonCostumes::Vest;
 		if (buf == "RPD") pConfig->CostumeOverride.Leon = LeonCostumes::RPD;
 		if (buf == "Mafia") pConfig->CostumeOverride.Leon = LeonCostumes::Mafia;
+
+		iCostumeComboLeon = (int)pConfig->CostumeOverride.Leon;
 	}
 
 	buf = iniReader.ReadString("MISC", "AshleyCostume", "");
@@ -228,6 +230,8 @@ void Config::ReadSettings(std::string_view ini_path)
 		if (buf == "Normal") pConfig->CostumeOverride.Ashley = AshleyCostumes::Normal;
 		if (buf == "Popstar") pConfig->CostumeOverride.Ashley = AshleyCostumes::Popstar;
 		if (buf == "Armor") pConfig->CostumeOverride.Ashley = AshleyCostumes::Armor;
+
+		iCostumeComboAshley = (int)pConfig->CostumeOverride.Ashley;
 	}
 
 	buf = iniReader.ReadString("MISC", "AdaCostume", "");
@@ -236,11 +240,13 @@ void Config::ReadSettings(std::string_view ini_path)
 		if (buf == "RE2") pConfig->CostumeOverride.Ada = AdaCostumes::RE2;
 		if (buf == "Spy") pConfig->CostumeOverride.Ada = AdaCostumes::Spy;
 		if (buf == "Normal") pConfig->CostumeOverride.Ada = AdaCostumes::Normal;
-	}
 
-	iCostumeComboLeon = (int)pConfig->CostumeOverride.Leon;
-	iCostumeComboAshley = (int)pConfig->CostumeOverride.Ashley;
 	iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
+
+		// Normal is id 3, but we're lying to ImGui by pretending Normal is id 2 instead.
+		if (pConfig->CostumeOverride.Ada == AdaCostumes::Normal)
+			iCostumeComboAda--;
+	}
 
 	pConfig->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles);
 
@@ -423,9 +429,9 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 	// MISC
 	iniReader.WriteBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
-	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[(int)pConfig->CostumeOverride.Leon]));
-	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[(int)pConfig->CostumeOverride.Ashley]));
-	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[(int)pConfig->CostumeOverride.Ada]));
+	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[iCostumeComboLeon]));
+	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[iCostumeComboAshley]));
+	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[iCostumeComboAda]));
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles);
 	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
 	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer);
@@ -560,9 +566,9 @@ void Config::LogSettings()
 	spd::log()->info("+ MISC---------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", pConfig->sWrappedDllPath.data());
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", pConfig->bOverrideCostumes ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[(int)pConfig->CostumeOverride.Leon]);
-	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[(int)pConfig->CostumeOverride.Ashley]);
-	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[(int)pConfig->CostumeOverride.Ada]);
+	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[iCostumeComboLeon]);
+	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[iCostumeComboAshley]);
+	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[iCostumeComboAda]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer ? "true" : "false");
