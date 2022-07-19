@@ -6,7 +6,7 @@
 #define APP_MAJOR				1
 #define APP_MINOR				7
 #define APP_BUILDNUMBER			7
-#define APP_REVISION			1
+#define APP_REVISION			2
 #define APP_COMPANYNAME			"nipkow"
 #define APP_DESCRPTION			"Fixes and tweaks for the UHD port of Resident Evil 4"
 #define APP_COPYRIGHT			"Copyright (C) 2021-2022 nipkow"
