@@ -83,6 +83,10 @@ void Init_Main()
 
 	Init_MathReimpl();
 
+	// Apply changes needed by the HD Project
+	if (bIsUsingHDProject)
+		Init_HDProject();
+
 	Init_ExceptionHandler();
 }
 

@@ -18,6 +18,8 @@ const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
 const char* sAdaCostumeNames[] = {"RE2", "Spy", "Normal"};
 
+bool bIsUsingHDProject = false;
+
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 {
 	// Convert combo to uppercase to match Settings::key_map
@@ -111,7 +113,10 @@ void Config::ReadSettings()
 	// Special case for HDProject settings, make sure it overrides all other INIs
 	auto hdproject_path = override_path + sHDProjectOverrideName;
 	if (std::filesystem::exists(hdproject_path))
+	{
+		bIsUsingHDProject = true;
 		ReadSettings(hdproject_path);
+	}
 }
 
 void Config::ReadSettings(std::string_view ini_path)

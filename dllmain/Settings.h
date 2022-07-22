@@ -145,5 +145,7 @@ extern const char* sLeonCostumeNames[5];
 extern const char* sAshleyCostumeNames[3];
 extern const char* sAdaCostumeNames[3];
 
+extern bool bIsUsingHDProject;
+
 // Parses an key combination string into a vector of VKs
 std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);

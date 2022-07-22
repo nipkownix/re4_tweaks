@@ -17,6 +17,7 @@ void Init_ExceptionHandler();
 void Init_FilterXXFixes();
 bool Init_Game();
 void Init_HandleLimits();
+void Init_HDProject();
 void Init_KeyboardMouseTweaks();
 void Init_MouseTurning();
 void Init_MathReimpl();
