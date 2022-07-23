@@ -1052,7 +1052,6 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Don't zoom in when reloading without aiming.");
 						ImGui::TextWrapped("Not usually recommended, since the zooming in and out masks some animation quirks when the reload ends.");
-
 					}
 
 					ImGui_ColumnFinish();
