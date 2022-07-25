@@ -9,6 +9,11 @@ template <typename I> std::string IntToHexStr(I w, size_t hex_len = sizeof(I) <<
 	return std::string("0x") + rc;
 }
 
+template <typename T>
+T clip(const T& n, const T& lower, const T& upper) {
+	return (std::max)(lower, std::min(n, upper));
+}
+
 std::string StrToUTF8(std::string const& str);
 std::string WstrToStr(const std::wstring& wstr);
 

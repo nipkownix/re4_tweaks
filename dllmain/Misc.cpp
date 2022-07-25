@@ -4,6 +4,7 @@
 #include "Game.h"
 #include "Settings.h"
 #include "input.hpp"
+#include "Utils.h"
 
 static uint32_t* ptrGameFrameRate;
 
@@ -471,8 +472,271 @@ bool cPlayer__keyReload_hook()
 	return (isAiming && hasPressedReload);
 }
 
+
+float *camPitch;
+float *wepPitch;
+float *wepPitch_m3r;
+float *StickXfloat;
+float *StickYfloat;
+
+int8_t*AnalogRX_8;
+int8_t*AnalogRY_8;
+
+bool bIsGrenade;
+bool bKeep0Y;
+
+double CameraControl__getCameraPitch__hook()
+{
+	if (bIsGrenade)
+	{
+		bKeep0Y = true;
+		return 0.0;
+	}
+
+	double angle = *camPitch;
+
+	if (angle > 0)
+		angle /= 2.0;
+
+	return angle;
+}
+
+
 void Init_Misc()
 {
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? D9 5D EC D9 EE D9 45 EC ");
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CameraControl__getCameraPitch__hook, PATCH_JUMP);
+
+		pattern = hook::pattern("d9 15 ? ? ? ? d9 1d ? ? ? ? c3 cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc 55");
+		camPitch = (float*)*pattern.count(1).get(0).get<uint32_t>(2);
+
+		pattern = hook::pattern("d9 15 ? ? ? ? d9 e8 d9 ee");
+		wepPitch = (float*)*pattern.count(1).get(0).get<uint32_t>(2);
+		wepPitch_m3r = wepPitch - 1;
+
+		pattern = hook::pattern("d9 05 ? ? ? ? d8 d1 df e0 d9 05");
+		StickXfloat = (float*)*pattern.count(1).get(0).get<uint32_t>(2);
+		StickYfloat = StickXfloat + 1;
+
+		pattern = hook::pattern("a2 ? ? ? ? eb ? dd d8 8b 0d");
+		AnalogRX_8 = (int8_t*)*pattern.count(1).get(0).get<uint32_t>(1);
+		AnalogRY_8 = AnalogRX_8 + 1;
+
+		// Simply used to know if we just entered the "if is aiming" section of CameraQuasiFPS::calcDepressionRatio
+		static bool bEnteredKamae = false;
+		pattern = hook::pattern("8b 8f ? ? ? ? e8 ? ? ? ? d9 9e");
+		struct calcDepressionRatio_kamae
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				regs.ecx = *(uint32_t*)(regs.edi + 0x7D8);
+
+				bEnteredKamae = true;
+			}
+		}; injector::MakeInline<calcDepressionRatio_kamae>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+
+		// Adjust camera position after aiming.
+		// For a few reasons, the camera's Y position gets reset after aiming. The main reason is that, when aiming, the float used to
+		// populate AnalogRY_8 is changed from absolute value to delta value. After aiming, that value is never restored to what it was before.
+		// Here we calculate an approximation of what it should be based on the current camera angle, and "restore" it before calcDepressionRatio
+		// tries to update the camera position again. Not the best solution, but it seems to work.
+		pattern = hook::pattern("89 55 ? 89 45 ? db 45 ? d9 5d");
+		struct calcDepressionRatioHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if ((*StickYfloat == 0.0f) && bEnteredKamae)
+				{
+					if (!bKeep0Y)
+						*StickYfloat = -(*camPitch / 1.6f); // Not 1:1, but it doesn't really need to be.
+					else
+					{
+						*StickYfloat = 0.0f;
+						*AnalogRY_8 = 0;
+					}
+
+					*camPitch = std::clamp(*camPitch, -1.0f, 1.0f);
+					*wepPitch = std::clamp(*wepPitch, -1.0f, 1.0f);
+
+					bEnteredKamae = false;
+				}
+
+				// Code we replaced
+				*(uint32_t*)(regs.ebp - 0x8) = regs.edx;
+				*(uint32_t*)(regs.ebp - 0x4) = regs.eax;
+			}
+		}; injector::MakeInline<calcDepressionRatioHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Reset AnalogRX_8 when aiming begins
+		pattern = hook::pattern("8b ec 8b 45 ? 8b 08 89 0d ? ? ? ? 8b 50 ? 89 15 ? ? ? ? 8b 40");
+		struct CamCtrlShoulderSetAimHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.ebp = regs.esp;
+				regs.eax = *(uint32_t*)(regs.ebp + 0x8);
+
+				if (pConfig->bTestFeature)
+				{
+					// Reseting AnalogRX_8 here fixes a weird issue that would occur in the vanilla game.
+					// When turning the camera to the side, pressing the aim button, and then releasing it, the camera
+					// would turn to face the same "angle" it was before aiming. It is weird to explain.
+					// I believe all these quirks were introduced when QLOC decided to hack their way around the original camera functions
+					// to add mouse freelook, which uses absolute position, while keeping the aiming's delta position using the same
+					// AnalogRY and AnalogRX vars. Not sure how hard it would have been to just split those up, but who knows.
+
+					*StickXfloat = 0.0f;
+					*AnalogRX_8 = 0;
+				}
+			}
+		}; injector::MakeInline<CamCtrlShoulderSetAimHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		// This section resets the camera X pos to 0 if we turn while walking. 
+		// Maybe useful for controllers(?), but it is getting in our way for KB/M.
+		pattern = hook::pattern("d9 15 ? ? ? ? d9 1d ? ? ? ? eb ? dd d8 a1");
+		struct PadReadXreset
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!pConfig->bTestFeature)
+				{
+					float tmp = 0.0f;
+
+					__asm {fst tmp}
+
+					*StickXfloat = tmp;
+				}
+			}
+		}; injector::MakeInline<PadReadXreset>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Same as before, but for the Y pos
+		struct PadReadYreset
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!pConfig->bTestFeature)
+				{
+					float tmp = 0.0f;
+
+					__asm {fstp tmp}
+
+					*StickYfloat = tmp;
+				}
+			}
+		}; injector::MakeInline<PadReadYreset>(pattern.count(1).get(0).get<uint32_t>(6), pattern.count(1).get(0).get<uint32_t>(12));
+
+
+		// This section resets the camera Y pos to 0 after we stop aiming.
+		// Same deal as before.
+		pattern = hook::pattern("d9 15 ? ? ? ? 83 fb ? 75 ? 83 bd ? ? ? ? ? 75");
+		struct PadReadYAimReset
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!pConfig->bTestFeature)
+				{
+					*StickYfloat = 0.0f;
+				}
+			}
+		}; injector::MakeInline<PadReadYAimReset>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+
+		// Due to our getCameraPitch hook potentially returning values higher than 1.0/lower than -1.0, we have to
+		// make sure here that wepPitch is within bounds.
+		// Clamping it inside our getCameraPitch hook doesn't work, because PlWepLockRand does something weird to the value afterwards.
+		// This is just easier.
+		pattern = hook::pattern("d9 15 ? ? ? ? 83 c4 ? d9 05 ? ? ? ? d9 c0 d9 ee da e9 df e0 f6 c4 ? 7a ? d9 c9 d9 1d");
+		struct PlWepLockCtrlPitchClamp
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float tmp = 0.0f;
+
+				__asm {fst tmp}
+
+				if (!pConfig->bTestFeature)
+					*wepPitch = tmp;
+				else
+					*wepPitch = std::clamp(tmp, -1.0f, 1.0f);
+			}
+		}; injector::MakeInline<PlWepLockCtrlPitchClamp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Clamp in PlSetLockPitch as well, just to be safe
+		pattern = hook::pattern("d9 15 ? ? ? ? d9 e8 D9 EE DC E9 D9 C2 DE CA DE CA");
+		injector::MakeInline<PlWepLockCtrlPitchClamp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// The original code here was used just to clamp the camPitch value.
+		// Since hacking around (while still leaving the option to enable/disable our changes on the fly) 
+		// proved to be a pain, we just replace everything with std::clamp. Seems to work fine.
+		auto pattern_begin = hook::pattern("d9 05 ? ? ? ? d8 96 ? ? ? ? df e0 f6 c4 ? 74 ? dd d8");
+		auto pattern_end = hook::pattern("d9 86 ? ? ? ? d9 5d ? d9 45 ? d9 9e");
+		injector::MakeRangedNOP(pattern_begin.count(1).get(0).get<uint32_t>(0), pattern_end.count(1).get(0).get<uint32_t>(0));
+		struct calcDepressionRatio_yClamp
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!pConfig->bTestFeature)
+				{
+					*camPitch = std::clamp(*camPitch, -1.0f, 1.0f);
+				}
+			}
+		}; injector::MakeInline<calcDepressionRatio_yClamp>(pattern_begin.count(1).get(0).get<uint32_t>(0), pattern_begin.count(1).get(0).get<uint32_t>(6));
+
+		// Wep adjustments
+		{
+			// Enables an alternative code path that skips having to wait for the initial ready animation to be finished
+			// before the aim moves to the correct place. Looks like this was added for Wii support, since it is originally
+			// checking for WPadMode. We repalce the WPadMode check with our own bool here. Making it check for both would
+			// be possible, and probably necessary if someone ever tries to restore Wii remote support, I guess.
+
+			// wep02_r3_ready00 -> Handguns
+			auto pattern = hook::pattern("83 3d ? ? ? ? ? 75 ? e8 ? ? ? ? 32 c9");
+			injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(2), &pConfig->bTestFeature, true);
+
+			// wep07_r3_ready00 -> Shotguns
+			pattern = hook::pattern("39 1D ? ? ? ? 75 2A 88 9E ? ? ? ? 8B 0D ? ? ? ? 8B 41 44");
+			injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(2), &pConfig->bTestFeature, true);
+
+			// wep11_r3_ready00 -> Machine guns
+			pattern = hook::pattern("39 1d ? ? ? ? 75 ? c6 86 ? ? ? ? ? 8b 15 ? ? ? ? 0f b6 8a");
+			injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(2), &pConfig->bTestFeature, true);
+
+			// wep14_r3_ready00 -> Mine thrower, PRL 412
+			// This one is a bit different. We just need to not let the function set wepPitch to 0.
+			pattern = hook::pattern("d9 15 ? ? ? ? 5f d9 15 ? ? ? ? d9 1d");
+			struct wep14_r3_ready00WepPitchReset
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					if (!pConfig->bTestFeature)
+					{
+						*wepPitch = 0.0f;
+					}
+				}
+			}; injector::MakeInline<wep14_r3_ready00WepPitchReset>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+			// Grenades sadly have some animation weirdness, so we're better of just leaving the out of our changes.
+			pattern = hook::pattern("8b 48 ? 03 49 ? 6a ? 6a ? 6a ? 6a ? 6a ? 51 51 51 56 b9 ? ? ? ? e8 ? ? ? ? d9 05 ? ? ? ? 51 b9 ? ? ? ? d9 1c ? e8 ? ? ? ? d9 ee d9 15 ? ? ? ? 6a");
+			struct wep19_r2_ready_hook
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					// Code we replaced
+					regs.ecx = *(uint32_t*)(regs.eax + 0x44);
+					regs.ecx += *(uint32_t*)(regs.ecx + 0x3C);
+
+					bIsGrenade = true;
+				}
+			}; injector::MakeInline<wep19_r2_ready_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		}
+	}
+
+
+
 	// Check if the exe is LAA
 	if (!laa.GameIsLargeAddressAware())
 	{

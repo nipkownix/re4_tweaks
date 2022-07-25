@@ -6,6 +6,8 @@
 class Config
 {
 public:
+	bool bTestFeature = true;
+
 	// DISPLAY
 	float fFOVAdditional = 0.0f;
 	bool bEnableFOV = false;
