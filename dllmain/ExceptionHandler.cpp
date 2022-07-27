@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include <exception.hpp>
 #include "miniz/miniz.h"
+#include "Utils.h"
 
 // miniz unfortunately doesn't include wchar versions of its functions, but fortunately does allow passing FILE* to it
 mz_bool mz_zip_writer_add_file(mz_zip_archive* pZip, const char* pArchive_name, const wchar_t* pSrc_filename, const void* pComment, mz_uint16 comment_size, mz_uint level_and_flags)
@@ -36,7 +37,8 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
 {
     wchar_t     modulename[MAX_PATH];
     wchar_t     dump_filename[MAX_PATH];
-    wchar_t     log_filename[MAX_PATH];
+    wchar_t     crash_log_filename[MAX_PATH];
+    wchar_t     re4t_log_filename[MAX_PATH];
     wchar_t     save_filename[MAX_PATH];
     wchar_t     zip_filename[MAX_PATH];
     wchar_t     timestamp[128];
@@ -56,7 +58,7 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
     }
     else
     {
-        wcscpy(modulenameptr, L"err.err");
+        modulenameptr = L"err.err";
     }
 
     _time64(&time);
@@ -81,8 +83,8 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
     }
 
     // Logs exception into buffer and writes to file
-    swprintf_s(log_filename, L"%s\\%s\\%s.%s.log", modulename, L"CrashDumps", modulenameptr, timestamp);
-    hFile = CreateFileW(log_filename, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    swprintf_s(crash_log_filename, L"%s\\%s\\%s.%s.log", modulename, L"CrashDumps", modulenameptr, timestamp);
+    hFile = CreateFileW(crash_log_filename, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile != INVALID_HANDLE_VALUE)
     {
@@ -90,11 +92,6 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
         {
             if (LogException(buffer, size, (LPEXCEPTION_POINTERS)ExceptionInfo, reg, stack, trace))
             {
-                // Add some info of our own. Only game version for now.
-                std::stringstream re4ti;
-                re4ti << "bio4.exe version: " << GameVersion() << std::endl;
-                strcat(buffer, re4ti.str().data());
-
                 // Write log file
                 DWORD NumberOfBytesWritten = 0;
                 WriteFile(hFile, buffer, strlen(buffer), &NumberOfBytesWritten, NULL);
@@ -133,6 +130,14 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
       }
     }
 
+    // Copy re4_tweaks log file to CrashDumps
+    {
+        swprintf_s(re4t_log_filename, L"%s\\%s\\re4t.log", modulename, L"CrashDumps");
+
+        if (std::filesystem::exists(logPath))
+            std::filesystem::copy_file(logPath, re4t_log_filename);
+    }
+
     // ZIP up the dump/log/save
     {
       swprintf_s(zip_filename, L"%s\\%s\\%s.%s.zip", modulename, L"CrashDumps", modulenameptr, timestamp);
@@ -151,7 +156,9 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
 
           if (!mz_zip_writer_add_file(&zip_archive, "dump.dmp", dump_filename, nullptr, 0, 3))
             zip_created = false;
-          if (!mz_zip_writer_add_file(&zip_archive, "log.log", log_filename, nullptr, 0, 3))
+          if (!mz_zip_writer_add_file(&zip_archive, "crash.log", crash_log_filename, nullptr, 0, 3))
+            zip_created = false;
+          if (!mz_zip_writer_add_file(&zip_archive, "re4t.log", re4t_log_filename, nullptr, 0, 3))
             zip_created = false;
 
           if (p_GameSave_BufPtr)
@@ -167,13 +174,18 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
       if (zip_created)
       {
         DeleteFileW(dump_filename);
-        DeleteFileW(log_filename);
+        DeleteFileW(crash_log_filename);
+        DeleteFileW(re4t_log_filename);
         if (p_GameSave_BufPtr)
           DeleteFileW(save_filename);
       }
     }
 
     // Exit the application
+    wchar_t	error[1024];
+    swprintf_s(error, L"Fatal error (0x%08X) at 0x%08X.\n\nA crash log has been saved to \"%s\".", (int)ExceptionInfo->ExceptionRecord->ExceptionCode, (int)ExceptionInfo->ExceptionRecord->ExceptionAddress, zip_filename);
+    MessageBoxW(NULL, error, L"re4_tweaks", MB_ICONERROR | MB_OK);
+
     ShowCursor(TRUE);
     hWnd = FindWindowW(0, L"");
     SetForegroundWindow(hWnd);
@@ -185,21 +197,15 @@ void Init_ExceptionHandler()
 {
     std::string dumpPath = rootPath + "CrashDumps";
 
-    auto FolderExists = [](LPCSTR szPath) -> BOOL
+    if (std::filesystem::exists(dumpPath))
     {
-        DWORD dwAttrib = GetFileAttributesA(szPath);
-        return (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-    };
-
-    if (FolderExists(dumpPath.c_str()))
-    {
+        /* This doesn't seem to catch all exceptions?
         SetUnhandledExceptionFilter(CustomUnhandledExceptionFilter);
 
         // Now stub out SetUnhandledExceptionFilter so NO ONE ELSE can set it!
-        uint32_t ret = 0x900004C2; //ret4
-        DWORD protect[2];
-        VirtualProtect(&SetUnhandledExceptionFilter, sizeof(ret), PAGE_EXECUTE_READWRITE, &protect[0]);
-        memcpy(&SetUnhandledExceptionFilter, &ret, sizeof(ret));
-        VirtualProtect(&SetUnhandledExceptionFilter, sizeof(ret), protect[0], &protect[1]);
+        Patch(&SetUnhandledExceptionFilter, { 0xC2, 0x04, 0x00 });
+        */
+
+        AddVectoredExceptionHandler(1, CustomUnhandledExceptionFilter);
     }
 }

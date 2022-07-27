@@ -11,6 +11,7 @@
 std::string WrapperMode;
 std::string WrapperName;
 std::string rootPath;
+std::string logPath;
 
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
@@ -86,8 +87,6 @@ void Init_Main()
 	// Apply changes needed by the HD Project
 	if (bIsUsingHDProject)
 		Init_HDProject();
-
-	Init_ExceptionHandler();
 }
 
 void StorePath(HMODULE hModule)
@@ -101,6 +100,9 @@ void StorePath(HMODULE hModule)
 	// Store root path
 	std::string modulePath = configname;
 	rootPath = modulePath.substr(0, modulePath.rfind('\\') + 1);
+
+	// Store log path
+	logPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".log";
 }
 
 void LoadRealDLL(HMODULE hModule)
@@ -148,6 +150,8 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		StorePath(hModule);
 
 		LoadRealDLL(hModule);
+
+		Init_ExceptionHandler();
 
 		Init_Main();
 

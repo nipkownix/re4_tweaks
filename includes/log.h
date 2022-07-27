@@ -1,9 +1,10 @@
 #pragma once
-
 #define SPDLOG_WCHAR_FILENAMES
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include <filesystem>
+#include "../dllmain/Utils.h"
+#include "../dllmain/Patches.h"
 
 class spd
 {
@@ -34,6 +35,7 @@ public:
 private:
     inline static const std::wstring GetLogName()
     {
+        /*
         HMODULE hm = NULL;
         GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCWSTR)&GetLogName, &hm);
         std::wstring ret;
@@ -41,5 +43,8 @@ private:
         GetModuleFileNameW(hm, &ret[0], ret.size());
         ret = ret.substr(0, ret.find_last_of('.')) + L".log";
         return ret;
+        */
+
+        return StrToWstr(logPath);
     }
 };

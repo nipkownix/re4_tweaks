@@ -4,6 +4,7 @@
 
 extern std::string WrapperName;
 extern std::string rootPath;
+extern std::string logPath;
 extern HWND hWindow;
 
 // Init functions
