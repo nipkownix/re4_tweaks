@@ -88,8 +88,8 @@ bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4 &activeCo
 
 	auto p0 = ImGui::GetItemRectMin();
 	auto p1 = ImGui::GetItemRectMax();
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + 10.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 8.0f), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + 8.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 6.0f), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret)
 		Tab = tabID;
@@ -277,7 +277,7 @@ void cfgMenuRender()
 			if (ImGui::Button(ICON_FA_ERASER" Discard", ImVec2(85, 35)))
 			{
 				pConfig->ReadSettings();
-				ImGui::GetIO().FontGlobalScale = pConfig->fFontSize - 0.35f;
+				ImGui::GetIO().FontGlobalScale = pConfig->fFontSize;
 			}
 
 			ImGui::SameLine();
@@ -294,7 +294,7 @@ void cfgMenuRender()
 				// Update console title
 				con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
 
-				pConfig->fFontSize = ImGui::GetIO().FontGlobalScale + 0.35f;
+				pConfig->fFontSize = ImGui::GetIO().FontGlobalScale;
 				pConfig->WriteSettings();
 			}
 
@@ -317,7 +317,7 @@ void cfgMenuRender()
 				// Config menu font size
 				if (ImGui::Button("-"))
 				{
-					if (ImGui::GetIO().FontGlobalScale > 0.65f)
+					if (ImGui::GetIO().FontGlobalScale > 1.0f)
 						ImGui::GetIO().FontGlobalScale -= 0.05f;
 
 					pConfig->HasUnsavedChanges = true;
@@ -327,7 +327,7 @@ void cfgMenuRender()
 
 				if (ImGui::Button("+"))
 				{
-					if (ImGui::GetIO().FontGlobalScale < 0.90f)
+					if (ImGui::GetIO().FontGlobalScale < 1.20f)
 						ImGui::GetIO().FontGlobalScale += 0.05f;
 
 					pConfig->HasUnsavedChanges = true;
@@ -1419,7 +1419,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(1);
-						if (ImGui::Button(StrToUTF8(pConfig->sConfigMenuKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(pConfig->sConfigMenuKeyCombo.c_str(), ImVec2(150, 0)))
 						{
 							pConfig->HasUnsavedChanges = true;
 							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sConfigMenuKeyCombo, 0, NULL);
@@ -1439,7 +1439,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(2);
-						if (ImGui::Button(StrToUTF8(pConfig->sConsoleKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(pConfig->sConsoleKeyCombo.c_str(), ImVec2(150, 0)))
 						{
 							pConfig->HasUnsavedChanges = true;
 							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sConsoleKeyCombo, 0, NULL);
@@ -1471,7 +1471,7 @@ void cfgMenuRender()
 							// UP
 							ImGui::TextWrapped("Flip UP");
 							ImGui::PushID(3);
-							if (ImGui::Button(StrToUTF8(pConfig->sFlipItemUp).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(pConfig->sFlipItemUp.c_str(), ImVec2(140, 0)))
 							{
 								pConfig->HasUnsavedChanges = true;
 								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemUp, 0, NULL);
@@ -1483,7 +1483,7 @@ void cfgMenuRender()
 							// DOWN
 							ImGui::TextWrapped("Flip DOWN");
 							ImGui::PushID(4);
-							if (ImGui::Button(StrToUTF8(pConfig->sFlipItemDown).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(pConfig->sFlipItemDown.c_str(), ImVec2(140, 0)))
 							{
 								pConfig->HasUnsavedChanges = true;
 								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemDown, 0, NULL);
@@ -1495,7 +1495,7 @@ void cfgMenuRender()
 							// LEFT
 							ImGui::TextWrapped("Flip LEFT");
 							ImGui::PushID(5);
-							if (ImGui::Button(StrToUTF8(pConfig->sFlipItemLeft).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(pConfig->sFlipItemLeft.c_str(), ImVec2(140, 0)))
 							{
 								pConfig->HasUnsavedChanges = true;
 								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemLeft, 0, NULL);
@@ -1507,7 +1507,7 @@ void cfgMenuRender()
 							// RIGHT
 							ImGui::TextWrapped("Flip RIGHT");
 							ImGui::PushID(6);
-							if (ImGui::Button(StrToUTF8(pConfig->sFlipItemRight).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(pConfig->sFlipItemRight.c_str(), ImVec2(140, 0)))
 							{
 								pConfig->HasUnsavedChanges = true;
 								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sFlipItemRight, 0, NULL);
@@ -1537,7 +1537,7 @@ void cfgMenuRender()
 							// QTE1
 							ImGui::TextWrapped("QTE key 1");
 							ImGui::PushID(7);
-							if (ImGui::Button(StrToUTF8(pConfig->sQTE_key_1).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(pConfig->sQTE_key_1.c_str(), ImVec2(140, 0)))
 							{
 								pConfig->HasUnsavedChanges = true;
 								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sQTE_key_1, 0, NULL);
@@ -1549,7 +1549,7 @@ void cfgMenuRender()
 							// QTE2
 							ImGui::TextWrapped("QTE key 2");
 							ImGui::PushID(8);
-							if (ImGui::Button(StrToUTF8(pConfig->sQTE_key_2).c_str(), ImVec2(140, 0)))
+							if (ImGui::Button(pConfig->sQTE_key_2.c_str(), ImVec2(140, 0)))
 							{
 								pConfig->HasUnsavedChanges = true;
 								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &pConfig->sQTE_key_2, 0, NULL);
@@ -1571,7 +1571,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(9);
-						if (ImGui::Button(StrToUTF8(pConfig->sDebugMenuKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(pConfig->sDebugMenuKeyCombo.c_str(), ImVec2(150, 0)))
 						{
 							pConfig->HasUnsavedChanges = true;
 							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sDebugMenuKeyCombo, 0, NULL);
@@ -1594,7 +1594,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(10);
-						if (ImGui::Button(StrToUTF8(pConfig->sMouseTurnModifierKeyCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(pConfig->sMouseTurnModifierKeyCombo.c_str(), ImVec2(150, 0)))
 						{
 							pConfig->HasUnsavedChanges = true;
 							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sMouseTurnModifierKeyCombo, 0, NULL);
@@ -1614,7 +1614,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::PushID(11);
-						if (ImGui::Button(StrToUTF8(pConfig->sJetSkiTrickCombo).c_str(), ImVec2(150, 0)))
+						if (ImGui::Button(pConfig->sJetSkiTrickCombo.c_str(), ImVec2(150, 0)))
 						{
 							pConfig->HasUnsavedChanges = true;
 							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sJetSkiTrickCombo, 0, NULL);
@@ -1654,7 +1654,7 @@ void ShowCfgMenuTip()
 			ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
 			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing);
 
-		std::string tooltip = StrToUTF8(std::string("re4_tweaks: Press ") + pConfig->sConfigMenuKeyCombo + std::string(" to open the configuration menu"));
+		std::string tooltip = std::string("re4_tweaks: Press ") + pConfig->sConfigMenuKeyCombo.c_str() + std::string(" to open the configuration menu");
 
 		ImGui::TextUnformatted(tooltip.data());
 

@@ -8,8 +8,8 @@
 #include "imgui\imgui_impl_dx9.h"
 #include "imgui\imgui_stdlib.h"
 #include <faprolight.hpp>
-#include <sffont.hpp>
 #include <hashes.h>
+#include <NotoSansCJKsc.hpp>
 #include "input.hpp"
 #include "resource.h"
 
@@ -224,35 +224,23 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 
 	io.IniFilename = nullptr;
 
-	static const ImWchar ranges[] =
-	{
-		0x0020, 0x00FF, // Basic Latin + Latin Supplement
-		0x2000, 0x206F, // General Punctuation
-		0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
-		0x31F0, 0x31FF, // Katakana Phonetic Extensions
-		0xFF00, 0xFFEF, // Half-width characters
-		0x4e00, 0x9FAF, // CJK Ideograms
-		0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
-		0x2DE0, 0x2DFF, // Cyrillic Extended-A
-		0xA640, 0xA69F, // Cyrillic Extended-B
-		0,
-	};
+	static const ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
 
 	ImFontConfig ImCustomFont;
 	ImCustomFont.FontDataOwnedByAtlas = false;
 
-	io.Fonts->AddFontFromMemoryCompressedTTF(sfpro_compressed_data, sfpro_compressed_size, 24, &ImCustomFont, ranges);
+	io.Fonts->AddFontFromMemoryCompressedTTF(NotoSansCJKsc_compressed_data, NotoSansCJKsc_compressed_size, 18, &ImCustomFont, ranges);
 
 	static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
-
+	
 	ImFontConfig ImCustomIcons;
 	ImCustomIcons.MergeMode = true;
 	ImCustomIcons.PixelSnapH = true;
 	ImCustomIcons.FontDataOwnedByAtlas = false;
+	
+	io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 18, &ImCustomIcons, icon_ranges);
 
-	io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 24, &ImCustomIcons, icon_ranges);
-
-	io.FontGlobalScale = pConfig->fFontSize - 0.35f;
+	io.FontGlobalScale = pConfig->fFontSize;
 
 	ApplyImGuiTheme();
 

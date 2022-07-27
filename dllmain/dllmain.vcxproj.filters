@@ -288,12 +288,6 @@
     <ClInclude Include="..\settings\settings_string.h">
       <Filter>settings</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\faprolight.hpp">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\sffont.hpp">
-      <Filter>includes</Filter>
-    </ClInclude>
     <ClInclude Include="..\includes\hashes.h">
       <Filter>includes</Filter>
     </ClInclude>
@@ -341,6 +335,12 @@
     </ClInclude>
     <ClInclude Include="dllmain.h">
       <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\faprolight.hpp">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\NotoSansCJKsc.hpp">
+      <Filter>includes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

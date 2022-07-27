@@ -217,7 +217,7 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
-    std::string name = StrToUTF8(std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide"));
+    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide");
     ImGui::Begin(name.data());
     ImGui::End();
     Draw(name.data());
