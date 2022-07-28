@@ -541,9 +541,8 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::BeginDisabled(!pConfig->bOverrideLaserColor || pConfig->bRainbowLaser);
-
 						ImGui::ColorEdit4("Laser color picker", fLaserColorPicker, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs);
-						if (ImGui::IsItemEdited)
+						if (ImGui::IsItemEdited())
 						{
 							pConfig->iLaserR = (int)(fLaserColorPicker[0] * 255.0f);
 							pConfig->iLaserG = (int)(fLaserColorPicker[1] * 255.0f);
