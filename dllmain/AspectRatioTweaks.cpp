@@ -112,30 +112,27 @@ void Init_AspectRatioTweaks()
 	pattern = hook::pattern("E8 ? ? ? ? 8D 4D ? 6A ? 51 E8 ? ? ? ? 8D 55 ? 52 8D 45 ? 50 8D 4D ? 51 56 E8 ? ? ? ? 8B 4D ? 33 CD");
 	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), C_MTXOrtho_cSofdec_hook);
 
-	// Hook LifeMeter::roomInit so we can override the initial HUD pos
-	pattern = hook::pattern("8B 48 ? 8B 51 ? 6A ? 6A ? 03 D1 68 ? ? ? ? 52 B9 ? ? ? ? E8 ? ? ? ? 6A");
-	struct LMroomInit_Hook
+	// Hook LifeMeter::move so we can override the HUD pos
+	pattern = hook::pattern("D9 98 ? ? ? ? 0F BE 46 ? 89 45 ? 6A ? B9 ? ? ? ? DB 45");
+	struct LifeMeter__move_hook
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			regs.ecx = *(uint32_t*)(regs.eax + 0x48);
-			regs.edx = *(uint32_t*)(regs.ecx + 0x7C);
+			// Code we replaced
+			__asm {fstp dword ptr[eax + 0x10C]}
 
-			if ((pConfig->bSideAlignHUD && bIsUltrawide) || bIs16by10)
+			float* fCurHudPosX = (float*)(regs.eax - 0x1DCC);
+
+			if ((pConfig->bSideAlignHUD && bIsUltrawide) || (pConfig->bRemove16by10BlackBars && bIs16by10))
 			{
-				// I honestly don't understand this pointer and/or the data structure it points to
-				float* fInitialHudPosX = (float*)(regs.ecx + regs.edx + 0x1C);
-
 				float fHudPosOffset = 0.25f * (fGameWidth - (fDefaultEngineAspectRatio * fGameHeight));
 
-				*fInitialHudPosX = fDefaultHudPosX + fHudPosOffset;
-
-				#ifdef VERBOSE
-				con.AddConcatLog("fInitialHudPosX: ", *fInitialHudPosX);
-				#endif
+				*fCurHudPosX = fDefaultHudPosX + fHudPosOffset;
 			}
+			else
+				*fCurHudPosX = fDefaultHudPosX;
 		}
-	}; injector::MakeInline<LMroomInit_Hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}; injector::MakeInline<LifeMeter__move_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 	// Hook function that sets the BG color (bio4_AddBgColor), so we can make sure it is black when playing videos
 	pattern = hook::pattern("F6 82 ? ? ? ? ? 75 ? B9 ? ? ? ? E8 ? ? ? ? 8B 48");

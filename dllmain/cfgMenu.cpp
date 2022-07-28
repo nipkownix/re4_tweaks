@@ -421,22 +421,15 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 
-						if (ImGui::Checkbox("UltraWideAspectSupport", &pConfig->bUltraWideAspectSupport))
-						{
-							pConfig->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("UltraWideAspectSupport", &pConfig->bUltraWideAspectSupport);
 						ImGui::TextWrapped("Fixes the incorrect aspect ratio when playing in ultrawide resolutions, preventing the image from being cut off and the HUD appearing off-screen.");
+						ImGui::TextWrapped("(Change the resolution for this setting to take effect)");
 
 						ImGui::Dummy(ImVec2(10, 10));
 
 						ImGui::BeginDisabled(!pConfig->bUltraWideAspectSupport);
-						if (ImGui::Checkbox("SideAlignHUD", &pConfig->bSideAlignHUD))
-						{
-							pConfig->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-						ImGui::TextWrapped("Moves the HUD to the right side of the screen. (Requires restart or game load to take effect!)");
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("SideAlignHUD", &pConfig->bSideAlignHUD);
+						ImGui::TextWrapped("Moves the HUD to the right side of the screen.");
 
 						ImGui::Spacing();
 
@@ -453,12 +446,9 @@ void cfgMenuRender()
 						ImGui_ItemSeparator2();
 						ImGui::Dummy(ImVec2(10, 10));
 
-						if (ImGui::Checkbox("Remove16by10BlackBars", &pConfig->bRemove16by10BlackBars))
-						{
-							pConfig->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("Remove16by10BlackBars", &pConfig->bRemove16by10BlackBars);
 						ImGui::TextWrapped("Removes top and bottom black bars that are present when playing in 16:10. Will crop a few pixels from each side of the screen.");
+						ImGui::TextWrapped("(Change the resolution for this setting to take effect)");
 					}
 
 					// DisableVsync
