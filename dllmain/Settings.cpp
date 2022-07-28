@@ -151,9 +151,12 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", pConfig->bOverrideLaserColor);
 	pConfig->bRainbowLaser = iniReader.ReadBoolean("DISPLAY", "RainbowLaser", pConfig->bRainbowLaser);
 
-	pConfig->fLaserRGB[0] = iniReader.ReadFloat("DISPLAY", "LaserR", pConfig->fLaserRGB[0]) / 255.0f;
-	pConfig->fLaserRGB[1] = iniReader.ReadFloat("DISPLAY", "LaserG", pConfig->fLaserRGB[1]) / 255.0f;
-	pConfig->fLaserRGB[2] = iniReader.ReadFloat("DISPLAY", "LaserB", pConfig->fLaserRGB[2]) / 255.0f;
+	pConfig->iLaserR = iniReader.ReadInteger("DISPLAY", "LaserR", pConfig->iLaserR);
+	pConfig->iLaserG = iniReader.ReadInteger("DISPLAY", "LaserG", pConfig->iLaserG);
+	pConfig->iLaserB = iniReader.ReadInteger("DISPLAY", "LaserB", pConfig->iLaserB);
+	fLaserColorPicker[0] = pConfig->iLaserR / 255.0f;
+	fLaserColorPicker[1] = pConfig->iLaserG / 255.0f;
+	fLaserColorPicker[2] = pConfig->iLaserB / 255.0f;
 
 	pConfig->bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", pConfig->bRestorePickupTransparency);
 	pConfig->bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03);
@@ -380,9 +383,9 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", pConfig->bOverrideLaserColor);
 	iniReader.WriteBoolean("DISPLAY", "RainbowLaser", pConfig->bRainbowLaser);
 
-	iniReader.WriteFloat("DISPLAY", "LaserR", pConfig->fLaserRGB[0] * 255.0f);
-	iniReader.WriteFloat("DISPLAY", "LaserG", pConfig->fLaserRGB[1] * 255.0f);
-	iniReader.WriteFloat("DISPLAY", "LaserB", pConfig->fLaserRGB[2] * 255.0f);
+	iniReader.WriteInteger("DISPLAY", "LaserR", pConfig->iLaserR);
+	iniReader.WriteInteger("DISPLAY", "LaserG", pConfig->iLaserG);
+	iniReader.WriteInteger("DISPLAY", "LaserB", pConfig->iLaserB);
 
 	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", pConfig->bRestorePickupTransparency);
 	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03);
@@ -505,9 +508,9 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", pConfig->iCustomRefreshRate);
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideLaserColor", pConfig->bOverrideLaserColor ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RainbowLaser", pConfig->bRainbowLaser ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "LaserR", pConfig->fLaserRGB[0] * 255.0f);
-	spd::log()->info("| {:<30} | {:>15} |", "LaserG", pConfig->fLaserRGB[1] * 255.0f);
-	spd::log()->info("| {:<30} | {:>15} |", "LaserB", pConfig->fLaserRGB[2] * 255.0f);
+	spd::log()->info("| {:<30} | {:>15} |", "LaserR", pConfig->iLaserR);
+	spd::log()->info("| {:<30} | {:>15} |", "LaserG", pConfig->iLaserG);
+	spd::log()->info("| {:<30} | {:>15} |", "LaserB", pConfig->iLaserB);
 	spd::log()->info("| {:<30} | {:>15} |", "RestorePickupTransparency", pConfig->bRestorePickupTransparency ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03 ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixBlurryImage", pConfig->bFixBlurryImage ? "true" : "false");

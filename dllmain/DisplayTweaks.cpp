@@ -288,9 +288,9 @@ void Init_DisplayTweaks()
 					}
 					else
 					{
-						*(float*)(ptrLaserR) = pConfig->fLaserRGB[0] * 255.0f;
-						*(float*)(ptrLaserG) = pConfig->fLaserRGB[1] * 255.0f;
-						*(float*)(ptrLaserB) = pConfig->fLaserRGB[2] * 255.0f;
+						*(float*)(ptrLaserR) = (float)pConfig->iLaserR;
+						*(float*)(ptrLaserG) = (float)pConfig->iLaserG;
+						*(float*)(ptrLaserB) = (float)pConfig->iLaserB;
 
 					}
 

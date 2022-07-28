@@ -14,6 +14,8 @@ bool bCfgMenuOpen;
 bool NeedsToRestart;
 bool bWaitingForHotkey;
 
+float fLaserColorPicker[3]{ 0.0f, 0.0f, 0.0f };
+
 ImVec2 PrevRightColumnPos;
 ImVec2 PrevLeftColumnPos;
 
@@ -539,7 +541,14 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::BeginDisabled(!pConfig->bOverrideLaserColor || pConfig->bRainbowLaser);
-						ImGui::ColorEdit4("Laser color picker", pConfig->fLaserRGB, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs);
+
+						ImGui::ColorEdit4("Laser color picker", fLaserColorPicker, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs);
+						if (ImGui::IsItemEdited)
+						{
+							pConfig->iLaserR = (int)(fLaserColorPicker[0] * 255.0f);
+							pConfig->iLaserG = (int)(fLaserColorPicker[1] * 255.0f);
+							pConfig->iLaserB = (int)(fLaserColorPicker[2] * 255.0f);
+						}
 						ImGui::EndDisabled();
 
 						ImGui::Spacing();

@@ -20,7 +20,9 @@ public:
 	int iCustomRefreshRate = -1;
 	bool bOverrideLaserColor = false;
 	bool bRainbowLaser = false;
-	float fLaserRGB[3] = { 1.0f, 0.0f, 0.0f };
+	int iLaserR = 255;
+	int iLaserG = 0;
+	int iLaserB = 0;
 	bool bRestorePickupTransparency = true;
 	bool bDisableBrokenFilter03 = true;
 	bool bFixBlurryImage = true;
