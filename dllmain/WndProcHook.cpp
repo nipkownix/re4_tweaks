@@ -172,6 +172,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 // CreateWindowExA hook to get the hWindow and set up the WndProc hook
 HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 {
+	// Perform LAA check/prompt before game window has a chance to be created
+	LAACheck();
+
 	int windowX = pConfig->iWindowPositionX < 0 ? CW_USEDEFAULT : pConfig->iWindowPositionX;
 	int windowY = pConfig->iWindowPositionY < 0 ? CW_USEDEFAULT : pConfig->iWindowPositionY;
 

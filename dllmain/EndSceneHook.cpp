@@ -280,14 +280,7 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	#ifdef VERBOSE
 	// Show the console if in verbose
 	con.ShowConsoleOutput();
-	#endif 
-
-	// Show the LAA window if needed
-	if (laa.LAA_State != LAADialogState::NotShowing)
-	{
-		if ((esHook._last_present_time - esHook._start_time) > std::chrono::seconds(10))
-			laa.LAARender();
-	}
+	#endif
 
 	// Show the cfgMenu
 	if (bCfgMenuOpen)
@@ -297,15 +290,15 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	}
 
 	// Show cursor if needed
-	ImGui::GetIO().MouseDrawCursor = bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing);
+	ImGui::GetIO().MouseDrawCursor = bCfgMenuOpen;
 
 	ImGui::EndFrame();
 	ImGui::Render();
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	pInput->block_mouse_input(bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing));
-	pInput->block_keyboard_input(bCfgMenuOpen || (laa.LAA_State != LAADialogState::NotShowing));
+	pInput->block_mouse_input(bCfgMenuOpen);
+	pInput->block_keyboard_input(bCfgMenuOpen);
 
 	// Update _last_frame_duration and _last_present_time
 	const auto current_time = std::chrono::high_resolution_clock::now();
