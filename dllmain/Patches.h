@@ -87,22 +87,8 @@ struct ConsoleOutput
 extern ConsoleOutput con;
 extern bool bConsoleOpen;
 
-// LAApatch
-enum class LAADialogState
-{
-	NotShowing,
-	Showing,
-	Finished // show dialog telling user that LAA patch is complete, etc
-};
-
-struct LAApatch
-{
-	void LAARender();
-	bool GameIsLargeAddressAware();
-	LAADialogState LAA_State;
-};
-
-extern LAApatch laa;
+// LAApatch.cpp
+void LAACheck();
 
 // Controller tweaks
 extern int* g_XInputDeadzone_LS;

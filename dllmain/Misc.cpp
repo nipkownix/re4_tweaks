@@ -473,13 +473,6 @@ bool cPlayer__keyReload_hook()
 
 void Init_Misc()
 {
-	// Check if the exe is LAA
-	if (!laa.GameIsLargeAddressAware())
-	{
-		spd::log()->info("Non-LAA executable detected!");
-		laa.LAA_State = LAADialogState::Showing; // Show LAA patch prompt
-	}
-
 	// Hook cPlayer::keyReload to allow reloading without aiming
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? 84 C0 74 3A 8B 86 ? ? ? ? 39 58 ? 74 ? 8B 40");
