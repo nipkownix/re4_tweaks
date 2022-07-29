@@ -125,7 +125,7 @@ void Init_AspectRatioTweaks()
 
 			if ((pConfig->bSideAlignHUD && bIsUltrawide) || (pConfig->bRemove16by10BlackBars && bIs16by10))
 			{
-				float fHudPosOffset = 0.25f * (fGameWidth - (fDefaultEngineAspectRatio * fGameHeight));
+				float fHudPosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) / 2.0f;
 
 				*fCurHudPosX = fDefaultHudPosX + fHudPosOffset;
 			}
