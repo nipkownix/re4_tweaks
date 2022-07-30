@@ -21,6 +21,12 @@ InputDevices LastUsedDevice()
 	return *(InputDevices*)(ptrLastUsedDevice);
 }
 
+void SetLastUsedDevice(InputDevices device)
+{
+	*(InputDevices*)(ptrLastUsedDevice) = device;
+	return;
+}
+
 uint32_t* ptrMouseSens = nullptr;
 int g_MOUSE_SENS()
 {

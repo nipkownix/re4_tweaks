@@ -559,6 +559,7 @@ static_assert(sizeof(DatTbl) == 8, "sizeof(DatTbl)");
 std::string GameVersion();
 bool GameVersionIsDebug();
 InputDevices LastUsedDevice();
+void SetLastUsedDevice(InputDevices device);
 int g_MOUSE_SENS();
 MouseAimingModes GetMouseAimingMode();
 void SetMouseAimingMode(MouseAimingModes newMode);

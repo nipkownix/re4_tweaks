@@ -11,6 +11,11 @@ int* g_XInputDeadzone_RS;
 int iDefaultXIDeadzone_LS = 7849;
 int iDefaultXIDeadzone_RS = 8689;
 
+float* fAnalogLX;
+float* fAnalogLY;
+float* fAnalogRX;
+float* fAnalogRY;
+
 void Init_ControllerTweaks()
 {
 	// Aiming speed
@@ -57,6 +62,15 @@ void Init_ControllerTweaks()
 		pattern = hook::pattern("0F B7 05 ? ? ? ? 50 51 E8 ? ? ? ? 0F B7 46 ? D9 5E");
 		g_XInputDeadzone_RS = (int*)*pattern.count(1).get(0).get<uint32_t>(3);
 
+		// Get pointers to the floats sub_964490 use for checking if the sticks are moving.
+		// (Are these the origins of the AnalogR*_ and AnalogL*_ values?)
+		pattern = hook::pattern("D9 81 ? ? ? ? D9 81 ? ? ? ? DA E9 DF E0 F6 C4 ? 7A ? D9 81 ? ? ? ? D9");
+		fAnalogLX = (float*)*pattern.count(3).get(0).get<uint32_t>(2);
+		fAnalogLY = fAnalogLX + 1;
+		fAnalogRX = fAnalogLY + 1;
+		fAnalogRY = fAnalogRX + 1;
+
+		// Write new deadzone value right before they're loaded.
 		pattern = hook::pattern("89 56 ? 89 46 ? 8B 0D ? ? ? ? F7 81 ? ? ? ? ? ? ? ? 0F");
 		struct PadXinputReadDZwrite
 		{
@@ -65,28 +79,44 @@ void Init_ControllerTweaks()
 				*(uint32_t*)(regs.esi - 0x44) = regs.edx;
 				*(uint32_t*)(regs.esi - 0x40) = regs.eax;
 
-				switch (LastUsedDevice()) {
-				case InputDevices::DinputController:
-				case InputDevices::XinputController:
-					if (pConfig->bOverrideXinputDeadzone)
-					{
-						*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_LS);
-						*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_RS);
-					}
-					else
-					{
-						*g_XInputDeadzone_LS = iDefaultXIDeadzone_LS;
-						*g_XInputDeadzone_RS = iDefaultXIDeadzone_RS;
-					}
-					break;
-				case InputDevices::Keyboard:
-				case InputDevices::Mouse:
+				if (pConfig->bOverrideXinputDeadzone)
+				{
+					*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_LS);
+					*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_RS);
+				}
+				else
+				{
 					*g_XInputDeadzone_LS = iDefaultXIDeadzone_LS;
 					*g_XInputDeadzone_RS = iDefaultXIDeadzone_RS;
-					break;
 				}
 			}
 		}; injector::MakeInline<PadXinputReadDZwrite>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// This function (sub_964490) is responsible for updating the game's iLastUsedController variable. For Xinput, it seems to be just checking if the
+		// floats aren't 0 before assuming a controller is being used, and writing Xinput as iLastUsedController.
+		// OverrideXinputDeadzone revealed that, even in the vanilla game, this can cause false positives if the analog sticks have more than 0.1% of drift in any direction.
+		// We add a bit of tolerance here to, hopefully, get rid of any false positives.
+		auto pattern_begin = hook::pattern("75 71 D9 81 ? ? ? ? D9 81 ? ? ? ? DA E9 DF E0 F6 C4 ? 7A ? D9 81");
+		auto pattern_end = hook::pattern("7A ? 83 C1 ? 81 F9 ? ? ? ? 0F 8C ? ? ? ? 8B 4D");
+		struct LastUsedDeviceHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float fDeadZone = 0.40f;
+				bool bShouldUpdate = false;
+
+				bShouldUpdate |= ((*fAnalogLX <= -fDeadZone) || (*fAnalogLX >= fDeadZone));
+				bShouldUpdate |= ((*fAnalogLY <= -fDeadZone) || (*fAnalogLY >= fDeadZone));
+				bShouldUpdate |= ((*fAnalogRX <= -fDeadZone) || (*fAnalogRX >= fDeadZone));
+				bShouldUpdate |= ((*fAnalogRY <= -fDeadZone) || (*fAnalogRY >= fDeadZone));
+
+				// Set PF if we want the input device to be updated to Xinput
+				if (bShouldUpdate)
+					regs.ef |= (1 << regs.parity_flag);
+				else
+					regs.ef &= ~(1 << regs.parity_flag);
+			}
+		}; injector::MakeInline<LastUsedDeviceHook>(pattern_begin.count(1).get(0).get<uint32_t>(2), pattern_end.count(1).get(0).get<uint32_t>(0));
 
 		spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
 	}
