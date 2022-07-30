@@ -8,6 +8,9 @@ uintptr_t* ptrAimSpeedFldAddr;
 int* g_XInputDeadzone_LS;
 int* g_XInputDeadzone_RS;
 
+int iDefaultXIDeadzone_LS = 7849;
+int iDefaultXIDeadzone_RS = 8689;
+
 void Init_ControllerTweaks()
 {
 	// Aiming speed
@@ -54,13 +57,37 @@ void Init_ControllerTweaks()
 		pattern = hook::pattern("0F B7 05 ? ? ? ? 50 51 E8 ? ? ? ? 0F B7 46 ? D9 5E");
 		g_XInputDeadzone_RS = (int*)*pattern.count(1).get(0).get<uint32_t>(3);
 
-		// Calculate new PadXinputRead deadzone
-		if (pConfig->bOverrideXinputDeadzone)
+		pattern = hook::pattern("89 56 ? 89 46 ? 8B 0D ? ? ? ? F7 81 ? ? ? ? ? ? ? ? 0F");
+		struct PadXinputReadDZwrite
 		{
-			*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * 7849); // 7849 and 8689 are the default values
-			*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * 8689);
+			void operator()(injector::reg_pack& regs)
+			{
+				*(uint32_t*)(regs.esi - 0x44) = regs.edx;
+				*(uint32_t*)(regs.esi - 0x40) = regs.eax;
 
-			spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
-		}
+				switch (LastUsedDevice()) {
+				case InputDevices::DinputController:
+				case InputDevices::XinputController:
+					if (pConfig->bOverrideXinputDeadzone)
+					{
+						*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_LS);
+						*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_RS);
+					}
+					else
+					{
+						*g_XInputDeadzone_LS = iDefaultXIDeadzone_LS;
+						*g_XInputDeadzone_RS = iDefaultXIDeadzone_RS;
+					}
+					break;
+				case InputDevices::Keyboard:
+				case InputDevices::Mouse:
+					*g_XInputDeadzone_LS = iDefaultXIDeadzone_LS;
+					*g_XInputDeadzone_RS = iDefaultXIDeadzone_RS;
+					break;
+				}
+			}
+		}; injector::MakeInline<PadXinputReadDZwrite>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
 	}
 }

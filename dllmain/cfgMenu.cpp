@@ -941,11 +941,7 @@ void cfgMenuRender()
 						ImGui::PopItemWidth();
 
 						if (ImGui::IsItemEdited())
-						{
 							pConfig->HasUnsavedChanges = true;
-							*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * 7849);
-							*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * 8689);
-						}
 
 						if (!pConfig->bOverrideXinputDeadzone)
 							pConfig->fXinputDeadzone = 1.0f;
