@@ -199,13 +199,11 @@ void Init_ExceptionHandler()
 
     if (std::filesystem::exists(dumpPath))
     {
-        /* This doesn't seem to catch all exceptions?
         SetUnhandledExceptionFilter(CustomUnhandledExceptionFilter);
 
         // Now stub out SetUnhandledExceptionFilter so NO ONE ELSE can set it!
         Patch(&SetUnhandledExceptionFilter, { 0xC2, 0x04, 0x00 });
-        */
 
-        AddVectoredExceptionHandler(1, CustomUnhandledExceptionFilter);
+        //AddVectoredExceptionHandler(1, CustomUnhandledExceptionFilter);
     }
 }
