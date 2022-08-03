@@ -83,6 +83,20 @@ void __declspec(naked) EmSetFromList_Hook_Trampoline()
 	}
 }
 
+BOOL (__fastcall* cEtcTbl__RegistData)(void* thisptr, void* unused, ETS_DATA* pEts, cEm* pPtr);
+BOOL __fastcall cEtcTbl__RegistData_Hook(void* thisptr, void* unused, ETS_DATA* pEts, cEm* pPtr)
+{
+	BOOL ret = cEtcTbl__RegistData(thisptr, unused, pEts, pPtr);
+
+	// update cEm scale value from the ETS data
+	// (why doesn't game do this already? ETS data already has a field specifically for scale...)
+	if (ret && pPtr)
+	{
+		pPtr->scale_AC = pEts->scale_4;
+	}
+	return ret;
+}
+
 void Init_ModExpansion()
 {
 	// Hook ESL-loading functions so we can add extended scale/speed parameters
@@ -99,4 +113,11 @@ void Init_ModExpansion()
 	pattern = hook::pattern("D9 98 7C 03 00 00 8B 42 10");
 	auto EmSetFromList_mov = pattern.count(1).get(0).get<uint8_t>(6);
 	InjectHook(EmSetFromList_mov, EmSetFromList_Hook_Trampoline, PATCH_CALL);
+
+	// Hook ETS set function so we can update cEm scale value from the ETS data
+	// (why doesn't game do this already? ETS data already has a field specifically for scale...)
+	pattern = hook::pattern("0F B7 46 02 8D 0C 40 56 8D 0C 8D ? ? ? ? E8 ? ? ? ?");
+	auto cEtcTbl__RegistData_thunk = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xF)).as_int();
+	ReadCall(cEtcTbl__RegistData_thunk, cEtcTbl__RegistData);
+	InjectHook(cEtcTbl__RegistData_thunk, cEtcTbl__RegistData_Hook, PATCH_JUMP);
 }

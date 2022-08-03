@@ -813,6 +813,15 @@ public:
 };
 static_assert(sizeof(cEm) == 0x408, "sizeof(cEm)");
 
+struct ETS_DATA
+{
+	uint16_t EtcModelId_0;
+	uint16_t EtcModelNo_2;
+	Vec scale_4;
+	Vec rotation_10;
+	Vec position_1C;
+};
+
 std::string GameVersion();
 bool GameVersionIsDebug();
 InputDevices LastUsedDevice();
