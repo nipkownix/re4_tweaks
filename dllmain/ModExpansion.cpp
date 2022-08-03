@@ -92,7 +92,47 @@ BOOL __fastcall cEtcTbl__RegistData_Hook(void* thisptr, void* unused, ETS_DATA* 
 	// (why doesn't game do this already? ETS data already has a field specifically for scale...)
 	if (ret && pPtr)
 	{
-		pPtr->scale_AC = pEts->scale_4;
+		Vec scale_model = pEts->scale_4;
+		Vec scale_collision = scale_model;
+
+		// Check if "short mode" flag is set
+		// If it is, the 12 bytes for scale are treated as two 6-byte "short vectors"
+		// First vector controls the scale of model, second one controls collision scale
+		// Both "short vector" values are treated as percentages, eg. setting to 200 will scale by 2x
+		// If the flag isn't set then both model & collision are scaled by the normal 12-byte scale vector
+		if (pEts->expansion_Flag_3 == 0xF0)
+		{
+			scale_model.x = float(double(pEts->expansion_PercentScaleModel_4.x) / 100.0f);
+			scale_model.y = float(double(pEts->expansion_PercentScaleModel_4.y) / 100.0f);
+			scale_model.z = float(double(pEts->expansion_PercentScaleModel_4.z) / 100.0f);
+			scale_collision.x = float(double(pEts->expansion_PercentScaleCollision_A.x) / 100.0f);
+			scale_collision.y = float(double(pEts->expansion_PercentScaleCollision_A.y) / 100.0f);
+			scale_collision.z = float(double(pEts->expansion_PercentScaleCollision_A.z) / 100.0f);
+
+			// Remove flag in case game reads EtcModelId somewhere else...
+			pEts->expansion_Flag_3 = 0;
+		}
+
+		pPtr->scale_AC = scale_model;
+
+		pPtr->atari_2B4.m_height_14 *= scale_collision.z;
+
+		// Update "rs" values - radius [for] square?
+		pPtr->atari_2B4.m_radius_C *= scale_collision.x;
+		pPtr->atari_2B4.m_radius_n_1C *= scale_collision.x;
+
+		// Update "ro" values
+		pPtr->atari_2B4.m_radius2_10 *= scale_collision.x;
+		pPtr->atari_2B4.m_radius2_n_20 *= scale_collision.x;
+
+		// Update "ra" values
+		pPtr->atari_2B4.m_radius3_2C *= scale_collision.x;
+
+		// Some models collision seems to use an offset for some reason
+		// Multiplying against our scale mostly seems to fix it though
+		pPtr->atari_2B4.m_offset_0.x *= scale_collision.x;
+		pPtr->atari_2B4.m_offset_0.y *= scale_collision.y;
+		pPtr->atari_2B4.m_offset_0.z *= scale_collision.z;
 	}
 	return ret;
 }
@@ -120,4 +160,10 @@ void Init_ModExpansion()
 	auto cEtcTbl__RegistData_thunk = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xF)).as_int();
 	ReadCall(cEtcTbl__RegistData_thunk, cEtcTbl__RegistData);
 	InjectHook(cEtcTbl__RegistData_thunk, cEtcTbl__RegistData_Hook, PATCH_JUMP);
+
+	// Patch ETS-loading func to read EtcModelNo_2 as byte
+	// which gives us a spare byte to use as a flag to change how scale values are read
+	// (game only allows EtcModelNo_2 values 0x40 and below anyway, so the byte was pretty much wasted...)
+	pattern = hook::pattern("51 0F B7 46 02");
+	Patch(pattern.count(1).get(0).get<uint8_t>(2), uint8_t(0xB6)); // change "movzx eax, word ptr" -> movzx eax, byte ptr"
 }
