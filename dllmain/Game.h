@@ -189,25 +189,31 @@ enum EM_BE_FLAG : uint8_t
   EM_BE_FLAG_DIE = 0x80,
 };
 
+struct SVEC
+{
+	int16_t x;
+	int16_t y;
+	int16_t z;
+};
+
 struct EM_LIST
 {
-  EM_BE_FLAG be_flag_0;
-  char id_1;
-  char type_2;
-  char set_3;
-  uint32_t em_flag_4;
-  int16_t hp_8;
-  uint8_t gapA;
-  char charaId_B;
-  int16_t posX_C;
-  int16_t posY_E;
-  int16_t posZ_10;
-  int16_t rotX_12;
-  int16_t rotY_14;
-  int16_t rotZ_16;
-  int16_t roomId_18;
-  int16_t guardRadius_1A;
-  uint8_t gap1C[4];
+	EM_BE_FLAG be_flag_0;
+	char id_1;
+	char type_2;
+	char set_3;
+	uint32_t flag_4;
+	int16_t hp_8;
+	uint8_t emset_no_A;
+	char Character_B;
+	SVEC s_pos_C;
+	SVEC s_ang_12;
+	uint16_t room_18;
+	int16_t Guard_r_1A;
+
+	// extended params added by re4_tweaks, normally field is Dummy / unused
+	uint16_t percentageMotionSpeed_1C;
+	uint16_t percentageScale_1E;
 };
 static_assert(sizeof(EM_LIST) == 0x20, "sizeof(EM_LIST)"); // TODO: find if this size is correct
 
@@ -556,6 +562,257 @@ struct DatTbl
 };
 static_assert(sizeof(DatTbl) == 8, "sizeof(DatTbl)");
 
+class cUnit
+{
+public:
+	uint32_t be_flag_4;
+	cUnit* pNext_8;
+
+	virtual ~cUnit() = 0;
+	virtual void beginEvent(uint32_t) = 0;
+	virtual void endEvent(uint32_t) = 0;
+};
+
+class cCoord : public cUnit
+{
+public:
+	Mtx mat_C;
+	Mtx l_mat_3C;
+	cCoord* pParent_6C;
+	Vec world_70;
+	Vec world_old_7C;
+	Vec world_old2_88;
+	Vec pos_94;
+	Vec ang_A0;
+	Vec scale_AC;
+	Vec r_scale_B8;
+
+	virtual void matUpdate() = 0;
+};
+
+class cLightInfo
+{
+public:
+	Mtx* imat_0;
+	DWORD cLightInfo_field_4;
+	DWORD cLightInfo_field_8;
+	DWORD cLightInfo_field_C;
+	Vec position_10;
+	Vec rotation_1C;
+	Vec scale_28;
+	int32_t cLightInfo_field_34;
+	int32_t cLightInfo_field_38;
+	int32_t cLightInfo_field_3C;
+	int32_t cLightInfo_field_40;
+	int32_t cLightInfo_field_44;
+	int32_t cLightInfo_field_48;
+	int32_t cLightInfo_field_4C;
+	uint8_t EnableMask_50;
+	uint8_t Flag_51;
+	int8_t PartsNo_52;
+	uint8_t dummy03_53;
+	uint32_t SelectMask_54;
+	Vec Offset_58;
+	Vec Size_64;
+	float Radius_70;
+};
+
+class cModel;
+
+class cAtariInfo
+{
+public:
+	Vec m_offset_0;
+	float m_radius_C;
+	float m_radius2_10;
+	float m_height_14;
+	int16_t m_parts_no_18;
+	uint16_t m_flag_1A;
+	float m_radius_n_1C;
+	float m_radius2_n_20;
+	uint16_t m_hokan_24;
+	uint16_t m_stat_26;
+	cModel* m_pMod_28;
+	float m_radius3_2C;
+	Vec m_Pos_30;
+	Vec m_oldPos_3C;
+	cAtariInfo* m_pList_48;
+};
+
+class cModelState
+{
+public:
+	uint32_t m_Flag_0;
+	uint32_t m_LightFlag_4;
+	uint32_t m_LightNo_8;
+	float m_LightPow_C;
+};
+
+class cModel : public cCoord
+{
+public:
+	Mtx mtx_C4;
+	class cParts* childParts_F4;
+	uint32_t guid_F8;
+	uint8_t r_no_0_FC;
+	uint8_t r_no_1_FD;
+	uint8_t r_no_2_FE;
+	uint8_t r_no_3_FF;
+	uint8_t id_100;
+	uint8_t type_101;
+	uint8_t nParts_102;
+	uint8_t alpha_omit_103;
+	Vec speed_104;
+	Vec pos_old_110;
+	Vec Wall_norm_11C;
+	Vec* pFloor_norm_128;
+	uint8_t z_mode_12C;
+	uint8_t TevScaleGroup_12D;
+	uint8_t kindid_12E;
+	uint8_t ot_type_12F;
+	cModel* pChildShadowModel_130;
+	uint8_t Shd_color_134;
+	uint8_t CullMode_135;
+	uint8_t Shader_type_136;
+	uint8_t Refract_pow_137;
+	uint8_t Refract_ratio_138;
+	uint8_t AddAmb_r_139;
+	uint8_t AddAmb_g_13A;
+	uint8_t AddAmb_b_13B;
+	uint32_t Fix_parts_13C;
+	Vec Fix_pos_140;
+	uint8_t invisible_trg_14C;
+	uint8_t invisible_old_14D;
+	uint8_t invisible_mode_14E;
+	uint8_t invisible_busy_14F;
+	int32_t invisible_timer_150;
+	float invisible_factor_154;
+	float invisible_factor2_158;
+	class cModelInfo* pModelInfo_15C;
+	class cModelInfo* pShadowModelInfo_160;
+	cLightInfo LightInfo_164;
+	MOTION_INFO Motion_1D8;
+	MOTION_INFO* pMotionB_2A8;
+	int16_t* pXFlip_2AC;
+	uint32_t* pDblJnt_2B0;
+	cAtariInfo atari_2B4;
+	Vec* inscreen_pos_300;
+	uint32_t pPath_304;
+	struct FOOTSHADOW_TBL* pFsdTbl_308;
+	cModelState State_30C;
+	int32_t field_31C;
+	uint8_t field_320;
+	uint8_t field_321;
+	uint8_t field_322;
+	uint8_t field_323;
+
+	virtual void move() = 0;
+	virtual void setNoSuspend(uint32_t) = 0;
+};
+static_assert(sizeof(cModel) == 0x324, "sizeof(cModel)");
+
+struct YARARE_INFO
+{
+	Vec offset_0;
+	Vec cross_C;
+	float radius_18;
+	float height_1C;
+	float extent_20;
+	uint16_t flag_24;
+	int16_t parts_no_26;
+	float len_28;
+	float c_dis_2C;
+	YARARE_INFO* nextInfo_30;
+};
+
+class cDmgInfo
+{
+public:
+	// old version of cDmgInfo only had a single float member
+	// unsure if this float is actually m_Dist or not, it might be m_Timer, since a lot of timer related stuff got changed to float during 60FPS change
+	float m_Dist_mb_0;
+	uint8_t m_Flag_4;
+	uint8_t m_Timer_mb_5;
+	uint8_t m_Wep_6;
+	uint8_t m_Padding03_7;
+	Vec m_PosFrom_8;
+	float m_Dist_mb_14;
+	YARARE_INFO* m_pDamageYarare_18;
+};
+
+class cEm : public cModel
+{
+public:
+	enum class Routine0 : uint8_t
+	{
+		// r0 values that are used by pretty much all cEms
+		// (other r* values are usually defined per-cEm though)
+		Init,
+		Move,
+		Damage,
+		Die
+	};
+
+	int16_t hp_324;
+	int16_t hp_max_326;
+	cDmgInfo m_DmgInfo_328;
+	YARARE_INFO yarare_344;
+	float l_pl_378;
+	float l_sub_37C;
+	void* pFile_380;
+	void* pFile2_384;
+	Vec target_offset0_388;
+	char target_parts0_394;
+	uint8_t set_395;
+	uint8_t emunk_396[2];
+	int(__cdecl* sce_func_398)(cEm*);
+	uint8_t emunk_39C[4];
+	uint8_t emListIndex_3A0;
+	uint8_t emunk_field_3A1;
+	uint8_t emunk_3A2[2];
+	Vec motionMove2Vec_3A4;
+	Vec Catch_at_adj_3B0;
+	float Catch_dir_3BC;
+	cEm* pEmCatch_3C0;
+	uint8_t RckStat_3C4;
+	int8_t RckMy_3C5;
+	int8_t RckTo_3C6;
+	int8_t RckNear_3C7;
+	int8_t RckRno_3C8;
+	int8_t RckPad0_3C9;
+	uint8_t emunk_3CA[2];
+	uint32_t m_StatusFlag_3CC;
+	uint32_t flag_3D0;
+	float Guard_r_3D4;
+	uint8_t characterNum_3D8;
+	uint8_t Item_eff_3D9;
+	uint8_t emunk_3DA[4];
+	uint16_t Item_id_3DE;
+	uint16_t Item_num_3E0;
+	uint16_t Item_flg_3E2;
+	uint16_t Auto_item_flg_3E4;
+	uint8_t emunk_3E6[2];
+	uint32_t flags_3E8;
+	Vec emunk_field_3EC;
+	Vec target_offset1_3F8;
+	int32_t target_parts1_404;
+
+	virtual void setItem(int16_t a2, int16_t a3, int16_t a4, int16_t a5, int8_t a6) = 0;
+	virtual void setNoItem() = 0;
+	virtual bool checkThrow() = 0;
+
+	inline bool IsValid()
+	{
+		return (be_flag_4 & 0x601) != 0;
+	}
+
+	inline bool IsSpawnedByESL()
+	{
+		return IsValid() && emListIndex_3A0 != 255;
+	}
+};
+static_assert(sizeof(cEm) == 0x408, "sizeof(cEm)");
+
 std::string GameVersion();
 bool GameVersionIsDebug();
 InputDevices LastUsedDevice();
@@ -572,6 +829,7 @@ SYSTEM_SAVE* SystemSavePtr();
 cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
+bool IsGanado(int id);
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

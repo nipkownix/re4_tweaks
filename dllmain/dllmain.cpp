@@ -82,6 +82,9 @@ void Init_Main()
 
 	Init_Misc();
 
+	if (pConfig->bEnableModExpansion)
+		Init_ModExpansion();
+
 	Init_MathReimpl();
 
 	// Apply changes needed by the HD Project

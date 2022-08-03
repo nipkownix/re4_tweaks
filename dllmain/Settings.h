@@ -95,6 +95,7 @@ public:
 	bool bAutomaticMashingQTE = false;
 	bool bSkipIntroLogos = false;
 	bool bEnableDebugMenu = false;
+	bool bEnableModExpansion = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;

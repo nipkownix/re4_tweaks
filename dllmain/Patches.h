@@ -23,6 +23,7 @@ void Init_KeyboardMouseTweaks();
 void Init_MouseTurning();
 void Init_MathReimpl();
 void Init_Misc();
+void Init_ModExpansion();
 void Init_QTEfixes();
 void Init_sofdec();
 void Init_ToolMenu();
