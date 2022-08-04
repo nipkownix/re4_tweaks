@@ -118,7 +118,7 @@ void Init_AspectRatioTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			// Code we replaced
+			// Code we replaced eax=0xCCCCCCCC in v1.0.6
 			__asm {fstp dword ptr[eax + 0x10C]}
 
 			float* fCurHudPosX = (float*)(regs.eax - 0x1DCC);
