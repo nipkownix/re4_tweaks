@@ -374,10 +374,10 @@ struct __declspec(align(4)) GLOBALS
   uint16_t totalDead_8462;
   uint32_t chapterKill_8464;
   uint32_t totalKill_8468;
-  uint32_t chapterShot_846C;
-  uint32_t totalShot_8470;
-  uint32_t chapterHit_8474;
-  uint32_t totalHit_8478;
+  uint32_t chapterHit_846C;
+  uint32_t totalHit_8470;
+  uint32_t chapterShot_8474;
+  uint32_t totalShot_8478;
   uint8_t curMode_847C; // Dynamic max 6 in pro 
   uint8_t field_847D;
   uint8_t field_847E;
