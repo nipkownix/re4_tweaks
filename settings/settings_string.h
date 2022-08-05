@@ -248,7 +248,8 @@ EnableDebugMenu = false
 
 ; Enables patches/hooks for expanded modding capabilities, such as allowing enemy speed & scale to be defined when spawning.
 ; Only needed when using mods that specifically require it, otherwise should be left disabled.
-; (modders that require this to be enabled can force it by including a override INI with their mod, see "dist/Bin32/re4_tweaks/setting_overrides/overrides_info.txt" file)
+; (more info about what this adds can be found here: https://github.com/nipkownix/re4_tweaks/pull/305)
+; (modders that require this to be enabled can force it by including a override INI with their mod, see "re4_tweaks/setting_overrides/overrides_info.txt" file)
 EnableModExpansion = false
 
 [MEMORY]
