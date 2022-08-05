@@ -1313,6 +1313,23 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
 					}
 
+					// EnableModExpansion
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("EnableModExpansion", &pConfig->bEnableModExpansion))
+						{
+							pConfig->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Enables patches/hooks for expanded modding capabilities, such as allowing enemy speed & scale to be defined when spawning.");
+						ImGui::TextWrapped("Only needed when using mods that specifically require it, otherwise should be left disabled.");
+					}
+
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}

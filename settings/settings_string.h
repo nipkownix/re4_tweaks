@@ -246,6 +246,12 @@ SkipIntroLogos = false
 ; (may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)
 EnableDebugMenu = false
 
+; Enables patches/hooks for expanded modding capabilities, such as allowing enemy speed & scale to be defined when spawning.
+; Only needed when using mods that specifically require it, otherwise should be left disabled.
+; (more info about what this adds can be found here: https://github.com/nipkownix/re4_tweaks/pull/305)
+; (modders that require this to be enabled can force it by including a override INI with their mod, see "re4_tweaks/setting_overrides/overrides_info.txt" file)
+EnableModExpansion = false
+
 [MEMORY]
 ; Allocate more memory for SFD movie files, and properly scale its resolution display above 512x336.
 ; Not tested beyond 1920x1080.

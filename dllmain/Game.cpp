@@ -116,6 +116,17 @@ uint8_t* GameSavePtr()
 	return *g_GameSave_BufPtr;
 }
 
+bool IsGanado(int id) // same as games IsGanado func
+{
+	if (id == 0x4B || id == 0x4E)
+		return 0;
+	if ((unsigned int)(id - 0x40) <= 0xF)
+		return 1;
+	if (id < 0x10)
+		return 0;
+	return id <= 0x20;
+}
+
 // Original game funcs
 bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);

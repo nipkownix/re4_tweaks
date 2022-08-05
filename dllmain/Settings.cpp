@@ -272,6 +272,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
 	pConfig->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
 	pConfig->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
+	pConfig->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", pConfig->bEnableModExpansion);
 
 	// MEMORY
 	pConfig->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
@@ -453,6 +454,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
+	iniReader.WriteBoolean("MISC", "EnableModExpansion", pConfig->bEnableModExpansion);
 
 	// MEMORY
 	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
@@ -590,6 +592,7 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", pConfig->bSkipIntroLogos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", pConfig->bEnableDebugMenu ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", pConfig->bEnableModExpansion ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY
