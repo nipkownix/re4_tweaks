@@ -185,6 +185,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	// MOUSE
 	pConfig->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
 	pConfig->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", pConfig->fCameraSensitivity);
+	pConfig->fCameraSensitivity = fmin(fmax(pConfig->fCameraSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
 	pConfig->bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
 	
 	std::string MouseTurnTypeStr = iniReader.ReadString("MOUSE", "MouseTurnType", "");
@@ -197,6 +198,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	}
 
 	pConfig->fTurnTypeBSensitivity = iniReader.ReadFloat("MOUSE", "TurnTypeBSensitivity", pConfig->fTurnTypeBSensitivity);
+	pConfig->fTurnTypeBSensitivity = fmin(fmax(pConfig->fTurnTypeBSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
 	pConfig->bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", pConfig->bUseRawMouseInput);
 	pConfig->bDetachCameraFromAim = iniReader.ReadBoolean("MOUSE", "DetachCameraFromAim", pConfig->bDetachCameraFromAim);
 	pConfig->bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", pConfig->bFixSniperZoom);
@@ -212,9 +214,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity);
 	pConfig->fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", pConfig->fControllerSensitivity);
 	pConfig->fControllerSensitivity = fmin(fmax(pConfig->fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
-
 	pConfig->bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone);
-
 	pConfig->bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone);
 	pConfig->fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", pConfig->fXinputDeadzone);
 	pConfig->fXinputDeadzone = fmin(fmax(pConfig->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
@@ -269,10 +269,8 @@ void Config::ReadSettings(std::string_view ini_path)
 	}
 
 	pConfig->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles);
-
 	pConfig->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
 	pConfig->iViolenceLevelOverride = min(max(pConfig->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
-
 	pConfig->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer);
 	pConfig->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes);
 	pConfig->bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley);
