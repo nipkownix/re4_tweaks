@@ -149,7 +149,7 @@ void Draw(const char* title, bool* p_open = NULL)
         return;
     }
 
-    if (ImGui::CollapsingHeader("Sliders"))
+    if (ImGui::CollapsingHeader("Debug"))
     {
         ImGui::SliderFloat("dbg1", &pConfig->fdbg1, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
         ImGui::SliderFloat("dbg2", &pConfig->fdbg2, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
@@ -157,6 +157,10 @@ void Draw(const char* title, bool* p_open = NULL)
         ImGui::SliderFloat("dbg4", &pConfig->fdbg4, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
         ImGui::SliderFloat("dbg5", &pConfig->fdbg5, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
         ImGui::SliderFloat("dbg6", &pConfig->fdbg6, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+
+        ImGui::Spacing();
+
+        ImGui::Checkbox("dbg", &pConfig->bdbg);
     }
 
     // Options menu

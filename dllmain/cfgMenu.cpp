@@ -727,6 +727,31 @@ void cfgMenuRender()
 				{
 					ImGui_ColumnInit();
 
+					// CameraImprovements
+					{
+						ImGui_ColumnSwitch();
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("CameraImprovements", &pConfig->bCameraImprovements);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Provides a small set of camera tweaks:");
+
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Aim weapons in the direction the camera is pointing to");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Stop camera from being randomly reset");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Allow full 360 degree movement");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Smoother and more responsive movement");
+
+						ImGui::Dummy(ImVec2(10, 10));
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Camera sensitivity").x);
+						ImGui::BeginDisabled(!pConfig->bCameraImprovements);
+						ImGui::SliderFloat("Camera sensitivity", &pConfig->fCameraSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+						ImGui::EndDisabled();
+						ImGui::PopItemWidth();
+					}
+
 					// UseMouseTurning
 					{
 						ImGui_ColumnSwitch();
@@ -736,16 +761,33 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::TextWrapped("Makes it so the mouse turns the character instead of controlling the camera.");
+						ImGui::TextWrapped("Provides alternative ways to turn the character using the mouse.");
 						ImGui::TextWrapped("\"Modern\" aiming mode in the game's settings is recommended.");
 
-						ImGui::Dummy(ImVec2(10, 20));
+						ImGui::Dummy(ImVec2(10, 10));
 
-						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Sensitivity Slider").x);
-						ImGui::BeginDisabled(!pConfig->bUseMouseTurning);
-						ImGui::SliderFloat("Sensitivity Slider", &pConfig->fTurnSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+						ImGui::RadioButton("Type A", &pConfig->iMouseTurnType, MouseTurnTypes::TypeA);
+						ImGui::Indent(29.0);
+						ImGui::TextWrapped("The character's rotation is influenced by the camera's position, similar to Resident Evil 6.");
+						ImGui::TextWrapped("Using CameraImprovements is recommended.");
+						ImGui::Unindent(29.0);
+
+						ImGui::Dummy(ImVec2(10, 10));
+
+						ImGui::RadioButton("Type B", &pConfig->iMouseTurnType, MouseTurnTypes::TypeB);
+						ImGui::Indent(29.0);
+						ImGui::TextWrapped("The character's rotation is directly changed by the mouse, similar to Resident Evil 5.");
+						ImGui::Unindent(29.0);
+
+						ImGui::Dummy(ImVec2(10, 10));
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Type B sensitivity").x - 60);
+						ImGui::BeginDisabled(!(pConfig->bUseMouseTurning && (pConfig->iMouseTurnType == MouseTurnTypes::TypeB)));
+						ImGui::Indent(29.0);
+						ImGui::SliderFloat("Type B sensitivity", &pConfig->fTurnTypeBSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();
+						ImGui::Unindent(29.0);
 					}
 
 					// UseRawMouseInput

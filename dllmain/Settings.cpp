@@ -183,8 +183,20 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->iVolumeCutscene = min(max(pConfig->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
 	// MOUSE
+	pConfig->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
+	pConfig->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", pConfig->fCameraSensitivity);
 	pConfig->bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
-	pConfig->fTurnSensitivity = iniReader.ReadFloat("MOUSE", "TurnSensitivity", pConfig->fTurnSensitivity);
+	
+	std::string MouseTurnTypeStr = iniReader.ReadString("MOUSE", "MouseTurnType", "");
+	if (!MouseTurnTypeStr.empty())
+	{
+		if (MouseTurnTypeStr == std::string("TypeA"))
+			pConfig->iMouseTurnType = MouseTurnTypes::TypeA;
+		else if (MouseTurnTypeStr == std::string("TypeB"))
+			pConfig->iMouseTurnType = MouseTurnTypes::TypeB;
+	}
+
+	pConfig->fTurnTypeBSensitivity = iniReader.ReadFloat("MOUSE", "TurnTypeBSensitivity", pConfig->fTurnTypeBSensitivity);
 	pConfig->bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", pConfig->bUseRawMouseInput);
 	pConfig->bDetachCameraFromAim = iniReader.ReadBoolean("MOUSE", "DetachCameraFromAim", pConfig->bDetachCameraFromAim);
 	pConfig->bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", pConfig->bFixSniperZoom);
@@ -406,8 +418,16 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
 
 	// MOUSE
+	iniReader.WriteBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
+	iniReader.WriteFloat("MOUSE", "CameraSensitivity", pConfig->fCameraSensitivity);
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
-	iniReader.WriteFloat("MOUSE", "TurnSensitivity", pConfig->fTurnSensitivity);
+
+	if (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)
+		iniReader.WriteString("MOUSE", "MouseTurnType", "TypeA");
+	else
+		iniReader.WriteString("MOUSE", "MouseTurnType", "TypeB");
+
+	iniReader.WriteFloat("MOUSE", "TurnTypeBSensitivity", pConfig->fTurnTypeBSensitivity);
 	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", pConfig->bUseRawMouseInput);
 	iniReader.WriteBoolean("MOUSE", "DetachCameraFromAim", pConfig->bDetachCameraFromAim);
 	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", pConfig->bFixSniperZoom);
@@ -535,8 +555,16 @@ void Config::LogSettings()
 
 	// MOUSE
 	spd::log()->info("+ MOUSE--------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "CameraImprovements", pConfig->bCameraImprovements ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "CameraSensitivity", pConfig->fCameraSensitivity);
 	spd::log()->info("| {:<30} | {:>15} |", "UseMouseTurning", pConfig->bUseMouseTurning ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "TurnSensitivity", pConfig->fTurnSensitivity);
+
+	if (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)
+		spd::log()->info("| {:<30} | {:>15} |", "MouseTurnType", "TypeA");
+	else
+		spd::log()->info("| {:<30} | {:>15} |", "MouseTurnType", "TypeB");
+
+	spd::log()->info("| {:<30} | {:>15} |", "TurnTypeBSensitivity", pConfig->fTurnTypeBSensitivity);
 	spd::log()->info("| {:<30} | {:>15} |", "UseRawMouseInput", pConfig->bUseRawMouseInput ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DetachCameraFromAim", pConfig->bDetachCameraFromAim ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixSniperZoom", pConfig->bFixSniperZoom ? "true" : "false");

@@ -41,8 +41,11 @@ public:
 	int iVolumeCutscene = 100;
 
 	// MOUSE
+	bool bCameraImprovements = true;
+	float fCameraSensitivity = 1.0f;
 	bool bUseMouseTurning = true;
-	float fTurnSensitivity = 1.0f;
+	int iMouseTurnType = MouseTurnTypes::TypeA;
+	float fTurnTypeBSensitivity = 1.0f;
 	bool bUseRawMouseInput = true;
 	bool bDetachCameraFromAim = false;
 	bool bFixSniperZoom = true;
@@ -134,6 +137,7 @@ public:
 	float fdbg4 = 1.0f;
 	float fdbg5 = 1.0f;
 	float fdbg6 = 1.0f;
+	bool bdbg;
 
 	void ReadSettings();
 	void ReadSettings(std::string_view ini_path);

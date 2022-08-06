@@ -245,7 +245,7 @@ void Init_KeyboardMouseTweaks()
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
 
-				if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
+				if (isKeyboardMouse())
 				{
 					if (pConfig->bUseRawMouseInput)
 					{
@@ -287,14 +287,11 @@ void Init_KeyboardMouseTweaks()
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
 
-				if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
+				if (pConfig->bDetachCameraFromAim && isKeyboardMouse())
 				{
-					if (pConfig->bDetachCameraFromAim)
-					{
-						// Make the game think the aiming mode is "Classic"
-						regs.ef |= (1 << regs.zero_flag);
-						regs.ef &= ~(1 << regs.carry_flag);
-					}
+					// Make the game think the aiming mode is "Classic"
+					regs.ef |= (1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
 				}
 			}
 		};
@@ -401,7 +398,7 @@ void Init_KeyboardMouseTweaks()
 				regs.ecx = *(int32_t*)(regs.ebp + 0x8);
 
 				// This makes it so the focus animation has to play for at least X ammount of time
-				if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
+				if (isKeyboardMouse())
 				{
 					if (regs.ecx == 1)
 					{

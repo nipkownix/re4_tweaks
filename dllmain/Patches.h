@@ -11,6 +11,7 @@ extern HWND hWindow;
 void Init_60fpsFixes();
 void Init_AspectRatioTweaks();
 void Init_AudioTweaks();
+void Init_CameraTweaks();
 void Init_ControllerTweaks();
 void Init_D3D9Hook();
 void Init_DisplayTweaks();
@@ -91,6 +92,25 @@ extern bool bConsoleOpen;
 // LAApatch.cpp
 void LAACheck();
 
-// Controller tweaks
+// Controller vars
 extern int* g_XInputDeadzone_LS;
 extern int* g_XInputDeadzone_RS;
+
+extern int8_t* AnalogRX_8;
+extern int8_t* AnalogRY_9;
+
+// Mouse vars
+extern float* fMousePosX;
+extern float* fMousePosY;
+
+enum MouseTurnTypes
+{
+	TypeA,
+	TypeB
+};
+
+// Camera vars
+extern float* fCameraPosX;
+extern float* fCameraPosY;
+
+extern float* wepPitch;

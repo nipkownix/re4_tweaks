@@ -90,13 +90,29 @@ VolumeSE = 100
 VolumeCutscene = 100
 
 [MOUSE]
-; Makes it so the mouse turns the character instead of controlling the camera.
+; Provides a small set of camera tweaks:
+; - Aim weapons in the direction the camera is pointing to;
+; - Stop camera from being randomly reset;
+; - Allow full 360 degree movement;
+; - Smoother and more responsive movement;
+CameraImprovements = true
+
+; Override the camera sensitivity.
+; Min 0.5, max 2.0.
+CameraSensitivity = 1.0
+
+; Provides alternative ways to turn the character using the mouse.
 ; "Modern" aiming mode in the game's settings is recomended.
 UseMouseTurning = true
 
-; Sensitivity for the mouse turning feature.
+; Choose the MouseTurning type.
+; TypeA = The character's rotation is influenced by the camera's position, similar to Resident Evil 6. Using CameraImprovements is recommended.
+; TypeB = The character's rotation is directly changed by the mouse, similar to Resident Evil 5.
+MouseTurnType = TypeA
+
+; Sensitivity for mouse turning Type B.
 ; Min 0.5, max 2.0.
-TurnSensitivity = 1.0
+TurnTypeBSensitivity = 1.0
 
 ; Makes the game use Raw Input for aiming and turning (if MouseTurning is enabled).
 ; Greatly improves mouse input by removing negative/positive accelerations that were being applied both by the game and by Direct Input.

@@ -28,7 +28,7 @@ void Init_ControllerTweaks()
 			{
 				double aim_spd_val = *(double*)ptrAimSpeedFldAddr;
 
-				if (pConfig->bOverrideControllerSensitivity && ((LastUsedDevice() == InputDevices::XinputController) || (LastUsedDevice() == InputDevices::DinputController)))
+				if (pConfig->bOverrideControllerSensitivity && isController())
 					aim_spd_val /= pConfig->fControllerSensitivity;
 
 				_asm {fld aim_spd_val}

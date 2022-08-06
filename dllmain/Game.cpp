@@ -21,10 +21,14 @@ InputDevices LastUsedDevice()
 	return *(InputDevices*)(ptrLastUsedDevice);
 }
 
-void SetLastUsedDevice(InputDevices device)
+bool isController()
 {
-	*(InputDevices*)(ptrLastUsedDevice) = device;
-	return;
+	return ((LastUsedDevice() == InputDevices::DinputController) || (LastUsedDevice() == InputDevices::XinputController));
+}
+
+bool isKeyboardMouse()
+{
+	return ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse));
 }
 
 uint32_t* ptrMouseSens = nullptr;

@@ -4,12 +4,9 @@
 #include "Settings.h"
 #include "input.hpp"
 
-uintptr_t* ptrCamXmovAddr;
 uintptr_t* ptrKnife_r3_downMovAddr;
 
 static uint32_t* ptrMouseDeltaX;
-
-uint32_t* ptrCamXPosAddr;
 
 int intMouseDeltaX()
 {
@@ -46,8 +43,8 @@ bool isMouseTurnEnabled()
 	// Reset camera position if modifier is pressed
 	if (bMouseTurnStateChanged)
 	{
-		*(float*)(ptrCamXPosAddr) = 0.0f;
-		*(int8_t*)(ptrCamXmovAddr) = 0;
+		*fMousePosX = 0.0f;
+		*AnalogRX_8 = 0;
 	}
 
 	bPrevMouseTurnState = state;
@@ -55,20 +52,49 @@ bool isMouseTurnEnabled()
 	return state;
 }
 
-void MouseTurn()
+void MouseTurn(float TurnDelayFactor = 20.0f)
 {
-	float SpeedMulti = 900;
+	if (isController())
+		return;
 
-	// "Classic" aiming mode (0x00) needs lower sensitivity here.
-	if (GetMouseAimingMode() == MouseAimingModes::Classic)
-		SpeedMulti = 1300;
+	if (!isMouseTurnEnabled())
+		return;
 
-	PlayerPtr()->rotation += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnSensitivity;
+	if ((pConfig->iMouseTurnType == MouseTurnTypes::TypeA))
+	{
+		// This has to be changed based on C_RANGE_1097
+		float fRangeMulti;
+		if (pConfig->bCameraImprovements)
+			fRangeMulti = 3.0f;
+		else
+			fRangeMulti = 2.0f;
+
+		// TurnDelayFactor is used to alter how long it will take for the player rotation to reach the camera rotation.
+		// Higher values = slower speed.
+		float factor = *fCameraPosX / TurnDelayFactor;
+
+		PlayerPtr()->rotation += factor;
+		*fMousePosX += factor / fRangeMulti;
+	}
+	else // Type B
+	{
+		float SpeedMulti = 900.0f;
+
+		// "Classic" aiming mode (0x00) needs lower sensitivity here.
+		if (GetMouseAimingMode() == MouseAimingModes::Classic)
+			SpeedMulti = 1300.0f;
+
+		PlayerPtr()->rotation += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnTypeBSensitivity;
+	}
 }
 
 bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 {
 	// Enable the turning animation/action if the mouse is moving
+
+	// Type A doesn't need this
+	if (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)
+		return game_KeyOnCheck_0(a1);
 
 	bool ret = false;
 	bool isMovingMouse = false;
@@ -95,37 +121,32 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 	return ret;
 }
 
-void GetMouseTurnPointers()
+void Init_MouseTurning()
 {
 	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
 	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
 
-	pattern = hook::pattern("A2 ? ? ? ? EB ? DD D8 8B 0D ? ? ? ? 8B 81 ? ? ? ? A9");
-	ptrCamXmovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
-}
-
-void Init_MouseTurning()
-{
-	GetMouseTurnPointers();
-
 	// Keep CameraXpos at 0f while isMouseTurnEnabled
-	auto pattern = hook::pattern("D9 05 ? ? ? ? DE C2 D9 C9 D9 1D ? ? ? ? D9 85");
-	ptrCamXPosAddr = *pattern.count(1).get(0).get<uint32_t*>(2);
+	pattern = hook::pattern("D9 05 ? ? ? ? DE C2 D9 C9 D9 1D ? ? ? ? D9 85");
 	struct CameraPositionWriter
 	{
 		void operator()(injector::reg_pack& regs)
 		{
 			float CameraXpos;
 
-			if ((LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
-			{
-				if (isMouseTurnEnabled())
+			switch (LastUsedDevice()) {
+			case InputDevices::DinputController:
+			case InputDevices::XinputController:
+				CameraXpos = *fMousePosX;
+				break;
+			case InputDevices::Keyboard:
+			case InputDevices::Mouse:
+				if (isMouseTurnEnabled() && (pConfig->iMouseTurnType == MouseTurnTypes::TypeB)) // Camera should be free for Type A
 					CameraXpos = 0.0f;
 				else
-					CameraXpos = *(float*)(ptrCamXPosAddr);
+					CameraXpos = *fMousePosX;
+				break;
 			}
-			else
-				CameraXpos = *(float*)(ptrCamXPosAddr);
 
 			_asm {fld CameraXpos}
 
@@ -225,31 +246,35 @@ void Init_MouseTurning()
 		{
 			regs.eax = *(int8_t*)(regs.esi + 0xFE);
 
-			if (isMouseTurnEnabled() && (LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
-				MouseTurn();
+			MouseTurn();
 		}
 	}; injector::MakeInline<TurnHook180>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
-	// Walk/Run struct
-	struct TurnHookWalkRun
+	// pl_R1_Walk
+	pattern = hook::pattern("8B EC 83 EC ? 53 56 8B 75 ? 33 DB 38 9E");
+	struct TurnHookWalk
 	{
 		void operator()(injector::reg_pack& regs)
 		{
 			regs.ebp = *(int32_t*)(regs.esp);
 			*(int32_t*)(regs.esp) -= 0x8;
 
-			if (isMouseTurnEnabled() && (LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
-				MouseTurn();
+			MouseTurn();
 		}
-	};
-
-	// pl_R1_Walk
-	pattern = hook::pattern("8B EC 83 EC ? 53 56 8B 75 ? 33 DB 38 9E");
-	injector::MakeInline<TurnHookWalkRun>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}; injector::MakeInline<TurnHookWalk>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// pl_R1_Run
 	pattern = hook::pattern("8B EC 83 EC ? 53 56 8B 75 ? 0F B6 86 ? ? ? ? 33 DB");
-	injector::MakeInline<TurnHookWalkRun>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	struct TurnHookRun
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			regs.ebp = *(int32_t*)(regs.esp);
+			*(int32_t*)(regs.esp) -= 0x8;
+
+			MouseTurn(5.0f);
+		}
+	}; injector::MakeInline<TurnHookRun>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
 	// pl_R1_Back
 	pattern = hook::pattern("83 3D ? ? ? ? ? 75 ? D9 05 ? ? ? ? 8B 8E ? ? ? ? 83 EC ? D9");
@@ -257,8 +282,7 @@ void Init_MouseTurning()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (isMouseTurnEnabled() && (LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
-				MouseTurn();
+			MouseTurn();
 		}
 	}; injector::MakeInline<TurnHookWalkingBack>(pattern.count(3).get(1).get<uint32_t>(0), pattern.count(3).get(1).get<uint32_t>(7));
 	injector::WriteMemory(pattern.count(3).get(1).get<uint32_t>(7), uint8_t(0xEB), true);
@@ -271,7 +295,7 @@ void Init_MouseTurning()
 		void operator()(injector::reg_pack& regs)
 		{
 			regs.eax = *(int32_t*)ptrKnife_r3_downMovAddr;
-			if (isMouseTurnEnabled() && (intMouseDeltaX() != 0) && (LastUsedDevice() == InputDevices::Keyboard) || (LastUsedDevice() == InputDevices::Mouse))
+			if (isMouseTurnEnabled() && (intMouseDeltaX() != 0) && isKeyboardMouse())
 				regs.eax = 0x8;
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));

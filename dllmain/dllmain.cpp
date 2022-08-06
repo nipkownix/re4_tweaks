@@ -64,6 +64,8 @@ void Init_Main()
 
 	Init_AudioTweaks();
 
+	Init_CameraTweaks();
+
 	Init_KeyboardMouseTweaks();
 
 	Init_ControllerTweaks();
