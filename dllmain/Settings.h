@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include "Game.h"
+#include "Patches.h"
 
 class Config
 {
