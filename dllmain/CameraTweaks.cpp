@@ -379,6 +379,9 @@ void Init_CameraTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
+			// Reset fCameraPosX_backup after it has been used.
+			fCameraPosX_backup = 0.0f;
+
 			float tmp = 0.0f;
 			__asm {fst tmp}
 
@@ -550,9 +553,27 @@ void Init_CameraTweaks()
 				{
 					PlayerPtr()->rotation += fCameraPosX_backup;
 					*fMousePosX += fCameraPosX_backup;
+
+					// Reset fCameraPosX_backup after it has been used.
+					fCameraPosX_backup = 0.0f;
 				}
 			}
 		}; injector::MakeInline<KnifeQuickTurn>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Hook knife_r3_down00 to make m_Work0_428 0 instead of 1. Keeps the camera/aim position from being reset in certain situations.
+		pattern = hook::pattern("c7 86 ? ? ? ? ? ? ? ? eb ? e8 ? ? ? ? 8b 75");
+		struct knife_r3_down00_Work
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (pConfig->bCameraImprovements && isKeyboardMouse())
+				{
+					*(uint32_t*)(regs.esi + 0x428) = 0;
+				}
+				else
+					*(uint32_t*)(regs.esi + 0x428) = 1;
+			}
+		}; injector::MakeInline<knife_r3_down00_Work>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
 		// Keep the knife from writing 0 to Stick*Float when the animation ends
 		pattern = hook::pattern("D9 15 ? ? ? ? 89 0D ? ? ? ? D9 15 ? ? ? ? 89 0D ? ? ? ? 89 0D");
