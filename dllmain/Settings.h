@@ -43,6 +43,7 @@ public:
 
 	// MOUSE
 	bool bCameraImprovements = true;
+	bool bResetCameraWhenRunning = true;
 	float fCameraSensitivity = 1.0f;
 	bool bUseMouseTurning = true;
 	int iMouseTurnType = MouseTurnTypes::TypeA;

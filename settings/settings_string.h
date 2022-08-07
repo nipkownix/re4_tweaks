@@ -97,6 +97,10 @@ VolumeCutscene = 100
 ; - Smoother and more responsive movement;
 CameraImprovements = true
 
+; Center the camera when the run key is pressed.
+; Only used if MouseTurning isn't enabled.
+ResetCameraWhenRunning = true
+
 ; Override the camera sensitivity.
 ; Min 0.5, max 2.0.
 CameraSensitivity = 1.0

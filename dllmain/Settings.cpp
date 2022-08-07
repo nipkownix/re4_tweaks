@@ -184,6 +184,7 @@ void Config::ReadSettings(std::string_view ini_path)
 
 	// MOUSE
 	pConfig->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
+	pConfig->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning);
 	pConfig->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", pConfig->fCameraSensitivity);
 	pConfig->fCameraSensitivity = fmin(fmax(pConfig->fCameraSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
 	pConfig->bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
@@ -417,6 +418,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
+	iniReader.WriteBoolean("MOUSE", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning);
 	iniReader.WriteFloat("MOUSE", "CameraSensitivity", pConfig->fCameraSensitivity);
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
 
@@ -554,6 +556,7 @@ void Config::LogSettings()
 	// MOUSE
 	spd::log()->info("+ MOUSE--------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraImprovements", pConfig->bCameraImprovements ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraSensitivity", pConfig->fCameraSensitivity);
 	spd::log()->info("| {:<30} | {:>15} |", "UseMouseTurning", pConfig->bUseMouseTurning ? "true" : "false");
 

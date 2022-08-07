@@ -745,6 +745,14 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 
+						ImGui::BeginDisabled(!pConfig->bCameraImprovements);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("ResetCameraWhenRunning", &pConfig->bResetCameraWhenRunning);
+						ImGui::EndDisabled();
+						ImGui::TextWrapped("Center the camera when the run key is pressed.");
+						ImGui::TextWrapped("Only used if MouseTurning isn't enabled.");
+
+						ImGui::Dummy(ImVec2(10, 10));
+
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Camera sensitivity").x);
 						ImGui::BeginDisabled(!pConfig->bCameraImprovements);
 						ImGui::SliderFloat("Camera sensitivity", &pConfig->fCameraSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);

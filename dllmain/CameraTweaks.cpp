@@ -298,6 +298,29 @@ void Init_CameraTweaks()
 		}
 	}; injector::MakeInline<ccMoveHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
+	// Hook pl_R1_Walk to provide the option to reset the camera pos when the player starts running.
+	// Only relevant if MouseTurning is off, really.
+	pattern = hook::pattern("c7 86 ? ? ? ? ? ? ? ? c6 86 ? ? ? ? ? db 45");
+	struct pl_R1_Walk_runReset
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			// Code we replaced
+			*(uint32_t*)(regs.esi + 0xFC) = 0x4020300;
+
+			if (pConfig->bCameraImprovements 
+				&& pConfig->bResetCameraWhenRunning 
+				&& !pConfig->bUseMouseTurning
+				&& isKeyboardMouse())
+			{
+				*fMousePosX = 0.0f;
+				*fMousePosY = 0.0f;
+				*fCameraPosX = 0.0f;
+				*fCameraPosY = 0.0f;
+			}
+		}
+	}; injector::MakeInline<pl_R1_Walk_runReset>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
+
 	// Reset AnalogRX_8 and fMousePosX when aiming begins
 	pattern = hook::pattern("8B EC 8B 45 ? 8B 08 89 0D ? ? ? ? 8B 50 ? 89 15 ? ? ? ? 8B 40");
 	struct CamCtrlShoulderSetAimHook
