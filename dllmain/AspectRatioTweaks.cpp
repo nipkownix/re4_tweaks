@@ -145,10 +145,10 @@ void Init_AspectRatioTweaks()
 		void operator()(injector::reg_pack& regs)
 		{
 			// Game was originally checking for this flag
-			bool origFlagSet = FlagIsSet(GlobalPtr()->flags_STATUS_501C, uint32_t(Flags_STATUS::STA_SET_BG_COLOR));
+			bool origFlagSet = FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_SET_BG_COLOR));
 
-			bool isPlayingSofdec = (FlagIsSet(GlobalPtr()->flags_STATUS_501C, uint32_t(Flags_STATUS::STA_MOVIE_ON)) ||
-				FlagIsSet(GlobalPtr()->flags_STATUS_501C, uint32_t(Flags_STATUS::STA_MOVIE2_ON)));
+			bool isPlayingSofdec = (FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_MOVIE_ON)) ||
+				FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_MOVIE2_ON)));
 
 			if ((origFlagSet || isPlayingSofdec))
 				regs.ef &= ~(1 << regs.zero_flag);

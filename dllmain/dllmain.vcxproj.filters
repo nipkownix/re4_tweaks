@@ -348,6 +348,63 @@
     <ClInclude Include="..\includes\NotoSansCJKsc.hpp">
       <Filter>includes</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\basic_types.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cCoord.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cUnit.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\em.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\model.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\GXStruct.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\atariInfo.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cManager.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\player.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cMotBase.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\obj.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\camera.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\pad.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\em_set.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\global.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\pl_wep.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\objWep.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\event.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\EtcModel.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -388,6 +445,9 @@
     </Filter>
     <Filter Include="external\eHooking">
       <UniqueIdentifier>{f4636442-5897-4e0e-9752-b925ff5f3fef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dllmain\SDK">
+      <UniqueIdentifier>{6f1cea62-3320-4c55-8eaf-678d95a53daf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
