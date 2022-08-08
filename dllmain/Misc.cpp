@@ -747,46 +747,138 @@ void Init_Misc()
 			}
 		}; injector::MakeInline<MercsTitleSubCos>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
-		// Fix instructions that are checking for Ashley's armor costume instead of Leon's mafia costume, which can a bunch of issues
-		//
-		// PlClothSetLeon -- Issue: Would not apply jacket physics if Ashley isn't armored
-		pattern = hook::pattern("80 B8 ? ? ? ? 02 75 ? 6A ? 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 66 85 ? 75 ? A1");
-		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
-
-		// Chicago Typewriter -- Issue: if Ashley is armored, Leon's Chicago Typewriter reload animation would always be the special Mafia one, regardless of Leon's costume
-		auto pattern_wep11_r2_reload_1 = hook::pattern("80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 8B 96");
-		auto pattern_wep11_r2_reload_2to7 = hook::pattern("80 B8 ? ? ? ? 02 75 ? 38 98 ? ? ? ? 75 ? 80 B8 ? ? ? ? 0C");
-		auto pattern_wep11_r2_reload_8 = hook::pattern("80 B8 ? ? ? ? ? D9 EE 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85"); 
-
-		auto pattern_ReadWepData = hook::pattern("80 B9 ? ? ? ? ? 75 ? BB ? ? ? ? EB ? BB ? ? ? ? 8D 3C DD");
-		auto pattern_cObjTompson__setMotion = hook::pattern("80 B8 ? ? ? ? ? 75 ? 38 88 ? ? ? ? 75 ? 8B 96 ? ? ? ? 89 8A ? ? ? ? 8B 86 ? ? ? ? 89");
-		auto pattern_cPlayer__seqSeCtrl = hook::pattern("80 B8 ? ? ? ? ? 75 ? 80 B8 ? ? ? ? ? 75 ? 83 FB ? 77 ? 0F B6 8B ? ? ? ? FF 24 8D");
-		auto pattern_cObjTompson__moveReload = hook::pattern("80 B9 ? ? ? ? ? 75 ? 80 B9 ? ? ? ? ? 0F 84 ? ? ? ? 80 BE ? ? ? ? ? 0F B6 81");
-	
-		injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
-
-		for (size_t i = 0; i < pattern_wep11_r2_reload_2to7.size(); ++i)
+		// Fix instructions that are checking for Ashley's armor costume instead of Leon's mafia costume, which can cause a bunch of issues
 		{
-			injector::WriteMemory(pattern_wep11_r2_reload_2to7.count(6).get(i).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-			injector::WriteMemory(pattern_wep11_r2_reload_2to7.count(6).get(i).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+			// PlClothSetLeon -- Issue: Would not apply jacket physics if Ashley isn't armored
+			auto pattern = hook::pattern("80 B8 ? ? ? ? 02 75 ? 6A ? 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 66 85 ? 75 ? A1");
+			injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+			injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+
+			// Chicago Typewriter -- Issue: if Ashley is armored, Leon's Chicago Typewriter reload animation would always be the special Mafia one, regardless of Leon's costume
+			auto pattern_wep11_r2_reload_1 = hook::pattern("80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 8B 96");
+			auto pattern_wep11_r2_reload_2to7 = hook::pattern("80 B8 ? ? ? ? 02 75 ? 38 98 ? ? ? ? 75 ? 80 B8 ? ? ? ? 0C");
+			auto pattern_wep11_r2_reload_8 = hook::pattern("80 B8 ? ? ? ? ? D9 EE 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85"); 
+
+			auto pattern_ReadWepData = hook::pattern("80 B9 ? ? ? ? ? 75 ? BB ? ? ? ? EB ? BB ? ? ? ? 8D 3C DD");
+			auto pattern_cObjTompson__setMotion = hook::pattern("80 B8 ? ? ? ? ? 75 ? 38 88 ? ? ? ? 75 ? 8B 96 ? ? ? ? 89 8A ? ? ? ? 8B 86 ? ? ? ? 89");
+			auto pattern_cPlayer__seqSeCtrl = hook::pattern("80 B8 ? ? ? ? ? 75 ? 80 B8 ? ? ? ? ? 75 ? 83 FB ? 77 ? 0F B6 8B ? ? ? ? FF 24 8D");
+			auto pattern_cObjTompson__moveReload = hook::pattern("80 B9 ? ? ? ? ? 75 ? 80 B9 ? ? ? ? ? 0F 84 ? ? ? ? 80 BE ? ? ? ? ? 0F B6 81");
+	
+			injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+			injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+
+			for (size_t i = 0; i < pattern_wep11_r2_reload_2to7.size(); ++i)
+			{
+				injector::WriteMemory(pattern_wep11_r2_reload_2to7.count(6).get(i).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+				injector::WriteMemory(pattern_wep11_r2_reload_2to7.count(6).get(i).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+			}
+
+			injector::WriteMemory(pattern_wep11_r2_reload_8.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+			injector::WriteMemory(pattern_wep11_r2_reload_8.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+
+			injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+			injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+
+			injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+			injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+
+			injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+			injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+
+			injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
+			injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 		}
 
-		injector::WriteMemory(pattern_wep11_r2_reload_8.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_wep11_r2_reload_8.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+		// Workaround crashes caused by some Ada costumes not working with certain weapons. Only seems to affect the inventory screen.
+		{
+			auto pattern = hook::pattern("0F B7 0D ? ? ? ? 51 E8 ? ? ? ? 0F B6 ? 50 8D 4D ? 51 E8 ? ? ? ? 8B");
+			static uint16_t* m_wep_id_10 = (uint16_t*)*pattern.count(1).get(0).get<uint32_t>(3);
 
-		injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+			// SubScreenTask -> Make game think the player's hand is empty instead of having the problematic weapons.
+			struct SubScreenTask_hook
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					// Code we replaced
+					regs.ecx = *m_wep_id_10;
 
-		injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+					PlayerCharacter curPlType = GlobalPtr()->pl_type_4FC8;
 
-		injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+					if (curPlType == PlayerCharacter::Ada)
+					{
+						AdaCostume curCostume = GlobalPtr()->plCostume_4FC9.Ada;
 
-		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
+						switch (curCostume) {
+						case AdaCostume::Spy:
+							if (regs.ecx == 0x10) // 0x10 = Bowgun
+								regs.ecx = 0x800; // 0x800 = Empty hand
+							break;
+						case AdaCostume::RE2:
+						case AdaCostume::RE2_d:
+							if (regs.ecx == 0x53) // 0x53 = Chicago Typewriter
+								regs.ecx = 0x800; // 0x800 = Empty hand
+						}
+					}
+				}
+			}; injector::MakeInline<SubScreenTask_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+			// playerModelInit -> Same as before.
+			pattern = hook::pattern("0F B7 05 ? ? ? ? 53 56 57 50 E8 ? ? ? ? 0F B7 15 ? ? ? ? 52 0F B6 ? E8");
+			struct playerModelInit_hook
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					// Code we replaced
+					regs.eax = *m_wep_id_10;
+
+					PlayerCharacter curPlType = GlobalPtr()->pl_type_4FC8;
+
+					if (curPlType == PlayerCharacter::Ada)
+					{
+						AdaCostume curCostume = GlobalPtr()->plCostume_4FC9.Ada;
+
+						switch (curCostume) {
+						case AdaCostume::Spy:
+							if (regs.eax == 0x10) // 0x10 = Bowgun
+								regs.eax = 0x800; // 0x800 = Empty hand
+							break;
+						case AdaCostume::RE2:
+						case AdaCostume::RE2_d:
+							if (regs.eax == 0x53) // 0x53 = Chicago Typewriter
+								regs.eax = 0x800; // 0x800 = Empty hand
+						}
+					}
+				}
+			}; injector::MakeInline<playerModelInit_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+			// SsPzzlMain::move -> Same as before, but for when changing weapons in the inventory.
+			pattern = hook::pattern("0F B7 05 ? ? ? ? 50 E8 ? ? ? ? 0F B7 15 ? ? ? ? 52 0F B6 ? E8 ? ? ? ? 0F B6 ? 50");
+			struct SsPzzlMain__move_hook
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					// Code we replaced
+					regs.eax = *m_wep_id_10;
+					PlayerCharacter curPlType = GlobalPtr()->pl_type_4FC8;
+
+					if (curPlType == PlayerCharacter::Ada)
+					{
+						AdaCostume curCostume = GlobalPtr()->plCostume_4FC9.Ada;
+
+						switch (curCostume) {
+						case AdaCostume::Spy:
+							if (regs.eax == 0x10) // 0x10 = Bowgun
+								regs.eax = 0x800; // 0x800 = Empty hand
+							break;
+						case AdaCostume::RE2:
+						case AdaCostume::RE2_d:
+							if (regs.eax == 0x53) // 0x53 = Chicago Typewriter
+								regs.eax = 0x800; // 0x800 = Empty hand
+						}
+					}
+				}
+			}; injector::MakeInline<SsPzzlMain__move_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+		}
 
 		spd::log()->info("OverrideCostumes applied");
 	}
