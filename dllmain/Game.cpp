@@ -61,8 +61,8 @@ uint64_t  Key_btn_trg()
 	return *(uint64_t*)(ptrKey_btn_trg);
 }
 
-GLOBALS** pG_ptr = nullptr;
-GLOBALS* GlobalPtr()
+GLOBAL_WK** pG_ptr = nullptr;
+GLOBAL_WK* GlobalPtr()
 {
 	if (!pG_ptr)
 		return nullptr;
@@ -78,8 +78,8 @@ DAMAGE* DamagePtr() {
 	return pD_ptr;
 }
 
-SYSTEM_SAVE** pSys_ptr = nullptr;
-SYSTEM_SAVE* SystemSavePtr()
+SYSTEM_SAVE_WORK** pSys_ptr = nullptr;
+SYSTEM_SAVE_WORK* SystemSavePtr()
 {
 	if (!pSys_ptr)
 		return nullptr;
@@ -186,7 +186,7 @@ bool Init_Game()
 
 	// Grab pointer to pG (pointer to games Global struct)
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
-	pG_ptr = *pattern.count(1).get(0).get<GLOBALS**>(1);
+	pG_ptr = *pattern.count(1).get(0).get<GLOBAL_WK**>(1);
 
 	// pDamage pointer
 	pattern = hook::pattern("8A 8B C3 4F 00 00 89 45 0C");
@@ -194,7 +194,7 @@ bool Init_Game()
 
 	// pSys pointer
 	pattern = hook::pattern("00 80 00 00 83 C4 ? E8 ? ? ? ? A1 ? ? ? ?");
-	pSys_ptr = *pattern.count(1).get(0).get<SYSTEM_SAVE**>(13);
+	pSys_ptr = *pattern.count(1).get(0).get<SYSTEM_SAVE_WORK**>(13);
 
 	// pPL pointer
 	pattern = hook::pattern("A1 ? ? ? ? D8 CC D8 C9 D8 CA D9 5D ? D9 45 ?");

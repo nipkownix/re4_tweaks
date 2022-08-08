@@ -93,7 +93,7 @@ void eprintf_Hook(int a1, int a2, int a3, int a4, char* Format, ...)
 
 bool IsInDebugMenu()
 {
-	return (GlobalPtr()->flags_DEBUG_60[0] & GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE))) != 0;
+	return (GlobalPtr()->flags_DEBUG_0_60[0] & GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE))) != 0;
 }
 
 uint32_t Keyboard2Gamepad()
@@ -178,7 +178,7 @@ void __cdecl gameDebug_recreation(void* a1)
 		{
 			cPlayer* pPL = PlayerPtr();
 			if (pPL)
-				eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->X, pPL->Y, pPL->Z, pPL->rotation);
+				eprintf_Hook(32, 300, 0, 0, "[X %7.3f Y %7.3f Z %7.3f R %5.3f]", pPL->pos_94.x, pPL->pos_94.y, pPL->pos_94.z, pPL->ang_A0.y);
 		}
 	}
 
@@ -188,7 +188,7 @@ void __cdecl gameDebug_recreation(void* a1)
 void(*MenuTask_Orig)();
 void MenuTask_Hook()
 {
-	GlobalPtr()->flags_DEBUG_60[0] |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
+	GlobalPtr()->flags_DEBUG_0_60[0] |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
 
 	MenuTask_Orig();
 }
@@ -252,7 +252,7 @@ void ToolMenu_Exit()
 {
 	// Exit tool-menu state via FlagEdit_die
 	// FlagEdit_die overwrites pG+0x170 with contents of 0xC6D008, so we need to write that first...
-	*FlagEdit_Backup_pG = GlobalPtr()->flags_STOP_170;
+	*FlagEdit_Backup_pG = GlobalPtr()->flags_STOP_0_170[0];
 	FlagEdit_die();
 
 	// alternatively "TaskChain(MenuTask, 0);" should return us to tool-menu
@@ -261,14 +261,14 @@ void ToolMenu_Exit()
 
 void ToolMenu_GoldMax()
 {
-	GlobalPtr()->money_4FA8 = 99999999;
+	GlobalPtr()->goldAmount_4FA8 = 99999999;
 
 	ToolMenu_Exit();
 }
 
 void ToolMenu_SecretOpen()
 {
-	uint32_t* flags_EXTRA = &SystemSavePtr()->flags_EXTRA_4;
+	uint32_t* flags_EXTRA = SystemSavePtr()->flags_EXTRA_4;
 
 	// debug exe ORs these seperately, probably part of an enum or something
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_AIM_REVERSE));
@@ -293,7 +293,7 @@ void ToolMenu_SecretOpen()
 
 void ToolMenu_MercenariesAllOpen()
 {
-	uint32_t* flags_EXTRA = &SystemSavePtr()->flags_EXTRA_4;
+	uint32_t* flags_EXTRA = SystemSavePtr()->flags_EXTRA_4;
 
 	// TODO: confirm whether these are what this option actually unlocks in the debug build
 	// (as these unlocks seem kinda strange)
@@ -317,7 +317,7 @@ void ToolMenu_ToggleInfoDisp()
 const char* ToolMenu_ToggleHUDName = "TOGGLE HUD";
 void ToolMenu_ToggleHUD()
 {
-	GlobalPtr()->flags_DISP0_58 ^= GetFlagValue(uint32_t(Flags_DISP::DPF_COCKPIT));
+	GlobalPtr()->Flags_DISP_0_58[0] ^= GetFlagValue(uint32_t(Flags_DISP::DPF_COCKPIT));
 
 	ToolMenu_Exit();
 }

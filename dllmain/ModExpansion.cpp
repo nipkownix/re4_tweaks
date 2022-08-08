@@ -9,8 +9,8 @@ void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 	// Game sometimes uses hardcoded stack-based EM_LIST to spawn certain enemies
 	// In those cases, 0xA & 0x1C usually are left untouched, resulting in random stack data being used
 	// To protect against that, we'll only allow param extensions from emData that came from pG->emList_5410
-	GLOBALS* pG = GlobalPtr();
-	if (emData < pG->emList_5410 || emData >= &pG->emList_5410[256])
+	GLOBAL_WK* pG = GlobalPtr();
+	if (emData < pG->Em_list_5410 || emData >= &pG->Em_list_5410[256])
 		return;
 
 	// check emset_no_A field to see if custom speed/scale params have been set
@@ -30,7 +30,7 @@ void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 		em->move();
 
 	if (emData->percentageMotionSpeed_1C)
-		em->Motion_1D8.speed_C0 = float(double(emData->percentageMotionSpeed_1C) / 100.0f);
+		em->Motion_1D8.Seq_speed_C0 = float(double(emData->percentageMotionSpeed_1C) / 100.0f);
 
 	if (emData->percentageScale_1E)
 	{
@@ -63,14 +63,14 @@ cEm* (__cdecl* EmSetFromList2)(unsigned int em_list_no, int a2);
 cEm* __cdecl EmSetFromList2_Hook(unsigned int em_list_no, int a2)
 {
 	cEm* result = EmSetFromList2(em_list_no, a2);
-	SetEmListParamExtensions(result, &GlobalPtr()->emList_5410[em_list_no]);
+	SetEmListParamExtensions(result, &GlobalPtr()->Em_list_5410[em_list_no]);
 
 	return result;
 }
 
 void __fastcall EmSetFromList_Hook(cEm* em, uint32_t unused)
 {
-	SetEmListParamExtensions(em, &GlobalPtr()->emList_5410[em->emListIndex_3A0]);
+	SetEmListParamExtensions(em, &GlobalPtr()->Em_list_5410[em->emListIndex_3A0]);
 	em->move(); // code we patched to jump here
 }
 

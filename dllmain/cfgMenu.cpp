@@ -1148,14 +1148,14 @@ void cfgMenuRender()
 						if (ImGui::IsItemEdited())
 						{
 							pConfig->HasUnsavedChanges = true;
-							pConfig->CostumeOverride.Leon = (LeonCostumes)iCostumeComboLeon;
+							pConfig->CostumeOverride.Leon = (LeonCostume)iCostumeComboLeon;
 						}
 
 						ImGui::Combo("Ashley", &iCostumeComboAshley, sAshleyCostumeNames, IM_ARRAYSIZE(sAshleyCostumeNames));
 						if (ImGui::IsItemEdited())
 						{
 							pConfig->HasUnsavedChanges = true;
-							pConfig->CostumeOverride.Ashley = (AshleyCostumes)iCostumeComboAshley;
+							pConfig->CostumeOverride.Ashley = (AshleyCostume)iCostumeComboAshley;
 						}
 
 						ImGui::Combo("Ada", &iCostumeComboAda, sAdaCostumeNames, IM_ARRAYSIZE(sAdaCostumeNames));
@@ -1165,9 +1165,9 @@ void cfgMenuRender()
 
 							// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
 							if (iCostumeComboAda == 2)
-								pConfig->CostumeOverride.Ada = (AdaCostumes)(iCostumeComboAda + 1);
+								pConfig->CostumeOverride.Ada = (AdaCostume)(iCostumeComboAda + 1);
 							else
-								pConfig->CostumeOverride.Ada = (AdaCostumes)iCostumeComboAda;
+								pConfig->CostumeOverride.Ada = (AdaCostume)iCostumeComboAda;
 						}
 						ImGui::PopItemWidth();
 						ImGui::EndDisabled();

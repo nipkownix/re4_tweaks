@@ -16,7 +16,7 @@ void __stdcall setLanguage_Hook()
 	{
 		auto* SystemSave = SystemSavePtr();
 		if (SystemSave)
-			SystemSave->violenceLevel_9 = uint8_t(pConfig->iViolenceLevelOverride);
+			SystemSave->eff_country_9 = uint8_t(pConfig->iViolenceLevelOverride);
 	}
 }
 
@@ -30,7 +30,7 @@ void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
 	{
 		auto* SystemSave = SystemSavePtr();
 		if (SystemSave)
-			SystemSave->violenceLevel_9 = uint8_t(pConfig->iViolenceLevelOverride);
+			SystemSave->eff_country_9 = uint8_t(pConfig->iViolenceLevelOverride);
 	}
 }
 
@@ -175,12 +175,12 @@ bool __fastcall DatTbl__GetDatWkNo_Hook(DatTbl* thisptr, void* unused, void** da
 	if (!ret)
 		return false; // doesn't exist in DAT, possibly corrupt game, return false...
 
-	if (work_no >= thisptr->count_0)
+	if (work_no >= thisptr->NumDatTbl_0)
 		return false;
 
-	auto& entry = thisptr->entries_4[work_no];
+	auto& entry = thisptr->PDatTbl_4[work_no];
 
-	return DatTbl_TryLoadFile(thisptr, entry.name_0, dataPtr);
+	return DatTbl_TryLoadFile(thisptr, entry.Name_0, dataPtr);
 }
 
 bool(__fastcall* DatTbl__DelDat)(DatTbl* thisptr, void* unused, const char* filePath);
@@ -195,10 +195,10 @@ bool __fastcall DatTbl__DelDat_Hook(DatTbl* thisptr, void* unused, const char* f
 bool(__fastcall* DatTbl__DelDatWkNo)(DatTbl* thisptr, void* unused, int work_no);
 bool __fastcall DatTbl__DelDatWkNo_Hook(DatTbl* thisptr, void* unused, int work_no)
 {
-	if (work_no < thisptr->count_0)
+	if (work_no < thisptr->NumDatTbl_0)
 	{
-		auto& entry = thisptr->entries_4[work_no];
-		DatTbl_TryUnloadFile(thisptr, entry.name_0);
+		auto& entry = thisptr->PDatTbl_4[work_no];
+		DatTbl_TryUnloadFile(thisptr, entry.Name_0);
 	}
 
 	// Only call DatTbl__DelDatWkNo once we're finished with entry, as that func will clear it...
@@ -291,20 +291,20 @@ BYTE __stdcall j_PlSetCostume_Hook()
 	if (!pConfig->bOverrideCostumes)
 		return val;
 
-	CharacterID curPlType = (CharacterID)GlobalPtr()->curPlType_4FC8;
+	PlayerCharacter curPlType = GlobalPtr()->pl_type_4FC8;
 
 	switch (curPlType)
 	{
-	case CharacterID::Leon:
-		GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Leon;
-		GlobalPtr()->Costume_subchar_4FCB = (uint8_t)pConfig->CostumeOverride.Ashley;
+	case PlayerCharacter::Leon:
+		GlobalPtr()->plCostume_4FC9.Leon = (LeonCostume)(uint8_t)pConfig->CostumeOverride.Leon;
+		GlobalPtr()->subCostume_4FCB = (AshleyCostume)(uint8_t)pConfig->CostumeOverride.Ashley;
 		break;
-	case CharacterID::Ashley: // When playing as Ashley in the castle section
+	case PlayerCharacter::Ashley: // When playing as Ashley in the castle section
 		// GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ashley; <- Disabled for being very unreliable. Crashed on me many times, and when it didn't Ashley had parts of her body invisible. TODO: Fix this oe day.
 		break;
-	case CharacterID::Ada:
+	case PlayerCharacter::Ada:
 	{
-		GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ada;
+		GlobalPtr()->plCostume_4FC9.Ada = (AdaCostume)(uint8_t)pConfig->CostumeOverride.Ada;
 		break;
 	}
 	default:
@@ -312,9 +312,9 @@ BYTE __stdcall j_PlSetCostume_Hook()
 	}
 
 	#ifdef VERBOSE
-	con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
-	con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
-	con.AddConcatLog("Subchar costume: ", GlobalPtr()->Costume_subchar_4FCB);
+	con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
+	con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Leon));
+	con.AddConcatLog("Subchar costume: ", int(GlobalPtr()->subCostume_4FCB));
 	#endif
 
 	return val;
@@ -330,7 +330,7 @@ void __cdecl wep17_r3_ready00_Hook(cPlayer* a1)
 {
 	// Update weapon direction to match camera if allowing quickturn
 	if(pConfig->bAllowMatildaQuickturn)
-		a1->plWep_7D8->field_30 = CameraControl__getCameraDirection();
+		a1->Wep_7D8->m_CamAdjY_30 = CameraControl__getCameraDirection();
 
 	wep17_r3_ready00(a1);
 }
@@ -355,7 +355,7 @@ void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 	// We fix that here by resetting speed to 1 whenever weapon change is occurring, pretty simple fix
 
 	if (pConfig->bFixDitmanGlitch)
-		thisptr->MotInfo_1D8.speed_C0 = 1.0f;
+		thisptr->Motion_1D8.Seq_speed_C0 = 1.0f;
 
 	cPlayer__weaponInit(thisptr, unused);
 }
@@ -437,7 +437,7 @@ bool cPlayer__keyReload_hook()
 			if (pConfig->bAllowReloadWithoutAiming_controller)
 			{
 				// Change controller reload key, since the default is also used for sprinting when not aiming
-				switch (SystemSavePtr()->keyConfigType_B) {
+				switch (SystemSavePtr()->pad_type_B) {
 					case keyConfigTypes::TypeI:
 						reloadKey = KEY_BTN::KEY_CANCEL; // Xinput B
 						break;
@@ -673,14 +673,14 @@ void Init_Misc()
 			void operator()(injector::reg_pack& regs)
 			{
 				if (!pConfig->bOverrideCostumes)
-					GlobalPtr()->plCostume_4FC9 = (uint8_t)AdaCostumes::Normal;
+					GlobalPtr()->plCostume_4FC9.Ada = AdaCostume::Normal;
 				else
 				{
-					GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ada;
+					GlobalPtr()->plCostume_4FC9.Ada = pConfig->CostumeOverride.Ada;
 
 					#ifdef VERBOSE
-					con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
-					con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
+					con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Ada));
 					#endif
 				}
 			}
@@ -693,14 +693,14 @@ void Init_Misc()
 			void operator()(injector::reg_pack& regs)
 			{
 				if (!pConfig->bOverrideCostumes)
-					GlobalPtr()->plCostume_4FC9 = (uint8_t)AdaCostumes::Spy;
+					GlobalPtr()->plCostume_4FC9.Ada = AdaCostume::Spy;
 				else
 				{
-					GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ada;
+					GlobalPtr()->plCostume_4FC9.Ada = pConfig->CostumeOverride.Ada;
 
 					#ifdef VERBOSE
-					con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
-					con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
+					con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Ada));
 					#endif
 				}
 			}
@@ -718,30 +718,30 @@ void Init_Misc()
 
 				if (pConfig->bOverrideCostumes)
 				{
-					CharacterID curPlType = (CharacterID)GlobalPtr()->curPlType_4FC8;
+					PlayerCharacter curPlType = GlobalPtr()->pl_type_4FC8;
 
 					switch (curPlType)
 					{
-					case CharacterID::Leon:
-						GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Leon;
+					case PlayerCharacter::Leon:
+						GlobalPtr()->plCostume_4FC9.Leon = pConfig->CostumeOverride.Leon;
 						break;
-					case CharacterID::Ada:
+					case PlayerCharacter::Ada:
 					{
 						// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
 						uint8_t costumeID = (uint8_t)pConfig->CostumeOverride.Ada;
 						if (costumeID == 2)
 							costumeID++;
 
-						GlobalPtr()->plCostume_4FC9 = costumeID;
+						GlobalPtr()->plCostume_4FC9.Ada = AdaCostume(costumeID);
 						break;
 					}
 					default:
-						GlobalPtr()->plCostume_4FC9 = (uint8_t)0; // HUNK, Krauser and Wesker only have one costume
+						GlobalPtr()->plCostume_4FC9.Leon = (LeonCostume)0; // HUNK, Krauser and Wesker only have one costume
 					}
 
 					#ifdef VERBOSE
-					con.AddConcatLog("Player type: ", GlobalPtr()->curPlType_4FC8);
-					con.AddConcatLog("Player costume: ", GlobalPtr()->plCostume_4FC9);
+					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
+					con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Leon));
 					#endif
 				}
 			}
@@ -752,7 +752,7 @@ void Init_Misc()
 		// PlClothSetLeon -- Issue: Would not apply jacket physics if Ashley isn't armored
 		pattern = hook::pattern("80 B8 ? ? ? ? 02 75 ? 6A ? 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 66 85 ? 75 ? A1");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
 		// Chicago Typewriter -- Issue: if Ashley is armored, Leon's Chicago Typewriter reload animation would always be the special Mafia one, regardless of Leon's costume
 		auto pattern_wep11_r2_reload_1 = hook::pattern("80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 8B 96");
@@ -765,28 +765,28 @@ void Init_Misc()
 		auto pattern_cObjTompson__moveReload = hook::pattern("80 B9 ? ? ? ? ? 75 ? 80 B9 ? ? ? ? ? 0F 84 ? ? ? ? 80 BE ? ? ? ? ? 0F B6 81");
 	
 		injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+		injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
 		for (size_t i = 0; i < pattern_wep11_r2_reload_2to7.size(); ++i)
 		{
 			injector::WriteMemory(pattern_wep11_r2_reload_2to7.count(6).get(i).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-			injector::WriteMemory(pattern_wep11_r2_reload_2to7.count(6).get(i).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+			injector::WriteMemory(pattern_wep11_r2_reload_2to7.count(6).get(i).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 		}
 
 		injector::WriteMemory(pattern_wep11_r2_reload_8.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_wep11_r2_reload_8.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+		injector::WriteMemory(pattern_wep11_r2_reload_8.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
 		injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+		injector::WriteMemory(pattern_ReadWepData.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
 		injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+		injector::WriteMemory(pattern_cObjTompson__setMotion.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
 		injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+		injector::WriteMemory(pattern_cPlayer__seqSeCtrl.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
 		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
-		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostumes::Mafia, true); // 02 -> 04
+		injector::WriteMemory(pattern_cObjTompson__moveReload.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
 		spd::log()->info("OverrideCostumes applied");
 	}
@@ -810,7 +810,7 @@ void Init_Misc()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				int AshleyCostumeID = GlobalPtr()->Costume_subchar_4FCB;
+				int AshleyCostumeID = int(GlobalPtr()->subCostume_4FCB);
 
 				// Mimic what CMP does, since we're overwriting it.
 				if (AshleyCostumeID > 2)

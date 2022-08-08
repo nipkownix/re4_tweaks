@@ -38,14 +38,14 @@ double CameraControl__getCameraPitch_hook()
 	double angle = (*fMousePosY * 127.0f) / *C_RANGE_1097;
 
 	// Invert the value if needed.
-	if (!FlagIsSet(&SystemSavePtr()->flags_CONFIG_0, uint32_t(Flags_CONFIG::CFG_AIM_REVERSE)))
+	if (!FlagIsSet(SystemSavePtr()->flags_CONFIG_0, uint32_t(Flags_CONFIG::CFG_AIM_REVERSE)))
 		angle = -angle;
 
 	// By default we need to decrease the positive Y value a bit.
 	// This value can change depending on the weapon.
 	double dFactor = 3.0;
 
-	switch (GlobalPtr()->curWepid_4FC0){
+	switch (GlobalPtr()->weapon_no_4FC0){
 	case 0x2E: // PRL 412
 	case 0x0F: // Handcannon
 		dFactor = 2.0;
@@ -539,7 +539,7 @@ void Init_CameraTweaks()
 
 					// This workaround breaks quickturning, so we implement our own replacement here.
 					float factor = fCameraPosX_backup * 0.8f;
-					PlayerPtr()->rotation += factor;
+					PlayerPtr()->ang_A0.y += factor;
 					*fMousePosX += factor;
 				}
 			}
@@ -574,7 +574,7 @@ void Init_CameraTweaks()
 
 				if (pConfig->bCameraImprovements && isKeyboardMouse())
 				{
-					PlayerPtr()->rotation += fCameraPosX_backup;
+					PlayerPtr()->ang_A0.y += fCameraPosX_backup;
 					*fMousePosX += fCameraPosX_backup;
 
 					// Reset fCameraPosX_backup after it has been used.

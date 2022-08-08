@@ -174,11 +174,11 @@ void ToolMenu_LightToolMenu()
     int sizetest2 = sizeof(cLightMgr_EnvInfo);
 
     // Make sure game knows we're in a tool menu
-    GLOBALS* Global = GlobalPtr();
-    Global->flags_DEBUG_60[0] |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
+    GLOBAL_WK* Global = GlobalPtr();
+    Global->flags_DEBUG_0_60[0] |= GetFlagValue(uint32_t(Flags_DEBUG::DBG_TEST_MODE));
 
-    uint32_t Flags_STOP_Orig = Global->flags_STOP_170;
-    Global->flags_STOP_170 |= ~GetFlagValue(uint32_t(Flags_STOP::SPF_CINESCO)); // stops all except cinesco?
+    uint32_t Flags_STOP_Orig = Global->flags_STOP_0_170[0];
+    Global->flags_STOP_0_170[0] |= ~GetFlagValue(uint32_t(Flags_STOP::SPF_CINESCO)); // stops all except cinesco?
 
     int SelectedIdx = 0;
     int PrevButtons = 0;
@@ -203,7 +203,7 @@ void ToolMenu_LightToolMenu()
         if (buttonStates & (uint32_t(GamePadButton::A) | uint32_t(GamePadButton::B)))
             if (SelectedIdx == NumMenuItems || (buttonStates & uint32_t(GamePadButton::B)))
             {
-                Global->flags_STOP_170 = Flags_STOP_Orig;
+                Global->flags_STOP_0_170[0] = Flags_STOP_Orig;
                 ToolMenu_Return();
                 break;
             }

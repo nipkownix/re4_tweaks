@@ -73,7 +73,7 @@ void MouseTurn(float TurnDelayFactor = 20.0f)
 		// Higher values = slower speed.
 		float factor = *fCameraPosX / TurnDelayFactor;
 
-		PlayerPtr()->rotation += factor;
+		PlayerPtr()->ang_A0.y += factor;
 		*fMousePosX += factor / fRangeMulti;
 	}
 	else // Type B
@@ -84,7 +84,7 @@ void MouseTurn(float TurnDelayFactor = 20.0f)
 		if (GetMouseAimingMode() == MouseAimingModes::Classic)
 			SpeedMulti = 1300.0f;
 
-		PlayerPtr()->rotation += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnTypeBSensitivity;
+		PlayerPtr()->ang_A0.y += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnTypeBSensitivity;
 	}
 }
 
@@ -183,13 +183,13 @@ void Init_MouseTurning()
 				bool isPressingDefaultKey = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT);
 
 				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
-				if (isPressingDefaultKey && (mi_ptr->motionFlags_40 == 4))
+				if (isPressingDefaultKey && (mi_ptr->Mot_attr_40 == 4))
 					regs.eax = 0;
 				else if (isMouseTurnEnabled() && (intMouseDeltaX() < -8) && !isPressingDefaultKey)
 				{
 					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
 					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
-					mi_ptr->motionFlags_40 = 4;
+					mi_ptr->Mot_attr_40 = 4;
 
 					regs.eax = 0x8;
 
@@ -221,13 +221,13 @@ void Init_MouseTurning()
 				bool isPressingDefaultKey = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT);
 
 				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
-				if (isPressingDefaultKey && (mi_ptr->motionFlags_40 == 4))
+				if (isPressingDefaultKey && (mi_ptr->Mot_attr_40 == 4))
 					regs.eax = 0;
 				else if (isMouseTurnEnabled() && (intMouseDeltaX() > 8) && !isPressingDefaultKey)
 				{
 					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
 					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
-					mi_ptr->motionFlags_40 = 4;
+					mi_ptr->Mot_attr_40 = 4;
 
 					regs.eax = 0x4;
 

@@ -82,9 +82,9 @@ public:
 
 	struct CostumeOverrideList
 	{
-		LeonCostumes Leon;
-		AshleyCostumes Ashley;
-		AdaCostumes Ada;
+		LeonCostume Leon;
+		AshleyCostume Ashley;
+		AdaCostume Ada;
 	} CostumeOverride;
 
 	bool bAshleyJPCameraAngles = false;

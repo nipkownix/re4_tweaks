@@ -236,11 +236,11 @@ void Config::ReadSettings(std::string_view ini_path)
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "Jacket") pConfig->CostumeOverride.Leon = LeonCostumes::Jacket;
-		if (buf == "Normal") pConfig->CostumeOverride.Leon = LeonCostumes::Normal;
-		if (buf == "Vest") pConfig->CostumeOverride.Leon = LeonCostumes::Vest;
-		if (buf == "RPD") pConfig->CostumeOverride.Leon = LeonCostumes::RPD;
-		if (buf == "Mafia") pConfig->CostumeOverride.Leon = LeonCostumes::Mafia;
+		if (buf == "Jacket") pConfig->CostumeOverride.Leon = LeonCostume::Jacket;
+		if (buf == "Normal") pConfig->CostumeOverride.Leon = LeonCostume::Normal;
+		if (buf == "Vest") pConfig->CostumeOverride.Leon = LeonCostume::Vest;
+		if (buf == "RPD") pConfig->CostumeOverride.Leon = LeonCostume::RPD;
+		if (buf == "Mafia") pConfig->CostumeOverride.Leon = LeonCostume::Mafia;
 
 		iCostumeComboLeon = (int)pConfig->CostumeOverride.Leon;
 	}
@@ -248,9 +248,9 @@ void Config::ReadSettings(std::string_view ini_path)
 	buf = iniReader.ReadString("MISC", "AshleyCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "Normal") pConfig->CostumeOverride.Ashley = AshleyCostumes::Normal;
-		if (buf == "Popstar") pConfig->CostumeOverride.Ashley = AshleyCostumes::Popstar;
-		if (buf == "Armor") pConfig->CostumeOverride.Ashley = AshleyCostumes::Armor;
+		if (buf == "Normal") pConfig->CostumeOverride.Ashley = AshleyCostume::Normal;
+		if (buf == "Popstar") pConfig->CostumeOverride.Ashley = AshleyCostume::Popstar;
+		if (buf == "Armor") pConfig->CostumeOverride.Ashley = AshleyCostume::Armor;
 
 		iCostumeComboAshley = (int)pConfig->CostumeOverride.Ashley;
 	}
@@ -258,14 +258,14 @@ void Config::ReadSettings(std::string_view ini_path)
 	buf = iniReader.ReadString("MISC", "AdaCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "RE2") pConfig->CostumeOverride.Ada = AdaCostumes::RE2;
-		if (buf == "Spy") pConfig->CostumeOverride.Ada = AdaCostumes::Spy;
-		if (buf == "Normal") pConfig->CostumeOverride.Ada = AdaCostumes::Normal;
+		if (buf == "RE2") pConfig->CostumeOverride.Ada = AdaCostume::RE2;
+		if (buf == "Spy") pConfig->CostumeOverride.Ada = AdaCostume::Spy;
+		if (buf == "Normal") pConfig->CostumeOverride.Ada = AdaCostume::Normal;
 
 	iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
 
 		// Normal is id 3, but we're lying to ImGui by pretending Normal is id 2 instead.
-		if (pConfig->CostumeOverride.Ada == AdaCostumes::Normal)
+		if (pConfig->CostumeOverride.Ada == AdaCostume::Normal)
 			iCostumeComboAda--;
 	}
 
