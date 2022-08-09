@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include "dllmain.h"
 #include "Patches.h"
 #include "..\wrappers\wrapper.h"

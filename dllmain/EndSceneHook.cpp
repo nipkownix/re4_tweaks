@@ -2,18 +2,21 @@
 #include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
-#include "imgui\imgui.h"
-#include "imgui\imgui_internal.h"
-#include "imgui\imgui_impl_win32.h"
-#include "imgui\imgui_impl_dx9.h"
-#include "imgui\imgui_stdlib.h"
+#include "imgui.h"
+#include "imgui_internal.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx9.h"
+#include "imgui\misc\cpp\imgui_stdlib.h"
 #include <faprolight.hpp>
-#include <hashes.h>
-#include <NotoSansCJKsc.hpp>
+#include <FAhashes.h>
+#include <IBMPlexSansJP_M.hpp>
 #include "input.hpp"
 #include "resource.h"
 
 EndSceneHook esHook;
+
+bool didInit = false;
+bool bRebuildFont = false;
 
 extern std::string cfgMenuTitle; // cfgMenu.cpp
 
@@ -210,7 +213,38 @@ void ImGuipInputUpdate()
 		io.AddInputCharacter(c);
 }
 
-static bool didInit = false;
+void BuildFontAtlas()
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.Fonts->Clear();
+
+	float fFontSize = 18.1f * pConfig->fFontSizeScale;
+
+	// Add IBM Plex Sans JP Medium for text
+	static const ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
+
+	ImFontConfig ImCustomFont;
+	ImCustomFont.FontDataOwnedByAtlas = false;
+
+	con.AddLogFloat(fFontSize);
+
+	io.Fonts->AddFontFromMemoryCompressedTTF(IBMPlexSansJP_M_compressed_data, IBMPlexSansJP_M_compressed_size, fFontSize, &ImCustomFont, ranges);
+
+	// Add FontAwesome for icons
+	static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+
+	ImFontConfig ImCustomIcons;
+	ImCustomIcons.MergeMode = true;
+	ImCustomIcons.PixelSnapH = true;
+	ImCustomIcons.FontDataOwnedByAtlas = false;
+
+	io.Fonts->AddFontFromMemoryTTF(&FAprolight, sizeof FAprolight, 18.0f * pConfig->fFontSizeScale, &ImCustomIcons, icon_ranges);
+
+	// Build atlas
+	io.Fonts->Build();
+}
+
 void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 {
 	didInit = true;
@@ -224,23 +258,7 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 
 	io.IniFilename = nullptr;
 
-	static const ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
-
-	ImFontConfig ImCustomFont;
-	ImCustomFont.FontDataOwnedByAtlas = false;
-
-	io.Fonts->AddFontFromMemoryCompressedTTF(NotoSansCJKsc_compressed_data, NotoSansCJKsc_compressed_size, 18, &ImCustomFont, ranges);
-
-	static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
-	
-	ImFontConfig ImCustomIcons;
-	ImCustomIcons.MergeMode = true;
-	ImCustomIcons.PixelSnapH = true;
-	ImCustomIcons.FontDataOwnedByAtlas = false;
-	
-	io.Fonts->AddFontFromMemoryTTF(&faprolight, sizeof faprolight, 18, &ImCustomIcons, icon_ranges);
-
-	io.FontGlobalScale = pConfig->fFontSize;
+	BuildFontAtlas();
 
 	ApplyImGuiTheme();
 
@@ -258,6 +276,14 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	// Init ImGui
 	if (!didInit)
 		Init_ImGui(pDevice);
+
+	// Rebuild font if needed
+	if (bRebuildFont)
+	{
+		BuildFontAtlas();
+		ImGui_ImplDX9_InvalidateDeviceObjects();
+		bRebuildFont = false;
+	}
 
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();

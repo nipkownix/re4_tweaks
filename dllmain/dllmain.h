@@ -20,4 +20,6 @@
 #pragma warning(pop)
 using namespace Memory::VP;
 
+#pragma comment(lib, "freetype.lib")
+
 #define VERBOSE

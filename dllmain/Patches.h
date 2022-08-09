@@ -1,6 +1,6 @@
 #pragma once
 #include <d3d9.h>
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 extern std::string WrapperName;
 extern std::string rootPath;
@@ -56,6 +56,7 @@ struct EndSceneHook
 };
 
 extern EndSceneHook esHook;
+extern bool bRebuildFont;
 
 // cfgMenu
 void cfgMenuRender();
