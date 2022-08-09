@@ -7,6 +7,69 @@ bool gameIsDebugBuild = false;
 
 SND_CTRL* Snd_ctrl_work = nullptr; // extern inside Game.h
 
+// a lot missing from here sadly ;_;
+std::unordered_map<int, std::string> UnitBeFlagNames =
+{
+	{ 0x1, "Alive" },
+	{ 0x2, "Trans" },
+	{ 0x8, "AltAmbientLightColor" }, // checked by LightSetModel, didn't notice any change
+	{ 0x10, "DrawFootShadow" },
+	{ 0x20, "Move" },
+	{ 0x200, "Dead" }, // maybe dead flag? setting it seems to set Destruct flag, which unsets a bunch of flags including Alive
+	{ 0x400, "Destruct" }, // checked by cManager<cEm>::dieCheck, calls destructor if set
+	{ 0x800, "NoSuspend" }, // keep running even if suspend game flag is set
+	{ 0x1000, "IgnoreDrawDistance" }, // looks like ModelTrans sets distance to 999999 if set
+	{ 0x2000, "ContiguousParts" }, // optimization? checked by cModel::getPartsPtr
+								   // seems to skip following nextParts_F4 pointers and accesses part by index directly if set
+	{ 0x4000, "DisableAnimation" }, // code for this doesn't actually seem anim/motion related, but anims do get disabled by it...
+	{ 0x8000, "DisableLighting" },
+	{ 0x20000, "UseSimpleLighting" },
+	{ 0x100000, "ClothNoScaleApply" }, // PenClothMove3
+	{ 0x200000, "ClothReset" }, // PenClothMove3
+	{ 0x1000000, "ApplyGlobalIllumination" }, // unsure, seems to adjust lighting color though
+	//{ 0x8000000, "InvertShadowFlagBit6" }, // commonModelTrans, seems to invert check for flag 0x40 / bit6
+};
+
+std::unordered_map<int, std::string> EmNames =
+{
+	{0x00, "Player"},
+	{0x50, "EmObj"},
+	{0x51, "EmDoor"},
+	{0x52, "EmWep"},
+	{0x53, "EmBox"},
+	//0x54 unused?
+	{0x55, "EmRack"},
+	{0x56, "EmWindow"},
+	{0x57, "EmTorch"},
+	{0x58, "EmBarrel"},
+	{0x59, "EmTree"},
+	{0x5A, "EmRock"},
+	{0x5B, "EmSwitch"},
+	{0x5C, "EmItem"},
+	{0x5D, "EmHit"},
+	{0x5E, "EmBarred"},
+	{0x5F, "EmMine"},
+	{0x60, "EmShield"},
+	{0x61, "EmBar"},
+};
+
+std::string cEmMgr::EmIdToName(int id)
+{
+	if (EmNames.count(id))
+		return EmNames[id];
+	std::stringstream ss;
+	ss << "Em" << std::setfill('0') << std::setw(2) << id;
+	return ss.str();
+}
+
+std::string cUnit::GetBeFlagName(int flagIndex)
+{
+	int flagValue = (1 << flagIndex);
+	if (UnitBeFlagNames.count(flagValue))
+		return UnitBeFlagNames[flagValue];
+	return "Bit" + std::to_string(flagIndex);
+}
+
 std::string GameVersion()
 {
 	return gameVersion;
@@ -122,6 +185,12 @@ uint8_t* GameSavePtr()
 	return *g_GameSave_BufPtr;
 }
 
+cEmMgr* EmMgr_ptr = nullptr;
+cEmMgr* EmMgrPtr()
+{
+	return EmMgr_ptr;
+}
+
 bool IsGanado(int id) // same as games IsGanado func
 {
 	if (id == 0x4B || id == 0x4E)
@@ -217,6 +286,10 @@ bool Init_Game()
 	// Pointer to the original KeyOnCheck
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), game_KeyOnCheck_0);
+
+	// pointer to EmMgr (instance of cManager<cEm>)
+	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
+	EmMgr_ptr = *pattern.count(1).get(0).get<cEmMgr*>(0xD);
 
 	return true;
 }

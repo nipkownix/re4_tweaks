@@ -93,7 +93,7 @@ bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4 &activeCo
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + 8.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 6.0f), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
-	if (ret)
+	if (ret && tabID != MenuTab::NumTabs)
 		Tab = tabID;
 
 	return ret;
@@ -269,6 +269,14 @@ void cfgMenuRender()
 			// Hotkeys
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
 			ImGui_TabButton("##hotkeys", "Hotkeys", active, inactive, MenuTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
+
+			// EmManager
+			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
+			if (ImGui_TabButton("##emmanager", "Em Manager", active, inactive, MenuTab::NumTabs, ICON_FA_CALCULATOR, icn_color, IM_COL32_WHITE, ImVec2(172, 31)))
+			{
+				void UI_NewEmManager(); // EndSceneHook.cpp
+				UI_NewEmManager();
+			}
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 

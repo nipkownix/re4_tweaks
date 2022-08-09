@@ -153,6 +153,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="Sofdec.cpp" />
     <ClCompile Include="FilterXXFixes.cpp" />
     <ClCompile Include="AspectRatioTweaks.cpp" />
+    <ClCompile Include="UI_DebugWindows.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="WndProcHook.cpp" />
     <ClCompile Include="ToolMenu.cpp" />
@@ -247,6 +248,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="SDK\snd.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="UI_DebugWindows.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

@@ -39,6 +39,7 @@ SYSTEM_SAVE_WORK* SystemSavePtr();
 cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
+cEmMgr* EmMgrPtr();
 bool IsGanado(int id);
 
 // Length seems to always be 0xFFAA0 across all builds

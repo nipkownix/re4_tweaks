@@ -12,10 +12,19 @@
 #include <NotoSansCJKsc.hpp>
 #include "input.hpp"
 #include "resource.h"
+#include "UI_DebugWindows.h"
 
 EndSceneHook esHook;
 
 extern std::string cfgMenuTitle; // cfgMenu.cpp
+
+std::vector<UI_Window*> DebugWindows; // Always-on-top debug windows, input only provided when cfgMenu is active
+
+void UI_NewEmManager()
+{
+	static int id = 0;
+	DebugWindows.push_back(new UI_EmManager(id++));
+}
 
 void ApplyImGuiTheme()
 {
@@ -263,7 +272,8 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplWin32_NewFrame();
 
 	// Update ImGui input for this frame
-	ImGuipInputUpdate();
+	if(bCfgMenuOpen)
+		ImGuipInputUpdate();
 
 	ImGui::NewFrame();
 
@@ -287,6 +297,21 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	{
 		//ImGui::ShowDemoWindow();
 		cfgMenuRender();
+	}
+
+	// Render any active always-on-top debug windows
+	auto it = DebugWindows.begin();
+	while (it != DebugWindows.end())
+	{
+		auto* window = *it;
+		bool remainVisible = window->Render();
+		if (!remainVisible)
+		{
+			delete window;
+			it = DebugWindows.erase(it);
+		}
+		else
+			++it;
 	}
 
 	// Show cursor if needed
