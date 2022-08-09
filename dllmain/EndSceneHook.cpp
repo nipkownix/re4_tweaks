@@ -19,11 +19,20 @@ EndSceneHook esHook;
 extern std::string cfgMenuTitle; // cfgMenu.cpp
 
 std::vector<UI_Window*> DebugWindows; // Always-on-top debug windows, input only provided when cfgMenu is active
+std::vector<UI_Window*> NewWindows; // Keep newly created windows in a seperate list, so they can be added after we've rendered current list
 
-void UI_NewEmManager()
+void UI_NewEmManager(int selectedEmIndex)
 {
 	static int id = 0;
-	DebugWindows.push_back(new UI_EmManager(id++));
+	std::string windowTitle = "Em Manager " + std::to_string(id++);
+	NewWindows.push_back(new UI_EmManager(windowTitle, selectedEmIndex));
+}
+
+void UI_NewGlobalsViewer()
+{
+	static int id = 0;
+	std::string windowTitle = "Globals " + std::to_string(id++);
+	NewWindows.push_back(new UI_Globals(windowTitle));
 }
 
 void ApplyImGuiTheme()
@@ -312,6 +321,14 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		}
 		else
 			++it;
+	}
+	// Now we've finished rendering, add any newly created windows to our main list
+	if (NewWindows.size())
+	{
+		auto newWindows = NewWindows; // make copy of NewWindows vect before processing, in case any new windows modify NewWindows vector...
+		NewWindows.clear();
+		for (auto window : newWindows)
+			DebugWindows.push_back(window);
 	}
 
 	// Show cursor if needed

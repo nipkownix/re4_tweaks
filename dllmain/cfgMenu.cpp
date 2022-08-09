@@ -9,6 +9,7 @@
 #include "Patches.h"
 #include <hashes.h>
 #include "Utils.h"
+#include "UI_DebugWindows.h"
 
 bool bCfgMenuOpen;
 bool NeedsToRestart;
@@ -274,8 +275,14 @@ void cfgMenuRender()
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
 			if (ImGui_TabButton("##emmanager", "Em Manager", active, inactive, MenuTab::NumTabs, ICON_FA_CALCULATOR, icn_color, IM_COL32_WHITE, ImVec2(172, 31)))
 			{
-				void UI_NewEmManager(); // EndSceneHook.cpp
 				UI_NewEmManager();
+			}
+
+			// Globals
+			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
+			if (ImGui_TabButton("##globals", "Globals", active, inactive, MenuTab::NumTabs, ICON_FA_CALCULATOR, icn_color, IM_COL32_WHITE, ImVec2(172, 31)))
+			{
+				UI_NewGlobalsViewer();
 			}
 
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));

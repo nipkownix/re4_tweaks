@@ -18,10 +18,7 @@ bool UI_EmManager::Render()
 	//ImGui::SetNextWindowSizeConstraints(ImVec2(940, 640), ImVec2(1280, 720));
 
 	bool retVal = true; // set to false on window close
-
-	// TODO: find how to get rid of this string, seems imgui needs each UI to have unique ID, EmManager## doesn't work?
-	std::string id = std::string("EmManager") + std::to_string(windowId);
-	ImGui::Begin(id.c_str(), &retVal, ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse);
 	{
 		auto pos = ImGui::GetWindowPos();
 		auto draw = ImGui::GetWindowDrawList();
@@ -240,6 +237,46 @@ bool UI_EmManager::Render()
 					}
 				}
 			}
+		}
+
+		ImGui::End();
+	}
+
+	return retVal;
+}
+
+bool UI_Globals::Render()
+{
+	bool retVal = true; // set to false on window close
+	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse);
+	{
+		auto& emMgr = *EmMgrPtr();
+		GLOBAL_WK* globals = GlobalPtr();
+
+		ImGui::Text("Area: R%03x", int(globals->curRoomId_4FAC & 0xFFF));
+
+		cPlayer* player = PlayerPtr();
+		if (!player)
+			ImGui::Text("Player Em: N/A");
+		else
+		{
+			int playerIdx = emMgr.indexOf(player);
+			ImGui::Text("Player Em: #%d (%p)", playerIdx, player);
+			if (playerIdx >= 0)
+				if (ImGui::Button("View"))
+					UI_NewEmManager(playerIdx);
+		}
+
+		cPlayer* ashley = AshleyPtr();
+		if (!ashley)
+			ImGui::Text("Ashley Em: N/A");
+		else
+		{
+			int ashleyIdx = emMgr.indexOf(ashley);
+			ImGui::Text("Ashley Em: #%d (%p)", ashleyIdx, ashley);
+			if (ashleyIdx >= 0)
+				if (ImGui::Button("View"))
+					UI_NewEmManager(ashleyIdx);
 		}
 
 		ImGui::End();

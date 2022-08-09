@@ -24,6 +24,17 @@ public:
 		return get(i);
 	}
 
+	int indexOf(T* entry)
+	{
+		// m_Array_4 is a big block of all the entries, check that it's part of block & figure out index of it
+		if (m_Array_4 > entry)
+			return -1;
+		if (get(m_nArray_8) <= entry)
+			return -1;
+		uintptr_t offset = (uintptr_t)entry - (uintptr_t)m_Array_4;
+		return (int)(offset / m_blockSize_C);
+	}
+
 	// iterator is kinda unnecessary.. was going to use it to only iterate through valid items, but found a better way for that instead
 	// the codes already written up now though, not much point in removing it?
 	struct Iterator

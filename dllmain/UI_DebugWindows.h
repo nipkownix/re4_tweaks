@@ -1,9 +1,16 @@
 #pragma once 
 #include "Game.h"
 
+void UI_NewEmManager(int selectedEmIndex = -1);
+void UI_NewGlobalsViewer();
+
 class UI_Window
 {
+protected:
+	std::string windowTitle;
+
 public:
+	UI_Window(std::string_view title) : windowTitle(title) {};
 	virtual bool Render() = 0;
 };
 
@@ -24,10 +31,15 @@ class UI_EmManager : public UI_Window
 
 	float addPosition[3] = { 0 };
 
-	int windowId = 0;
-
 	std::string EmDisplayString(int i, cEm& em);
 public:
-	UI_EmManager(int id) : windowId(id) {};
+	UI_EmManager(std::string_view title, int selectedIndex = -1) : UI_Window(title), emIdx(selectedIndex) {}
+	bool Render();
+};
+
+class UI_Globals : public UI_Window
+{
+public:
+	UI_Globals(std::string_view title) : UI_Window(title) {}
 	bool Render();
 };
