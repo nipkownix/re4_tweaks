@@ -20,6 +20,8 @@ struct __declspec(align(4)) DAMAGE {
 };
 static_assert(sizeof(DAMAGE) == 0x54, "sizeof(ATTACK_VALUE)");
 
+extern SND_CTRL* Snd_ctrl_work;
+
 std::string GameVersion();
 bool GameVersionIsDebug();
 InputDevices LastUsedDevice();
@@ -36,7 +38,6 @@ DAMAGE* DamagePtr();
 SYSTEM_SAVE_WORK* SystemSavePtr();
 cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
-SND_CTRL* SndCtrlWorkPtr();
 uint8_t* GameSavePtr();
 bool IsGanado(int id);
 

@@ -36,7 +36,6 @@ void(__cdecl* Snd_seq_work_calc_ax_vol)(SND_SEQ* a1); // 0x978150 in 1.1.0
 
 void AudioTweaks_UpdateVolume()
 {
-	SND_CTRL* Snd_ctrl_work = SndCtrlWorkPtr();
 	if (!Snd_ctrl_work)
 		return;
 
