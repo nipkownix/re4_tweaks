@@ -124,7 +124,7 @@ public:
 	bool bIgnoreFPSWarning = false;
 
 	// IMGUI
-	float fFontSize = 1.0f;
+	float fFontSizeScale = 1.0f;
 	bool bDisableMenuTip = false;
 	
 	// DEBUG

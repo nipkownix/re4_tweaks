@@ -1,13 +1,13 @@
-#define NOMINMAX
+﻿#define NOMINMAX
 #include <iostream>
 #include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
-#include "imgui\imgui.h"
-#include "imgui\imgui_stdlib.h"
+#include "imgui.h"
+#include "imgui\misc\cpp\imgui_stdlib.h"
 #include "input.hpp"
 #include "Patches.h"
-#include <hashes.h>
+#include <FAhashes.h>
 #include "Utils.h"
 #include "UI_DebugWindows.h"
 
@@ -293,8 +293,12 @@ void cfgMenuRender()
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
 			if (ImGui::Button(ICON_FA_ERASER" Discard", ImVec2(85, 35)))
 			{
+				float oldSize = pConfig->fFontSizeScale;
+
 				pConfig->ReadSettings();
-				ImGui::GetIO().FontGlobalScale = pConfig->fFontSize;
+
+				if (oldSize != pConfig->fFontSizeScale)
+					bRebuildFont = true;
 			}
 
 			ImGui::SameLine();
@@ -311,7 +315,6 @@ void cfgMenuRender()
 				// Update console title
 				con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
 
-				pConfig->fFontSize = ImGui::GetIO().FontGlobalScale;
 				pConfig->WriteSettings();
 			}
 
@@ -334,20 +337,25 @@ void cfgMenuRender()
 				// Config menu font size
 				if (ImGui::Button("-"))
 				{
-					if (ImGui::GetIO().FontGlobalScale > 1.0f)
-						ImGui::GetIO().FontGlobalScale -= 0.05f;
+					if (pConfig->fFontSizeScale > 1.0f)
+					{
+						pConfig->fFontSizeScale -= 0.05f;
 
-					pConfig->HasUnsavedChanges = true;
+						bRebuildFont = true;
+						pConfig->HasUnsavedChanges = true;
+					}
 				}
 
 				ImGui::SameLine();
 
 				if (ImGui::Button("+"))
 				{
-					if (ImGui::GetIO().FontGlobalScale < 1.20f)
-						ImGui::GetIO().FontGlobalScale += 0.05f;
-
-					pConfig->HasUnsavedChanges = true;
+					if (pConfig->fFontSizeScale < 1.20f)
+					{
+						pConfig->fFontSizeScale += 0.05f;
+						bRebuildFont = true;
+						pConfig->HasUnsavedChanges = true;
+					}
 				}
 
 				ImGui::SameLine();

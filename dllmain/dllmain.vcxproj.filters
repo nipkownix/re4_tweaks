@@ -85,9 +85,6 @@
     <ClCompile Include="ExceptionHandler.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
-      <Filter>external\ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="ControllerTweaks.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
@@ -99,9 +96,6 @@
     </ClCompile>
     <ClCompile Include="EndSceneHook.cpp">
       <Filter>dllmain</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_stdlib.cpp">
-      <Filter>includes\external\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Misc.cpp">
       <Filter>dllmain</Filter>
@@ -144,6 +138,12 @@
     </ClCompile>
     <ClCompile Include="UI_DebugWindows.cpp">
       <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\misc\freetype\imgui_freetype.cpp">
+      <Filter>external\ImGui\misc\freetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\misc\cpp\imgui_stdlib.cpp">
+      <Filter>external\ImGui\misc\cpp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -297,9 +297,6 @@
     <ClInclude Include="..\settings\settings_string.h">
       <Filter>settings</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\hashes.h">
-      <Filter>includes</Filter>
-    </ClInclude>
     <ClInclude Include="..\includes\exception.hpp">
       <Filter>includes</Filter>
     </ClInclude>
@@ -308,9 +305,6 @@
     </ClInclude>
     <ClInclude Include="..\Wrappers\x3daudio1_7.h">
       <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_stdlib.h">
-      <Filter>external\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="input.hpp">
       <Filter>dllmain</Filter>
@@ -344,12 +338,6 @@
     </ClInclude>
     <ClInclude Include="dllmain.h">
       <Filter>dllmain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\faprolight.hpp">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\NotoSansCJKsc.hpp">
-      <Filter>includes</Filter>
     </ClInclude>
     <ClInclude Include="SDK\basic_types.h">
       <Filter>dllmain\SDK</Filter>
@@ -414,6 +402,21 @@
     <ClInclude Include="UI_DebugWindows.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\imgui\misc\freetype\imgui_freetype.h">
+      <Filter>external\ImGui\misc\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\misc\cpp\imgui_stdlib.h">
+      <Filter>external\ImGui\misc\cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\FAhashes.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\FAprolight.hpp">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp">
+      <Filter>includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -457,6 +460,15 @@
     </Filter>
     <Filter Include="dllmain\SDK">
       <UniqueIdentifier>{6f1cea62-3320-4c55-8eaf-678d95a53daf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\ImGui\misc">
+      <UniqueIdentifier>{90d3bf1f-001b-4676-ae3e-a572df7dc0fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\ImGui\misc\cpp">
+      <UniqueIdentifier>{b3c74398-5cef-4091-8940-b8afbd8977d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\ImGui\misc\freetype">
+      <UniqueIdentifier>{84419003-dc17-466d-b01e-6beed7f93767}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

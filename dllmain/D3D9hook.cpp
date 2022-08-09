@@ -1,7 +1,7 @@
 #include "dllmain.h"
 #include "D3D9Hook.h"
 #include <iostream>
-#include <imgui/imgui_impl_dx9.h>
+#include <imgui_impl_dx9.h>
 #include "Patches.h"
 #include "Settings.h"
 

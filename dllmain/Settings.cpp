@@ -327,8 +327,8 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning);
 	
 	// IMGUI
-	pConfig->fFontSize = iniReader.ReadFloat("IMGUI", "FontSize", pConfig->fFontSize);
-	pConfig->fFontSize = fmin(fmax(pConfig->fFontSize, 1.0f), 1.25f); // limit between 1.0 - 1.25
+	pConfig->fFontSizeScale = iniReader.ReadFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
+	pConfig->fFontSizeScale = fmin(fmax(pConfig->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
 	pConfig->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", pConfig->bDisableMenuTip);
 
@@ -495,7 +495,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + pConfig->sJetSkiTrickCombo);
 
 	// IMGUI
-	iniReader.WriteFloat("IMGUI", "FontSize", pConfig->fFontSize);
+	iniReader.WriteFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
 
 	pConfig->HasUnsavedChanges = false;
 
@@ -653,7 +653,7 @@ void Config::LogSettings()
 
 	// IMGUI
 	spd::log()->info("+ IMGUI--------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "FontSize", pConfig->fFontSize);
+	spd::log()->info("| {:<30} | {:>15} |", "FontSizeScale", pConfig->fFontSizeScale);
 	spd::log()->info("| {:<30} | {:>15} |", "DisableMenuTip", pConfig->bDisableMenuTip ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
