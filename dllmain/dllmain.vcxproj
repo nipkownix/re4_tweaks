@@ -244,6 +244,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="SDK\pad.h" />
     <ClInclude Include="SDK\player.h" />
     <ClInclude Include="SDK\pl_wep.h" />
+    <ClInclude Include="SDK\snd.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils.h" />

@@ -111,6 +111,15 @@ cPlayer* AshleyPtr()
 	return *pAS_ptr;
 }
 
+SND_CTRL* Snd_ctrl_work_ptr = nullptr;
+SND_CTRL* SndCtrlWorkPtr()
+{
+	if (!Snd_ctrl_work_ptr)
+		return nullptr;
+
+	return Snd_ctrl_work_ptr;
+}
+
 uint8_t** g_GameSave_BufPtr = nullptr;
 uint8_t* GameSavePtr()
 {
@@ -203,6 +212,10 @@ bool Init_Game()
 	// pAS pointer
 	pattern = hook::pattern("A8 02 74 16 8B 15");
 	pAS_ptr = *pattern.count(1).get(0).get<cPlayer**>(6);
+
+	// Pointer to Snd_ctrl_work struct
+	pattern = hook::pattern("68 B8 00 00 00 6A 00 68 ? ? ? ?");
+	Snd_ctrl_work_ptr = *pattern.count(1).get(0).get<SND_CTRL*>(8);
 
 	// g_GameSave_BufPtr pointer (not actual name)
 	pattern = hook::pattern("89 15 ? ? ? ? C7 05 ? ? ? ? A0 FA 0F 00");

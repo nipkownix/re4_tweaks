@@ -4,54 +4,6 @@
 #include "Game.h"
 #include "Settings.h"
 
-struct SND_SYS_VOL // name from PS2 sound driver, might not be correct (values could be part of larger Snd_ctrl_work struct)
-{
-	int16_t mas_bgm;
-	int16_t mas_se;
-	int16_t iss_bgm;
-	int16_t iss_se;
-	int16_t str_bgm;
-	int16_t str_se;
-};
-static_assert(sizeof(SND_SYS_VOL) == 0xC, "sizeof(SND_SYS_VOL)");
-
-struct SND_STR
-{
-	uint32_t sound_idx_0; // idx into Snd_str_work? used to fetch IXACT3Cue ptr
-	uint8_t unk_4[4];
-	uint32_t field_8;
-	uint32_t field_C;
-	uint8_t unk_10[0x18];
-	uint32_t field_28;
-	uint8_t unk_2C[0x10];
-	int vol_decibels_3C;
-	uint16_t vol_transformed_40;
-	uint8_t unk_42[0x4];
-	uint16_t status_flags_46;
-	uint8_t unk_48[8];
-	int str_type_50; // checked by Snd_str_work_calc_ax_vol, 4 is treated as SE, otherwise BGM
-	int snd_id_54;
-	uint8_t unk_58[0x4];
-};
-static_assert(sizeof(SND_STR) == 0x5C, "sizeof(SND_STR)");
-
-struct SND_SEQ
-{
-	uint32_t sound_idx_0; // idx into Snd_str_work? used to fetch IXACT3Cue ptr
-	uint8_t unk_4[0x10];
-	uint16_t field_14;
-	uint8_t unk_16[0x36];
-	uint8_t status_flags_4C; // maybe uint32, game only checks lowest byte tho...
-	uint8_t unk_4D[0x7];
-	uint8_t seq_type_54; // checked by Snd_seq_work_calc_ax_vol, 2 is treated as SE, otherwise BGM
-	uint8_t unk_55[0xF];
-	int vol_decibels_64;
-	uint8_t unk_68[0x24];
-};
-static_assert(sizeof(SND_SEQ) == 0x8C, "sizeof(SND_SEQ)");
-
-SND_SYS_VOL* g_Snd_sys_vol;
-
 void(__cdecl* Snd_set_system_vol)(char flg, int16_t vol);
 void __cdecl Snd_set_system_vol_Hook(char flg, int16_t vol)
 {
@@ -84,16 +36,17 @@ void(__cdecl* Snd_seq_work_calc_ax_vol)(SND_SEQ* a1); // 0x978150 in 1.1.0
 
 void AudioTweaks_UpdateVolume()
 {
-	if (!g_Snd_sys_vol)
+	SND_CTRL* Snd_ctrl_work = SndCtrlWorkPtr();
+	if (!Snd_ctrl_work)
 		return;
 
 	// shift value left by 8, as done by Snd_set_system_vol
 
 	const float vol_max = 127;
 
-	g_Snd_sys_vol->str_bgm = g_Snd_sys_vol->iss_bgm = (int16_t(vol_max * (pConfig->iVolumeBGM / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
-	g_Snd_sys_vol->iss_se = (int16_t(vol_max * (pConfig->iVolumeSE / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
-	g_Snd_sys_vol->str_se = (int16_t(vol_max * (pConfig->iVolumeCutscene / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8); // str_se seems to mostly get used by cutscenes / merchant dialogue
+	Snd_ctrl_work->vol_str_bgm_48 = Snd_ctrl_work->vol_iss_bgm_44 = (int16_t(vol_max * (pConfig->iVolumeBGM / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
+	Snd_ctrl_work->vol_iss_se_46 = (int16_t(vol_max * (pConfig->iVolumeSE / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
+	Snd_ctrl_work->vol_str_se_4A = (int16_t(vol_max * (pConfig->iVolumeCutscene / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8); // str_se seems to mostly get used by cutscenes / merchant dialogue
 
 	if (g_mwply && (
 		FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_MOVIE_ON)) ||
@@ -137,10 +90,6 @@ void Init_AudioTweaks()
 	auto pattern = hook::pattern("B8 10 00 00 00 0F B6 55 ? 52 50 E8 ? ? ? ? 83 C4");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xB)).as_int(), Snd_set_system_vol);
 	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xB)).as_int(), Snd_set_system_vol_Hook);
-
-	// Fetch pointer to volume table
-	pattern = hook::pattern("F6 C1 01 74 06 66 A3 ? ? ? ? F6 C1 02");
-	g_Snd_sys_vol = *pattern.count(1).get(0).get<SND_SYS_VOL*>(7);
 
 	// Hook mwPlySetOutVol so we can override FMV volume, and store mwply handle to allow updating volume during runtime
 	pattern = hook::pattern("6A 9C 56 E8 ? ? ? ?");

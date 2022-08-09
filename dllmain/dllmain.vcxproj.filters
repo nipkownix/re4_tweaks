@@ -405,6 +405,9 @@
     <ClInclude Include="SDK\EtcModel.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\snd.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

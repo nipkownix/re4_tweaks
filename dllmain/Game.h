@@ -7,6 +7,7 @@
 #include "SDK/player.h"
 #include "SDK/pad.h"
 #include "SDK/global.h"
+#include "SDK/snd.h"
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];
@@ -35,6 +36,7 @@ DAMAGE* DamagePtr();
 SYSTEM_SAVE_WORK* SystemSavePtr();
 cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
+SND_CTRL* SndCtrlWorkPtr();
 uint8_t* GameSavePtr();
 bool IsGanado(int id);
 
