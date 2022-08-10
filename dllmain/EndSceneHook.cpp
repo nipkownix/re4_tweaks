@@ -13,6 +13,7 @@
 #include "input.hpp"
 #include "resource.h"
 #include "UI_DebugWindows.h"
+#include "Trainer.h"
 
 EndSceneHook esHook;
 
@@ -328,6 +329,8 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ImGui::GetIO().SetAppAcceptingEvents(ImGuiShouldAcceptInput());
 
 	ImGui::NewFrame();
+
+	Trainer_Update();
 
 	// Check if the configuration menu binding has been pressed
 	cfgMenuBinding();

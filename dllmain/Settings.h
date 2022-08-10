@@ -126,6 +126,7 @@ public:
 	// IMGUI
 	float fFontSizeScale = 1.0f;
 	bool bDisableMenuTip = false;
+	bool bUseTrainer = false;
 	
 	// DEBUG
 	bool bVerboseLog = false;

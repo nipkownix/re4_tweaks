@@ -145,6 +145,9 @@
     <ClCompile Include="..\external\imgui\misc\cpp\imgui_stdlib.cpp">
       <Filter>external\ImGui\misc\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="Trainer.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
@@ -416,6 +419,9 @@
     </ClInclude>
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp">
       <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="Trainer.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
