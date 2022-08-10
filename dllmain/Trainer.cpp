@@ -3,6 +3,9 @@
 #include "Game.h"
 #include "Settings.h"
 #include "input.hpp"
+#include "imgui.h"
+#include <FAhashes.h>
+#include "UI_DebugWindows.h"
 
 bool bUseNumpadMovement;
 bool bUseMouseWheelUPDOWN;
@@ -233,5 +236,216 @@ void Trainer_Update()
 	{
 		player->atari_2B4.m_flag_1A = atariInfoFlagBackup;
 		atariInfoFlagSet = false;
+	}
+}
+
+enum class TrainerTab
+{
+	Patches,
+	Hotkeys,
+	NumTabs
+};
+TrainerTab CurTrainerTab = TrainerTab::Patches;
+
+// Helper funcs from cfgMenu.cpp
+// TODO: move these to seperate cpp/h to help make cfgMenu less crowded?
+void ImGui_ItemSeparator();
+void ImGui_ColumnInit();
+void ImGui_ColumnSwitch();
+void ImGui_ColumnFinish();
+void ImGui_ItemBG(float RowSize, ImColor bgCol);
+extern ImColor itmbgColor;
+void SetHotkeyComboThread(std::string* cfgHotkey);
+
+bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& activeCol,
+	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor iconColor,
+	const ImColor textColor, const ImVec2& size = ImVec2(0, 0))
+{
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	ImGui::PushStyleColor(ImGuiCol_Button, CurTrainerTab == tabID ? activeCol : inactiveCol);
+	bool ret = ImGui::Button(btnID, ImVec2(172, 31));
+	ImGui::PopStyleColor();
+
+	auto p0 = ImGui::GetItemRectMin();
+	auto p1 = ImGui::GetItemRectMax();
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + 10.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 8.0f), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+
+	if (ret && tabID != TrainerTab::NumTabs)
+		CurTrainerTab = tabID;
+
+	return ret;
+}
+
+void Trainer_RenderUI()
+{
+	ImColor icn_color = ImColor(230, 15, 95);
+
+	ImColor active = ImColor(150, 10, 40, 255);
+	ImColor inactive = ImColor(31, 30, 31, 0);
+
+	// Patches
+	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
+
+	// Hotkeys
+	ImGui::SameLine();
+	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_KEYBOARD, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
+
+	// EmMgr
+	ImGui::SameLine();
+	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, ImVec2(172, 31)))
+	{
+		UI_NewEmManager();
+	}
+
+	// Globals
+	ImGui::SameLine();
+	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, ImVec2(172, 31)))
+	{
+		UI_NewGlobalsViewer();
+	}
+
+	ImGui_ItemSeparator();
+
+	ImGui::Dummy(ImVec2(0.0f, 12.0f));
+
+	if (CurTrainerTab == TrainerTab::Patches)
+	{
+		if (ImGui::BeginTable("TrainerPatches", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		{
+			ImGui_ColumnInit();
+
+			// Invincibility
+			{
+				ImGui_ColumnSwitch();
+				bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+				if (ImGui::Checkbox("Invincibility", &invincibility))
+					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2), invincibility);
+
+				ImGui::TextWrapped("Prevents taking hits from enemies & automatically skips grabs.");
+			}
+
+			// Weak Enemies
+			{
+				ImGui_ColumnSwitch();
+
+				bool weakEnemies = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_WEAK));
+				if (ImGui::Checkbox("Weak Enemies", &weakEnemies))
+					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_WEAK), weakEnemies);
+
+				ImGui::TextWrapped("Makes most enemies die in 1 hit.");
+			}
+
+			// Inf Ammo
+			{
+				ImGui_ColumnSwitch();
+
+				bool infAmmo = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET));
+				if (ImGui::Checkbox("Infinite Ammo", &infAmmo))
+					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET), infAmmo);
+
+				ImGui::TextWrapped("Prevents game from removing bullets after firing.");
+			}
+
+			// Numpad Movement
+			{
+				ImGui_ColumnSwitch();
+
+				bool DisablePlayerCollision = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+				if (ImGui::Checkbox("Disable Player Collision", &DisablePlayerCollision))
+					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), DisablePlayerCollision);
+
+				ImGui::TextWrapped("Disables collision (no-clip).");
+
+				ImGui::Spacing();
+
+				ImGui::BeginDisabled(!DisablePlayerCollision);
+				ImGui::Checkbox("Numpad Movement", &bUseNumpadMovement);
+				ImGui::TextWrapped("Allows noclip movement via numpad.");
+
+				ImGui::Spacing();
+
+				ImGui::Checkbox("Use Mouse Wheel", &bUseMouseWheelUPDOWN);
+				ImGui::TextWrapped("Allows using the mouse wheel to go up and down.");
+				ImGui::EndDisabled();
+			}
+
+			ImGui_ColumnFinish();
+			ImGui::EndTable();
+		}
+	}
+
+	if (CurTrainerTab == TrainerTab::Hotkeys)
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
+
+		if (ImGui::BeginTable("TrainerHotkeysTop", 1, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		{
+			ImGui::TableNextColumn();
+
+			static float bgHeight = 0;
+			ImGui_ItemBG(bgHeight, itmbgColor);
+
+			ImGui::TextWrapped("Key combinations for trainer-related toggles.");
+			ImGui::TextWrapped("Most keys can be combined (requiring multiple to be pressed at the same time). To combine, hold one key and press another at the same time.");
+			ImGui::TextWrapped("(Press \"Save\" for changes to take effect.)");
+
+			bgHeight = ImGui::GetCursorPos().y;
+
+			ImGui::EndTable();
+		}
+
+		ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+		if (ImGui::BeginTable("TrainerHotkeys", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		{
+			ImGui_ColumnInit();
+
+			// UI Focus 
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Key combination to set mouse focus on trainer related UIs (EmManager/Globals)");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushID(1);
+				if (ImGui::Button(pConfig->sTrainerFocusUIKeyCombo.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerFocusUIKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Focus/unfocus trainer UIs");
+			}
+
+			// Noclip
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Key combination to toggle the \"Disable Player Collision\" / no-clip patch.");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushID(2);
+				if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerNoclipKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Toggle no-clip");
+			}
+
+			ImGui_ColumnFinish();
+			ImGui::EndTable();
+		}
+
+		ImGui::PopStyleColor();
 	}
 }
