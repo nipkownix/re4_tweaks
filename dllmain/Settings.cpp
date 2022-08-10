@@ -8,6 +8,7 @@
 #include "Patches.h"
 #include "input.hpp"
 #include "Utils.h"
+#include "Trainer.h"
 
 std::shared_ptr<class Config> pConfig = std::make_shared<Config>();
 
@@ -323,6 +324,14 @@ void Config::ReadSettings(std::string_view ini_path)
 	if (pConfig->sJetSkiTrickCombo.length())
 		ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
 
+	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("HOTKEYS", "TrainerFocusUI", pConfig->sTrainerFocusUIKeyCombo);
+	if (pConfig->sTrainerFocusUIKeyCombo.length())
+		ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
+
+	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("HOTKEYS", "TrainerNoclipToggle", pConfig->sTrainerNoclipKeyCombo);
+	if (pConfig->sTrainerNoclipKeyCombo.length())
+		ParseNoclipToggleCombo(pConfig->sTrainerNoclipKeyCombo);
+
 	// FPS WARNING
 	pConfig->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning);
 	
@@ -494,6 +503,8 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + pConfig->sDebugMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + pConfig->sMouseTurnModifierKeyCombo);
 	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + pConfig->sJetSkiTrickCombo);
+	iniReader.WriteString("HOTKEYS", "TrainerFocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
+	iniReader.WriteString("HOTKEYS", "TrainerNoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
@@ -646,6 +657,8 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "DebugMenu", pConfig->sDebugMenuKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "JetSkiTricks", pConfig->sJetSkiTrickCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "TrainerFocusUI", pConfig->sTrainerFocusUIKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "TrainerNoclipToggle", pConfig->sTrainerNoclipKeyCombo.data());
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FPS WARNING

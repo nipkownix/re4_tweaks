@@ -57,7 +57,7 @@ struct EndSceneHook
 
 extern EndSceneHook esHook;
 extern bool bRebuildFont;
-extern int KeyImGuiUIFocus;
+bool ParseImGuiUIFocusCombo(std::string_view in_combo);
 
 // cfgMenu
 void cfgMenuRender();

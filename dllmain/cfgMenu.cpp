@@ -371,6 +371,8 @@ void cfgMenuRender()
 				ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
 				ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
 				ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
+				ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
+				ParseNoclipToggleCombo(pConfig->sTrainerNoclipKeyCombo);
 
 				// Update console title
 				con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
@@ -1810,7 +1812,6 @@ void cfgMenuRender()
 
 				if (CurTrainerTab == TrainerTab::Patches)
 				{
-
 					if (ImGui::BeginTable("TrainerPatches", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 					{
 						ImGui_ColumnInit();
@@ -1877,6 +1878,75 @@ void cfgMenuRender()
 
 				if (CurTrainerTab == TrainerTab::Hotkeys)
 				{
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
+
+					if (ImGui::BeginTable("TrainerHotkeysTop", 1, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+					{
+						ImGui::TableNextColumn();
+
+						static float bgHeight = 0;
+						ImGui_ItemBG(bgHeight, itmbgColor);
+
+						ImGui::TextWrapped("Key combinations for trainer-related toggles.");
+						ImGui::TextWrapped("Most keys can be combined (requiring multiple to be pressed at the same time). To combine, hold one key and press another at the same time.");
+						ImGui::TextWrapped("(Press \"Save\" for changes to take effect.)");
+
+						bgHeight = ImGui::GetCursorPos().y;
+
+						ImGui::EndTable();
+					}
+
+					ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+					if (ImGui::BeginTable("TrainerHotkeys", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+					{
+						ImGui_ColumnInit();
+
+						// UI Focus 
+						{
+							ImGui_ColumnSwitch();
+
+							ImGui::TextWrapped("Key combination to set mouse focus on trainer related UIs (EmManager/Globals)");
+							ImGui::Dummy(ImVec2(10, 10));
+
+							ImGui::PushID(1);
+							if (ImGui::Button(pConfig->sTrainerFocusUIKeyCombo.c_str(), ImVec2(150, 0)))
+							{
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerFocusUIKeyCombo, 0, NULL);
+							}
+							ImGui::PopID();
+
+							ImGui::SameLine();
+
+							ImGui::TextWrapped("Focus/unfocus trainer UIs");
+						}
+
+						// Noclip
+						{
+							ImGui_ColumnSwitch();
+
+							ImGui::TextWrapped("Key combination to toggle the \"Disable Player Collision\" / no-clip patch.");
+							ImGui::Dummy(ImVec2(10, 10));
+
+							ImGui::PushID(2);
+							if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(150, 0)))
+							{
+								pConfig->HasUnsavedChanges = true;
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerNoclipKeyCombo, 0, NULL);
+							}
+							ImGui::PopID();
+
+							ImGui::SameLine();
+
+							ImGui::TextWrapped("Toggle no-clip");
+						}
+
+						ImGui_ColumnFinish();
+						ImGui::EndTable();
+					}
+
+					ImGui::PopStyleColor();
 				}
 			}
 

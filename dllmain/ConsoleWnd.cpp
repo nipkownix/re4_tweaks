@@ -221,7 +221,7 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
-    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide") + " - " + pInput->KeyMap_getSTR(KeyImGuiUIFocus) + " to Focus/Unfocus";
+    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide") + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
     ImGui::Begin(name.data());
     ImGui::End();
     Draw(name.data());

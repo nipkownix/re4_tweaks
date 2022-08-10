@@ -61,6 +61,14 @@ struct FlagPatch
 
 std::vector<FlagPatch> flagPatches;
 
+std::vector<uint32_t> KeyComboNoclipToggle;
+bool ParseNoclipToggleCombo(std::string_view in_combo)
+{
+	KeyComboNoclipToggle.clear();
+	KeyComboNoclipToggle = ParseKeyCombo(in_combo);
+	return KeyComboNoclipToggle.size() > 0;
+}
+
 void Trainer_Init()
 {
 	GLOBAL_WK* globals = GlobalPtr();
@@ -133,6 +141,12 @@ void Trainer_Init()
 
 void Trainer_Update()
 {
+	if (pInput->is_combo_pressed(&KeyComboNoclipToggle))
+	{
+		bool playerCollisionDisabled = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+		FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), !playerCollisionDisabled);
+	}
+
 	for (auto& flagPatch : flagPatches)
 	{
 		flagPatch.Update();

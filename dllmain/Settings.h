@@ -119,6 +119,8 @@ public:
 	std::string sDebugMenuKeyCombo = "CTRL+F3";
 	std::string sMouseTurnModifierKeyCombo = "ALT";
 	std::string sJetSkiTrickCombo = "LMOUSE+RMOUSE";
+	std::string sTrainerFocusUIKeyCombo = "F5";
+	std::string sTrainerNoclipKeyCombo = "";
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;
