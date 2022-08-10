@@ -57,6 +57,7 @@ struct EndSceneHook
 
 extern EndSceneHook esHook;
 extern bool bRebuildFont;
+extern int KeyImGuiUIFocus;
 
 // cfgMenu
 void cfgMenuRender();

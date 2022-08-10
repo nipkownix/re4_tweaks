@@ -18,6 +18,9 @@ EndSceneHook esHook;
 
 bool didInit = false;
 bool bRebuildFont = false;
+bool bImGuiUIFocus = false;
+
+int KeyImGuiUIFocus = VK_F5; // Should we make this configurable?
 
 extern std::string cfgMenuTitle; // cfgMenu.cpp
 
@@ -27,15 +30,19 @@ std::vector<UI_Window*> NewWindows; // Keep newly created windows in a seperate 
 void UI_NewEmManager(int selectedEmIndex)
 {
 	static int id = 0;
-	std::string windowTitle = "Em Manager " + std::to_string(id++);
+	std::string windowTitle = "Em Manager " + std::to_string(id++) + " - " + pInput->KeyMap_getSTR(KeyImGuiUIFocus) + " to Focus/Unfocus";
 	NewWindows.push_back(new UI_EmManager(windowTitle, selectedEmIndex));
+
+	bImGuiUIFocus = true;
 }
 
 void UI_NewGlobalsViewer()
 {
 	static int id = 0;
-	std::string windowTitle = "Globals " + std::to_string(id++);
+	std::string windowTitle = "Globals " + std::to_string(id++) + " - " + pInput->KeyMap_getSTR(KeyImGuiUIFocus) + " to Focus/Unfocus";;
 	NewWindows.push_back(new UI_Globals(windowTitle));
+
+	bImGuiUIFocus = true;
 }
 
 void ApplyImGuiTheme()
@@ -231,6 +238,14 @@ void ImGuipInputUpdate()
 		io.AddInputCharacter(c);
 }
 
+bool ImGuiShouldAcceptInput()
+{
+	if (DebugWindows.size() < 1 && !bConsoleOpen)
+		bImGuiUIFocus = false;
+
+	return (bCfgMenuOpen || bImGuiUIFocus);
+}
+
 void BuildFontAtlas()
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -307,8 +322,10 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplWin32_NewFrame();
 
 	// Update ImGui input for this frame
-	if(bCfgMenuOpen)
+	if (ImGuiShouldAcceptInput())
 		ImGuipInputUpdate();
+
+	ImGui::GetIO().SetAppAcceptingEvents(ImGuiShouldAcceptInput());
 
 	ImGui::NewFrame();
 
@@ -317,6 +334,10 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 	// Check if the console binding has been pressed
 	ConsoleBinding();
+
+	// Check if we should switch input focus to/from ImGui windows
+	if (pInput->is_key_pressed(KeyImGuiUIFocus))
+		bImGuiUIFocus = !bImGuiUIFocus;
 
 	// Show cfgMenu tip
 	if (!pConfig->bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
@@ -358,15 +379,15 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	}
 
 	// Show cursor if needed
-	ImGui::GetIO().MouseDrawCursor = bCfgMenuOpen;
+	ImGui::GetIO().MouseDrawCursor = ImGuiShouldAcceptInput();
 
 	ImGui::EndFrame();
 	ImGui::Render();
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	pInput->block_mouse_input(bCfgMenuOpen);
-	pInput->block_keyboard_input(bCfgMenuOpen);
+	pInput->block_mouse_input(ImGuiShouldAcceptInput());
+	pInput->block_keyboard_input(ImGuiShouldAcceptInput());
 
 	// Update _last_frame_duration and _last_present_time
 	const auto current_time = std::chrono::high_resolution_clock::now();

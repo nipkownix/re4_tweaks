@@ -15,10 +15,10 @@ std::string UI_EmManager::EmDisplayString(int i, cEm& em)
 
 bool UI_EmManager::Render()
 {
-	//ImGui::SetNextWindowSizeConstraints(ImVec2(940, 640), ImVec2(1280, 720));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(320, 120), ImVec2(320, 530));
 
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 	{
 		auto pos = ImGui::GetWindowPos();
 		auto draw = ImGui::GetWindowDrawList();
@@ -38,6 +38,7 @@ bool UI_EmManager::Render()
 					currentEmStr = EmDisplayString(emIdx, *em);
 			}
 
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("CurrentEm").x - 10.0f);
 			if (ImGui::BeginCombo("CurrentEm", currentEmStr.c_str()))
 			{
 				int i = 0;
@@ -63,6 +64,7 @@ bool UI_EmManager::Render()
 				}
 				ImGui::EndCombo();
 			}
+			ImGui::PopItemWidth();
 
 			ImGui::Checkbox("Active", &onlyShowValidEms); ImGui::SameLine();
 			ImGui::Checkbox("ESL-spawned", &onlyShowESLSpawned);
@@ -140,6 +142,7 @@ bool UI_EmManager::Render()
 						}
 					}
 
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Flags").x - 60.0f);
 					if (ImGui::BeginListBox("Flags"))
 					{
 						bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
@@ -166,7 +169,9 @@ bool UI_EmManager::Render()
 						}
 						ImGui::EndListBox();
 					}
+					ImGui::PopItemWidth();
 
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
 					if (ImGui::InputFloat3("Position", (float*)&em->pos_94, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
 						em->matUpdate();
 
@@ -184,7 +189,9 @@ bool UI_EmManager::Render()
 						}
 						em->matUpdate();
 					}
+					ImGui::PopItemWidth();
 
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
 					ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
 
 					int hpCur = em->hp_324;
@@ -194,6 +201,7 @@ bool UI_EmManager::Render()
 					int hpMax = em->hp_max_326;
 					if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
 						em->hp_max_326 = hpMax;
+					ImGui::PopItemWidth();
 
 					ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
 					//ImGui::Text("Parts count: %d", em->PartCount());
@@ -227,7 +235,9 @@ bool UI_EmManager::Render()
 					ImGui::Dummy(ImVec2(10, 25));
 
 					ImGui::Text("Modification:");
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("PositionChange").x - 10.0f);
 					ImGui::InputFloat3("PositionChange", addPosition, "%.3f");
+					ImGui::PopItemWidth();
 					if (ImGui::Button("Apply"))
 					{
 						em->pos_94.x += addPosition[0];
@@ -247,8 +257,10 @@ bool UI_EmManager::Render()
 
 bool UI_Globals::Render()
 {
+	ImGui::SetNextWindowSizeConstraints(ImVec2(250, 100), ImVec2(250, 350));
+
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 	{
 		auto& emMgr = *EmMgrPtr();
 		GLOBAL_WK* globals = GlobalPtr();
