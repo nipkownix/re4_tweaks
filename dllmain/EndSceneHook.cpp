@@ -351,7 +351,7 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	// Show the cfgMenu
 	if (bCfgMenuOpen)
 	{
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 		cfgMenuRender();
 	}
 
