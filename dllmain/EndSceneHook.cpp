@@ -49,16 +49,16 @@ void ApplyImGuiTheme()
 {
 	ImGuiStyle* style = &ImGui::GetStyle();
 
-	style->WindowBorderSize = 0;
+	style->WindowBorderSize = 0.0f;
 	style->WindowTitleAlign = ImVec2(0.5, 0.5);
-	style->Alpha = 1.f;
-	style->WindowRounding = 1.f;
+	style->Alpha = 1.0f;
+	style->WindowRounding = 1.0f;
 	style->FramePadding = ImVec2(4, 3);
 	style->WindowPadding = ImVec2(8, 8);
 	style->ItemInnerSpacing = ImVec2(4, 4);
 	style->ItemSpacing = ImVec2(8, 4);
-	style->FrameRounding = 5.f;
-	style->ScrollbarSize = 2.f;
+	style->FrameRounding = 5.0f;
+	style->ScrollbarSize = 10.f;
 	style->ScrollbarRounding = 12.f;
 
 	ImVec4* colors = ImGui::GetStyle().Colors;
