@@ -98,8 +98,9 @@ struct TEXANM_INFO
 };
 assert_size(TEXANM_INFO, 0x20);
 
-class cModelInfo : cUnit
+class cModelInfo : public cUnit
 {
+public:
 	cModelData* modelData_addr_C;
 	uint8_t* tpl_addr_10;
 	cModelInfo* pList_14;
@@ -280,5 +281,17 @@ public:
 
 	virtual void move() = 0;
 	virtual void setNoSuspend(BOOL onoff) = 0;
+
+	int PartCount()
+	{
+		int i = 0;
+		cParts* part = childParts_F4;
+		while (part != nullptr)
+		{
+			i++;
+			part = part->nextParts_F4;
+		}
+		return i;
+	}
 };
 assert_size(cModel, 0x324);

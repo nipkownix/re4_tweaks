@@ -2,6 +2,35 @@
 #include "UI_DebugWindows.h"
 #include "Game.h"
 
+const char* emlist_name[] = {
+	"emleon00.esl",
+	"emleon01.esl",
+	"emleon02.esl",
+	"emleon03.esl",
+	"emleon04.esl",
+	"emleon05.esl",
+	"emleon06.esl",
+	"emleon07.esl",
+	"emleon08.esl",
+	"emleon09.esl",
+	"omake00.esl",
+	"omake01.esl",
+	"omake02.esl",
+	"omake03.esl",
+	"omake04.esl",
+	"omake05.esl",
+	"omake06.esl",
+	"omake07.esl",
+	"omake08.esl",
+};
+
+const char* getEmListName(int emListNumber)
+{
+	if (emListNumber >= 0 && emListNumber < 19)
+		return emlist_name[emListNumber];
+	return "unknown";
+}
+
 std::string UI_EmManager::EmDisplayString(int i, cEm& em)
 {
 	char tmpBuf[256];
@@ -13,13 +42,15 @@ std::string UI_EmManager::EmDisplayString(int i, cEm& em)
 	return tmpBuf;
 }
 
+void ImGui_ItemSeparator(); // cfgMenu.cpp
+
 bool UI_EmManager::Render()
 {
 	ImGui::SetNextWindowSize(ImVec2(320, 120), ImGuiCond_Appearing);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(320, 120), ImVec2(420, 630));
 
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin(windowTitle.c_str(), &retVal);
 	{
 		auto pos = ImGui::GetWindowPos();
 		auto draw = ImGui::GetWindowDrawList();
@@ -45,8 +76,8 @@ bool UI_EmManager::Render()
 				WindowResized = true;
 			}
 
-			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("CurrentEm").x - 10.0f);
-			if (ImGui::BeginCombo("CurrentEm", currentEmStr.c_str()))
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Em").x - 10.0f);
+			if (ImGui::BeginCombo("Em", currentEmStr.c_str()))
 			{
 				int i = 0;
 				for (auto& em : emMgr)
@@ -73,8 +104,8 @@ bool UI_EmManager::Render()
 			}
 			ImGui::PopItemWidth();
 
-			ImGui::Checkbox("Active", &onlyShowValidEms); ImGui::SameLine();
-			ImGui::Checkbox("ESL-spawned", &onlyShowESLSpawned);
+			ImGui::Checkbox("Only active", &onlyShowValidEms); ImGui::SameLine();
+			ImGui::Checkbox("Only ESL-spawned", &onlyShowESLSpawned);
 		}
 
 		// cEm info
@@ -84,11 +115,15 @@ bool UI_EmManager::Render()
 				cEm* em = emMgr[emIdx];
 				if (em)
 				{
+					ImGui::Separator();
+					ImGui::Dummy(ImVec2(10, 5));
+
 					if (showEmPointers)
 						ImGui::Text("#%d:0x%x c%s (type %x)", emIdx, em, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
 					else
 						ImGui::Text("#%d c%s (type %x)", emIdx, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
 
+					static Vec copyPosition = { 0 };
 					if (ImGui::Button("Copy position"))
 						copyPosition = em->pos_94;
 
@@ -211,11 +246,9 @@ bool UI_EmManager::Render()
 					ImGui::PopItemWidth();
 
 					ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
-					//ImGui::Text("Parts count: %d", em->PartCount());
-					//if (em->emListIndex_3A0 != 255)
-					//	ImGui::Text("ESL: %s @ #%d (offset 0x%x)", getEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
-
-					ImGui::Dummy(ImVec2(10, 25));
+					ImGui::Text("Parts count: %d", em->PartCount());
+					if (em->emListIndex_3A0 != 255)
+						ImGui::Text("ESL: %s @ #%d (offset 0x%x)", getEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
 
 					// works, but unsure what to display atm
 					/*
@@ -239,7 +272,8 @@ bool UI_EmManager::Render()
 						ImGui::EndListBox();
 					}*/
 
-					ImGui::Dummy(ImVec2(10, 25));
+					ImGui::Separator();
+					ImGui::Dummy(ImVec2(10, 5));
 
 					ImGui::Text("Modification:");
 					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("PositionChange").x - 10.0f);
@@ -267,7 +301,7 @@ bool UI_Globals::Render()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(250, 100), ImVec2(250, 350));
 
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_AlwaysAutoResize);
 	{
 		auto& emMgr = *EmMgrPtr();
 		GLOBAL_WK* globals = GlobalPtr();
@@ -282,8 +316,11 @@ bool UI_Globals::Render()
 			int playerIdx = emMgr.indexOf(player);
 			ImGui::Text("Player Em: #%d (%p)", playerIdx, player);
 			if (playerIdx >= 0)
+			{
+				ImGui::SameLine();
 				if (ImGui::Button("View"))
 					UI_NewEmManager(playerIdx);
+			}
 		}
 
 		cPlayer* ashley = AshleyPtr();
@@ -294,8 +331,11 @@ bool UI_Globals::Render()
 			int ashleyIdx = emMgr.indexOf(ashley);
 			ImGui::Text("Ashley Em: #%d (%p)", ashleyIdx, ashley);
 			if (ashleyIdx >= 0)
+			{
+				ImGui::SameLine();
 				if (ImGui::Button("View"))
 					UI_NewEmManager(ashleyIdx);
+			}
 		}
 
 		ImGui::End();
