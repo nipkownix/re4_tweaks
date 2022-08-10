@@ -121,6 +121,7 @@ public:
 	std::string sJetSkiTrickCombo = "LMOUSE+RMOUSE";
 	std::string sTrainerFocusUIKeyCombo = "F5";
 	std::string sTrainerNoclipKeyCombo = "";
+	std::string sTrainerSpeedOverrideKeyCombo = "";
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;

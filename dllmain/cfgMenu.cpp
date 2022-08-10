@@ -343,7 +343,7 @@ void cfgMenuRender()
 				ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
 				ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
 				ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
-				ParseNoclipToggleCombo(pConfig->sTrainerNoclipKeyCombo);
+				Trainer_ParseKeyCombos();
 
 				// Update console title
 				con.TitleKeyCombo = pConfig->sConsoleKeyCombo;

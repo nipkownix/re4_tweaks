@@ -329,8 +329,8 @@ void Config::ReadSettings(std::string_view ini_path)
 		ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
 
 	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("HOTKEYS", "TrainerNoclipToggle", pConfig->sTrainerNoclipKeyCombo);
-	if (pConfig->sTrainerNoclipKeyCombo.length())
-		ParseNoclipToggleCombo(pConfig->sTrainerNoclipKeyCombo);
+	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("HOTKEYS", "TrainerSpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
+	Trainer_ParseKeyCombos();
 
 	// FPS WARNING
 	pConfig->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning);
@@ -505,6 +505,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + pConfig->sJetSkiTrickCombo);
 	iniReader.WriteString("HOTKEYS", "TrainerFocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
 	iniReader.WriteString("HOTKEYS", "TrainerNoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
+	iniReader.WriteString("HOTKEYS", "TrainerSpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
@@ -659,6 +660,7 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "JetSkiTricks", pConfig->sJetSkiTrickCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "TrainerFocusUI", pConfig->sTrainerFocusUIKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "TrainerNoclipToggle", pConfig->sTrainerNoclipKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "TrainerSpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo.data());
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FPS WARNING

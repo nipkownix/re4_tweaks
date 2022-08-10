@@ -7,8 +7,11 @@
 #include <FAhashes.h>
 #include "UI_DebugWindows.h"
 
-bool bUseNumpadMovement;
-bool bUseMouseWheelUPDOWN;
+bool bUseNumpadMovement = false;
+bool bUseMouseWheelUPDOWN = false;
+
+bool bPlayerSpeedOverride = false;
+float fPlayerSpeedOverride = 1.0f;
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
@@ -65,11 +68,14 @@ struct FlagPatch
 std::vector<FlagPatch> flagPatches;
 
 std::vector<uint32_t> KeyComboNoclipToggle;
-bool ParseNoclipToggleCombo(std::string_view in_combo)
+std::vector<uint32_t> KeyComboSpeedOverride;
+void Trainer_ParseKeyCombos()
 {
 	KeyComboNoclipToggle.clear();
-	KeyComboNoclipToggle = ParseKeyCombo(in_combo);
-	return KeyComboNoclipToggle.size() > 0;
+	KeyComboNoclipToggle = ParseKeyCombo(pConfig->sTrainerNoclipKeyCombo);
+
+	KeyComboSpeedOverride.clear();
+	KeyComboSpeedOverride = ParseKeyCombo(pConfig->sTrainerSpeedOverrideKeyCombo);
 }
 
 void Trainer_Init()
@@ -150,6 +156,11 @@ void Trainer_Update()
 		FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), !playerCollisionDisabled);
 	}
 
+	if (pInput->is_combo_pressed(&KeyComboSpeedOverride))
+	{
+		bPlayerSpeedOverride = !bPlayerSpeedOverride;
+	}
+
 	for (auto& flagPatch : flagPatches)
 	{
 		flagPatch.Update();
@@ -158,6 +169,29 @@ void Trainer_Update()
 	cPlayer* player = PlayerPtr();
 	if (!player)
 		return;
+
+	// Player speed override handling
+	{
+		static bool prev_bPlayerSpeedOverride = false;
+		static float prev_PlayerSpeed = 0;
+		if (prev_bPlayerSpeedOverride != bPlayerSpeedOverride)
+		{
+			if (bPlayerSpeedOverride)
+			{
+				// changed from disabled -> enabled, backup previous speed value
+				prev_PlayerSpeed = player->Motion_1D8.Seq_speed_C0;
+			}
+			else if (!bPlayerSpeedOverride)
+			{
+				// changed from enabled -> disabled, restore previous speed value
+				player->Motion_1D8.Seq_speed_C0 = prev_PlayerSpeed;
+			}
+			prev_bPlayerSpeedOverride = bPlayerSpeedOverride;
+		}
+
+		if (bPlayerSpeedOverride)
+			player->Motion_1D8.Seq_speed_C0 = fPlayerSpeedOverride;
+	}
 
 	static uint16_t atariInfoFlagBackup = 0;
 	static bool atariInfoFlagSet = false;
@@ -371,6 +405,20 @@ void Trainer_RenderUI()
 				ImGui::EndDisabled();
 			}
 
+			// Speed override
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::Checkbox("Enable Player Speed Override", &bPlayerSpeedOverride);
+				ImGui::TextWrapped("Allows overriding player speed value.");
+
+				ImGui::Spacing();
+
+				ImGui::BeginDisabled(!bPlayerSpeedOverride);
+				ImGui::InputFloat("Speed", &fPlayerSpeedOverride);
+				ImGui::EndDisabled();
+			}
+
 			ImGui_ColumnFinish();
 			ImGui::EndTable();
 		}
@@ -440,6 +488,27 @@ void Trainer_RenderUI()
 				ImGui::SameLine();
 
 				ImGui::TextWrapped("Toggle no-clip");
+			}
+
+			// Speed override
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Key combination to toggle the \"Player Speed Override\" patch.");
+				ImGui::TextWrapped("(set your player speed override value in the Patches section first)");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushID(2);
+				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerSpeedOverrideKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Toggle speed override");
 			}
 
 			ImGui_ColumnFinish();
