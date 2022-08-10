@@ -444,10 +444,6 @@ void Init_ToolMenu()
 		pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
 		InjectHook(pattern.count(1).get(0).get<uint32_t>(1), gameDebug_recreation);
 
-		// Remove bzero call that clears flags every frame for some reason
-		pattern = hook::pattern("83 C0 60 6A 10 50 E8");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 5, true);
-
 		// Hook eprintf to add screen-drawing to it, like the GC debug has
 		// (required for debug-menu to be able to draw itself)
 		pattern = hook::pattern("55 8B EC 8B 4D ? 8D 45 ? 50 51 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D C3");
