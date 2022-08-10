@@ -25,6 +25,8 @@ class UI_EmManager : public UI_Window
 	bool showEmPointers = false;
 #endif
 
+	bool WindowResized = false;
+
 	Vec copyPosition = { 0 };
 	uint16_t AtariFlagBackup = 0;
 	bool AtariFlagBackupSet = false;

@@ -15,10 +15,11 @@ std::string UI_EmManager::EmDisplayString(int i, cEm& em)
 
 bool UI_EmManager::Render()
 {
-	ImGui::SetNextWindowSizeConstraints(ImVec2(320, 120), ImVec2(320, 530));
+	ImGui::SetNextWindowSize(ImVec2(320, 120), ImGuiCond_Appearing);
+	ImGui::SetNextWindowSizeConstraints(ImVec2(320, 120), ImVec2(420, 630));
 
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_NoCollapse);
 	{
 		auto pos = ImGui::GetWindowPos();
 		auto draw = ImGui::GetWindowDrawList();
@@ -36,6 +37,12 @@ bool UI_EmManager::Render()
 				cEm* em = emMgr[emIdx];
 				if (em)
 					currentEmStr = EmDisplayString(emIdx, *em);
+			}
+
+			if (emIdx >= 0 && !WindowResized)
+			{
+				ImGui::SetWindowSize(ImVec2(0, 0)); // Auto-fit
+				WindowResized = true;
 			}
 
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("CurrentEm").x - 10.0f);
