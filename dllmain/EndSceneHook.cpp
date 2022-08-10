@@ -17,6 +17,9 @@
 
 EndSceneHook esHook;
 
+std::vector<UI_Window*> DebugWindows; // Always-on-top debug windows, input only provided when cfgMenu is active
+std::vector<UI_Window*> NewWindows; // Keep newly created windows in a seperate list, so they can be added after we've rendered current list
+
 bool didInit = false;
 bool bRebuildFont = false;
 bool bImGuiUIFocus = false;
@@ -26,18 +29,19 @@ bool ParseImGuiUIFocusCombo(std::string_view in_combo)
 {
 	KeyImGuiUIFocus.clear();
 	KeyImGuiUIFocus = ParseKeyCombo(in_combo);
+
+	for (auto& window : DebugWindows)
+		window->UpdateWindowTitle();
+
 	return KeyImGuiUIFocus.size() > 0;
 }
 
 extern std::string cfgMenuTitle; // cfgMenu.cpp
 
-std::vector<UI_Window*> DebugWindows; // Always-on-top debug windows, input only provided when cfgMenu is active
-std::vector<UI_Window*> NewWindows; // Keep newly created windows in a seperate list, so they can be added after we've rendered current list
-
 void UI_NewEmManager(int selectedEmIndex)
 {
 	static int id = 0;
-	std::string windowTitle = "Em Manager " + std::to_string(id++) + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
+	std::string windowTitle = "Em Manager " + std::to_string(id++);
 	NewWindows.push_back(new UI_EmManager(windowTitle, selectedEmIndex));
 
 	bImGuiUIFocus = true;
@@ -46,7 +50,7 @@ void UI_NewEmManager(int selectedEmIndex)
 void UI_NewGlobalsViewer()
 {
 	static int id = 0;
-	std::string windowTitle = "Globals " + std::to_string(id++) + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";;
+	std::string windowTitle = "Globals " + std::to_string(id++);
 	NewWindows.push_back(new UI_Globals(windowTitle));
 
 	bImGuiUIFocus = true;

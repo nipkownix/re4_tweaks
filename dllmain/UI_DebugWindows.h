@@ -6,12 +6,16 @@ void UI_NewGlobalsViewer();
 
 class UI_Window
 {
+	std::string origWindowTitle;
+
 protected:
 	std::string windowTitle;
 
 public:
-	UI_Window(std::string_view title) : windowTitle(title) {};
+	UI_Window(std::string_view title) : origWindowTitle(title) { UpdateWindowTitle(); };
 	virtual bool Render() = 0;
+
+	void UpdateWindowTitle();
 };
 
 class UI_EmManager : public UI_Window

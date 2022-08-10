@@ -1,6 +1,7 @@
 #include "dllmain.h"
 #include "UI_DebugWindows.h"
 #include "Game.h"
+#include "Settings.h"
 
 const char* emlist_name[] = {
 	"emleon00.esl",
@@ -29,6 +30,14 @@ const char* getEmListName(int emListNumber)
 	if (emListNumber >= 0 && emListNumber < 19)
 		return emlist_name[emListNumber];
 	return "unknown";
+}
+
+void UI_Window::UpdateWindowTitle()
+{
+	if (pConfig->sTrainerFocusUIKeyCombo.empty())
+		windowTitle = origWindowTitle;
+	else
+		windowTitle = origWindowTitle + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
 }
 
 std::string UI_EmManager::EmDisplayString(int i, cEm& em)
