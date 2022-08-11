@@ -202,6 +202,35 @@ bool IsGanado(int id) // same as games IsGanado func
 	return id <= 0x20;
 }
 
+const char* emlist_name[] = {
+	"emleon00.esl",
+	"emleon01.esl",
+	"emleon02.esl",
+	"emleon03.esl",
+	"emleon04.esl",
+	"emleon05.esl",
+	"emleon06.esl",
+	"emleon07.esl",
+	"emleon08.esl",
+	"emleon09.esl",
+	"omake00.esl",
+	"omake01.esl",
+	"omake02.esl",
+	"omake03.esl",
+	"omake04.esl",
+	"omake05.esl",
+	"omake06.esl",
+	"omake07.esl",
+	"omake08.esl",
+};
+
+const char* GetEmListName(int emListNumber)
+{
+	if (emListNumber >= 0 && emListNumber < 19)
+		return emlist_name[emListNumber];
+	return "unknown";
+}
+
 // Original game funcs
 bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);

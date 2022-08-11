@@ -8,6 +8,7 @@
 #include "gitparams.h"
 #include "resource.h"
 #include "Trainer.h"
+#include "UI_DebugWindows.h"
 
 std::string WrapperMode;
 std::string WrapperName;

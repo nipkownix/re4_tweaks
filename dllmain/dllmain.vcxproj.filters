@@ -423,6 +423,9 @@
     <ClInclude Include="Trainer.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\room_jmp.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

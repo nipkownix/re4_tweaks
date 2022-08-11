@@ -298,13 +298,17 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
 	ImGui::PushStyleColor(ImGuiCol_Button, CurTrainerTab == tabID ? activeCol : inactiveCol);
-	bool ret = ImGui::Button(btnID, ImVec2(172, 31));
+	bool ret = ImGui::Button(btnID, size);
 	ImGui::PopStyleColor();
 
 	auto p0 = ImGui::GetItemRectMin();
 	auto p1 = ImGui::GetItemRectMax();
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + 10.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + 8.0f), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+
+	float iconPos = (size.x * 0.20);
+	float textPos = (size.x * 0.40);
+
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + iconPos, p0.y + 10.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + textPos, p0.y + 8.0f), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret && tabID != TrainerTab::NumTabs)
 		CurTrainerTab = tabID;
@@ -320,24 +324,31 @@ void Trainer_RenderUI()
 	ImColor inactive = ImColor(31, 30, 31, 0);
 
 	// Patches
-	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
+	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, ImVec2(137, 31));
 
 	// Hotkeys
 	ImGui::SameLine();
-	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, ImVec2(172, 31));
+	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, ImVec2(137, 31));
 
 	// EmMgr
 	ImGui::SameLine();
-	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, ImVec2(172, 31)))
+	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, ImVec2(137, 31)))
 	{
 		UI_NewEmManager();
 	}
 
 	// Globals
 	ImGui::SameLine();
-	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, ImVec2(172, 31)))
+	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, ImVec2(137, 31)))
 	{
 		UI_NewGlobalsViewer();
+	}
+
+	// Area Jump
+	ImGui::SameLine();
+	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, ImVec2(137, 31)))
+	{
+		UI_NewAreaJump();
 	}
 
 	ImGui_ItemSeparator();

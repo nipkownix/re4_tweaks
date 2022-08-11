@@ -56,6 +56,15 @@ void UI_NewGlobalsViewer()
 	bImGuiUIFocus = true;
 }
 
+void UI_NewAreaJump()
+{
+	static int id = 0;
+	std::string windowTitle = "AreaJump " + std::to_string(id++);
+	NewWindows.push_back(new UI_AreaJump(windowTitle));
+
+	bImGuiUIFocus = true;
+}
+
 void ApplyImGuiTheme()
 {
 	ImGuiStyle* style = &ImGui::GetStyle();
@@ -388,7 +397,10 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		auto newWindows = NewWindows; // make copy of NewWindows vect before processing, in case any new windows modify NewWindows vector...
 		NewWindows.clear();
 		for (auto window : newWindows)
-			DebugWindows.push_back(window);
+		{
+			if(window->Init())
+				DebugWindows.push_back(window);
+		}
 	}
 
 	// Show cursor if needed

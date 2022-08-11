@@ -404,6 +404,8 @@ void GetToolMenuPointers()
 void Init_ToolMenu()
 {
 	GetToolMenuPointers();
+	if (!pConfig->bEnableDebugMenu)
+		return;
 
 	// Hook systemRestartInit so we can make it load in roomInfo.dat
 	auto pattern = hook::pattern("E8 ? ? ? ? 80 3D ? ? ? ? ? 74 ? 80 3D ? ? ? ? ? 75");

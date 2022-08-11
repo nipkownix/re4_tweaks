@@ -1055,9 +1055,9 @@ void Init_Misc()
 	}
 
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
+	Init_ToolMenu();
 	if (pConfig->bEnableDebugMenu)
 	{
-		Init_ToolMenu();
 		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
 
 		spd::log()->info("EnableDebugMenu applied");

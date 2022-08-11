@@ -40,7 +40,9 @@ cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
+
 bool IsGanado(int id);
+const char* GetEmListName(int emListNumber);
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

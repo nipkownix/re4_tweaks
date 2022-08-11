@@ -2,35 +2,7 @@
 #include "UI_DebugWindows.h"
 #include "Game.h"
 #include "Settings.h"
-
-const char* emlist_name[] = {
-	"emleon00.esl",
-	"emleon01.esl",
-	"emleon02.esl",
-	"emleon03.esl",
-	"emleon04.esl",
-	"emleon05.esl",
-	"emleon06.esl",
-	"emleon07.esl",
-	"emleon08.esl",
-	"emleon09.esl",
-	"omake00.esl",
-	"omake01.esl",
-	"omake02.esl",
-	"omake03.esl",
-	"omake04.esl",
-	"omake05.esl",
-	"omake06.esl",
-	"omake07.esl",
-	"omake08.esl",
-};
-
-const char* getEmListName(int emListNumber)
-{
-	if (emListNumber >= 0 && emListNumber < 19)
-		return emlist_name[emListNumber];
-	return "unknown";
-}
+#include "SDK/room_jmp.h"
 
 void UI_Window::UpdateWindowTitle()
 {
@@ -257,7 +229,7 @@ bool UI_EmManager::Render()
 					ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
 					ImGui::Text("Parts count: %d", em->PartCount());
 					if (em->emListIndex_3A0 != 255)
-						ImGui::Text("ESL: %s @ #%d (offset 0x%x)", getEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+						ImGui::Text("ESL: %s @ #%d (offset 0x%x)", GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
 
 					// works, but unsure what to display atm
 					/*
@@ -307,6 +279,14 @@ bool UI_EmManager::Render()
 
 bool UI_Globals::Render()
 {
+	cRoomJmp_data* test = cRoomJmp_data::get();
+	cRoomJmp_stage* stage = test->GetStage(1);
+	CRoomInfo* room = stage->GetRoom(0);
+
+	char* room_name = room->getName();
+	char* room_person = room->getPerson();
+	char* room_person2 = room->getPerson2();
+
 	ImGui::SetNextWindowSizeConstraints(ImVec2(250, 100), ImVec2(250, 350));
 
 	bool retVal = true; // set to false on window close
@@ -344,6 +324,172 @@ bool UI_Globals::Render()
 				ImGui::SameLine();
 				if (ImGui::Button("View"))
 					UI_NewEmManager(ashleyIdx);
+			}
+		}
+
+		ImGui::End();
+	}
+
+	return retVal;
+}
+
+std::string UI_AreaJump::RoomDisplayString(int stageIdx, int roomIdx)
+{
+	cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
+
+	std::string retVal = "N/A";
+	if (!roomJmpData)
+		return retVal;
+
+	auto* stage = roomJmpData->GetStage(stageIdx);
+	if (!stage)
+		return retVal;
+
+	auto* room = stage->GetRoom(roomIdx);
+	if (!room)
+		return retVal;
+
+	char ret[256];
+	sprintf_s(ret, "R%03x - %s", int(room->roomNo_2 & 0xFFF), room->getName());
+	return ret;
+}
+
+void UI_AreaJump::UpdateRoomInfo()
+{
+	cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
+	cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
+	CRoomInfo* room = stage->GetRoom(curRoomIdx);
+	//sprintf_s(curRoomNo, "%03X", int(room->roomNo_2 & 0xFFF));
+	if ((room->flag_0 & 1) != 0)
+	{
+		curRoomPosition = room->pos_4;
+		curRoomRotation = room->r_10;
+	}
+	else
+	{
+		curRoomPosition = { 0 };
+		curRoomRotation = 0;
+	};
+}
+
+bool UI_AreaJump::Init()
+{
+	GLOBAL_WK* pG = GlobalPtr();
+	if (pG)
+	{
+		// Init current stage to whatever stage player is currently on
+		curStage = (pG->curRoomId_4FAC & 0xFFF) >> 8;
+		// ...but don't let us init it to the boring 0 stage
+		if (curStage <= 0)
+			curStage = 1;
+	}
+	return true;
+}
+
+bool UI_AreaJump::Render()
+{
+	ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 350));
+
+	bool retVal = true; // set to false on window close
+	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_AlwaysAutoResize);
+	{
+		cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
+
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Stage").x - 10.0f);
+		if (ImGui::InputInt("Stage", &curStage))
+		{
+			if (curStage < 0)
+				curStage = roomJmpData->nData_0 - 1;
+			if (curStage >= roomJmpData->nData_0)
+				curStage = 0;
+
+			curRoomIdx = 0;
+			UpdateRoomInfo();
+		}
+
+		cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
+		if (stage)
+		{
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Room").x - 10.0f);
+			std::string curRoomStr = RoomDisplayString(curStage, curRoomIdx);
+			if (ImGui::BeginCombo("Room", curRoomStr.c_str()))
+			{
+				for (int i = 0; i < stage->nData_0; i++)
+				{
+					std::string roomStr = RoomDisplayString(curStage, i);
+
+					bool is_selected = (curRoomIdx == i);
+					if (ImGui::Selectable(roomStr.c_str(), is_selected))
+					{
+						curRoomIdx = i;
+						UpdateRoomInfo();
+					}
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::PopItemWidth();
+
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(10, 5));
+
+			CRoomInfo* roomData = stage->GetRoom(curRoomIdx);
+			if (roomData)
+			{
+				//ImGui::InputText("Room", curRoomNo, 256); // some reason this breaks combo box?
+
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
+				ImGui::InputFloat3("Position", (float*)&curRoomPosition);
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Rotation").x - 10.0f);
+				ImGui::InputFloat("Rotation", &curRoomRotation);
+
+				if (ImGui::Button("Jump!"))
+				{
+					// proceed with the jumpening
+					GLOBAL_WK* pG = GlobalPtr();
+
+					// roomJumpExec begin
+					// pG->flags_STOP_0_170[0] = 0xFFFFFFFF;
+					pG->flags_DEBUG_2_68 |= 0x80000000;
+
+					// copy what CRoomInfo::setNextPos does
+					pG->nextRoomPosition_2C = curRoomPosition;
+					pG->nextRoomRotationY_38 = curRoomRotation;
+					pG->prevRoomId_4FB0 = pG->curRoomId_4FAC;
+					pG->Part_old_4FB2 = pG->Part_4FAE;
+					pG->RoomNo_next = roomData->roomNo_2;
+					pG->Part_next_2A = 0;
+
+					// roomJumpExec end
+					pG->JumpPoint_4FAF = curRoomIdx;
+
+					// TODO: roomJumpExec runs these funcs, are they necessary at all?
+#if 0
+					typedef char(__fastcall* MessageControl__roomInit_Fn)(uint32_t ecx, uint32_t edx);
+					MessageControl__roomInit_Fn MessageControl__roomInit = (MessageControl__roomInit_Fn)0x7196C0;
+					MessageControl__roomInit(0xC17830, 0);
+
+					typedef void(__fastcall* MessageControl__Delete_Fn)(uint32_t ecx, uint32_t edx, int idx);
+					MessageControl__Delete_Fn MessageControl__Delete = (MessageControl__Delete_Fn)0x716F60;
+					for (int i = 0; i < 0x10; i++)
+						MessageControl__Delete(0xC17830, 0, i);
+#endif
+
+					pG->playerHpCur_4FB4 = pG->playerHpMax_4FB6;
+					pG->r_continue_cnt_4FA0 = 0;
+
+					// roomJumpExit
+					pG->Rno0_20 = 4;
+					pG->Rno1_21 = 0;
+					pG->Rno2_22 = 0;
+					pG->Rno3_23 = 0;
+
+					pG->Flags_SYSTEM_0_54[0] &= 0x40;
+					pG->flags_DEBUG_0_60[0] &= ~0x80000000;
+
+				}
 			}
 		}
 
