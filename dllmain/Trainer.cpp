@@ -6,12 +6,15 @@
 #include "imgui.h"
 #include <FAhashes.h>
 #include "UI_DebugWindows.h"
+#include "Trainer.h"
 
 bool bUseNumpadMovement = false;
 bool bUseMouseWheelUPDOWN = false;
 
 bool bPlayerSpeedOverride = false;
 float fPlayerSpeedOverride = 1.0f;
+
+int AshleyStateOverride;
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
@@ -145,6 +148,34 @@ void Trainer_Init()
 		FlagPatch patch_cItemMgr__dump_0(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET));
 		patch_cItemMgr__dump_0.SetPatch(cItemMgr__dump_0_mov, { 0x90, 0x90, 0x90, 0x90 });
 		flagPatches.push_back(patch_cItemMgr__dump_0);
+	}
+
+	// Ashley presence
+	{
+		auto pattern = hook::pattern("F7 80 ? ? ? ? ? ? ? ? 74 22 D9 80 ? ? ? ? 51");
+		struct ScenarioRoomInit_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				switch ((AshleyState)AshleyStateOverride) {
+				case AshleyState::Present:
+					*(uint32_t*)(regs.eax + 0x5028) = 0x4000000;
+					break;
+				case AshleyState::NotPresent:
+					*(uint32_t*)(regs.eax + 0x5028) = 0;
+					break;
+				case AshleyState::Default:
+					break;
+				}
+				
+				// Code we replaced
+				//if (FlagIsSet(GlobalPtr()->flags_STATUS_3_5028, uint32_t(Flags_STATUS::STA_SUB_ASHLEY))) <- Not working for some reason?
+				if (*(uint32_t*)(regs.eax + 0x5028) == 0x4000000)
+					regs.ef &= ~(1 << regs.zero_flag);
+				else
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<ScenarioRoomInit_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 	}
 }
 
@@ -451,6 +482,20 @@ void Trainer_RenderUI()
 				if (ImGui::Button("Reset"))
 					fPlayerSpeedOverride = 1.0f;
 				ImGui::EndDisabled();
+			}
+
+			// Ashley presence
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::Spacing();
+				ImGui::TextWrapped("Override Ashley's Presence");
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::RadioButton("Area Default", &AshleyStateOverride, AshleyState::Default);
+				ImGui::RadioButton("Present", &AshleyStateOverride, AshleyState::Present);
+				ImGui::RadioButton("Not present", &AshleyStateOverride, AshleyState::NotPresent);
 			}
 
 			ImGui_ColumnFinish();
