@@ -293,7 +293,7 @@ void SetHotkeyComboThread(std::string* cfgHotkey);
 
 bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& activeCol,
 	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor iconColor,
-	const ImColor textColor, const ImVec2& size = ImVec2(0, 0))
+	const ImColor textColor, const ImVec2& size = ImVec2(0, 0), const bool samelinecheck = true)
 {
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
@@ -317,6 +317,20 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_icon_offset - 14.0f, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_text_offset - 7.0f, p0.y + y_text_offset), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
+	if (samelinecheck)
+	{
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+		float last_button_x2;
+		float next_button_x2;
+
+		last_button_x2 = ImGui::GetItemRectMax().x;
+		next_button_x2 = last_button_x2 + style.ItemSpacing.x + size.x; // Expected position if next button was on same line
+		if (next_button_x2 < window_visible_x2)
+			ImGui::SameLine();
+	}
+
 	if (ret && tabID != TrainerTab::NumTabs)
 		CurTrainerTab = tabID;
 
@@ -330,29 +344,13 @@ void Trainer_RenderUI()
 	ImColor active = ImColor(150, 10, 40, 255);
 	ImColor inactive = ImColor(31, 30, 31, 0);
 
-	ImGuiStyle& style = ImGui::GetStyle();
-
-	float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-	float last_button_x2;
-	float next_button_x2;
-
 	auto button_size = ImVec2(135, 31);
 
 	// Patches
 	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, button_size);
 
-	last_button_x2 = ImGui::GetItemRectMax().x;
-	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x; // Expected position if next button was on same line
-	if (next_button_x2 < window_visible_x2)
-		ImGui::SameLine();
-
 	// Hotkeys
 	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, button_size);
-
-	last_button_x2 = ImGui::GetItemRectMax().x;
-	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x;
-	if (next_button_x2 < window_visible_x2)
-		ImGui::SameLine();
 
 	// EmMgr
 	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size))
@@ -360,29 +358,19 @@ void Trainer_RenderUI()
 		UI_NewEmManager();
 	}
 
-	last_button_x2 = ImGui::GetItemRectMax().x;
-	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x;
-	if (next_button_x2 < window_visible_x2)
-		ImGui::SameLine();
-
 	// Globals
-	ImGui::SameLine();
 	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, button_size))
 	{
 		UI_NewGlobalsViewer();
 	}
 
-	last_button_x2 = ImGui::GetItemRectMax().x;
-	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x;
-	if (next_button_x2 < window_visible_x2)
-		ImGui::SameLine();
-
 	// Area Jump
-	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, button_size))
+	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, button_size, false))
 	{
 		UI_NewAreaJump();
 	}
 
+	// Last param to ImGui_TrainerTabButton must be false if it is the last button, to avoid the separator below from being SameLine'd as well.
 	ImGui_ItemSeparator();
 
 	ImGui::Dummy(ImVec2(0.0f, 12.0f));
