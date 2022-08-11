@@ -28,6 +28,9 @@ struct CRoomInfo
 
 	char* getPerson()
 	{
+		if (!person_18)
+			return nullptr;
+
 		if ((uintptr_t)this < (uintptr_t)person_18)
 			return (char*)person_18;
 		if (roomInfoAddr)
@@ -38,6 +41,9 @@ struct CRoomInfo
 
 	char* getPerson2()
 	{
+		if (!person2_1C)
+			return nullptr;
+
 		if ((uintptr_t)this < (uintptr_t)person2_1C)
 			return (char*)person2_1C;
 		if (roomInfoAddr)

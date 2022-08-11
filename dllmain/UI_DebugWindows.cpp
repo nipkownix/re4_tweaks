@@ -432,12 +432,30 @@ bool UI_AreaJump::Render()
 			}
 			ImGui::PopItemWidth();
 
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(10, 5));
-
 			CRoomInfo* roomData = stage->GetRoom(curRoomIdx);
-			if (roomData)
+			if(roomData)
 			{
+				char* person1 = roomData->getPerson();
+				char* person2 = roomData->getPerson2();
+
+				bool hasPerson1 = person1 && strlen(person1) > 0;
+				bool hasPerson2 = person2 && strlen(person2) > 0;
+
+				ImGui::BeginDisabled(true);
+				if (hasPerson1)
+					ImGui::Text("Scenario: %s", person1);
+				if (hasPerson2)
+				{
+					if (hasPerson1)
+						ImGui::SameLine();
+
+					ImGui::Text("Program: %s", person2);
+				}
+				ImGui::EndDisabled();
+
+				ImGui::Separator();
+				ImGui::Dummy(ImVec2(10, 5));
+
 				//ImGui::InputText("Room", curRoomNo, 256); // some reason this breaks combo box?
 
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
