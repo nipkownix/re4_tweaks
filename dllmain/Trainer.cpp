@@ -442,11 +442,14 @@ void Trainer_RenderUI()
 
 				ImGui::Checkbox("Enable Player Speed Override", &bPlayerSpeedOverride);
 				ImGui::TextWrapped("Allows overriding player speed value.");
+				ImGui::TextWrapped("Ctrl+Click to set input a custom value.");
 
 				ImGui::Spacing();
 
 				ImGui::BeginDisabled(!bPlayerSpeedOverride);
-				ImGui::InputFloat("Speed", &fPlayerSpeedOverride);
+				ImGui::SliderFloat("Speed", &fPlayerSpeedOverride, 0.0f, 50.0f, "%.2f");
+				if (ImGui::Button("Reset"))
+					fPlayerSpeedOverride = 1.0f;
 				ImGui::EndDisabled();
 			}
 
