@@ -304,11 +304,18 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	auto p0 = ImGui::GetItemRectMin();
 	auto p1 = ImGui::GetItemRectMax();
 
-	float iconPos = (size.x * 0.20);
-	float textPos = (size.x * 0.40);
+	float textWidth = ImGui::CalcTextSize(text).x;
+	float textHeight = ImGui::CalcTextSize(text).y;
+	float iconWidth = ImGui::CalcTextSize(icon).x;
 
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + iconPos, p0.y + 10.0f), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + textPos, p0.y + 8.0f), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	float x_text_offset = iconWidth + ((size.x - textWidth) * 0.5f);
+	float y_text_offset = (size.y - textHeight) * 0.5f;
+
+	float x_icon_offset = x_text_offset - iconWidth;
+	float y_icon_offset = y_text_offset + 2.0f;
+
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_icon_offset - 14.0f, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_text_offset - 7.0f, p0.y + y_text_offset), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret && tabID != TrainerTab::NumTabs)
 		CurTrainerTab = tabID;
@@ -323,30 +330,55 @@ void Trainer_RenderUI()
 	ImColor active = ImColor(150, 10, 40, 255);
 	ImColor inactive = ImColor(31, 30, 31, 0);
 
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+	float last_button_x2;
+	float next_button_x2;
+
+	auto button_size = ImVec2(135, 31);
+
 	// Patches
-	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, ImVec2(137, 31));
+	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, button_size);
+
+	last_button_x2 = ImGui::GetItemRectMax().x;
+	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x; // Expected position if next button was on same line
+	if (next_button_x2 < window_visible_x2)
+		ImGui::SameLine();
 
 	// Hotkeys
-	ImGui::SameLine();
-	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, ImVec2(137, 31));
+	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, button_size);
+
+	last_button_x2 = ImGui::GetItemRectMax().x;
+	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x;
+	if (next_button_x2 < window_visible_x2)
+		ImGui::SameLine();
 
 	// EmMgr
-	ImGui::SameLine();
-	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, ImVec2(137, 31)))
+	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size))
 	{
 		UI_NewEmManager();
 	}
 
+	last_button_x2 = ImGui::GetItemRectMax().x;
+	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x;
+	if (next_button_x2 < window_visible_x2)
+		ImGui::SameLine();
+
 	// Globals
 	ImGui::SameLine();
-	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, ImVec2(137, 31)))
+	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, button_size))
 	{
 		UI_NewGlobalsViewer();
 	}
 
+	last_button_x2 = ImGui::GetItemRectMax().x;
+	next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_size.x;
+	if (next_button_x2 < window_visible_x2)
+		ImGui::SameLine();
+
 	// Area Jump
-	ImGui::SameLine();
-	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, ImVec2(137, 31)))
+	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, button_size))
 	{
 		UI_NewAreaJump();
 	}
