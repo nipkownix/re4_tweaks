@@ -159,18 +159,17 @@ void Trainer_Init()
 			{
 				switch ((AshleyState)AshleyStateOverride) {
 				case AshleyState::Present:
-					*(uint32_t*)(regs.eax + 0x5028) = 0x4000000;
+					FlagSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_SUB_ASHLEY), true);
 					break;
 				case AshleyState::NotPresent:
-					*(uint32_t*)(regs.eax + 0x5028) = 0;
+					FlagSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_SUB_ASHLEY), false);
 					break;
 				case AshleyState::Default:
 					break;
 				}
 				
 				// Code we replaced
-				//if (FlagIsSet(GlobalPtr()->flags_STATUS_3_5028, uint32_t(Flags_STATUS::STA_SUB_ASHLEY))) <- Not working for some reason?
-				if (*(uint32_t*)(regs.eax + 0x5028) == 0x4000000)
+				if (FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_SUB_ASHLEY)))
 					regs.ef &= ~(1 << regs.zero_flag);
 				else
 					regs.ef |= (1 << regs.zero_flag);
