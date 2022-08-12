@@ -227,7 +227,7 @@ void systemRestartInit_Hook()
 	systemRestartInit_Orig();
 
 	// If roomInfo_new.dat exists we'll read from that instead (so users can still customize it if wanted)
-	// But instead of using broken debug\roomInfo.data included with Steam UHD, we'll use our custom fixed one instead
+	// But instead of using broken debug\roomInfo.dat included with Steam UHD, we'll use our custom fixed one instead
 
 	// not entirely sure how FileExistCheck works, game checks for 0xFFFFFFFF meaning doesn't exist, but it never returns that for us?
 	// a2 seems to get set to 0xffffff if non-existing though, so we'll also check that too
@@ -404,14 +404,15 @@ void GetToolMenuPointers()
 void Init_ToolMenu()
 {
 	GetToolMenuPointers();
-	if (!pConfig->bEnableDebugMenu)
-		return;
 
 	// Hook systemRestartInit so we can make it load in roomInfo.dat
 	auto pattern = hook::pattern("E8 ? ? ? ? 80 3D ? ? ? ? ? 74 ? 80 3D ? ? ? ? ? 75");
 	auto func = pattern.count(1).get(0).get<uint32_t>(0);
 	ReadCall(func, systemRestartInit_Orig);
 	InjectHook(func, systemRestartInit_Hook);
+
+	if (!pConfig->bEnableDebugMenu)
+		return;
 
 	// Hook FlagEdit so we can slow it down by only exposing buttons to it when button state has changed at all
 	pattern = hook::pattern("8B 14 8D ? ? ? ? 68 ? ? ? ? FF D2 A1 ? ? ? ? 8B 88");
