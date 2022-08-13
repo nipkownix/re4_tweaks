@@ -56,5 +56,13 @@ struct __declspec(align(4)) TITLE_WORK
 	uint32_t TITLE_WORK_field_7C;
 	uint8_t TITLE_WORK_field_r_no_1_bk_mb_80;
 	uint8_t TITLE_WORK_unk_84[56];
+
+	inline void SetRoutine(Routine0 Rno0, int8_t Rno1, int8_t Rno2, int8_t Rno3)
+	{
+		Rno0_0 = int8_t(Rno0);
+		Rno1_1 = Rno1;
+		Rno2_2 = Rno2;
+		Rno3_3 = Rno3;
+	}
 };
 assert_size(TITLE_WORK, 0xBC);

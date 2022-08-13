@@ -520,6 +520,11 @@ bool UI_AreaJump::Render()
 					// roomJumpExit
 					pG->SetRoutine(GLOBAL_WK::Routine0::Doordemo, 0, 0, 0);
 
+					// Force title screen to Exit state, allows AreaJump from main menu
+					TITLE_WORK* titleWork = TitleWorkPtr();
+					if (titleWork)
+						titleWork->SetRoutine(TITLE_WORK::Routine0::Exit, 0, 0, 0);
+
 					pG->Flags_SYSTEM_0_54[0] &= 0x40;
 					pG->flags_DEBUG_0_60[0] &= ~0x80000000;
 
