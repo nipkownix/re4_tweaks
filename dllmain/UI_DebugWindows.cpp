@@ -4,6 +4,8 @@
 #include "Settings.h"
 #include "SDK/room_jmp.h"
 
+#define AREAJUMP_MAX_STAGE 5
+
 void UI_Window::UpdateWindowTitle()
 {
 	if (pConfig->sTrainerFocusUIKeyCombo.empty())
@@ -399,8 +401,8 @@ bool UI_AreaJump::Render()
 		if (ImGui::InputInt("Stage", &curStage))
 		{
 			if (curStage < 0)
-				curStage = roomJmpData->nData_0 - 1;
-			if (curStage >= roomJmpData->nData_0)
+				curStage = AREAJUMP_MAX_STAGE;
+			if (curStage > AREAJUMP_MAX_STAGE)
 				curStage = 0;
 
 			curRoomIdx = 0;
@@ -414,7 +416,7 @@ bool UI_AreaJump::Render()
 			std::string curRoomStr = RoomDisplayString(curStage, curRoomIdx);
 			if (ImGui::BeginCombo("Room", curRoomStr.c_str()))
 			{
-				for (int i = 0; i < stage->nData_0; i++)
+				for (uint32_t i = 0; i < stage->nData_0; i++)
 				{
 					std::string roomStr = RoomDisplayString(curStage, i);
 
