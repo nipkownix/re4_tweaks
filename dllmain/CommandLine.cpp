@@ -12,31 +12,37 @@ typedef void(__cdecl* titleMain_Fn)(TITLE_WORK* pT);
 titleMain_Fn titleMain;
 void __cdecl titleMain_Hook(TITLE_WORK* pT)
 {
-	if(paramRoomValue > 0)
+	if (paramRoomValue > 0)
 	{
-		// Search for a CRoomInfo instance with the same room number
-		cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
 		int stageNum = (paramRoomValue & 0xF00) >> 8;
-		cRoomJmp_stage* stage = roomJmpData->GetStage(stageNum);
-
-		CRoomInfo* roomInfo = nullptr;
-		int roomInfoIdx = 0;
-		for (uint32_t i = 0; i < stage->nData_0; i++)
+		if (stageNum >= 0 && stageNum <= 5)
 		{
-			CRoomInfo* curRoomInfo = stage->GetRoom(i);
-			if (curRoomInfo->roomNo_2 == paramRoomValue)
+			// Search for a CRoomInfo instance with the same room number
+			cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
+			if (roomJmpData)
 			{
-				roomInfo = curRoomInfo;
-				roomInfoIdx = i;
-				break;
-			}
-		}
+				cRoomJmp_stage* stage = roomJmpData->GetStage(stageNum);
 
-		// Found roominfo for the requested room, let's jump to it
-		if (roomInfo)
-		{
-			GlobalPtr()->JumpPoint_4FAF = roomInfoIdx;
-			AreaJump(roomInfo->roomNo_2, roomInfo->pos_4, roomInfo->r_10);
+				CRoomInfo* roomInfo = nullptr;
+				int roomInfoIdx = 0;
+				for (uint32_t i = 0; i < stage->nData_0; i++)
+				{
+					CRoomInfo* curRoomInfo = stage->GetRoom(i);
+					if (curRoomInfo->roomNo_2 == paramRoomValue)
+					{
+						roomInfo = curRoomInfo;
+						roomInfoIdx = i;
+						break;
+					}
+				}
+
+				// Found roominfo for the requested room, let's jump to it
+				if (roomInfo)
+				{
+					GlobalPtr()->JumpPoint_4FAF = roomInfoIdx;
+					AreaJump(roomInfo->roomNo_2, roomInfo->pos_4, roomInfo->r_10);
+				}
+			}
 		}
 
 		paramRoomValue = 0; // only run this once
