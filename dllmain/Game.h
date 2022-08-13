@@ -43,6 +43,8 @@ uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
 
+void AreaJump(uint16_t roomNo, Vec& position, float rotation);
+
 bool IsGanado(int id);
 const char* GetEmListName(int emListNumber);
 

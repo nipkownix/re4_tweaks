@@ -484,50 +484,8 @@ bool UI_AreaJump::Render()
 
 				if (ImGui::Button("Jump!"))
 				{
-					// proceed with the jumpening
-					GLOBAL_WK* pG = GlobalPtr();
-
-					// roomJumpExec begin
-					// pG->flags_STOP_0_170[0] = 0xFFFFFFFF;
-					pG->flags_DEBUG_2_68 |= 0x80000000;
-
-					// copy what CRoomInfo::setNextPos does
-					pG->nextRoomPosition_2C = curRoomPosition;
-					pG->nextRoomRotationY_38 = curRoomRotation;
-					pG->prevRoomId_4FB0 = pG->curRoomId_4FAC;
-					pG->Part_old_4FB2 = pG->Part_4FAE;
-					pG->RoomNo_next = roomData->roomNo_2;
-					pG->Part_next_2A = 0;
-
-					// roomJumpExec end
-					pG->JumpPoint_4FAF = curRoomIdx;
-
-					// TODO: roomJumpExec runs these funcs, are they necessary at all?
-#if 0
-					typedef char(__fastcall* MessageControl__roomInit_Fn)(uint32_t ecx, uint32_t edx);
-					MessageControl__roomInit_Fn MessageControl__roomInit = (MessageControl__roomInit_Fn)0x7196C0;
-					MessageControl__roomInit(0xC17830, 0);
-
-					typedef void(__fastcall* MessageControl__Delete_Fn)(uint32_t ecx, uint32_t edx, int idx);
-					MessageControl__Delete_Fn MessageControl__Delete = (MessageControl__Delete_Fn)0x716F60;
-					for (int i = 0; i < 0x10; i++)
-						MessageControl__Delete(0xC17830, 0, i);
-#endif
-
-					pG->playerHpCur_4FB4 = pG->playerHpMax_4FB6;
-					pG->r_continue_cnt_4FA0 = 0;
-
-					// roomJumpExit
-					pG->SetRoutine(GLOBAL_WK::Routine0::Doordemo, 0, 0, 0);
-
-					// Force title screen to Exit state, allows AreaJump from main menu
-					TITLE_WORK* titleWork = TitleWorkPtr();
-					if (titleWork)
-						titleWork->SetRoutine(TITLE_WORK::Routine0::Exit, 0, 0, 0);
-
-					pG->Flags_SYSTEM_0_54[0] &= 0x40;
-					pG->flags_DEBUG_0_60[0] &= ~0x80000000;
-
+					GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
+					AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
 				}
 			}
 		}

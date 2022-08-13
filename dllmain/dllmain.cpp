@@ -61,6 +61,9 @@ void Init_Main()
 	// Install input-related hooks
 	pInput->InstallHooks();
 
+	// Parse any special command-line options
+	Init_CommandLine();
+
 	// Various display-related tweaks
 	Init_DisplayTweaks();
 
