@@ -296,8 +296,25 @@ bool UI_Globals::Render()
 	{
 		auto& emMgr = *EmMgrPtr();
 		GLOBAL_WK* globals = GlobalPtr();
+		TITLE_WORK* titleWork = TitleWorkPtr();
+		if (titleWork)
+		{
+			ImGui::Text("Menu Routine: %d-%d-%d-%d", int(titleWork->Rno0_0), int(titleWork->Rno1_1), int(titleWork->Rno2_2), int(titleWork->Rno3_3));
+			const char* menuRoutine0Names[] = {"Init", "Wait", "Nintendo", "Warning", "Logo", "Main", "Sub", "Exit", "Ada" };
+			if(titleWork->Rno0_0 >= int(TITLE_WORK::Routine0::Init) && titleWork->Rno0_0 <= int(TITLE_WORK::Routine0::Ada))
+				ImGui::Text("Menu Routine0: %s", menuRoutine0Names[titleWork->Rno0_0]);
+
+			ImGui::Dummy(ImVec2(20, 10));
+		}
 
 		ImGui::Text("Area: R%03x", int(globals->curRoomId_4FAC & 0xFFF));
+		
+		ImGui::Text("Routine: %d-%d-%d-%d", int(globals->Rno0_20), int(globals->Rno1_21), int(globals->Rno2_22), int(globals->Rno3_23));
+		
+		// TODO: make this a GLOBAL_WK::Routine0Name() func?
+		const char* routine0Names[] = { "Init", "StageInit", "RoomInit", "MainLoop", "Doordemo", "Ending", "Option" };
+		if (globals->Rno0_20 >= int(GLOBAL_WK::Routine0::Init) && globals->Rno0_20 <= int(GLOBAL_WK::Routine0::Option))
+			ImGui::Text("Routine0: %s", routine0Names[globals->Rno0_20]);
 
 		cPlayer* player = PlayerPtr();
 		if (!player)
@@ -501,10 +518,7 @@ bool UI_AreaJump::Render()
 					pG->r_continue_cnt_4FA0 = 0;
 
 					// roomJumpExit
-					pG->Rno0_20 = 4;
-					pG->Rno1_21 = 0;
-					pG->Rno2_22 = 0;
-					pG->Rno3_23 = 0;
+					pG->SetRoutine(GLOBAL_WK::Routine0::Doordemo, 0, 0, 0);
 
 					pG->Flags_SYSTEM_0_54[0] &= 0x40;
 					pG->flags_DEBUG_0_60[0] &= ~0x80000000;

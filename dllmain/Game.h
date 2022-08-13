@@ -8,6 +8,7 @@
 #include "SDK/pad.h"
 #include "SDK/global.h"
 #include "SDK/snd.h"
+#include "SDK/title.h"
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];
@@ -40,6 +41,7 @@ cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
+TITLE_WORK* TitleWorkPtr();
 
 bool IsGanado(int id);
 const char* GetEmListName(int emListNumber);

@@ -191,6 +191,12 @@ cEmMgr* EmMgrPtr()
 	return EmMgr_ptr;
 }
 
+TITLE_WORK* TitleWork_ptr = nullptr;
+TITLE_WORK* TitleWorkPtr()
+{
+	return TitleWork_ptr;
+}
+
 bool IsGanado(int id) // same as games IsGanado func
 {
 	if (id == 0x4B || id == 0x4E)
@@ -234,6 +240,23 @@ const char* GetEmListName(int emListNumber)
 // Original game funcs
 bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
+
+
+void* (__cdecl* mem_calloc)(size_t Size, char* Str, int a3, int a4, int a5);
+void* __cdecl mem_calloc_TITLE_WORK_hook(size_t Size, char* Str, int a3, int a4, int a5)
+{
+	void* mem = mem_calloc(Size, Str, a3, a4, a5);
+	TitleWork_ptr = (TITLE_WORK*)mem;
+	return mem;
+}
+
+void(__cdecl* Mem_free)(void* mem);
+void __cdecl Mem_free_TITLE_WORK_hook(void* mem)
+{
+	if (mem == TitleWork_ptr)
+		TitleWork_ptr = nullptr;
+	Mem_free(mem);
+}
 
 bool Init_Game()
 {
@@ -319,6 +342,17 @@ bool Init_Game()
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
 	EmMgr_ptr = *pattern.count(1).get(0).get<cEmMgr*>(0xD);
+
+	// mem_calloc call for TITLE_WORK struct
+	// (game doesn't store this in a global, so we need to capture it...)
+	pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 BC 00 00 00 E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xD), mem_calloc);
+	InjectHook(pattern.count(1).get(0).get<uint8_t>(0xD), mem_calloc_TITLE_WORK_hook, PATCH_CALL);
+
+	// Mem_free call for TITLE_WORK, so we can set to nullptr once game frees it
+	pattern = hook::pattern("56 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 68 C0 01 00 00");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x1), Mem_free);
+	InjectHook(pattern.count(1).get(0).get<uint8_t>(0x1), Mem_free_TITLE_WORK_hook, PATCH_CALL);
 
 	return true;
 }
