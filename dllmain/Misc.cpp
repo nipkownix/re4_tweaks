@@ -1051,6 +1051,13 @@ void Init_Misc()
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
 
+		// Skip logo fade-in
+		pattern = hook::pattern("3B 05 ? ? ? ? 7E ? 3B 05 ? ? ? ? 7D ? 68 00 20 00 00 68 00 10 00 C0");
+		uint8_t* titleLogoCode = pattern.count(1).get(0).get<uint8_t>(0);
+		Patch(titleLogoCode + 0x6, uint16_t(0x9090));
+		Patch(titleLogoCode + 0xE, uint16_t(0x9090));
+		Patch(titleLogoCode + 0x24, uint16_t(0x9090));
+
 		spd::log()->info("SkipIntroLogos enabled");
 	}
 
