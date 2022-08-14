@@ -163,6 +163,22 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
 	pConfig->bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
 	pConfig->bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
+
+	std::string GCBlurTypeStr = iniReader.ReadString("DISPLAY", "GCBlurType", "");
+	if (!GCBlurTypeStr.empty())
+	{
+		if (GCBlurTypeStr == std::string("Enhanced"))
+		{
+			pConfig->bUseEnhancedGCBlur = true;
+			iGCBlurMode = 0;
+		}
+		else if (GCBlurTypeStr == std::string("Classic"))
+		{
+			pConfig->bUseEnhancedGCBlur = false;
+			iGCBlurMode = 1;
+		}
+	}
+
 	pConfig->bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
 	pConfig->bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
 	pConfig->iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
@@ -404,6 +420,12 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
 	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
 	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
+
+	if (pConfig->bUseEnhancedGCBlur)
+		iniReader.WriteString("DISPLAY", "GCBlurType", "Enhanced");
+	else
+		iniReader.WriteString("DISPLAY", "GCBlurType", "Classic");
+
 	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
 	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
 	iniReader.WriteInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
@@ -538,6 +560,12 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "FixBlurryImage", pConfig->bFixBlurryImage ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableFilmGrain", pConfig->bDisableFilmGrain ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCBlur", pConfig->bEnableGCBlur ? "true" : "false");
+	
+	if (pConfig->bUseEnhancedGCBlur)
+		spd::log()->info("| {:<30} | {:>15} |", "GCBlurType", "Enhanced");
+	else
+		spd::log()->info("| {:<30} | {:>15} |", "GCBlurType", "Classic");
+
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", pConfig->bWindowBorderless ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", pConfig->iWindowPositionX);
