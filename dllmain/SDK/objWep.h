@@ -39,5 +39,23 @@ public:
 	Vec cObjWep_field_374;
 	Vec cObjWep_field_380;
 	uint8_t cObjWep_unk_38C[992];
+
+	virtual void moveAll() = 0;
+	virtual void moveStay() = 0;
+	virtual void moveReady() = 0;
+	virtual void moveSet() = 0;
+	virtual void moveFire() = 0;
+	virtual void moveDown() = 0;
+	virtual void moveReload() = 0;
+	virtual void moveDrop() = 0;
+	virtual void init(cModel* cmdl) = 0;
+	virtual void setMotion(cEm* cpl) = 0;
+	virtual void setHand() = 0;
+	virtual void cObjWep__interrupt() = 0;
+	virtual void endReload(int val) = 0;
+	virtual bool reloadable() = 0;
+	virtual void keyKamae() = 0;
+	virtual void fire() = 0;
+	virtual void beginReload() = 0;
 };
 assert_size(cObjWep, 0x76C);
