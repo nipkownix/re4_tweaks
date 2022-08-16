@@ -301,6 +301,7 @@ enum class TrainerTab
 {
 	Patches,
 	Hotkeys,
+	FlagEdit,
 	NumTabs
 };
 TrainerTab CurTrainerTab = TrainerTab::Patches;
@@ -375,6 +376,9 @@ void Trainer_RenderUI()
 
 	// Hotkeys
 	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, button_size);
+
+	// FlagEdit
+	ImGui_TrainerTabButton("##flagedit", "Flag Editor", active, inactive, TrainerTab::FlagEdit, ICON_FA_FLAG, icn_color, IM_COL32_WHITE, button_size);
 
 	// EmMgr
 	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size))
@@ -603,5 +607,55 @@ void Trainer_RenderUI()
 		}
 
 		ImGui::PopStyleColor();
+	}
+
+	if (CurTrainerTab == TrainerTab::FlagEdit)
+	{
+		struct CategoryInfo
+		{
+			const char* categoryName;
+			uint32_t* values;
+			const char** valueNames;
+			int numValues;
+		};
+
+		// TODO: ITEM_SET, KEY_LOCK, ROOM, ROOM_SAVE
+		CategoryInfo flagCategoryInfo[] = {
+			{ "DEBUG", GlobalPtr()->flags_DEBUG_0_60, Flags_DEBUG_Names, 128 },
+			{ "STOP", GlobalPtr()->flags_STOP_0_170, Flags_STOP_Names, 32 },
+			{ "STATUS", GlobalPtr()->flags_STATUS_0_501C, Flags_STATUS_Names, 128 },
+			{ "SYSTEM", GlobalPtr()->Flags_SYSTEM_0_54, Flags_SYSTEM_Names, 32 },
+			{ "SCENARIO", GlobalPtr()->flags_SCENARIO_0_52CC, Flags_SCENARIO_Names, 64 },
+			{ "EXTRA", SystemSavePtr()->flags_EXTRA_4, Flags_EXTRA_Names, 21 },
+			{ "CONFIG", SystemSavePtr()->flags_CONFIG_0, Flags_CONFIG_Names, 6 },
+			{ "DISP", GlobalPtr()->Flags_DISP_0_58, Flags_DISP_Names, 32 }
+		};
+
+		static int flagCategory = 0;
+		if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
+		{
+			for (int i = 0; i < (sizeof(flagCategoryInfo) / sizeof(CategoryInfo)); i++)
+			{
+				bool selected = false;
+				if (ImGui::Selectable(flagCategoryInfo[i].categoryName, &selected))
+					if (selected)
+						flagCategory = i;
+			}
+			ImGui::EndCombo();
+		}
+
+		CategoryInfo* curFlagCategory = &flagCategoryInfo[flagCategory];
+
+		if (ImGui::BeginListBox("Flags", ImVec2(320, 420)))
+		{
+			for (int i = 0; i < curFlagCategory->numValues; i++)
+			{
+				bool selected = FlagIsSet(curFlagCategory->values, i);
+				if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
+					FlagSet(curFlagCategory->values, i, selected);
+			}
+
+			ImGui::EndListBox();
+		}
 	}
 }

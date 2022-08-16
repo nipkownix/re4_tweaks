@@ -161,6 +161,8 @@ enum class Flags_DEBUG
 	DBG_CHAR_MACHINE = 127, // 0x1 (@ 0xc)
 };
 
+extern const char* Flags_DEBUG_Names[];
+
 enum class Flags_STOP
 {
 	SPF_KEY = 0, // 0x80000000 (@ 0x0)
@@ -191,6 +193,8 @@ enum class Flags_STOP
 	SPF_ID_SYSTEM = 25, // 0x40 (@ 0x0)
 	SPF_ESP_AREA = 26, // 0x20 (@ 0x0)
 };
+
+extern const char* Flags_STOP_Names[];
 
 enum class Flags_STATUS
 {
@@ -324,6 +328,8 @@ enum class Flags_STATUS
 	// 127, // 0x1 (@ 0xc)
 };
 
+extern const char* Flags_STATUS_Names[];
+
 enum class Flags_SYSTEM
 {
 	SYS_OMAKE_ADA_GAME = 0, // 0x80000000 (@ 0x0)
@@ -359,6 +365,8 @@ enum class Flags_SYSTEM
 	SYS_PAL = 30, // 0x2 (@ 0x0)
 	SYS_DTV480P = 31, // 0x1 (@ 0x0)
 };
+
+extern const char* Flags_SYSTEM_Names[];
 
 enum class Flags_ITEM_SET
 {
@@ -448,6 +456,8 @@ enum class Flags_SCENARIO
 	SCF_R22C_BONUS_4 = 63, // 0x1 (@ 0x4)
 };
 
+extern const char* Flags_SCENARIO_Names[];
+
 enum class Flags_KEY_LOCK
 {
 	// 0, // 0x80000000 (@ 0x0)
@@ -486,6 +496,8 @@ enum class Flags_EXTRA
 	EXT_GET_ADA_TOMPSON = 20, // 0x800 (@ 0x0)
 };
 
+extern const char* Flags_EXTRA_Names[];
+
 enum class Flags_CONFIG
 {
 	CFG_AIM_REVERSE = 0, // 0x80000000 (@ 0x0)
@@ -495,6 +507,8 @@ enum class Flags_CONFIG
 	CFG_VIBRATION = 4, // 0x8000000 (@ 0x0)
 	CFG_KNIFE_MODE = 5, // 0x4000000 (@ 0x0)
 };
+
+extern const char* Flags_CONFIG_Names[];
 
 enum class Flags_DISP
 {
@@ -522,6 +536,8 @@ enum class Flags_DISP
 	DPF_TEX_RENDER = 21, // 0x400 (@ 0x0)
 	DPF_EFFECT_VU1 = 22, // 0x200 (@ 0x0)
 };
+
+extern const char* Flags_DISP_Names[];
 
 struct FlagCategoryInfo
 {
