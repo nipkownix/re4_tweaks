@@ -84,6 +84,11 @@ void Config::ReadSettings()
 	std::string sDefaultIniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
 	ReadSettings(sDefaultIniPath);
 
+	// Try reading in trainer.ini settings
+	std::string sTrainerIniPath = rootPath + "\\re4_tweaks\\trainer.ini";
+	if (std::filesystem::exists(sTrainerIniPath))
+		ReadSettings(sTrainerIniPath);
+
 	// Try reading any setting override files
 	auto override_path = rootPath + sSettingOverridesPath;
 
