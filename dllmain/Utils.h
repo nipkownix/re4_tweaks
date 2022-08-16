@@ -11,5 +11,6 @@ template <typename I> std::string IntToHexStr(I w, size_t hex_len = sizeof(I) <<
 
 std::string WstrToStr(const std::wstring& wstr);
 std::wstring StrToWstr(const std::string& str);
+std::string StrToUpper(std::string str);
 
 void CreateThreadAutoClose(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
