@@ -151,16 +151,18 @@ void Draw(const char* title, bool* p_open = NULL)
 
     if (ImGui::CollapsingHeader("Debug"))
     {
-        ImGui::SliderFloat("dbg1", &pConfig->fdbg1, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("dbg2", &pConfig->fdbg2, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("dbg3", &pConfig->fdbg3, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("dbg4", &pConfig->fdbg4, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("dbg5", &pConfig->fdbg5, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("dbg6", &pConfig->fdbg6, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg1", &pConfig->fdbg1, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg2", &pConfig->fdbg2, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg3", &pConfig->fdbg3, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg4", &pConfig->fdbg4, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg5", &pConfig->fdbg5, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg6", &pConfig->fdbg6, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
 
         ImGui::Spacing();
 
-        ImGui::Checkbox("dbg", &pConfig->bdbg);
+        ImGui::Checkbox("bdbg1", &pConfig->bdbg1);
+        ImGui::Checkbox("bdbg2", &pConfig->bdbg2);
+        ImGui::Checkbox("bdbg3", &pConfig->bdbg3);
     }
 
     // Options menu

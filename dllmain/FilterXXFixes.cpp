@@ -184,6 +184,65 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 		GXTexCoord2f32(0.0f, 1.0f);
 
 		GXShaderCall_Maybe(0xE);
+
+		if ((pConfig->bUseEnhancedGCBlur) && (params->AlphaLevel > 1))
+		{
+			// 2nd blur step - Not present on the original code. We do this to blur the image a bit more, which makes the effect
+			// look better on modern high-definition displays.
+			float blurAlpha = 225.0f;
+
+			GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
+			GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, 6, 1);
+			GXCopyTex(*ptr_filter01_buff, 0, 0);
+
+			GXBegin(0x80, 0, 4);
+
+			float Xnew = -0.6472f;
+			float Ynew = -0.6472f;
+
+			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 1.0f);
+
+			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 1.0f);
+
+			GXShaderCall_Maybe(0xE);
+
+			// 3rd blur step - Also not present on the original code.
+			GXBegin(0x80, 0, 4);
+
+			Xnew = -0.1f;
+			Ynew = -0.1f;
+
+			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 1.0f);
+
+			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 1.0f);
+
+			GXShaderCall_Maybe(0xE);
+		}
+
 	}
 
 	if (params->AlphaLevel > 1)
@@ -226,7 +285,7 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 	float GameWidth = *ptr_InternalWidth;
 	float GameHeight = *ptr_InternalHeight;
 
-	float AlphaLvlTable[] = { // level_tbl1 in GC debug
+	std::vector<float> AlphaLvlTable = { // level_tbl1 in GC debug
 		0.0f,
 		0.60f, // 0.60000002
 		1.5f,
@@ -239,6 +298,24 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 		4.5f,
 		6.60f // 6.5999999
 	};
+
+	// Replace some values to reduce ghosting a bit
+	if (pConfig->bUseEnhancedGCBlur)
+	{
+		AlphaLvlTable = {
+			0.0f,
+			0.6f,
+			1.5f,
+			1.7f,
+			1.5f,
+			1.6f,
+			1.6f,
+			1.8f,
+			1.9f,
+			2.5f,
+			3.60f
+		};
+	}
 
 	int AlphaLevel_floor = (int)floorf(params->AlphaLevel); // TODO: should this be ceil instead?
 	float blurPositionOffset = AlphaLvlTable[AlphaLevel_floor];
@@ -317,6 +394,64 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 		GXTexCoord2f32(0.0f, 1.0f);
 
 		GXShaderCall_Maybe(0xE);
+
+		if (pConfig->bUseEnhancedGCBlur)
+		{
+			// 2nd blur step - Not present on the original code. We do this to blur the image a bit more, which makes the effect
+			// look better on modern high-definition displays.
+			float blurAlpha = 225.0f;
+
+			GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
+			GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, 6, 1);
+			GXCopyTex(*ptr_filter01_buff, 0, 0);
+
+			GXBegin(0x80, 0, 4);
+
+			float Xnew = -0.6472f;
+			float Ynew = -0.6472f;
+
+			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 1.0f);
+
+			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 1.0f);
+
+			GXShaderCall_Maybe(0xE);
+
+			// 3rd blur step - Also not present on the original code.
+			GXBegin(0x80, 0, 4);
+
+			Xnew = -0.1f;
+			Ynew = -0.1f;
+
+			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 0.0f);
+
+			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(1.0f, 1.0f);
+
+			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			GXTexCoord2f32(0.0f, 1.0f);
+
+			GXShaderCall_Maybe(0xE);
+		}
 	}
 }
 

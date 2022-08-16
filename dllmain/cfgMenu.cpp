@@ -16,6 +16,11 @@ bool bCfgMenuOpen;
 bool NeedsToRestart;
 bool bWaitingForHotkey;
 
+int iGCBlurMode = 0;
+int iCostumeComboLeon;
+int iCostumeComboAshley;
+int iCostumeComboAda;
+
 float fLaserColorPicker[3]{ 0.0f, 0.0f, 0.0f };
 
 ImVec2 PrevRightColumnPos;
@@ -39,9 +44,6 @@ enum class MenuTab
 MenuTab Tab = MenuTab::Display;
 
 int MenuTipTimer = 500; // cfgMenu tooltip timer
-int iCostumeComboLeon;
-int iCostumeComboAshley;
-int iCostumeComboAda;
 
 std::string cfgMenuTitle = "re4_tweaks";
 
@@ -685,6 +687,23 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Restores DoF blurring from the GC version, which was removed/unimplemented in later ports.");
+
+						ImGui::Dummy(ImVec2(10, 10));
+
+						if (ImGui::RadioButton("Enhanced", &iGCBlurMode, 0))
+							pConfig->bUseEnhancedGCBlur = true;
+						ImGui::Indent(29.0);
+						ImGui::TextWrapped("Slightly improved implementation to look better on modern high-definition displays.");
+						ImGui::Unindent(29.0);
+
+						ImGui::Dummy(ImVec2(10, 10));
+
+						if (ImGui::RadioButton("Classic", &iGCBlurMode, 1))
+							pConfig->bUseEnhancedGCBlur = false;
+						ImGui::Indent(29.0);
+						ImGui::TextWrapped("The original GC implementation.");
+						ImGui::Unindent(29.0);
+
 					}
 
 					// EnableGCScopeBlur

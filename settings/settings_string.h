@@ -66,6 +66,11 @@ DisableFilmGrain = true
 ; Restores DoF blurring from the GC version, which was removed/unimplemented in later ports.
 EnableGCBlur = true
 
+; Choose GC blur type.
+; Enhanced = Slightly improved implementation to look better on modern high-definition displays.
+; Classic = The original GC implementation.
+GCBlurType = Enhanced
+
 ; Restores outer-scope blurring when using a scope, which was removed/unimplemented in later ports.
 EnableGCScopeBlur = true
 
@@ -332,7 +337,7 @@ IgnoreFPSWarning = false
 [IMGUI]
 ; Scale the font used in the configuration menu.
 ; Min 1.0, max 1.25.
-FontSize = 1.000
+FontSizeScale = 1.000
 
 ; Disables the "Press key to open the configuration menu" tooltip.
 DisableMenuTip = false

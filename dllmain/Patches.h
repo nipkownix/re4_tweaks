@@ -69,6 +69,7 @@ extern bool bWaitingForHotkey;
 
 extern float fLaserColorPicker[3];
 
+extern int iGCBlurMode;
 extern int iCostumeComboLeon;
 extern int iCostumeComboAshley;
 extern int iCostumeComboAda;

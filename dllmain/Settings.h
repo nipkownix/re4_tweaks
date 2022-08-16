@@ -29,6 +29,7 @@ public:
 	bool bFixBlurryImage = true;
 	bool bDisableFilmGrain = true;
 	bool bEnableGCBlur = true;
+	bool bUseEnhancedGCBlur = true;
 	bool bEnableGCScopeBlur = true;
 	bool bWindowBorderless = false;
 	int iWindowPositionX = -1;
@@ -152,7 +153,10 @@ public:
 	float fdbg4 = 1.0f;
 	float fdbg5 = 1.0f;
 	float fdbg6 = 1.0f;
-	bool bdbg;
+	bool bdbg1;
+	bool bdbg2;
+	bool bdbg3;
+	bool bdbg4;
 
 	void ReadSettings();
 	void ReadSettings(std::string_view ini_path);

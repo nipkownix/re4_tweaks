@@ -422,61 +422,118 @@ void Install_LangLogHook()
 		injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
 }
 
-bool *PlReloadDirect;
-bool cPlayer__keyReload_hook()
+bool bShouldReload = false;
+BOOL (*joyKamae_orig)();
+BOOL joyKamae_Hook()
 {
-	bool isAiming = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
-	bool bReloadWithoutZoom = false;
+	// Run the original function first
+	BOOL ret = joyKamae_orig();
+
 	KEY_BTN reloadKey{};
 
-	switch (LastUsedDevice()) {
+	bool reloadKeyCheck = false;
+
+	if (pConfig->bAllowReloadWithoutAiming_kbm && isKeyboardMouse())
+	{
+		reloadKeyCheck = true;
+		reloadKey = KEY_BTN::KEY_RELOCKON; // Default key: R
+	}
+	else if (pConfig->bAllowReloadWithoutAiming_controller && isController())
+	{
+		reloadKeyCheck = true;
+
+		// Change controller reload key, since the default is also used for sprinting when not aiming
+		switch (SystemSavePtr()->pad_type_B) {
+		case keyConfigTypes::TypeI:
+			reloadKey = KEY_BTN::KEY_CANCEL; // Xinput B
+			break;
+		case keyConfigTypes::TypeII:
+		case keyConfigTypes::TypeIII:
+			reloadKey = KEY_BTN::KEY_Y; // Xinput X
+			break;
+		}
+	}
+
+	if (reloadKeyCheck)
+	{
+		// Check if the reload key has been pressed
+		bool hasPressedReload = ((Key_btn_on() & (uint64_t)reloadKey) == (uint64_t)reloadKey);
+
+		auto wepPtr = PlayerPtr()->Wep_7D8;
+		if (wepPtr->m_pWep_34)
+		{
+			if (wepPtr->m_pWep_34->reloadable() && hasPressedReload)
+			{
+				bShouldReload = true; // Tell cPlayer__keyReload_hook to reload
+				ret = TRUE; // Tell the game to initiate the aiming routine
+			}
+			else
+				bShouldReload = false;
+		}
+	}
+
+	return ret;
+}
+
+bool* PlReloadDirect;
+bool (*cPlayer__keyReload_orig)();
+bool cPlayer__keyReload_hook()
+{
+	bool ret = false;
+
+	if (pConfig->bAllowReloadWithoutAiming_kbm || pConfig->bAllowReloadWithoutAiming_controller)
+	{
+		bool isAiming = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
+		bool reloadWithoutZoom = false;
+
+		switch (LastUsedDevice()) {
 		case InputDevices::DinputController:
 		case InputDevices::XinputController:
-			reloadKey = KEY_BTN::KEY_B; // Default key: Xinput A
-
 			if (pConfig->bAllowReloadWithoutAiming_controller)
-			{
-				// Change controller reload key, since the default is also used for sprinting when not aiming
-				switch (SystemSavePtr()->pad_type_B) {
-					case keyConfigTypes::TypeI:
-						reloadKey = KEY_BTN::KEY_CANCEL; // Xinput B
-						break;
-					case keyConfigTypes::TypeII:
-					case keyConfigTypes::TypeIII:
-						reloadKey = KEY_BTN::KEY_Y; // Xinput X
-						break;
-				}
+				ret = bShouldReload;
 
-				bReloadWithoutZoom = (pConfig->bReloadWithoutZoom_controller && !isAiming);
-
-				isAiming = true; // Pass aim check
-			}
+			if (pConfig->bReloadWithoutZoom_controller)
+				reloadWithoutZoom = (pConfig->bReloadWithoutZoom_controller && !isAiming);
 			break;
 		case InputDevices::Keyboard:
 		case InputDevices::Mouse:
-			reloadKey = KEY_BTN::KEY_RELOCKON; // Default key: R
-
 			if (pConfig->bAllowReloadWithoutAiming_kbm)
-			{
-				bReloadWithoutZoom = (pConfig->bReloadWithoutZoom_kbm && !isAiming);
-				isAiming = true; // Pass aim check
-			}
+				ret = bShouldReload;
+
+			if (pConfig->bReloadWithoutZoom_kbm)
+				reloadWithoutZoom = (pConfig->bReloadWithoutZoom_kbm && !isAiming);
 			break;
+		}
+
+		*PlReloadDirect = reloadWithoutZoom;
+	}
+	else
+	{
+		ret = cPlayer__keyReload_orig();
 	}
 
-	*PlReloadDirect = bReloadWithoutZoom;
-
-	bool hasPressedReload = ((Key_btn_trg() & (uint64_t)reloadKey) == (uint64_t)reloadKey);
-
-	return (isAiming && hasPressedReload);
+	return ret;
 }
 
 void Init_Misc()
 {
-	// Hook cPlayer::keyReload to allow reloading without aiming
+	// Hooks to allow reloading without aiming
 	{
-		auto pattern = hook::pattern("E8 ? ? ? ? 84 C0 74 3A 8B 86 ? ? ? ? 39 58 ? 74 ? 8B 40");
+		// joyKamae -> Tells the game if the player is aiming or not.
+		// We originally only hooked cPlayer::keyReload, and that worked for the most part, but under some circustances,
+		// some type of race condition could occur if the player pressed reload first, and then held the aim button after reloading began. This would lead to
+		// the game skipping the wep**_r3_ready** funcs, which are responsible to set up a bunch of stuff related to aiming, leading to a broken state. Now we hook
+		// this function and, if the player wants to reload without aiming, we first pretend the player is aiming. This makes everything get set up properly. Then,
+		// we tell cPlayer__keyReload_hook to go into the reload routine. Kinda messy, but it seems to fix the issue we had before.
+		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 81 A6 ? ? ? ? ? ? ? ? C7 86 ? ? ? ? ? ? ? ? 5E");
 
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), joyKamae_orig);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), joyKamae_Hook, PATCH_JUMP);
+
+		// cPlayer::keyReload -> Makes the game enter the reload routine if a condition is met.
+		pattern = hook::pattern("E8 ? ? ? ? 84 C0 74 3A 8B 86 ? ? ? ? 39 58 ? 74 ? 8B 40");
+
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cPlayer__keyReload_orig);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cPlayer__keyReload_hook, PATCH_JUMP);
 
 		// PlReloadDirect is used to skip the camera change when you press the aim button (checked in cPlayer::isKamae)

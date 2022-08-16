@@ -170,6 +170,22 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
 	pConfig->bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
 	pConfig->bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
+
+	std::string GCBlurTypeStr = iniReader.ReadString("DISPLAY", "GCBlurType", "");
+	if (!GCBlurTypeStr.empty())
+	{
+		if (GCBlurTypeStr == std::string("Enhanced"))
+		{
+			pConfig->bUseEnhancedGCBlur = true;
+			iGCBlurMode = 0;
+		}
+		else if (GCBlurTypeStr == std::string("Classic"))
+		{
+			pConfig->bUseEnhancedGCBlur = false;
+			iGCBlurMode = 1;
+		}
+	}
+
 	pConfig->bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
 	pConfig->bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
 	pConfig->iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
@@ -298,11 +314,11 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc);
 
 	// HOTKEYS
-	pConfig->sConfigMenuKeyCombo = iniReader.ReadString("HOTKEYS", "ConfigMenu", pConfig->sConfigMenuKeyCombo);
+	pConfig->sConfigMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "ConfigMenu", pConfig->sConfigMenuKeyCombo));
 	if (pConfig->sConfigMenuKeyCombo.length())
 		ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
 
-	pConfig->sConsoleKeyCombo = iniReader.ReadString("HOTKEYS", "Console", pConfig->sConsoleKeyCombo);
+	pConfig->sConsoleKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "Console", pConfig->sConsoleKeyCombo));
 	if (pConfig->sConsoleKeyCombo.length())
 	{
 		ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
@@ -311,22 +327,31 @@ void Config::ReadSettings(std::string_view ini_path)
 		con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
 	}
 
-	pConfig->sFlipItemUp = iniReader.ReadString("HOTKEYS", "FlipItemUp", pConfig->sFlipItemUp);
-	pConfig->sFlipItemDown = iniReader.ReadString("HOTKEYS", "FlipItemDown", pConfig->sFlipItemDown);
-	pConfig->sFlipItemLeft = iniReader.ReadString("HOTKEYS", "FlipItemLeft", pConfig->sFlipItemLeft);
-	pConfig->sFlipItemRight = iniReader.ReadString("HOTKEYS", "FlipItemRight", pConfig->sFlipItemRight);
-	pConfig->sQTE_key_1 = iniReader.ReadString("HOTKEYS", "QTE_key_1", pConfig->sQTE_key_1);
-	pConfig->sQTE_key_2 = iniReader.ReadString("HOTKEYS", "QTE_key_2", pConfig->sQTE_key_2);
+	pConfig->sFlipItemUp = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemUp", pConfig->sFlipItemUp));
+	pConfig->sFlipItemDown = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemDown", pConfig->sFlipItemDown));
+	pConfig->sFlipItemLeft = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemLeft", pConfig->sFlipItemLeft));
+	pConfig->sFlipItemRight = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemRight", pConfig->sFlipItemRight));
 
-	pConfig->sDebugMenuKeyCombo = iniReader.ReadString("HOTKEYS", "DebugMenu", pConfig->sDebugMenuKeyCombo);
+	pConfig->sQTE_key_1 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_1", pConfig->sQTE_key_1));
+	pConfig->sQTE_key_2 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_2", pConfig->sQTE_key_2));
+	
+	// Check if the QTE bindings are valid for the current keyboard layout.
+	// Try to reset them using VK Hex Codes if they aren't.
+	if (pInput->KeyMap_getVK(pConfig->sQTE_key_1) == 0)
+		pConfig->sQTE_key_1 = pInput->KeyMap_getSTR(0x44); // Latin D
+
+	if (pInput->KeyMap_getVK(pConfig->sQTE_key_2) == 0)
+		pConfig->sQTE_key_2 = pInput->KeyMap_getSTR(0x41); // Latin A
+
+	pConfig->sDebugMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "DebugMenu", pConfig->sDebugMenuKeyCombo));
 	if (pConfig->sDebugMenuKeyCombo.length())
 		ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
 
-	pConfig->sMouseTurnModifierKeyCombo = iniReader.ReadString("HOTKEYS", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo);
+	pConfig->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo));
 	if (pConfig->sMouseTurnModifierKeyCombo.length())
 		ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
 
-	pConfig->sJetSkiTrickCombo = iniReader.ReadString("HOTKEYS", "JetSkiTricks", pConfig->sJetSkiTrickCombo);
+	pConfig->sJetSkiTrickCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "JetSkiTricks", pConfig->sJetSkiTrickCombo));
 	if (pConfig->sJetSkiTrickCombo.length())
 		ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
 
@@ -450,6 +475,12 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
 	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
 	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
+
+	if (pConfig->bUseEnhancedGCBlur)
+		iniReader.WriteString("DISPLAY", "GCBlurType", "Enhanced");
+	else
+		iniReader.WriteString("DISPLAY", "GCBlurType", "Classic");
+
 	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
 	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
 	iniReader.WriteInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
@@ -592,6 +623,12 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "FixBlurryImage", pConfig->bFixBlurryImage ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableFilmGrain", pConfig->bDisableFilmGrain ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCBlur", pConfig->bEnableGCBlur ? "true" : "false");
+	
+	if (pConfig->bUseEnhancedGCBlur)
+		spd::log()->info("| {:<30} | {:>15} |", "GCBlurType", "Enhanced");
+	else
+		spd::log()->info("| {:<30} | {:>15} |", "GCBlurType", "Classic");
+
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", pConfig->bWindowBorderless ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", pConfig->iWindowPositionX);

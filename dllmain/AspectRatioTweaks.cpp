@@ -11,7 +11,7 @@ float fDefaultEngineWidthScale = 1280.0f;
 float fDefaultEngineAspectRatio = 1.777777791f;
 float fDefaultAspectRatio = 1.333333373f;
 float fDefaultEsp18Height = 0.375f;
-float fDefaultHudPosX = 217.0f;
+float fDefaultHudPosX = 0.0f; // 217.0f in the vanilla game, but since mods can change it, we'll just store whatever the game gives us.
 
 double fDefaultMapIconsPos = 320.0;
 double fNewMapIconsPos;
@@ -126,11 +126,16 @@ void Init_AspectRatioTweaks()
 			}
 
 			float* fCurHudPosX = (float*)(regs.eax - 0x1DCC);
+			
+			// Store default HUD Pos X
+			if (fDefaultHudPosX == 0.0f)
+				fDefaultHudPosX = *fCurHudPosX;
 
+			// Calculate new X pos if needed
 			if ((pConfig->bSideAlignHUD && bIsUltrawide) || (pConfig->bRemove16by10BlackBars && bIs16by10))
 			{
 				float fHudPosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) / 2.0f;
-
+			
 				*fCurHudPosX = fDefaultHudPosX + fHudPosOffset;
 			}
 			else
