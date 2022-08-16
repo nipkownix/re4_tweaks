@@ -119,9 +119,19 @@ public:
 	std::string sDebugMenuKeyCombo = "CTRL+F3";
 	std::string sMouseTurnModifierKeyCombo = "ALT";
 	std::string sJetSkiTrickCombo = "LMOUSE+RMOUSE";
+
+	// TRAINER_HOTKEYS
 	std::string sTrainerFocusUIKeyCombo = "F5";
 	std::string sTrainerNoclipKeyCombo = "";
 	std::string sTrainerSpeedOverrideKeyCombo = "";
+
+	// TRAINER
+	bool bTrainerEnable = false;
+	bool bTrainerPlayerSpeedOverride = false;
+	float fTrainerPlayerSpeedOverride = 1.0f;
+
+	bool bTrainerUseNumpadMovement = true;
+	bool bTrainerUseMouseWheelUpDown = true;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;
@@ -129,7 +139,6 @@ public:
 	// IMGUI
 	float fFontSizeScale = 1.0f;
 	bool bDisableMenuTip = false;
-	bool bUseTrainer = false;
 	
 	// DEBUG
 	bool bVerboseLog = false;

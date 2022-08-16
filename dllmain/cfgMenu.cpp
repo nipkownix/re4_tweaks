@@ -281,7 +281,7 @@ void cfgMenuRender()
 			ImGui::Spacing();
 
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
-			if (!pConfig->bUseTrainer)
+			if (!pConfig->bTrainerEnable)
 			{
 				if (ImGui_TabButton("##trainer", "Trainer", active, inactive, MenuTab::Trainer, ICON_FA_SHOE_PRINTS, ImColor(255, 255, 255, 60), ImColor(255, 255, 255, 60), ImVec2(172, 31)))
 					ImGui::OpenPopup("Trainer menu");
@@ -300,7 +300,7 @@ void cfgMenuRender()
 
 					if (ImGui::Button("Yes", ImVec2(120, 0)))
 					{
-						pConfig->bUseTrainer = true;
+						pConfig->bTrainerEnable = true;
 						pConfig->WriteSettings();
 						ImGui::CloseCurrentPopup();
 					}

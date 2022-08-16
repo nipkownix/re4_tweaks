@@ -198,6 +198,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp" />
     <ClInclude Include="..\includes\log.h" />
     <ClInclude Include="..\settings\settings_string.h" />
+    <ClInclude Include="..\settings\trainer_string.h" />
     <ClInclude Include="..\Wrappers\bcrypt.h" />
     <ClInclude Include="..\Wrappers\cryptsp.h" />
     <ClInclude Include="..\Wrappers\d2d1.h" />

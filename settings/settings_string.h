@@ -321,15 +321,6 @@ MouseTurningModifier = ALT
 ; Key combo for jump tricks during Jet-ski sequence (normally RT+LT on controller)
 JetSkiTricks = LMOUSE+RMOUSE
 
-; Key combination to set mouse focus on trainer related UIs (EmManager/Globals)
-TrainerFocusUI = F5
-
-; Key combination to toggle the "Disable Player Collision" / no-clip patch.
-TrainerNoclipToggle = 
-
-; Key combination to toggle the "Player Speed Override" patch
-TrainerSpeedOverrideToggle = 
-
 [WARNING]
 ; This version of RE4 only works properly if played at 30 or 60 FPS. Anything else can and will cause numerous amounts of
 ; different bugs, most of which aren't even documented. By default, re4_tweaks will warn you about these issues and change
@@ -345,9 +336,6 @@ FontSize = 1.000
 
 ; Disables the "Press key to open the configuration menu" tooltip.
 DisableMenuTip = false
-
-; Allows the use of the "Trainer" tab
-UseTrainer = false
 
 [DEBUG]
 ; Logs extra information.

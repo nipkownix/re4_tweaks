@@ -8,12 +8,6 @@
 #include "UI_DebugWindows.h"
 #include "Trainer.h"
 
-bool bUseNumpadMovement = false;
-bool bUseMouseWheelUPDOWN = false;
-
-bool bPlayerSpeedOverride = false;
-float fPlayerSpeedOverride = 1.0f;
-
 int AshleyStateOverride;
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
@@ -188,7 +182,7 @@ void Trainer_Update()
 
 	if (pInput->is_combo_pressed(&KeyComboSpeedOverride))
 	{
-		bPlayerSpeedOverride = !bPlayerSpeedOverride;
+		pConfig->bTrainerPlayerSpeedOverride = !pConfig->bTrainerPlayerSpeedOverride;
 	}
 
 	for (auto& flagPatch : flagPatches)
@@ -204,23 +198,23 @@ void Trainer_Update()
 	{
 		static bool prev_bPlayerSpeedOverride = false;
 		static float prev_PlayerSpeed = 0;
-		if (prev_bPlayerSpeedOverride != bPlayerSpeedOverride)
+		if (prev_bPlayerSpeedOverride != pConfig->bTrainerPlayerSpeedOverride)
 		{
-			if (bPlayerSpeedOverride)
+			if (pConfig->bTrainerPlayerSpeedOverride)
 			{
 				// changed from disabled -> enabled, backup previous speed value
 				prev_PlayerSpeed = player->Motion_1D8.Seq_speed_C0;
 			}
-			else if (!bPlayerSpeedOverride)
+			else if (!pConfig->bTrainerPlayerSpeedOverride)
 			{
 				// changed from enabled -> disabled, restore previous speed value
 				player->Motion_1D8.Seq_speed_C0 = prev_PlayerSpeed;
 			}
-			prev_bPlayerSpeedOverride = bPlayerSpeedOverride;
+			prev_bPlayerSpeedOverride = pConfig->bTrainerPlayerSpeedOverride;
 		}
 
-		if (bPlayerSpeedOverride)
-			player->Motion_1D8.Seq_speed_C0 = fPlayerSpeedOverride;
+		if (pConfig->bTrainerPlayerSpeedOverride)
+			player->Motion_1D8.Seq_speed_C0 = pConfig->fTrainerPlayerSpeedOverride;
 	}
 
 	static uint16_t atariInfoFlagBackup = 0;
@@ -239,7 +233,7 @@ void Trainer_Update()
 		bool positionModded = false;
 
 		// Handle numpad-movement
-		if (bUseNumpadMovement)
+		if (pConfig->bTrainerUseNumpadMovement)
 		{
 			if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
 			{
@@ -274,7 +268,7 @@ void Trainer_Update()
 		}
 
 		// Handle mouse wheel
-		if (bUseMouseWheelUPDOWN)
+		if (pConfig->bTrainerUseMouseWheelUpDown)
 		{
 			if (pInput->mouse_wheel_delta() > 0) // Mouse wheel up
 			{
@@ -456,12 +450,14 @@ void Trainer_RenderUI()
 				ImGui::Spacing();
 
 				ImGui::BeginDisabled(!DisablePlayerCollision);
-				ImGui::Checkbox("Numpad Movement", &bUseNumpadMovement);
+				if (ImGui::Checkbox("Numpad Movement", &pConfig->bTrainerUseNumpadMovement))
+					pConfig->HasUnsavedChanges = true;
 				ImGui::TextWrapped("Allows noclip movement via numpad.");
 
 				ImGui::Spacing();
 
-				ImGui::Checkbox("Use Mouse Wheel", &bUseMouseWheelUPDOWN);
+				if (ImGui::Checkbox("Use Mouse Wheel", &pConfig->bTrainerUseMouseWheelUpDown))
+					pConfig->HasUnsavedChanges = true;
 				ImGui::TextWrapped("Allows using the mouse wheel to go up and down.");
 				ImGui::EndDisabled();
 			}
@@ -470,16 +466,23 @@ void Trainer_RenderUI()
 			{
 				ImGui_ColumnSwitch();
 
-				ImGui::Checkbox("Enable Player Speed Override", &bPlayerSpeedOverride);
+				if(ImGui::Checkbox("Enable Player Speed Override", &pConfig->bTrainerPlayerSpeedOverride))
+					pConfig->HasUnsavedChanges = true;
+
 				ImGui::TextWrapped("Allows overriding player speed value.");
 				ImGui::TextWrapped("Ctrl+Click to set input a custom value.");
 
 				ImGui::Spacing();
 
-				ImGui::BeginDisabled(!bPlayerSpeedOverride);
-				ImGui::SliderFloat("Speed", &fPlayerSpeedOverride, 0.0f, 50.0f, "%.2f");
+				ImGui::BeginDisabled(!pConfig->bTrainerPlayerSpeedOverride);
+				if(ImGui::SliderFloat("Speed", &pConfig->fTrainerPlayerSpeedOverride, 0.0f, 50.0f, "%.2f"))
+					pConfig->HasUnsavedChanges = true;
+
 				if (ImGui::Button("Reset"))
-					fPlayerSpeedOverride = 1.0f;
+				{
+					pConfig->fTrainerPlayerSpeedOverride = 1.0f;
+					pConfig->HasUnsavedChanges = true;
+				}
 				ImGui::EndDisabled();
 			}
 

@@ -5,6 +5,7 @@
 #include "dllmain.h"
 #include "Settings.h"
 #include "settings_string.h"
+#include "trainer_string.h"
 #include "Patches.h"
 #include "input.hpp"
 #include "Utils.h"
@@ -324,12 +325,20 @@ void Config::ReadSettings(std::string_view ini_path)
 	if (pConfig->sJetSkiTrickCombo.length())
 		ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
 
-	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("HOTKEYS", "TrainerFocusUI", pConfig->sTrainerFocusUIKeyCombo);
+	// TRAINER
+	pConfig->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
+	pConfig->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("TRAINER", "EnablePlayerSpeedOverride", pConfig->bTrainerPlayerSpeedOverride);
+	pConfig->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
+	pConfig->bTrainerUseNumpadMovement = iniReader.ReadBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
+	pConfig->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+
+	// TRAINER HOTKEYS
+	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
 	if (pConfig->sTrainerFocusUIKeyCombo.length())
 		ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
 
-	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("HOTKEYS", "TrainerNoclipToggle", pConfig->sTrainerNoclipKeyCombo);
-	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("HOTKEYS", "TrainerSpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
+	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo);
+	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
 	Trainer_ParseKeyCombos();
 
 	// FPS WARNING
@@ -340,7 +349,6 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->fFontSizeScale = fmin(fmax(pConfig->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
 	pConfig->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", pConfig->bDisableMenuTip);
-	pConfig->bUseTrainer = iniReader.ReadBoolean("IMGUI", "UseTrainer", pConfig->bUseTrainer);
 
 	// DEBUG
 	pConfig->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", pConfig->bVerboseLog);
@@ -349,31 +357,34 @@ void Config::ReadSettings(std::string_view ini_path)
 
 std::mutex settingsThreadRunningMutex;
 
-DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
+void WriteSettings(std::string_view iniPath, bool trainerIni)
 {
 	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // only allow single thread writing to INI at one time
 
 	CIniReader iniReader("");
-
-	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
 
 	#ifdef VERBOSE
 	con.AddConcatLog("Writing settings to: ", iniPath.data());
 	#endif
 
 	// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
-	const char* filename = iniPath.c_str();
+	const char* filename = iniPath.data();
 	if (!std::filesystem::exists(filename)) {
 		#ifdef VERBOSE
 		con.AddLogChar("ini file doesn't exist in folder. Creating new one.");
 		#endif
-		std::ofstream iniFile(iniPath);
-		iniFile << defaultSettings + 1; // +1 to skip the first new line
+		std::ofstream iniFile(iniPath.data());
+
+		if(!trainerIni)
+			iniFile << defaultSettings + 1; // +1 to skip the first new line
+		else
+			iniFile << defaultSettingsTrainer + 1; // +1 to skip the first new line
+
 		iniFile.close();
 	}
 
 	// Try to remove read-only flag is it is set, for some reason.
-	DWORD iniFile = GetFileAttributesA(iniPath.c_str());
+	DWORD iniFile = GetFileAttributesA(iniPath.data());
 	if (iniFile != INVALID_FILE_ATTRIBUTES) {
 		bool isReadOnly = iniFile & FILE_ATTRIBUTE_READONLY;
 
@@ -385,8 +396,28 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 			spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
 
-			SetFileAttributesA(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
+			SetFileAttributesA(iniPath.data(), iniFile & ~FILE_ATTRIBUTE_READONLY);
 		}
+	}
+
+	if (trainerIni)
+	{
+		// trainer.ini-only settings
+		iniReader = CIniReader(iniPath);
+
+		// TRAINER
+		iniReader.WriteBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
+		iniReader.WriteBoolean("TRAINER", "EnablePlayerSpeedOverride", pConfig->bTrainerPlayerSpeedOverride);
+		iniReader.WriteFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
+		iniReader.WriteBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
+		iniReader.WriteBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+
+		// TRAINER_HOTKEYS
+		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
+
+		return;
 	}
 
 	// DISPLAY
@@ -397,7 +428,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
 	iniReader.WriteBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
 	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
-	
+
 	iniReader.WriteBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
 	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
@@ -503,13 +534,17 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + pConfig->sDebugMenuKeyCombo);
 	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + pConfig->sMouseTurnModifierKeyCombo);
 	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + pConfig->sJetSkiTrickCombo);
-	iniReader.WriteString("HOTKEYS", "TrainerFocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
-	iniReader.WriteString("HOTKEYS", "TrainerNoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
-	iniReader.WriteString("HOTKEYS", "TrainerSpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
-	iniReader.WriteBoolean("IMGUI", "UseTrainer", pConfig->bUseTrainer);
+}
+
+DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
+{
+	std::string iniPathMain = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+	std::string iniPathTrainer = rootPath + "\\re4_tweaks\\trainer.ini";
+	WriteSettings(iniPathMain, false);
+	WriteSettings(iniPathTrainer, true);
 
 	pConfig->HasUnsavedChanges = false;
 
@@ -672,7 +707,6 @@ void Config::LogSettings()
 	spd::log()->info("+ IMGUI--------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "FontSizeScale", pConfig->fFontSizeScale);
 	spd::log()->info("| {:<30} | {:>15} |", "DisableMenuTip", pConfig->bDisableMenuTip ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "UseTrainer", pConfig->bUseTrainer ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// DEBUG
