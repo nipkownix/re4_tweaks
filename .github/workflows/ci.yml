@@ -42,6 +42,7 @@ jobs:
         shell: bash
         run: |
           head -n -1 settings/settings_string.h | tail -n +3 > dinput8.ini
+          head -n -1 settings/trainer_string.h | tail -n +3 > trainer.ini
           
       - name: Copy game data files
         shell: bash
@@ -52,6 +53,8 @@ jobs:
           cp -r dist/Bin32/re4_tweaks/ Release/
           cp dinput8.ini Debug/
           cp dinput8.ini Release/
+          cp trainer.ini Debug/re4_tweaks/
+          cp trainer.ini Release/re4_tweaks/
 
       - name: Upload Debug
         uses: actions/upload-artifact@v2
