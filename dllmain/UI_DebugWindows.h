@@ -4,6 +4,7 @@
 void UI_NewEmManager(int selectedEmIndex = -1);
 void UI_NewGlobalsViewer();
 void UI_NewAreaJump();
+void UI_NewFilterTool();
 
 class UI_Window
 {
@@ -67,5 +68,13 @@ class UI_AreaJump : public UI_Window
 public:
 	UI_AreaJump(std::string_view title) : UI_Window(title) { Init(); }
 	bool Init();
+	bool Render();
+};
+
+class UI_FilterTool : public UI_Window
+{
+public:
+	UI_FilterTool(std::string_view title) : UI_Window(title) { Init(); }
+	bool Init() { return true; }
 	bool Render();
 };

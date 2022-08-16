@@ -13,5 +13,6 @@ assert_size(cObj, 0x32C);
 
 class cObjMgr : public cManager<cObj>
 {
+	uint32_t m_nMaxActiveWork_1C; // TODO: unsure if this is part of cManager or maybe the cxxxMgr (cEmMgr etc) classes that inherit it
 };
 assert_size(cObjMgr, 0x20);

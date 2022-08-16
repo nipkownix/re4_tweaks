@@ -110,6 +110,8 @@ assert_size(cEm, 0x408);
 // use cEm::IsValid() to check for validity and skip over invalid cEms if needed
 class cEmMgr : public cManager<cEm>
 {
+	uint32_t m_nMaxActiveWork_1C; // TODO: unsure if this is part of cManager or maybe the cxxxMgr (cEmMgr etc) classes that inherit it
+
 public:
 	int count_valid() { int i = 0; for (auto& em : *this) if (em.IsValid()) i++; return i; }
 

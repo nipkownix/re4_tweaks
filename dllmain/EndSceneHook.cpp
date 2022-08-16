@@ -65,6 +65,15 @@ void UI_NewAreaJump()
 	bImGuiUIFocus = true;
 }
 
+void UI_NewFilterTool()
+{
+	static int id = 0;
+	std::string windowTitle = "FilterTool " + std::to_string(id++);
+	NewWindows.push_back(new UI_FilterTool(windowTitle));
+
+	bImGuiUIFocus = true;
+}
+
 void ApplyImGuiTheme()
 {
 	ImGuiStyle* style = &ImGui::GetStyle();

@@ -12,7 +12,6 @@ public:
 	uint8_t pad_11[3];
 	T* m_pAlive_14;
 	T* m_pAliveBack_18;
-	uint32_t m_nMaxActiveWork_1C; // TODO: unsure if this is part of cManager or maybe the cxxxMgr (cEmMgr etc) classes that inherit it
 
 	T* get(uint32_t i)
 	{
@@ -73,4 +72,4 @@ public:
 	virtual void destroy(T* pT) = 0;
 	virtual int construct(T* result, uint32_t id) = 0;
 };
-assert_size(cManager<int>, 0x20);
+assert_size(cManager<int>, 0x1C);

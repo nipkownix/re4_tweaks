@@ -3,6 +3,7 @@
 #include "Game.h"
 #include "Settings.h"
 #include "SDK/room_jmp.h"
+#include "SDK/filter00.h"
 
 #define AREAJUMP_MAX_STAGE 5
 
@@ -489,6 +490,125 @@ bool UI_AreaJump::Render()
 				}
 			}
 		}
+
+		ImGui::End();
+	}
+
+	return retVal;
+}
+
+bool UI_FilterTool::Render()
+{
+	ImGui::SetNextWindowSize(ImVec2(300, 410), ImGuiCond_Appearing);
+	ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 410));
+
+	bool retVal = true; // set to false on window close
+	ImGui::Begin(windowTitle.c_str(), &retVal);
+	{
+		cLightEnv* LightEnv = &LightMgr->LightEnv_20;
+
+		bool env_changed = false;
+
+		ImGui::Text("DoF / Filter01:");
+
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("ContrastLevel").x - 10.0f);
+
+		if (ImGui::SliderInt("Distance", &LightEnv->FocusZ_28, 0, 65535))
+			env_changed = true;
+
+		int alphaLvl = LightEnv->FocusLevel_2D;
+		if (ImGui::SliderInt("AlphaLvl", &alphaLvl, 0, 10))
+		{
+			env_changed = true;
+			LightEnv->FocusLevel_2D = uint8_t(alphaLvl);
+		}
+
+		const char* DoFModeNames[] = { "NEAR", "FAR", "FollowPL NEAR", "FollowPL FAR" };
+		const char* curMode = DoFModeNames[LightEnv->FocusMode_2E];
+		if (ImGui::BeginCombo("Mode", curMode))
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				bool selected = false;
+				if (ImGui::Selectable(DoFModeNames[i], &selected))
+					if (selected)
+					{
+						env_changed = true;
+						LightEnv->FocusMode_2E = uint8_t(i);
+					}
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::Dummy(ImVec2(10, 10));
+
+		ImGui::Text("Blur / Filter00:");
+
+		cFilter00Params* params = cFilter00Params::get();
+		cFilter00Params2* params2 = cFilter00Params2::get();
+
+		const char* BlurTypeNames[] = { "NORMAL", "SPREAD", "ADD", "SUBTRACT" };
+		const char* curType = BlurTypeNames[LightEnv->blur_type_F0];
+		if (ImGui::BeginCombo("Type", curType))
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				bool selected = false;
+				if (ImGui::Selectable(BlurTypeNames[i], &selected))
+					if (selected)
+					{
+						env_changed = true;
+						LightEnv->blur_type_F0 = uint8_t(i);
+					}
+			}
+			ImGui::EndCombo();
+		}
+
+		int blurRate = LightEnv->blur_rate_2F;
+		if (ImGui::SliderInt("Rate", &blurRate, 0, 255))
+		{
+			env_changed = true;
+			LightEnv->blur_rate_2F = uint8_t(blurRate);
+		}
+
+		int blurPower = LightEnv->blur_power_F1;
+		if (ImGui::SliderInt("Power", &blurPower, 0, 255))
+		{
+			env_changed = true;
+			LightEnv->blur_power_F1 = uint8_t(blurPower);
+		}
+
+		int contLevel = LightEnv->contrast_level_F5;
+		if (ImGui::SliderInt("ContrastLevel", &contLevel, 0, 255))
+		{
+			env_changed = true;
+			LightEnv->contrast_level_F5 = uint8_t(contLevel);
+		}
+
+		int contPow = LightEnv->contrast_pow_F6;
+		if (ImGui::SliderInt("ContrastPow", &contPow, 0, 255))
+		{
+			env_changed = true;
+			LightEnv->contrast_pow_F6 = uint8_t(contPow);
+		}
+
+		int contBias = LightEnv->contrast_bias_F7;
+		if (ImGui::SliderInt("ContrastBias", &contBias, 0, 255))
+		{
+			env_changed = true;
+			LightEnv->contrast_bias_F7 = uint8_t(contBias);
+		}
+
+		int effRate = params->eff_blur_rate;
+		if (ImGui::SliderInt("EffBlurRate", &effRate, 0, 255))
+			params->eff_blur_rate = uint8_t(effRate);
+
+		ImGui::SliderFloat("EffSpreadNum", &params->eff_spread_num, 0, 255);
+
+		if (env_changed)
+			LightMgr->setEnv(LightEnv, LightMgr->m_Hokan_178);
+
+		ImGui::PopItemWidth();
 
 		ImGui::End();
 	}

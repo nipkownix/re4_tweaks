@@ -435,6 +435,12 @@
     <ClInclude Include="..\settings\trainer_string.h">
       <Filter>settings</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\filter00.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\light.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

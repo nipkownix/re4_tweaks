@@ -9,6 +9,7 @@
 #include "SDK/global.h"
 #include "SDK/snd.h"
 #include "SDK/title.h"
+#include "SDK/light.h"
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];

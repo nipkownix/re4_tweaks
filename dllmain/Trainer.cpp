@@ -389,9 +389,15 @@ void Trainer_RenderUI()
 	}
 
 	// Area Jump
-	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, button_size, false))
+	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, button_size))
 	{
 		UI_NewAreaJump();
+	}
+
+	// Filter Tool
+	if (ImGui_TrainerTabButton("##filtertool", "Filter Tool", active, inactive, TrainerTab::NumTabs, ICON_FA_CAMERA, icn_color, IM_COL32_WHITE, button_size, false))
+	{
+		UI_NewFilterTool();
 	}
 
 	// Last param to ImGui_TrainerTabButton must be false if it is the last button, to avoid the separator below from being SameLine'd as well.

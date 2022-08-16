@@ -1,11 +1,16 @@
 #include "dllmain.h"
 #include "Game.h"
 #include "Patches.h"
+#include "SDK/filter00.h"
 
 std::string gameVersion;
 bool gameIsDebugBuild = false;
 
 SND_CTRL* Snd_ctrl_work = nullptr; // extern inside Game.h
+cLightMgr* LightMgr = nullptr; // extern inside light.h
+cLightMgr__setEnv_Fn cLightMgr__setEnv = nullptr; // extern inside light.h
+cFilter00Params* Filter00Params = nullptr; // extern inside filter00.h
+cFilter00Params2* Filter00Params2 = nullptr; // extern inside filter00.h
 
 // a lot missing from here sadly ;_;
 std::unordered_map<int, std::string> UnitBeFlagNames =
@@ -399,6 +404,22 @@ bool Init_Game()
 	pattern = hook::pattern("56 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 68 C0 01 00 00");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x1), Mem_free);
 	InjectHook(pattern.count(1).get(0).get<uint8_t>(0x1), Mem_free_TITLE_WORK_hook, PATCH_CALL);
+
+	// LightMgr pointer
+	pattern = hook::pattern("6A 00 53 6A 00 57 B9 ? ? ? ?");
+	LightMgr = (cLightMgr*)*pattern.count(1).get(0).get<uint32_t>(7);
+
+	// Filter00Params ptrs
+	pattern = hook::pattern("D9 EE 33 C0 D9 15 ? ? ? ? A2 ? ? ? ?");
+	auto varPtr = pattern.count(3).get(0).get<uint32_t>(11);
+	Filter00Params = (cFilter00Params*)*varPtr;
+
+	varPtr = pattern.count(3).get(0).get<uint32_t>(22);
+	Filter00Params2 = (cFilter00Params2*)*varPtr;
+
+	// cLightMgr::setEnv ptr
+	pattern = hook::pattern("55 8B EC 51 53 56 8B 75 ? 8B 46 ? A3 ? ? ? ? 8B D9 8B 4E ?");
+	cLightMgr__setEnv = (cLightMgr__setEnv_Fn)pattern.count(1).get(0).get<uint8_t>(0);
 
 	return true;
 }
