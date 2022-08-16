@@ -185,7 +185,7 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 
 		GXShaderCall_Maybe(0xE);
 
-		if (pConfig->bUseEnhancedGCBlur)
+		if ((pConfig->bUseEnhancedGCBlur) && (params->AlphaLevel > 1))
 		{
 			// 2nd blur step - Not present on the original code. We do this to blur the image a bit more, which makes the effect
 			// look better on modern high-definition displays.
