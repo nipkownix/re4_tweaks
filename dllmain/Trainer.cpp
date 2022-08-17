@@ -645,16 +645,40 @@ void Trainer_RenderUI()
 			}
 			ImGui::EndCombo();
 		}
-
 		CategoryInfo* curFlagCategory = &flagCategoryInfo[flagCategory];
 
-		if (ImGui::BeginListBox("Flags", ImVec2(320, 420)))
+		static char searchText[256] = { 0 };
+		ImGui::InputText("Search", searchText, 256);
+
+		// make search uppercase to make case insensitive search easier...
+		std::string searchTextUpper = searchText;
+		if (strlen(searchText) > 0)
+		{
+			std::transform(searchTextUpper.begin(), searchTextUpper.end(), searchTextUpper.begin(),
+				[](unsigned char c) { return std::toupper(c); });
+		}
+
+		if (ImGui::BeginListBox("##flags", ImVec2(-FLT_MIN, -FLT_MIN)))
 		{
 			for (int i = 0; i < curFlagCategory->numValues; i++)
 			{
-				bool selected = FlagIsSet(curFlagCategory->values, i);
-				if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
-					FlagSet(curFlagCategory->values, i, selected);
+				bool makeVisible = true;
+				if (!searchTextUpper.empty())
+				{
+					std::string flagNameUpper = curFlagCategory->valueNames[i];
+
+					std::transform(flagNameUpper.begin(), flagNameUpper.end(), flagNameUpper.begin(),
+						[](unsigned char c) { return std::toupper(c); });
+
+					makeVisible = flagNameUpper.find(searchTextUpper) != std::string::npos;
+				}
+
+				if (makeVisible)
+				{
+					bool selected = FlagIsSet(curFlagCategory->values, i);
+					if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
+						FlagSet(curFlagCategory->values, i, selected);
+				}
 			}
 
 			ImGui::EndListBox();
