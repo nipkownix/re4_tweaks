@@ -5,7 +5,7 @@
 #include "SDK/room_jmp.h"
 #include "SDK/filter00.h"
 
-#define AREAJUMP_MAX_STAGE 5
+#define AREAJUMP_MAX_STAGE 7
 
 void UI_Window::UpdateWindowTitle()
 {

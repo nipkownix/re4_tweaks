@@ -515,6 +515,31 @@ bool cPlayer__keyReload_hook()
 	return ret;
 }
 
+// Small fixup for GetEtcFlgPtr - R6xx / R7xx rooms call into this, but those rooms don't have StX_data_tbl[n].save_flg set
+// making GetEtcFlgPtr return NULL for those, causing a crash since the caller doesn't seem to handle NULL returns
+// We could just patch the save_flg, but that might affect savegames in some way, so this way is probably safest
+// (RE4 PS2 actually works very similarly to this, but only seems to use this for R0XX rooms, not sure if R6XX/R7XX would even run on there...)
+uint16_t dmy_flg;
+uint16_t* (__cdecl* GetEtcFlgPtr)(uint32_t etc_no, uint16_t room_no);
+uint16_t* GetEtcFlgPtr_Hook(uint32_t etc_no, uint16_t room_no)
+{
+	uint16_t* ret = GetEtcFlgPtr(etc_no, room_no);
+	if (ret)
+		return ret;
+
+	int stageNum = (GlobalPtr()->curRoomId_4FAC & 0xF00) >> 8;
+
+	// Reimplement PS2s stage == 0 check, which provides pointer to a dummy flag to prevent crashing
+	if (!stageNum)
+		return &dmy_flg;
+
+	// Add our own checks for stage 6/7, should let us fix the crashes mentioned above
+	if (stageNum == 6 || stageNum == 7)
+		return &dmy_flg;
+
+	return ret;
+}
+
 void Init_Misc()
 {
 	// Hooks to allow reloading without aiming
@@ -1205,5 +1230,13 @@ void Init_Misc()
 				}
 			}
 		}; injector::MakeInline<SuplexCheckPlayerAshley>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
+	}
+
+	// Fix GetEtcFlgPtr crashes for R6XX/R7XX rooms (see comment above GetEtcFlgPtr_Hook)
+	{
+		auto pattern = hook::pattern("0F B6 8E 56 06 00 00 83 C4 ? 50 51 E8");
+
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr_Hook, PATCH_JUMP);
 	}
 }
