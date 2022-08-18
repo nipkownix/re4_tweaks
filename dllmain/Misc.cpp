@@ -1239,4 +1239,10 @@ void Init_Misc()
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr_Hook, PATCH_JUMP);
 	}
+
+	// Patch reference to non-existent st7_0.rel to point to st6_0.rel instead, allows loading into R7XX rooms
+	{
+		auto pattern = hook::pattern("73 74 37 5F 30 2E 72 65");
+		Patch(pattern.count(1).get(0).get<uint8_t>(2), uint8_t('6'));
+	}
 }
