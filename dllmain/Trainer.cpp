@@ -634,6 +634,7 @@ void Trainer_RenderUI()
 		};
 
 		static int flagCategory = 0;
+		ImGui::PushItemWidth(120.0f * pConfig->fFontSizeScale);
 		if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
 		{
 			for (int i = 0; i < (sizeof(flagCategoryInfo) / sizeof(CategoryInfo)); i++)
@@ -645,43 +646,58 @@ void Trainer_RenderUI()
 			}
 			ImGui::EndCombo();
 		}
+		ImGui::PopItemWidth();
 		CategoryInfo* curFlagCategory = &flagCategoryInfo[flagCategory];
 
 		static char searchText[256] = { 0 };
+		ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale);
 		ImGui::InputText("Search", searchText, 256);
+		ImGui::PopItemWidth();
+
+		static int columns = 3;
+		
+		ImGui::Text("Columns: %i", columns);
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
+		if (ImGui::Button("Remove column"))
+			columns--;
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Add column"))
+			columns++;
+		ImGui::PopStyleColor();
+
+		columns = std::clamp(columns, 1, 6);
+
+		ImGui::Dummy(ImVec2(10, 10));
 
 		// make search uppercase to make case insensitive search easier...
-		std::string searchTextUpper = searchText;
-		if (strlen(searchText) > 0)
-		{
-			std::transform(searchTextUpper.begin(), searchTextUpper.end(), searchTextUpper.begin(),
-				[](unsigned char c) { return std::toupper(c); });
-		}
+		std::string searchTextUpper = StrToUpper(searchText);
 
-		if (ImGui::BeginListBox("##flags", ImVec2(-FLT_MIN, -FLT_MIN)))
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
+		if (ImGui::BeginTable("##flags", columns, ImGuiTableFlags_ScrollY))
 		{
 			for (int i = 0; i < curFlagCategory->numValues; i++)
 			{
 				bool makeVisible = true;
 				if (!searchTextUpper.empty())
 				{
-					std::string flagNameUpper = curFlagCategory->valueNames[i];
-
-					std::transform(flagNameUpper.begin(), flagNameUpper.end(), flagNameUpper.begin(),
-						[](unsigned char c) { return std::toupper(c); });
+					std::string flagNameUpper = StrToUpper(curFlagCategory->valueNames[i]);
 
 					makeVisible = flagNameUpper.find(searchTextUpper) != std::string::npos;
 				}
 
 				if (makeVisible)
 				{
+					ImGui::TableNextColumn();
 					bool selected = FlagIsSet(curFlagCategory->values, i);
 					if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
 						FlagSet(curFlagCategory->values, i, selected);
 				}
 			}
-
-			ImGui::EndListBox();
+			ImGui::EndTable();
 		}
+		ImGui::PopStyleVar();
 	}
 }

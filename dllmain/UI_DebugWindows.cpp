@@ -483,11 +483,13 @@ bool UI_AreaJump::Render()
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Rotation").x - 10.0f);
 				ImGui::InputFloat("Rotation", &curRoomRotation);
 
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
 				if (ImGui::Button("Jump!"))
 				{
 					GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
 					AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
 				}
+				ImGui::PopStyleColor();
 			}
 		}
 
