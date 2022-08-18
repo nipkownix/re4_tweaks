@@ -1109,8 +1109,8 @@ void Init_Misc()
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
 
 		// Skip titleWarning fade-in
-		pattern = hook::pattern("0F BE 46 01 83 E8 00 0F");
-		uint8_t* titleWarningCode = pattern.count(1).get(0).get<uint8_t>(0);
+		pattern = hook::pattern("DD D8 0F BE 46 01 83 E8 00 0F");
+		uint8_t* titleWarningCode = pattern.count(1).get(0).get<uint8_t>(2);
 		Patch(titleWarningCode + 0x7, uint16_t(0x9090));
 		Patch(titleWarningCode + 0x9, uint32_t(0x90909090));
 		Patch(titleWarningCode + 0xE, uint16_t(0x9090));
