@@ -17,8 +17,12 @@ std::vector<uint32_t> mouseTurnModifierCombo;
 
 bool ParseMouseTurnModifierCombo(std::string_view in_combo)
 {
+	if (in_combo.empty())
+		return false;
+
 	mouseTurnModifierCombo.clear();
 	mouseTurnModifierCombo = ParseKeyCombo(in_combo);
+
 	return mouseTurnModifierCombo.size() > 0;
 }
 

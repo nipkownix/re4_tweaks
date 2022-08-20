@@ -125,6 +125,7 @@ public:
 	std::string sTrainerFocusUIKeyCombo = "F5";
 	std::string sTrainerNoclipKeyCombo = "";
 	std::string sTrainerSpeedOverrideKeyCombo = "";
+	std::string sTrainerMoveAshToPlayerKeyCombo = "";
 
 	// TRAINER
 	bool bTrainerEnable = false;
@@ -159,6 +160,7 @@ public:
 	bool bdbg4;
 
 	void ReadSettings();
+	void ParseHotkeys();
 	void ReadSettings(std::string_view ini_path);
 	void WriteSettings();
 

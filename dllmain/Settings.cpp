@@ -1,4 +1,4 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <mutex>
@@ -124,6 +124,20 @@ void Config::ReadSettings()
 		bIsUsingHDProject = true;
 		ReadSettings(hdproject_path);
 	}
+}
+
+void Config::ParseHotkeys()
+{
+	pInput->ClearHotkeys();
+
+	ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
+	ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
+	ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
+	ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
+	ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
+	ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
+
+	Trainer_ParseKeyCombos();
 }
 
 void Config::ReadSettings(std::string_view ini_path)
@@ -315,18 +329,7 @@ void Config::ReadSettings(std::string_view ini_path)
 
 	// HOTKEYS
 	pConfig->sConfigMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "ConfigMenu", pConfig->sConfigMenuKeyCombo));
-	if (pConfig->sConfigMenuKeyCombo.length())
-		ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
-
 	pConfig->sConsoleKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "Console", pConfig->sConsoleKeyCombo));
-	if (pConfig->sConsoleKeyCombo.length())
-	{
-		ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
-
-		// Update console title
-		con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
-	}
-
 	pConfig->sFlipItemUp = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemUp", pConfig->sFlipItemUp));
 	pConfig->sFlipItemDown = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemDown", pConfig->sFlipItemDown));
 	pConfig->sFlipItemLeft = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemLeft", pConfig->sFlipItemLeft));
@@ -344,16 +347,10 @@ void Config::ReadSettings(std::string_view ini_path)
 		pConfig->sQTE_key_2 = pInput->KeyMap_getSTR(0x41); // Latin A
 
 	pConfig->sDebugMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "DebugMenu", pConfig->sDebugMenuKeyCombo));
-	if (pConfig->sDebugMenuKeyCombo.length())
-		ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
-
 	pConfig->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo));
-	if (pConfig->sMouseTurnModifierKeyCombo.length())
-		ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
-
 	pConfig->sJetSkiTrickCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "JetSkiTricks", pConfig->sJetSkiTrickCombo));
-	if (pConfig->sJetSkiTrickCombo.length())
-		ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
+
+	ParseHotkeys();
 
 	// TRAINER
 	pConfig->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
@@ -364,11 +361,9 @@ void Config::ReadSettings(std::string_view ini_path)
 
 	// TRAINER HOTKEYS
 	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
-	if (pConfig->sTrainerFocusUIKeyCombo.length())
-		ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
-
 	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo);
 	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
+	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
 	Trainer_ParseKeyCombos();
 
 	// FPS WARNING
@@ -446,6 +441,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + pConfig->sTrainerMoveAshToPlayerKeyCombo);
 
 		return;
 	}
@@ -735,9 +731,10 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "DebugMenu", pConfig->sDebugMenuKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "JetSkiTricks", pConfig->sJetSkiTrickCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "TrainerFocusUI", pConfig->sTrainerFocusUIKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "TrainerNoclipToggle", pConfig->sTrainerNoclipKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "TrainerSpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FocusUI", pConfig->sTrainerFocusUIKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo.data());
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FPS WARNING

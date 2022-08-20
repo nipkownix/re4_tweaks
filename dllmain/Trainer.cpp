@@ -62,19 +62,59 @@ struct FlagPatch
 
 };
 
-std::vector<FlagPatch> flagPatches;
+void MoveAshleyToPlayer()
+{
+	cPlayer* ashley = AshleyPtr();
+	cPlayer* player = PlayerPtr();
+
+	if (player && ashley)
+	{
+		ashley->pos_94 = player->pos_94;
+		ashley->pos_old_110 = player->pos_old_110;
+
+		ashley->matUpdate();
+		ashley->move();
+	}
+}
 
 std::vector<uint32_t> KeyComboNoclipToggle;
 std::vector<uint32_t> KeyComboSpeedOverride;
+std::vector<uint32_t> KeyComboAshToPlayer;
 void Trainer_ParseKeyCombos()
 {
-	KeyComboNoclipToggle.clear();
-	KeyComboNoclipToggle = ParseKeyCombo(pConfig->sTrainerNoclipKeyCombo);
+	// NoClip
+	{
+		KeyComboNoclipToggle.clear();
+		KeyComboNoclipToggle = ParseKeyCombo(pConfig->sTrainerNoclipKeyCombo);
 
-	KeyComboSpeedOverride.clear();
-	KeyComboSpeedOverride = ParseKeyCombo(pConfig->sTrainerSpeedOverrideKeyCombo);
+		pInput->RegisterHotkey({ []() {
+			bool playerCollisionDisabled = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
+			FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), !playerCollisionDisabled);
+		}, &KeyComboNoclipToggle });
+	}
+
+	// SpeedOverride
+	{
+		KeyComboSpeedOverride.clear();
+		KeyComboSpeedOverride = ParseKeyCombo(pConfig->sTrainerSpeedOverrideKeyCombo);
+
+		pInput->RegisterHotkey({ []() {
+			pConfig->bTrainerPlayerSpeedOverride = !pConfig->bTrainerPlayerSpeedOverride;
+		}, &KeyComboSpeedOverride });
+	}
+
+	// Move Ash to player
+	{
+		KeyComboAshToPlayer.clear();
+		KeyComboAshToPlayer = ParseKeyCombo(pConfig->sTrainerMoveAshToPlayerKeyCombo);
+
+		pInput->RegisterHotkey({ []() {
+			MoveAshleyToPlayer();
+		}, &KeyComboAshToPlayer });
+	}
 }
 
+std::vector<FlagPatch> flagPatches;
 void Trainer_Init()
 {
 	GLOBAL_WK* globals = GlobalPtr();
@@ -174,17 +214,6 @@ void Trainer_Init()
 
 void Trainer_Update()
 {
-	if (pInput->is_combo_pressed(&KeyComboNoclipToggle))
-	{
-		bool playerCollisionDisabled = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
-		FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), !playerCollisionDisabled);
-	}
-
-	if (pInput->is_combo_pressed(&KeyComboSpeedOverride))
-	{
-		pConfig->bTrainerPlayerSpeedOverride = !pConfig->bTrainerPlayerSpeedOverride;
-	}
-
 	for (auto& flagPatch : flagPatches)
 	{
 		flagPatch.Update();
@@ -508,6 +537,12 @@ void Trainer_RenderUI()
 				ImGui::RadioButton("Area Default", &AshleyStateOverride, AshleyState::Default);
 				ImGui::RadioButton("Present", &AshleyStateOverride, AshleyState::Present);
 				ImGui::RadioButton("Not present", &AshleyStateOverride, AshleyState::NotPresent);
+
+				// Should this be in another tab?
+				if (ImGui::Button("Move Ashley to Player"))
+				{
+					MoveAshleyToPlayer();
+				}
 			}
 
 			ImGui_ColumnFinish();
@@ -561,7 +596,7 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("Focus/unfocus trainer UIs");
 			}
 
-			// Noclip
+			// No-clip
 			{
 				ImGui_ColumnSwitch();
 
@@ -589,7 +624,7 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("(set your player speed override value in the Patches section first)");
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::PushID(2);
+				ImGui::PushID(3);
 				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(150, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
@@ -600,6 +635,26 @@ void Trainer_RenderUI()
 				ImGui::SameLine();
 
 				ImGui::TextWrapped("Toggle speed override");
+			}
+
+			// Move Ash to Player
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Key combination to move Ashley to the player's position.");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushID(4);
+				if (ImGui::Button(pConfig->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerMoveAshToPlayerKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Move Ashley to Player");
 			}
 
 			ImGui_ColumnFinish();

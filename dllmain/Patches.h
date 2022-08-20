@@ -33,8 +33,6 @@ void Init_ToolMenuDebug();
 void Init_WndProcHook();
 
 // Hotkey bindings and parsing
-void ConsoleBinding();
-void cfgMenuBinding();
 bool ParseConsoleKeyCombo(std::string_view in_combo);
 bool ParseConfigMenuKeyCombo(std::string_view in_combo);
 bool ParseMouseTurnModifierCombo(std::string_view in_combo);

@@ -38,8 +38,12 @@ std::vector<uint32_t> toolMenuKeyCombo;
 
 bool ParseToolMenuKeyCombo(std::string_view in_combo)
 {
+	if (in_combo.empty())
+		return false;
+
 	toolMenuKeyCombo.clear();
 	toolMenuKeyCombo = ParseKeyCombo(in_combo);
+
 	return toolMenuKeyCombo.size() > 0;
 }
 

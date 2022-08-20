@@ -29,10 +29,21 @@ static std::unordered_map<unsigned int, std::string> _keyboardStringMap;
 static std::unordered_map<std::string, unsigned int> _keyboardVKMap;
 static std::unordered_map<std::string, unsigned int> _keyboardDIKMap;
 
+std::vector<Hotkey> m_Hotkeys;
 
 input::input(window_handle window)
 	: _window(window)
 {
+}
+
+void input::RegisterHotkey(Hotkey hotkey)
+{ 
+	m_Hotkeys.push_back(hotkey); 
+}
+
+void input::ClearHotkeys()
+{ 
+	m_Hotkeys.clear();
 }
 
 void input::register_window_with_raw_input(window_handle window, bool no_legacy_keyboard, bool no_legacy_mouse)
@@ -575,6 +586,14 @@ void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
 
 void input::next_frame()
 {
+	// Check hotkey status
+	for (const Hotkey& hotkey : m_Hotkeys) {
+		if (is_combo_pressed(hotkey.keyComboVector))
+		{
+			hotkey.func();
+		}
+	}
+
 	_frame_count++;
 
 	for (auto &state : _keys)

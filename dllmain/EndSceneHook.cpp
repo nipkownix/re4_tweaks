@@ -27,8 +27,15 @@ bool bImGuiUIFocus = false;
 std::vector<uint32_t> KeyImGuiUIFocus;
 bool ParseImGuiUIFocusCombo(std::string_view in_combo)
 {
+	if (in_combo.empty())
+		return false;
+
 	KeyImGuiUIFocus.clear();
 	KeyImGuiUIFocus = ParseKeyCombo(in_combo);
+
+	pInput->RegisterHotkey({ []() {
+		bImGuiUIFocus = !bImGuiUIFocus;
+	}, &KeyImGuiUIFocus });
 
 	for (auto& window : DebugWindows)
 		window->UpdateWindowTitle();
@@ -289,8 +296,6 @@ void BuildFontAtlas()
 	ImFontConfig ImCustomFont;
 	ImCustomFont.FontDataOwnedByAtlas = false;
 
-	con.AddLogFloat(fFontSize);
-
 	io.Fonts->AddFontFromMemoryCompressedTTF(IBMPlexSansJP_M_compressed_data, IBMPlexSansJP_M_compressed_size, fFontSize, &ImCustomFont, ranges);
 
 	// Add FontAwesome for icons
@@ -364,16 +369,6 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 	Trainer_Update();
 
-	// Check if the configuration menu binding has been pressed
-	cfgMenuBinding();
-
-	// Check if the console binding has been pressed
-	ConsoleBinding();
-
-	// Check if we should switch input focus to/from ImGui windows
-	if (pInput->is_combo_pressed(&KeyImGuiUIFocus))
-		bImGuiUIFocus = !bImGuiUIFocus;
-
 	// Show cfgMenu tip
 	if (!pConfig->bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
 		ShowCfgMenuTip();
@@ -404,6 +399,7 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		else
 			++it;
 	}
+
 	// Now we've finished rendering, add any newly created windows to our main list
 	if (NewWindows.size())
 	{

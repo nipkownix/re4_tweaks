@@ -23,15 +23,17 @@ std::vector<uint32_t> ConsoleCombo;
 
 bool ParseConsoleKeyCombo(std::string_view in_combo)
 {
+    if (in_combo.empty())
+        return false;
+
     ConsoleCombo.clear();
     ConsoleCombo = ParseKeyCombo(in_combo);
-    return ConsoleCombo.size() > 0;
-}
 
-void ConsoleBinding()
-{
-    if (pInput->is_combo_pressed(&ConsoleCombo))
+    pInput->RegisterHotkey({ []() {
         bConsoleOpen = !bConsoleOpen;
+    }, &ConsoleCombo });
+
+    return ConsoleCombo.size() > 0;
 }
 
 void ConsoleOutput::Clear()

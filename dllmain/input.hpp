@@ -10,6 +10,13 @@
 #include <shared_mutex>
 #include <vector>
 
+typedef void (*HotkeyFunc)();
+
+struct Hotkey {
+	HotkeyFunc func;
+	std::vector<uint32_t> *keyComboVector;
+};
+
 class input
 {
 public:
@@ -126,6 +133,10 @@ public:
 
 	void PopulateKeymap();
 	void InstallHooks();
+	void RegisterHotkey(Hotkey hotkey);
+	void ClearHotkeys();
+
+	
 
 private:
 	std::shared_mutex _mutex;

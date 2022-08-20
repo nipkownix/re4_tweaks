@@ -51,15 +51,17 @@ std::vector<uint32_t> cfgMenuCombo;
 
 bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 {
+	if (in_combo.empty())
+		return false;
+
 	cfgMenuCombo.clear();
 	cfgMenuCombo = ParseKeyCombo(in_combo);
-	return cfgMenuCombo.size() > 0;
-}
 
-void cfgMenuBinding()
-{
-	if (pInput->is_combo_pressed(&cfgMenuCombo) && !bWaitingForHotkey)
+	pInput->RegisterHotkey({ []() {
 		bCfgMenuOpen = !bCfgMenuOpen;
+	}, &cfgMenuCombo });
+
+	return cfgMenuCombo.size() > 0;
 }
 
 // If we don't run these in another thread, we end up locking the rendering
@@ -345,13 +347,7 @@ void cfgMenuRender()
 			if (ImGui::Button(ICON_FA_CODE" Save", ImVec2(85, 35)))
 			{
 				// Parse key combos on save
-				ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
-				ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
-				ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
-				ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
-				ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
-				ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
-				Trainer_ParseKeyCombos();
+				pConfig->ParseHotkeys();
 
 				// Update console title
 				con.TitleKeyCombo = pConfig->sConsoleKeyCombo;

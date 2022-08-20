@@ -27,4 +27,7 @@ NoclipToggle =
 
 ; Key combination to toggle the "Player Speed Override" patch
 SpeedOverrideToggle = 
+
+; Key combination to move Ashley to the player's position
+MoveAshleyToPlayer = 
 )"""";

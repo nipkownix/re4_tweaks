@@ -20,8 +20,12 @@ std::vector<uint32_t> jetSkiTrickCombo;
 
 bool ParseJetSkiTrickCombo(std::string_view in_combo)
 {
+	if (in_combo.empty())
+		return false;
+
 	jetSkiTrickCombo.clear();
 	jetSkiTrickCombo = ParseKeyCombo(in_combo);
+
 	return jetSkiTrickCombo.size() > 0;
 }
 
