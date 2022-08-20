@@ -179,6 +179,14 @@ bool UI_EmManager::Render()
 							else
 								em->atari_2B4.m_flag_1A &= ~0x100;
 						}
+						bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
+						if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
+						{
+							if (emCollisionEnabled)
+								em->atari_2B4.m_flag_1A |= 0x200;
+							else
+								em->atari_2B4.m_flag_1A &= ~0x200;
+						}
 
 						for (int i = 0; i < 32; i++)
 						{

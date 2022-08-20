@@ -227,7 +227,7 @@ void Trainer_Update()
 			atariInfoFlagBackup = player->atari_2B4.m_flag_1A;
 			atariInfoFlagSet = true;
 		}
-		player->atari_2B4.m_flag_1A &= ~0x100;
+		player->atari_2B4.m_flag_1A &= ~(0x100 | 0x200); // 0x100 = map collision, 0x200 = Em collision
 
 		Vec positionMod{ 0 };
 		bool positionModded = false;
