@@ -235,10 +235,40 @@ const char* emlist_name[] = {
 	"omake08.esl",
 };
 
+//
+const char* emlist_enum_name[] = {
+	"ST1_0",
+	"ST1_1",
+	"ST2_0",
+	"ST2_1",
+	"ST2_2",
+	"ST2_3",
+	"ST3_0",
+	"ST3_1",
+	"DUMMY",
+	"BIO5",
+	"ADA",
+	"ETC",
+	"ETC2",
+	"PS2ST1",
+	"PS2ST2",
+	"PS2ST3",
+	"PS2ST4",
+	"PS2ST5",
+	"PS2ETC"
+};
+
 const char* GetEmListName(int emListNumber)
 {
 	if (emListNumber >= 0 && emListNumber < 19)
 		return emlist_name[emListNumber];
+	return "unknown";
+}
+
+const char* GetEmListEnumName(int emListNumber)
+{
+	if (emListNumber >= 0 && emListNumber < 19)
+		return emlist_enum_name[emListNumber];
 	return "unknown";
 }
 

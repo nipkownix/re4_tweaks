@@ -48,6 +48,7 @@ void AreaJump(uint16_t roomNo, Vec& position, float rotation);
 
 bool IsGanado(int id);
 const char* GetEmListName(int emListNumber);
+const char* GetEmListEnumName(int emListNumber);
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

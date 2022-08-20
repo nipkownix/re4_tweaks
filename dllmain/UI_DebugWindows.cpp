@@ -232,7 +232,7 @@ bool UI_EmManager::Render()
 					ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
 					ImGui::Text("Parts count: %d", em->PartCount());
 					if (em->emListIndex_3A0 != 255)
-						ImGui::Text("ESL: %s @ #%d (offset 0x%x)", GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+						ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
 
 					// works, but unsure what to display atm
 					/*
