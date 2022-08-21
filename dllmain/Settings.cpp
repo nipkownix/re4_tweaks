@@ -43,7 +43,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 
 			if (cur_token.length())
 			{
-				uint32_t token_num = input::KeyMap_getVK(cur_token);
+				uint32_t token_num = pInput->KeyMap_getVK(cur_token);
 				if (!token_num)
 				{
 					// parse failed...
@@ -65,7 +65,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	if (cur_token.length())
 	{
 		// Get VK for the current token and push it into the vector
-		uint32_t token_num = input::KeyMap_getVK(cur_token);
+		uint32_t token_num = pInput->KeyMap_getVK(cur_token);
 		if (!token_num)
 		{
 			// parse failed...
@@ -350,8 +350,6 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo));
 	pConfig->sJetSkiTrickCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "JetSkiTricks", pConfig->sJetSkiTrickCombo));
 
-	ParseHotkeys();
-
 	// TRAINER
 	pConfig->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
 	pConfig->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("TRAINER", "EnablePlayerSpeedOverride", pConfig->bTrainerPlayerSpeedOverride);
@@ -364,7 +362,9 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo);
 	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
 	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
-	Trainer_ParseKeyCombos();
+
+	// Parse all hotkeys
+	ParseHotkeys();
 
 	// FPS WARNING
 	pConfig->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning);

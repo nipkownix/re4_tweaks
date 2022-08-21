@@ -45,10 +45,10 @@ public:
 
 	bool _ignore_shortcuts = false;
 
-	static std::string KeyMap_getSTR(int keyINT);
-	static int KeyMap_getVK(std::string keySTR);
-	static int KeyMap_getDIK(std::string keySTR);
-	static void set_hotkey(std::string* cfgHotkey, bool supportsCombo);
+	std::string KeyMap_getSTR(int keyINT);
+	int KeyMap_getVK(std::string keySTR);
+	int KeyMap_getDIK(std::string keySTR);
+	void set_hotkey(std::string* cfgHotkey, bool supportsCombo);
 
 	// Before accessing input data with any of the member functions below, first call "lock()" and keep the returned object alive while accessing it.
 
