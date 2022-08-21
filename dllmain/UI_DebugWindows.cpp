@@ -313,7 +313,7 @@ bool UI_Globals::Render()
 			if(titleWork->Rno0_0 >= int(TITLE_WORK::Routine0::Init) && titleWork->Rno0_0 <= int(TITLE_WORK::Routine0::Ada))
 				ImGui::Text("Menu Routine0: %s", menuRoutine0Names[titleWork->Rno0_0]);
 
-			ImGui::Dummy(ImVec2(20, 10));
+			ImGui::Separator();
 		}
 
 		ImGui::Text("Area: R%03x", int(globals->curRoomId_4FAC & 0xFFF));
@@ -324,6 +324,8 @@ bool UI_Globals::Render()
 		const char* routine0Names[] = { "Init", "StageInit", "RoomInit", "MainLoop", "Doordemo", "Ending", "Option" };
 		if (globals->Rno0_20 >= int(GLOBAL_WK::Routine0::Init) && globals->Rno0_20 <= int(GLOBAL_WK::Routine0::Option))
 			ImGui::Text("Routine0: %s", routine0Names[globals->Rno0_20]);
+
+		ImGui::Separator();
 
 		cPlayer* player = PlayerPtr();
 		if (!player)
@@ -354,6 +356,39 @@ bool UI_Globals::Render()
 					UI_NewEmManager(ashleyIdx);
 			}
 		}
+
+		ImGui::Separator();
+
+		ImGui::Text("Chapter: %d", globals->chapter_4F9A);
+
+		static std::string diff;
+		switch (globals->gameDifficulty_847C) {
+		case GameDifficulty::VeryEasy:
+			diff = "Very Easy";
+			break;
+		case GameDifficulty::Easy:
+			diff = "Easy";
+			break;
+		case GameDifficulty::Medium:
+			diff = "Normal";
+			break;
+		case GameDifficulty::Pro:
+			diff = "Professional";
+			break;
+		default:
+			diff = "unk";
+			break;
+		}
+
+		ImGui::Text("Game difficulty: %s", diff.c_str());
+
+		ImGui::Text("DynamicDifficulty Level: %d", globals->dynamicDifficultyLevel_4F98);
+
+		ImGui::Text("DynamicDifficulty Points: %d", globals->dynamicDifficultyPoints_4F94);
+
+		ImGui::Text("Pesetas: %d", globals->goldAmount_4FA8);
+
+		ImGui::Text("Total kills: %d", globals->g_kill_cnt_8468);
 
 		ImGui::End();
 	}
