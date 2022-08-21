@@ -62,6 +62,8 @@ struct FlagPatch
 
 };
 
+uint16_t ash_atariInfoFlagBackup = 0;
+bool ash_atariInfoFlagSet = false;
 void MoveAshleyToPlayer()
 {
 	cPlayer* ashley = AshleyPtr();
@@ -69,11 +71,16 @@ void MoveAshleyToPlayer()
 
 	if (player && ashley)
 	{
+		// Backup original collision flags and then unset collision-enabled bit
+		if (!ash_atariInfoFlagSet)
+		{
+			ash_atariInfoFlagBackup = ashley->atari_2B4.m_flag_1A;
+			ash_atariInfoFlagSet = true;
+		}
+		ashley->atari_2B4.m_flag_1A &= ~(0x100 | 0x200); // 0x100 = map collision, 0x200 = Em collision
+
 		ashley->pos_94 = player->pos_94;
 		ashley->pos_old_110 = player->pos_old_110;
-
-		ashley->matUpdate();
-		ashley->move();
 	}
 }
 
@@ -244,6 +251,18 @@ void Trainer_Update()
 
 		if (pConfig->bTrainerPlayerSpeedOverride)
 			player->Motion_1D8.Seq_speed_C0 = pConfig->fTrainerPlayerSpeedOverride;
+	}
+
+	// Handle Ashley's collision
+	cPlayer* ashley = AshleyPtr();
+	if (ashley)
+	{
+		// Restore collision flags
+		if (ash_atariInfoFlagSet)
+		{
+			ashley->atari_2B4.m_flag_1A = ash_atariInfoFlagBackup;
+			ash_atariInfoFlagSet = false;
+		}
 	}
 
 	static uint16_t atariInfoFlagBackup = 0;
