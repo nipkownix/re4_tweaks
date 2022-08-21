@@ -15,7 +15,7 @@ void UI_Window::UpdateWindowTitle()
 		windowTitle = origWindowTitle + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
 }
 
-std::string UI_EmManager::EmDisplayString(int i, cEm& em)
+std::string UI_EmManager::EmDisplayString(int i, cEm& em, bool showEmPointers)
 {
 	char tmpBuf[256];
 	if (showEmPointers)
@@ -51,7 +51,7 @@ bool UI_EmManager::Render()
 			{
 				cEm* em = emMgr[emIdx];
 				if (em)
-					currentEmStr = EmDisplayString(emIdx, *em);
+					currentEmStr = EmDisplayString(emIdx, *em, showEmPointers);
 			}
 
 			if (emIdx >= 0 && !WindowResized)
@@ -70,7 +70,7 @@ bool UI_EmManager::Render()
 					{
 						if (!onlyShowESLSpawned || em.IsSpawnedByESL())
 						{
-							std::string emStr = EmDisplayString(i, em);
+							std::string emStr = EmDisplayString(i, em, showEmPointers);
 
 							const bool is_selected = (emIdx == i);
 							if (ImGui::Selectable(emStr.c_str(), is_selected))
@@ -491,13 +491,11 @@ bool UI_AreaJump::Render()
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Rotation").x - 10.0f);
 				ImGui::InputFloat("Rotation", &curRoomRotation);
 
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
 				if (ImGui::Button("Jump!"))
 				{
 					GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
 					AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
 				}
-				ImGui::PopStyleColor();
 			}
 		}
 

@@ -204,7 +204,7 @@ void ImGui_ColumnFinish()
 
 void cfgMenuRender()
 {
-	ImGui::SetNextWindowSizeConstraints(ImVec2(940, 640), ImVec2(1280, 720));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(950, 640), ImVec2(1280, 720));
 
 	ImGui::Begin("cfgMenu", nullptr,  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar);
 	{
@@ -300,7 +300,6 @@ void cfgMenuRender()
 					ImGui::Separator();
 
 					ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 265, ImGui::GetCursorPos().y));
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
 
 					if (ImGui::Button("Yes", ImVec2(120, 0)))
 					{
@@ -318,7 +317,6 @@ void cfgMenuRender()
 						ImGui::CloseCurrentPopup();
 					}
 
-					ImGui::PopStyleColor();
 					ImGui::EndPopup();
 				}
 
@@ -329,6 +327,9 @@ void cfgMenuRender()
 			ImGui::Dummy(ImVec2(0.0f, 12.0f));
 
 			// Save/Load
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 0.00f));
+
 			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 40);
 
 			ImGui::Dummy(ImVec2(0, 13)); ImGui::SameLine();
@@ -355,6 +356,8 @@ void cfgMenuRender()
 				pConfig->WriteSettings();
 			}
 
+			ImGui::PopStyleColor();
+
 			ImGui::EndChild();
 		}
 
@@ -372,6 +375,9 @@ void cfgMenuRender()
 				ImGui::TableNextColumn();
 
 				// Config menu font size
+				
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 0.00f));
+
 				if (ImGui::Button("-"))
 				{
 					if (pConfig->fFontSizeScale > 1.0f)
@@ -394,6 +400,8 @@ void cfgMenuRender()
 						pConfig->HasUnsavedChanges = true;
 					}
 				}
+
+				ImGui::PopStyleColor();
 
 				ImGui::SameLine();
 				ImGui::AlignTextToFramePadding();
@@ -1525,8 +1533,6 @@ void cfgMenuRender()
 
 			if (Tab == MenuTab::Hotkeys)
 			{
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
-
 				if (ImGui::BeginTable("HotkeysTop", 1, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui::TableNextColumn();
@@ -1767,7 +1773,6 @@ void cfgMenuRender()
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
-				ImGui::PopStyleColor();
 			}
 
 			if (Tab == MenuTab::Trainer)

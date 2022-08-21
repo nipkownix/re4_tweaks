@@ -98,17 +98,18 @@ void ApplyImGuiTheme()
 	style->ScrollbarRounding = 12.f;
 
 	ImVec4* colors = ImGui::GetStyle().Colors;
-	colors[ImGuiCol_Button] = ImColor(35, 35, 45, 0);
+	colors[ImGuiCol_Button] = ImVec4(0.51f, 0.00f, 0.14f, 1.00f);
 	colors[ImGuiCol_ButtonHovered] = ImVec4(0.44f, 0.13f, 0.23f, 1.00f);
 	colors[ImGuiCol_ButtonActive] = ImVec4(0.74f, 0.05f, 0.13f, 1.00f);
-	colors[ImGuiCol_ChildBg] = ImColor(24, 29, 59, 0);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.031f, 0.031f, 0.031f, 0.965f);
+	colors[ImGuiCol_ChildBg] = ImVec4(0.09f, 0.11f, 0.23f, 0.00f);
 	colors[ImGuiCol_Border] = ImVec4(0.07f, 0.07f, 0.11f, 0.50f);
 	colors[ImGuiCol_FrameBg] = ImColor(25, 25, 33, 255);
 	colors[ImGuiCol_FrameBgActive] = ImColor(25, 25, 33, 255);
 	colors[ImGuiCol_FrameBgHovered] = ImColor(25, 25, 33, 255);
-	colors[ImGuiCol_Header] = ImColor(25, 25, 33, 255);
-	colors[ImGuiCol_HeaderActive] = ImColor(28, 28, 36, 255);
-	colors[ImGuiCol_HeaderHovered] = ImColor(30, 30, 38, 255);
+	colors[ImGuiCol_Header] = ImVec4(0.10f, 0.10f, 0.13f, 1.00f);
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.11f, 0.11f, 0.14f, 1.00f);
 	colors[ImGuiCol_PopupBg] = ImVec4(0.05f, 0.03f, 0.04f, 0.94f);
 	colors[ImGuiCol_Border] = ImVec4(0.17f, 0.17f, 0.20f, 0.20f);
 	colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);

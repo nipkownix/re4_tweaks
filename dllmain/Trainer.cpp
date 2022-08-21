@@ -350,6 +350,7 @@ enum class TrainerTab
 	Patches,
 	Hotkeys,
 	FlagEdit,
+	EmMgr,
 	NumTabs
 };
 TrainerTab CurTrainerTab = TrainerTab::Patches;
@@ -429,10 +430,7 @@ void Trainer_RenderUI()
 	ImGui_TrainerTabButton("##flagedit", "Flag Editor", active, inactive, TrainerTab::FlagEdit, ICON_FA_FLAG, icn_color, IM_COL32_WHITE, button_size);
 
 	// EmMgr
-	if (ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::NumTabs, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size))
-	{
-		UI_NewEmManager();
-	}
+	ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::EmMgr, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size);
 
 	// Globals
 	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, button_size))
@@ -571,8 +569,6 @@ void Trainer_RenderUI()
 
 	if (CurTrainerTab == TrainerTab::Hotkeys)
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
-
 		if (ImGui::BeginTable("TrainerHotkeysTop", 1, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 		{
 			ImGui::TableNextColumn();
@@ -679,8 +675,6 @@ void Trainer_RenderUI()
 			ImGui_ColumnFinish();
 			ImGui::EndTable();
 		}
-
-		ImGui::PopStyleColor();
 	}
 
 	if (CurTrainerTab == TrainerTab::FlagEdit)
@@ -707,44 +701,51 @@ void Trainer_RenderUI()
 			{ "DISP", GlobalPtr()->Flags_DISP_0_58, Flags_DISP_Names, 32 }
 		};
 
-		static int flagCategory = 0;
-		ImGui::PushItemWidth(120.0f * pConfig->fFontSizeScale);
-		if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
-		{
-			for (int i = 0; i < (sizeof(flagCategoryInfo) / sizeof(CategoryInfo)); i++)
-			{
-				bool selected = false;
-				if (ImGui::Selectable(flagCategoryInfo[i].categoryName, &selected))
-					if (selected)
-						flagCategory = i;
-			}
-			ImGui::EndCombo();
-		}
-		ImGui::PopItemWidth();
-		CategoryInfo* curFlagCategory = &flagCategoryInfo[flagCategory];
-
 		static char searchText[256] = { 0 };
-		ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale);
-		ImGui::InputText("Search", searchText, 256);
-		ImGui::PopItemWidth();
-
 		static int columns = 3;
-		
-		ImGui::Text("Columns: %i", columns);
+		CategoryInfo* curFlagCategory = nullptr;
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
+		if (ImGui::BeginTable("##flagtoolheader", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 70)))
+		{
+			ImGui::TableNextColumn();
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 1.00f));
-		if (ImGui::Button("Remove column"))
-			columns--;
+			static int flagCategory = 0;
+			ImGui::PushItemWidth(120.0f * pConfig->fFontSizeScale);
+			if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
+			{
+				for (int i = 0; i < (sizeof(flagCategoryInfo) / sizeof(CategoryInfo)); i++)
+				{
+					bool selected = false;
+					if (ImGui::Selectable(flagCategoryInfo[i].categoryName, &selected))
+						if (selected)
+							flagCategory = i;
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::PopItemWidth();
+			curFlagCategory = &flagCategoryInfo[flagCategory];
 
-		ImGui::SameLine();
+			ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale);
+			ImGui::InputText("Search", searchText, 256);
+			ImGui::PopItemWidth();
 
-		if (ImGui::Button("Add column"))
-			columns++;
-		ImGui::PopStyleColor();
+			ImGui::TableNextColumn();
 
-		columns = std::clamp(columns, 1, 6);
+			ImGui::Text("Columns: %i", columns);
 
-		ImGui::Dummy(ImVec2(10, 10));
+			if (ImGui::Button("Remove column"))
+				columns--;
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Add column"))
+				columns++;
+
+			columns = std::clamp(columns, 1, 6);
+
+			ImGui::EndTable();
+		}
+		ImGui::PopStyleVar();
 
 		// make search uppercase to make case insensitive search easier...
 		std::string searchTextUpper = StrToUpper(searchText);
@@ -773,5 +774,276 @@ void Trainer_RenderUI()
 			ImGui::EndTable();
 		}
 		ImGui::PopStyleVar();
+	}
+
+	if (CurTrainerTab == TrainerTab::EmMgr)
+	{
+		static int emIdx = -1;
+		static bool onlyShowValidEms = true;
+		static bool onlyShowESLSpawned = false;
+#ifdef _DEBUG
+		static bool showEmPointers = true;
+#else
+		static bool showEmPointers = false;
+#endif
+		static uint16_t AtariFlagBackup = 0;
+		static bool AtariFlagBackupSet = false;
+
+		static float addPosition[3] = { 0 };
+
+		auto& emMgr = *EmMgrPtr();
+		// cEm list
+		{
+			ImGui::Text("Em Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
+
+			ImGui::SameLine();
+
+			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new Em Manager window").x - 25, 0));
+			ImGui::SameLine();
+			if (ImGui::Button("Open new Em Manager window"))
+				UI_NewEmManager();
+
+			std::string currentEmStr = "N/A";
+			if (emIdx >= 0)
+			{
+				cEm* em = emMgr[emIdx];
+				if (em)
+					currentEmStr = UI_EmManager::EmDisplayString(emIdx, *em, showEmPointers);
+			}
+
+			ImGui::Checkbox("Only active", &onlyShowValidEms); ImGui::SameLine();
+			ImGui::Checkbox("Only ESL-spawned", &onlyShowESLSpawned); ImGui::SameLine();
+			ImGui::Checkbox("Show addresses", &showEmPointers);
+
+			ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - 375.0f) * pConfig->fFontSizeScale);
+			if (ImGui::BeginCombo("Em", currentEmStr.c_str()))
+			{
+				int i = 0;
+				for (auto& em : emMgr)
+				{
+					if (!onlyShowValidEms || em.IsValid())
+					{
+						if (!onlyShowESLSpawned || em.IsSpawnedByESL())
+						{
+							std::string emStr = UI_EmManager::EmDisplayString(i, em, showEmPointers);
+
+							const bool is_selected = (emIdx == i);
+							if (ImGui::Selectable(emStr.c_str(), is_selected))
+								emIdx = i;
+
+							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+							if (is_selected)
+								ImGui::SetItemDefaultFocus();
+						}
+					}
+
+					i++;
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::PopItemWidth();
+		}
+
+		// cEm info
+		{
+			if (emIdx >= 0)
+			{
+				cEm* em = emMgr[emIdx];
+				if (em)
+				{
+					ImGui::Separator();
+					ImGui::Dummy(ImVec2(10, 5));
+
+					if (showEmPointers)
+						ImGui::Text("#%d:0x%x c%s (type %x)", emIdx, em, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+					else
+						ImGui::Text("#%d c%s (type %x)", emIdx, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+
+					static Vec copyPosition = { 0 };
+					if (ImGui::Button("Copy position"))
+						copyPosition = em->pos_94;
+
+					ImGui::SameLine();
+
+					if (AtariFlagBackupSet)
+					{
+						em->atari_2B4.m_flag_1A = AtariFlagBackup;
+						AtariFlagBackupSet = false;
+					}
+
+					if (ImGui::Button("Paste position"))
+					{
+						em->pos_94 = copyPosition;
+						em->pos_old_110 = copyPosition;
+
+						// temporarily disable atariInfo collision, prevents colliding with map
+						// TODO: some reason using em->move() isn't enough to bypass collision for some Em's
+						// as workaround we let game render another frame and then restore flags above
+						AtariFlagBackup = em->atari_2B4.m_flag_1A;
+						AtariFlagBackupSet = true;
+						em->atari_2B4.m_flag_1A = 0;
+
+						em->matUpdate();
+						em->move();
+					}
+
+					cPlayer* player = PlayerPtr();
+					if (em != player)
+					{
+						if (ImGui::Button("Teleport player"))
+						{
+							player->pos_94 = em->pos_94;
+							player->pos_old_110 = em->pos_94;
+
+							// temporarily disable atariInfo collision, prevents colliding with map
+							uint16_t flagBackup = player->atari_2B4.m_flag_1A;
+							player->atari_2B4.m_flag_1A = 0;
+
+							player->matUpdate();
+							player->move();
+
+							player->atari_2B4.m_flag_1A = flagBackup;
+						}
+						ImGui::SameLine();
+
+						if (ImGui::Button("Move to player"))
+						{
+							em->pos_94 = player->pos_94;
+							em->pos_old_110 = player->pos_old_110;
+
+							// temporarily disable atariInfo collision, prevents colliding with map
+							AtariFlagBackup = em->atari_2B4.m_flag_1A;
+							AtariFlagBackupSet = true;
+							em->atari_2B4.m_flag_1A = 0;
+
+							em->matUpdate();
+							em->move();
+						}
+					}
+
+					ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
+					if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 220)))
+					{
+						ImGui::TableNextColumn();
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
+						if (ImGui::InputFloat3("Position", (float*)&em->pos_94, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+							em->matUpdate();
+
+						if (ImGui::InputFloat3("Rotation", (float*)&em->ang_A0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+							em->matUpdate();
+
+						if (ImGui::InputFloat3("Scale", (float*)&em->scale_AC, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+						{
+							if (IsGanado(em->id_100))
+							{
+								// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
+								// make sure we update that as well
+								Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
+								*scale_bk_498 = em->scale_AC;
+							}
+							em->matUpdate();
+						}
+						ImGui::PopItemWidth();
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
+						ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
+
+						int hpCur = em->hp_324;
+						if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+							em->hp_324 = hpCur;
+
+						int hpMax = em->hp_max_326;
+						if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+							em->hp_max_326 = hpMax;
+						ImGui::PopItemWidth();
+
+						ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
+						ImGui::Text("Parts count: %d", em->PartCount());
+						if (em->emListIndex_3A0 != 255)
+							ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+
+						ImGui::TableNextColumn();
+
+						float flagsWidth = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Flags").x - 20.0f;
+						float flagsHeight = ImGui::GetContentRegionAvail().y - 10.0f;
+						if (ImGui::BeginListBox("Flags", ImVec2(flagsWidth, flagsHeight)))
+						{
+							bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
+							if (ImGui::Checkbox("MapCollision", &collisionEnabled))
+							{
+								if (collisionEnabled)
+									em->atari_2B4.m_flag_1A |= 0x100;
+								else
+									em->atari_2B4.m_flag_1A &= ~0x100;
+							}
+							bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
+							if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
+							{
+								if (emCollisionEnabled)
+									em->atari_2B4.m_flag_1A |= 0x200;
+								else
+									em->atari_2B4.m_flag_1A &= ~0x200;
+							}
+
+							for (int i = 0; i < 32; i++)
+							{
+								bool bitSet = (em->be_flag_4 & (1 << i)) != 0;
+
+								std::string lbl = cUnit::GetBeFlagName(i);
+								if (ImGui::Checkbox(lbl.c_str(), &bitSet))
+								{
+									if (bitSet)
+										em->be_flag_4 = em->be_flag_4 | (1 << i);
+									else
+										em->be_flag_4 = em->be_flag_4 & ~(1 << i);
+								}
+							}
+							ImGui::EndListBox();
+						}
+
+						ImGui::EndTable();
+					}
+					ImGui::PopStyleVar();
+
+					// works, but unsure what to display atm
+					/*
+					static int partIdx = -1;
+					if (ImGui::BeginListBox("Test"))
+					{
+						int i = 0;
+						cParts* part = em->childParts_F4;
+						while (part != nullptr)
+						{
+							sprintf(tmpBuf, "#%d", i);
+							const bool is_selected = (partIdx == i);
+							if (ImGui::Selectable(tmpBuf, is_selected))
+								partIdx = i;
+							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+							if (is_selected)
+								ImGui::SetItemDefaultFocus();
+							i++;
+							part = part->nextParts_F4;
+						}
+						ImGui::EndListBox();
+					}*/
+
+					ImGui::Separator();
+					ImGui::Dummy(ImVec2(10, 5));
+
+					ImGui::Text("Modification:");
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("PositionChange").x - 100.0f);
+					ImGui::InputFloat3("PositionChange", addPosition, "%.3f");
+					ImGui::PopItemWidth();
+					if (ImGui::Button("Apply"))
+					{
+						em->pos_94.x += addPosition[0];
+						em->pos_94.y += addPosition[1];
+						em->pos_94.z += addPosition[2];
+						em->matUpdate();
+					}
+				}
+			}
+		}
 	}
 }

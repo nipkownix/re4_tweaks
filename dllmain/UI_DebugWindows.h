@@ -38,10 +38,9 @@ class UI_EmManager : public UI_Window
 	bool AtariFlagBackupSet = false;
 
 	float addPosition[3] = { 0 };
-
-	std::string EmDisplayString(int i, cEm& em);
 public:
 	UI_EmManager(std::string_view title, int selectedIndex = -1) : UI_Window(title), emIdx(selectedIndex) {}
+	static std::string EmDisplayString(int i, cEm& em, bool showEmPointers);
 	bool Init() { return true; }
 	bool Render();
 };
