@@ -14,7 +14,7 @@ void __cdecl titleMain_Hook(TITLE_WORK* pT)
 {
 	if (paramRoomValue > 0)
 	{
-		int stageNum = (paramRoomValue & 0xF00) >> 8;
+		int stageNum = (paramRoomValue & 0xFF00) >> 8;
 		if (stageNum >= 0 && stageNum <= 7)
 		{
 			// Search for a CRoomInfo instance with the same room number

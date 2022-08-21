@@ -527,14 +527,17 @@ uint16_t* GetEtcFlgPtr_Hook(uint32_t etc_no, uint16_t room_no)
 	if (ret)
 		return ret;
 
-	int stageNum = (GlobalPtr()->curRoomId_4FAC & 0xF00) >> 8;
+	int stageNum = (GlobalPtr()->curRoomId_4FAC & 0xFF00) >> 8;
 
 	// Reimplement PS2s stage == 0 check, which provides pointer to a dummy flag to prevent crashing
 	if (!stageNum)
 		return &dmy_flg;
 
-	// Add our own checks for stage 6/7, should let us fix the crashes mentioned above
-	if (stageNum == 6 || stageNum == 7)
+	// Add our own stage number checks that also provide dummy pointer if necessary
+	// Originally this was only meant to affect stage 6/7, as those are the only levels in vanilla game that had this crash issue
+	// However some modders have found ways to store maps under later stage numbers, which can run into the same issue of crashing due to missing save_flg
+	// (eg. has been noticed to happen when renaming r102 to ra02 & trying to jump there - should be able to load fine now with this)
+	if (stageNum >= 6)
 		return &dmy_flg;
 
 	return ret;
