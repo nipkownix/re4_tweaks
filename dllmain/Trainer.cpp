@@ -7,6 +7,8 @@
 #include <FAhashes.h>
 #include "UI_DebugWindows.h"
 #include "Trainer.h"
+#include "SDK/room_jmp.h"
+#include "SDK/filter00.h"
 
 int AshleyStateOverride;
 
@@ -351,6 +353,7 @@ enum class TrainerTab
 	Hotkeys,
 	FlagEdit,
 	EmMgr,
+	DebugTools,
 	NumTabs
 };
 TrainerTab CurTrainerTab = TrainerTab::Patches;
@@ -432,22 +435,13 @@ void Trainer_RenderUI()
 	// EmMgr
 	ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::EmMgr, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size);
 
+	// DebugTools
+	ImGui_TrainerTabButton("##dbgtools", "Debug Tools", active, inactive, TrainerTab::DebugTools, ICON_FA_VIRUS, icn_color, IM_COL32_WHITE, button_size);
+
 	// Globals
-	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, button_size))
+	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, button_size, false))
 	{
 		UI_NewGlobalsViewer();
-	}
-
-	// Area Jump
-	if (ImGui_TrainerTabButton("##areajump", "Area Jump", active, inactive, TrainerTab::NumTabs, ICON_FA_SIGN, icn_color, IM_COL32_WHITE, button_size))
-	{
-		UI_NewAreaJump();
-	}
-
-	// Filter Tool
-	if (ImGui_TrainerTabButton("##filtertool", "Filter Tool", active, inactive, TrainerTab::NumTabs, ICON_FA_CAMERA, icn_color, IM_COL32_WHITE, button_size, false))
-	{
-		UI_NewFilterTool();
 	}
 
 	// Last param to ImGui_TrainerTabButton must be false if it is the last button, to avoid the separator below from being SameLine'd as well.
@@ -468,6 +462,10 @@ void Trainer_RenderUI()
 				if (ImGui::Checkbox("Invincibility", &invincibility))
 					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2), invincibility);
 
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
 				ImGui::TextWrapped("Prevents taking hits from enemies & automatically skips grabs.");
 			}
 
@@ -478,6 +476,10 @@ void Trainer_RenderUI()
 				bool weakEnemies = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_WEAK));
 				if (ImGui::Checkbox("Weak Enemies", &weakEnemies))
 					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_WEAK), weakEnemies);
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Makes most enemies die in 1 hit.");
 			}
@@ -490,6 +492,10 @@ void Trainer_RenderUI()
 				if (ImGui::Checkbox("Infinite Ammo", &infAmmo))
 					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_INF_BULLET), infAmmo);
 
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
 				ImGui::TextWrapped("Prevents game from removing bullets after firing.");
 			}
 
@@ -500,6 +506,10 @@ void Trainer_RenderUI()
 				bool DisablePlayerCollision = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
 				if (ImGui::Checkbox("Disable Player Collision", &DisablePlayerCollision))
 					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), DisablePlayerCollision);
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Disables collision (no-clip).");
 
@@ -522,8 +532,12 @@ void Trainer_RenderUI()
 			{
 				ImGui_ColumnSwitch();
 
-				if(ImGui::Checkbox("Enable Player Speed Override", &pConfig->bTrainerPlayerSpeedOverride))
+				if (ImGui::Checkbox("Enable Player Speed Override", &pConfig->bTrainerPlayerSpeedOverride))
 					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Allows overriding player speed value.");
 				ImGui::TextWrapped("Ctrl+Click to set input a custom value.");
@@ -531,7 +545,7 @@ void Trainer_RenderUI()
 				ImGui::Spacing();
 
 				ImGui::BeginDisabled(!pConfig->bTrainerPlayerSpeedOverride);
-				if(ImGui::SliderFloat("Speed", &pConfig->fTrainerPlayerSpeedOverride, 0.0f, 50.0f, "%.2f"))
+				if (ImGui::SliderFloat("Speed", &pConfig->fTrainerPlayerSpeedOverride, 0.0f, 50.0f, "%.2f"))
 					pConfig->HasUnsavedChanges = true;
 
 				if (ImGui::Button("Reset"))
@@ -548,6 +562,8 @@ void Trainer_RenderUI()
 
 				ImGui::Spacing();
 				ImGui::TextWrapped("Override Ashley's Presence");
+
+				ImGui_ItemSeparator();
 
 				ImGui::Dummy(ImVec2(10, 10));
 
@@ -1043,6 +1059,258 @@ void Trainer_RenderUI()
 						em->matUpdate();
 					}
 				}
+			}
+		}
+	}
+
+	if (CurTrainerTab == TrainerTab::DebugTools)
+	{
+		if (ImGui::BeginTable("DebugTools", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		{
+			ImGui_ColumnInit();
+
+			// Area jump
+			{
+				ImGui_ColumnSwitch();
+
+				static int curStage = 0;
+				static int curRoomIdx = 0;
+				static char curRoomNo[256] = { 0 };
+				static Vec curRoomPosition = { 0 };
+				static float curRoomRotation = 0;
+				static bool didInit = false;
+
+				if (!didInit)
+				{
+					GLOBAL_WK* pG = GlobalPtr();
+					if (pG)
+					{
+						// Init current stage to whatever stage player is currently on
+						curStage = (pG->curRoomId_4FAC & 0xFFF) >> 8;
+						// ...but don't let us init it to the boring 0 stage
+						if (curStage <= 0)
+							curStage = 1;
+					}
+
+					didInit = true;
+				}
+
+				ImGui::Spacing();
+				ImGui::TextWrapped("%s  Area Jump", ICON_FA_SIGN);
+
+				ImGui::SameLine();
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new Area Jump window").x - 15.0f, 0.0f));
+				ImGui::SameLine();
+				if (ImGui::Button("Open new Area Jump window"))
+					UI_NewAreaJump();
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
+
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Stage").x - 10.0f);
+				if (ImGui::InputInt("Stage", &curStage))
+				{
+					if (curStage < 0)
+						curStage = AREAJUMP_MAX_STAGE;
+					if (curStage > AREAJUMP_MAX_STAGE)
+						curStage = 0;
+
+					curRoomIdx = 0;
+					UI_AreaJump::UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
+				}
+
+				cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
+				if (stage)
+				{
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Room").x - 10.0f);
+					std::string curRoomStr = UI_AreaJump::RoomDisplayString(curStage, curRoomIdx);
+					if (ImGui::BeginCombo("Room", curRoomStr.c_str()))
+					{
+						for (uint32_t i = 0; i < stage->nData_0; i++)
+						{
+							std::string roomStr = UI_AreaJump::RoomDisplayString(curStage, i);
+
+							bool is_selected = (curRoomIdx == i);
+							if (ImGui::Selectable(roomStr.c_str(), is_selected))
+							{
+								curRoomIdx = i;
+								UI_AreaJump::UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
+							}
+
+							if (is_selected)
+								ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
+					ImGui::PopItemWidth();
+
+					CRoomInfo* roomData = stage->GetRoom(curRoomIdx);
+					if (roomData)
+					{
+						char* person1 = roomData->getPerson();
+						char* person2 = roomData->getPerson2();
+
+						bool hasPerson1 = person1 && strlen(person1) > 0;
+						bool hasPerson2 = person2 && strlen(person2) > 0;
+
+						ImGui::BeginDisabled(true);
+						if (hasPerson1)
+							ImGui::Text("Scenario: %s", person1);
+						if (hasPerson2)
+						{
+							if (hasPerson1)
+								ImGui::SameLine();
+
+							ImGui::Text("Program: %s", person2);
+						}
+						ImGui::EndDisabled();
+
+						ImGui_ItemSeparator();
+						ImGui::Dummy(ImVec2(10, 5));
+
+						//ImGui::InputText("Room", curRoomNo, 256); // some reason this breaks combo box?
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
+						ImGui::InputFloat3("Position", (float*)&curRoomPosition);
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Rotation").x - 10.0f);
+						ImGui::InputFloat("Rotation", &curRoomRotation);
+
+						if (ImGui::Button("Jump!"))
+						{
+							GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
+							AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
+						}
+					}
+				}
+
+				// FilterTool
+				{
+					ImGui_ColumnSwitch();
+
+					ImGui::Spacing();
+					ImGui::TextWrapped("%s  Filter Tool", ICON_FA_CAMERA);
+
+					ImGui::SameLine();
+					ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new Filter Tool window").x - 15.0f, 0.0f));
+					ImGui::SameLine();
+					if (ImGui::Button("Open new Filter Tool window"))
+						UI_NewFilterTool();
+
+					ImGui_ItemSeparator();
+
+					ImGui::Dummy(ImVec2(10, 10));
+
+					cLightEnv* LightEnv = &LightMgr->LightEnv_20;
+
+					bool env_changed = false;
+
+					ImGui::Text("DoF / Filter01:");
+
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("ContrastLevel").x - 10.0f);
+
+					if (ImGui::SliderInt("Distance", &LightEnv->FocusZ_28, 0, 65535))
+						env_changed = true;
+
+					int alphaLvl = LightEnv->FocusLevel_2D;
+					if (ImGui::SliderInt("AlphaLvl", &alphaLvl, 0, 10))
+					{
+						env_changed = true;
+						LightEnv->FocusLevel_2D = uint8_t(alphaLvl);
+					}
+
+					const char* DoFModeNames[] = { "NEAR", "FAR", "FollowPL NEAR", "FollowPL FAR" };
+					const char* curMode = DoFModeNames[LightEnv->FocusMode_2E];
+					if (ImGui::BeginCombo("Mode", curMode))
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							bool selected = false;
+							if (ImGui::Selectable(DoFModeNames[i], &selected))
+								if (selected)
+								{
+									env_changed = true;
+									LightEnv->FocusMode_2E = uint8_t(i);
+								}
+						}
+						ImGui::EndCombo();
+					}
+
+					ImGui::Dummy(ImVec2(10, 10));
+
+					ImGui::Text("Blur / Filter00:");
+
+					cFilter00Params* params = cFilter00Params::get();
+					cFilter00Params2* params2 = cFilter00Params2::get();
+
+					const char* BlurTypeNames[] = { "NORMAL", "SPREAD", "ADD", "SUBTRACT" };
+					const char* curType = BlurTypeNames[LightEnv->blur_type_F0];
+					if (ImGui::BeginCombo("Type", curType))
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							bool selected = false;
+							if (ImGui::Selectable(BlurTypeNames[i], &selected))
+								if (selected)
+								{
+									env_changed = true;
+									LightEnv->blur_type_F0 = uint8_t(i);
+								}
+						}
+						ImGui::EndCombo();
+					}
+
+					int blurRate = LightEnv->blur_rate_2F;
+					if (ImGui::SliderInt("Rate", &blurRate, 0, 255))
+					{
+						env_changed = true;
+						LightEnv->blur_rate_2F = uint8_t(blurRate);
+					}
+
+					int blurPower = LightEnv->blur_power_F1;
+					if (ImGui::SliderInt("Power", &blurPower, 0, 255))
+					{
+						env_changed = true;
+						LightEnv->blur_power_F1 = uint8_t(blurPower);
+					}
+
+					int contLevel = LightEnv->contrast_level_F5;
+					if (ImGui::SliderInt("ContrastLevel", &contLevel, 0, 255))
+					{
+						env_changed = true;
+						LightEnv->contrast_level_F5 = uint8_t(contLevel);
+					}
+
+					int contPow = LightEnv->contrast_pow_F6;
+					if (ImGui::SliderInt("ContrastPow", &contPow, 0, 255))
+					{
+						env_changed = true;
+						LightEnv->contrast_pow_F6 = uint8_t(contPow);
+					}
+
+					int contBias = LightEnv->contrast_bias_F7;
+					if (ImGui::SliderInt("ContrastBias", &contBias, 0, 255))
+					{
+						env_changed = true;
+						LightEnv->contrast_bias_F7 = uint8_t(contBias);
+					}
+
+					int effRate = params->eff_blur_rate;
+					if (ImGui::SliderInt("EffBlurRate", &effRate, 0, 255))
+						params->eff_blur_rate = uint8_t(effRate);
+
+					ImGui::SliderFloat("EffSpreadNum", &params->eff_spread_num, 0, 255);
+
+					if (env_changed)
+						LightMgr->setEnv(LightEnv, LightMgr->m_Hokan_178);
+
+					ImGui::PopItemWidth();
+				}
+
+				ImGui_ColumnFinish();
+				ImGui::EndTable();
 			}
 		}
 	}

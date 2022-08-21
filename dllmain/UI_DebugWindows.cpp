@@ -5,8 +5,6 @@
 #include "SDK/room_jmp.h"
 #include "SDK/filter00.h"
 
-#define AREAJUMP_MAX_STAGE 7
-
 void UI_Window::UpdateWindowTitle()
 {
 	if (pConfig->sTrainerFocusUIKeyCombo.empty())
@@ -417,21 +415,21 @@ std::string UI_AreaJump::RoomDisplayString(int stageIdx, int roomIdx)
 	return ret;
 }
 
-void UI_AreaJump::UpdateRoomInfo()
+void UI_AreaJump::UpdateRoomInfo(int *curStage, int *curRoomIdx, Vec *curRoomPosition, float *curRoomRotation)
 {
 	cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
-	cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
-	CRoomInfo* room = stage->GetRoom(curRoomIdx);
+	cRoomJmp_stage* stage = roomJmpData->GetStage(*curStage);
+	CRoomInfo* room = stage->GetRoom(*curRoomIdx);
 	//sprintf_s(curRoomNo, "%03X", int(room->roomNo_2 & 0xFFF));
 	if ((room->flag_0 & 1) != 0)
 	{
-		curRoomPosition = room->pos_4;
-		curRoomRotation = room->r_10;
+		*curRoomPosition = room->pos_4;
+		*curRoomRotation = room->r_10;
 	}
 	else
 	{
-		curRoomPosition = { 0 };
-		curRoomRotation = 0;
+		*curRoomPosition = { 0 };
+		*curRoomRotation = 0;
 	};
 }
 
@@ -467,7 +465,7 @@ bool UI_AreaJump::Render()
 				curStage = 0;
 
 			curRoomIdx = 0;
-			UpdateRoomInfo();
+			UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
 		}
 
 		cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
@@ -485,7 +483,7 @@ bool UI_AreaJump::Render()
 					if (ImGui::Selectable(roomStr.c_str(), is_selected))
 					{
 						curRoomIdx = i;
-						UpdateRoomInfo();
+						UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
 					}
 
 					if (is_selected)

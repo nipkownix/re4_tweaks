@@ -1,6 +1,8 @@
 #pragma once 
 #include "Game.h"
 
+#define AREAJUMP_MAX_STAGE 7
+
 void UI_NewEmManager(int selectedEmIndex = -1);
 void UI_NewGlobalsViewer();
 void UI_NewAreaJump();
@@ -61,10 +63,9 @@ class UI_AreaJump : public UI_Window
 	char curRoomNo[256] = { 0 };
 	Vec curRoomPosition = { 0 };
 	float curRoomRotation = 0;
-
-	std::string RoomDisplayString(int stage, int room);
-	void UpdateRoomInfo();
 public:
+	static std::string RoomDisplayString(int stage, int room);
+	static void UpdateRoomInfo(int* curStage, int* curRoomIdx, Vec* curRoomPosition, float* curRoomRotation);
 	UI_AreaJump(std::string_view title) : UI_Window(title) { Init(); }
 	bool Init();
 	bool Render();
