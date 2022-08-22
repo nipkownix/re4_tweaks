@@ -518,6 +518,18 @@ bool UI_Globals::Render(bool WindowMode)
 
 		ImGui::Text("Kills: %d", globals->g_kill_cnt_8468);
 
+		ImGui::Text("Weapon ID: %d", ItemMgr->m_wep_id_10);
+
+		if (ItemPiecePtr())
+		{
+			ImGui::Text("itemPiece pItem: %p", ItemPiecePtr()->pItem_24);
+			if (ItemPiecePtr()->pItem_24)
+				ImGui::Text("itemPiece pItem.id: %d", ItemPiecePtr()->pItem_24->id_0);
+		}
+
+		extern ITEM_ID BoundWeapons[5];
+		ImGui::Text("Cur bound weapon IDs: %d %d %d %d %d", BoundWeapons[0], BoundWeapons[1], BoundWeapons[2], BoundWeapons[3], BoundWeapons[4]);
+
 		ImGui::End();
 	}
 

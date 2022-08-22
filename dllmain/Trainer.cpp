@@ -87,6 +87,38 @@ void MoveAshleyToPlayer()
 std::vector<uint32_t> KeyComboNoclipToggle;
 std::vector<uint32_t> KeyComboSpeedOverride;
 std::vector<uint32_t> KeyComboAshToPlayer;
+
+std::vector<uint32_t> KeyBindWepSlot1;
+std::vector<uint32_t> KeyBindWepSlot2;
+std::vector<uint32_t> KeyBindWepSlot3;
+std::vector<uint32_t> KeyBindWepSlot4;
+std::vector<uint32_t> KeyBindWepSlot5;
+
+std::vector<uint32_t> KeySelWepSlot1;
+std::vector<uint32_t> KeySelWepSlot2;
+std::vector<uint32_t> KeySelWepSlot3;
+std::vector<uint32_t> KeySelWepSlot4;
+std::vector<uint32_t> KeySelWepSlot5;
+
+ITEM_ID BoundWeapons[5] = { 0 };
+void BindWeaponSlot(int slotIdx)
+{
+	if (ItemPiecePtr())
+		BoundWeapons[slotIdx] = ItemPiecePtr()->pItem_24->id_0;
+}
+
+void ChangeWeaponToSlot(int slotIdx)
+{
+	if (BoundWeapons[slotIdx])
+	{
+		cItem* item = ItemMgr->search(BoundWeapons[slotIdx]);
+		if (ItemMgr->arm(item))
+		{
+			RequestWeaponChange();
+		}
+	}
+}
+
 void Trainer_ParseKeyCombos()
 {
 	// NoClip
@@ -119,6 +151,28 @@ void Trainer_ParseKeyCombos()
 			MoveAshleyToPlayer();
 		}, &KeyComboAshToPlayer });
 	}
+
+	KeyBindWepSlot1 = ParseKeyCombo("CTRL+1");
+	KeyBindWepSlot2 = ParseKeyCombo("CTRL+2");
+	KeyBindWepSlot3 = ParseKeyCombo("CTRL+3");
+	KeyBindWepSlot4 = ParseKeyCombo("CTRL+4");
+	KeyBindWepSlot5 = ParseKeyCombo("CTRL+5");
+	pInput->RegisterHotkey({ []() { BindWeaponSlot(0); }, &KeyBindWepSlot1 });
+	pInput->RegisterHotkey({ []() { BindWeaponSlot(1); }, &KeyBindWepSlot2 });
+	pInput->RegisterHotkey({ []() { BindWeaponSlot(2); }, &KeyBindWepSlot3 });
+	pInput->RegisterHotkey({ []() { BindWeaponSlot(3); }, &KeyBindWepSlot4 });
+	pInput->RegisterHotkey({ []() { BindWeaponSlot(4); }, &KeyBindWepSlot5 });
+
+	KeySelWepSlot1 = ParseKeyCombo("1");
+	KeySelWepSlot2 = ParseKeyCombo("2");
+	KeySelWepSlot3 = ParseKeyCombo("3");
+	KeySelWepSlot4 = ParseKeyCombo("4");
+	KeySelWepSlot5 = ParseKeyCombo("5");
+	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(0); }, &KeySelWepSlot1 });
+	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(1); }, &KeySelWepSlot2 });
+	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(2); }, &KeySelWepSlot3 });
+	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(3); }, &KeySelWepSlot4 });
+	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(4); }, &KeySelWepSlot5 });
 }
 
 std::vector<FlagPatch> flagPatches;

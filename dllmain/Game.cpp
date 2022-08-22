@@ -311,6 +311,24 @@ void __cdecl Mem_free_TITLE_WORK_hook(void* mem)
 	Mem_free(mem);
 }
 
+bool WeaponChangeRequested = false;
+void RequestWeaponChange()
+{
+	WeaponChangeRequested = true; // signal main thread
+}
+
+void(__cdecl* WeaponChange)();
+void(__cdecl* TaskScheduler)();
+void TaskScheduler_Hook()
+{
+	if (WeaponChangeRequested)
+	{
+		WeaponChange();
+		WeaponChangeRequested = false;
+	}
+	TaskScheduler();
+}
+
 void AreaJump(uint16_t roomNo, Vec& position, float rotation)
 {
 	// proceed with the jumpening
@@ -480,6 +498,15 @@ bool Init_Game()
 	// g_p_Item_piece ptr (not actual name)
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 8B 35 ? ? ? ? 85 F6 0F 84");
 	g_p_Item_piece = *pattern.count(1).get(0).get<itemPiece**>(10);
+
+	// Hook call to TaskScheduler, so we can run code inside the main thread before other things update
+	pattern = hook::pattern("81 60 54 FF FB FF FF E8 ? ? ? ? 68");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(7), TaskScheduler);
+	InjectHook(pattern.count(1).get(0).get<uint8_t>(7), TaskScheduler_Hook, PATCH_CALL);
+
+	// WeaponChange funcptr
+	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), WeaponChange);
 
 	return true;
 }
