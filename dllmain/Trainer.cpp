@@ -7,8 +7,6 @@
 #include <FAhashes.h>
 #include "UI_DebugWindows.h"
 #include "Trainer.h"
-#include "SDK/room_jmp.h"
-#include "SDK/filter00.h"
 
 int AshleyStateOverride;
 
@@ -439,7 +437,7 @@ void Trainer_RenderUI()
 	ImGui_TrainerTabButton("##dbgtools", "Debug Tools", active, inactive, TrainerTab::DebugTools, ICON_FA_VIRUS, icn_color, IM_COL32_WHITE, button_size);
 
 	// Globals
-	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_HEADPHONES, icn_color, IM_COL32_WHITE, button_size, false))
+	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_GLOBE, icn_color, IM_COL32_WHITE, button_size, false))
 	{
 		UI_NewGlobalsViewer();
 	}
@@ -448,6 +446,8 @@ void Trainer_RenderUI()
 	ImGui_ItemSeparator();
 
 	ImGui::Dummy(ImVec2(0.0f, 12.0f));
+
+	ImGui::BeginChild("right side", ImVec2(0, 0));
 
 	if (CurTrainerTab == TrainerTab::Patches)
 	{
@@ -794,273 +794,8 @@ void Trainer_RenderUI()
 
 	if (CurTrainerTab == TrainerTab::EmMgr)
 	{
-		static int emIdx = -1;
-		static bool onlyShowValidEms = true;
-		static bool onlyShowESLSpawned = false;
-#ifdef _DEBUG
-		static bool showEmPointers = true;
-#else
-		static bool showEmPointers = false;
-#endif
-		static uint16_t AtariFlagBackup = 0;
-		static bool AtariFlagBackupSet = false;
-
-		static float addPosition[3] = { 0 };
-
-		auto& emMgr = *EmMgrPtr();
-		// cEm list
-		{
-			ImGui::Text("Em Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
-
-			ImGui::SameLine();
-
-			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new Em Manager window").x - 25, 0));
-			ImGui::SameLine();
-			if (ImGui::Button("Open new Em Manager window"))
-				UI_NewEmManager();
-
-			std::string currentEmStr = "N/A";
-			if (emIdx >= 0)
-			{
-				cEm* em = emMgr[emIdx];
-				if (em)
-					currentEmStr = UI_EmManager::EmDisplayString(emIdx, *em, showEmPointers);
-			}
-
-			ImGui::Checkbox("Only active", &onlyShowValidEms); ImGui::SameLine();
-			ImGui::Checkbox("Only ESL-spawned", &onlyShowESLSpawned); ImGui::SameLine();
-			ImGui::Checkbox("Show addresses", &showEmPointers);
-
-			ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - 375.0f) * pConfig->fFontSizeScale);
-			if (ImGui::BeginCombo("Em", currentEmStr.c_str()))
-			{
-				int i = 0;
-				for (auto& em : emMgr)
-				{
-					if (!onlyShowValidEms || em.IsValid())
-					{
-						if (!onlyShowESLSpawned || em.IsSpawnedByESL())
-						{
-							std::string emStr = UI_EmManager::EmDisplayString(i, em, showEmPointers);
-
-							const bool is_selected = (emIdx == i);
-							if (ImGui::Selectable(emStr.c_str(), is_selected))
-								emIdx = i;
-
-							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-							if (is_selected)
-								ImGui::SetItemDefaultFocus();
-						}
-					}
-
-					i++;
-				}
-				ImGui::EndCombo();
-			}
-			ImGui::PopItemWidth();
-		}
-
-		// cEm info
-		{
-			if (emIdx >= 0)
-			{
-				cEm* em = emMgr[emIdx];
-				if (em)
-				{
-					ImGui::Separator();
-					ImGui::Dummy(ImVec2(10, 5));
-
-					if (showEmPointers)
-						ImGui::Text("#%d:0x%x c%s (type %x)", emIdx, em, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
-					else
-						ImGui::Text("#%d c%s (type %x)", emIdx, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
-
-					static Vec copyPosition = { 0 };
-					if (ImGui::Button("Copy position"))
-						copyPosition = em->pos_94;
-
-					ImGui::SameLine();
-
-					if (AtariFlagBackupSet)
-					{
-						em->atari_2B4.m_flag_1A = AtariFlagBackup;
-						AtariFlagBackupSet = false;
-					}
-
-					if (ImGui::Button("Paste position"))
-					{
-						em->pos_94 = copyPosition;
-						em->pos_old_110 = copyPosition;
-
-						// temporarily disable atariInfo collision, prevents colliding with map
-						// TODO: some reason using em->move() isn't enough to bypass collision for some Em's
-						// as workaround we let game render another frame and then restore flags above
-						AtariFlagBackup = em->atari_2B4.m_flag_1A;
-						AtariFlagBackupSet = true;
-						em->atari_2B4.m_flag_1A = 0;
-
-						em->matUpdate();
-						em->move();
-					}
-
-					cPlayer* player = PlayerPtr();
-					if (em != player)
-					{
-						if (ImGui::Button("Teleport player"))
-						{
-							player->pos_94 = em->pos_94;
-							player->pos_old_110 = em->pos_94;
-
-							// temporarily disable atariInfo collision, prevents colliding with map
-							uint16_t flagBackup = player->atari_2B4.m_flag_1A;
-							player->atari_2B4.m_flag_1A = 0;
-
-							player->matUpdate();
-							player->move();
-
-							player->atari_2B4.m_flag_1A = flagBackup;
-						}
-						ImGui::SameLine();
-
-						if (ImGui::Button("Move to player"))
-						{
-							em->pos_94 = player->pos_94;
-							em->pos_old_110 = player->pos_old_110;
-
-							// temporarily disable atariInfo collision, prevents colliding with map
-							AtariFlagBackup = em->atari_2B4.m_flag_1A;
-							AtariFlagBackupSet = true;
-							em->atari_2B4.m_flag_1A = 0;
-
-							em->matUpdate();
-							em->move();
-						}
-					}
-
-					ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
-					if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 220)))
-					{
-						ImGui::TableNextColumn();
-
-						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
-						if (ImGui::InputFloat3("Position", (float*)&em->pos_94, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
-							em->matUpdate();
-
-						if (ImGui::InputFloat3("Rotation", (float*)&em->ang_A0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
-							em->matUpdate();
-
-						if (ImGui::InputFloat3("Scale", (float*)&em->scale_AC, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
-						{
-							if (IsGanado(em->id_100))
-							{
-								// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
-								// make sure we update that as well
-								Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
-								*scale_bk_498 = em->scale_AC;
-							}
-							em->matUpdate();
-						}
-						ImGui::PopItemWidth();
-
-						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
-						ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
-
-						int hpCur = em->hp_324;
-						if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
-							em->hp_324 = hpCur;
-
-						int hpMax = em->hp_max_326;
-						if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
-							em->hp_max_326 = hpMax;
-						ImGui::PopItemWidth();
-
-						ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
-						ImGui::Text("Parts count: %d", em->PartCount());
-						if (em->emListIndex_3A0 != 255)
-							ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
-
-						ImGui::TableNextColumn();
-
-						float flagsWidth = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Flags").x - 20.0f;
-						float flagsHeight = ImGui::GetContentRegionAvail().y - 10.0f;
-						if (ImGui::BeginListBox("Flags", ImVec2(flagsWidth, flagsHeight)))
-						{
-							bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
-							if (ImGui::Checkbox("MapCollision", &collisionEnabled))
-							{
-								if (collisionEnabled)
-									em->atari_2B4.m_flag_1A |= 0x100;
-								else
-									em->atari_2B4.m_flag_1A &= ~0x100;
-							}
-							bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
-							if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
-							{
-								if (emCollisionEnabled)
-									em->atari_2B4.m_flag_1A |= 0x200;
-								else
-									em->atari_2B4.m_flag_1A &= ~0x200;
-							}
-
-							for (int i = 0; i < 32; i++)
-							{
-								bool bitSet = (em->be_flag_4 & (1 << i)) != 0;
-
-								std::string lbl = cUnit::GetBeFlagName(i);
-								if (ImGui::Checkbox(lbl.c_str(), &bitSet))
-								{
-									if (bitSet)
-										em->be_flag_4 = em->be_flag_4 | (1 << i);
-									else
-										em->be_flag_4 = em->be_flag_4 & ~(1 << i);
-								}
-							}
-							ImGui::EndListBox();
-						}
-
-						ImGui::EndTable();
-					}
-					ImGui::PopStyleVar();
-
-					// works, but unsure what to display atm
-					/*
-					static int partIdx = -1;
-					if (ImGui::BeginListBox("Test"))
-					{
-						int i = 0;
-						cParts* part = em->childParts_F4;
-						while (part != nullptr)
-						{
-							sprintf(tmpBuf, "#%d", i);
-							const bool is_selected = (partIdx == i);
-							if (ImGui::Selectable(tmpBuf, is_selected))
-								partIdx = i;
-							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-							if (is_selected)
-								ImGui::SetItemDefaultFocus();
-							i++;
-							part = part->nextParts_F4;
-						}
-						ImGui::EndListBox();
-					}*/
-
-					ImGui::Separator();
-					ImGui::Dummy(ImVec2(10, 5));
-
-					ImGui::Text("Modification:");
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("PositionChange").x - 100.0f);
-					ImGui::InputFloat3("PositionChange", addPosition, "%.3f");
-					ImGui::PopItemWidth();
-					if (ImGui::Button("Apply"))
-					{
-						em->pos_94.x += addPosition[0];
-						em->pos_94.y += addPosition[1];
-						em->pos_94.z += addPosition[2];
-						em->matUpdate();
-					}
-				}
-			}
-		}
+		static auto EmMgr = new UI_EmManager();
+		EmMgr->Render(false);
 	}
 
 	if (CurTrainerTab == TrainerTab::DebugTools)
@@ -1072,28 +807,6 @@ void Trainer_RenderUI()
 			// Area jump
 			{
 				ImGui_ColumnSwitch();
-
-				static int curStage = 0;
-				static int curRoomIdx = 0;
-				static char curRoomNo[256] = { 0 };
-				static Vec curRoomPosition = { 0 };
-				static float curRoomRotation = 0;
-				static bool didInit = false;
-
-				if (!didInit)
-				{
-					GLOBAL_WK* pG = GlobalPtr();
-					if (pG)
-					{
-						// Init current stage to whatever stage player is currently on
-						curStage = (pG->curRoomId_4FAC & 0xFFF) >> 8;
-						// ...but don't let us init it to the boring 0 stage
-						if (curStage <= 0)
-							curStage = 1;
-					}
-
-					didInit = true;
-				}
 
 				ImGui::Spacing();
 				ImGui::TextWrapped("%s  Area Jump", ICON_FA_SIGN);
@@ -1108,210 +821,35 @@ void Trainer_RenderUI()
 
 				ImGui::Dummy(ImVec2(10, 10));
 
-				cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
-
-				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Stage").x - 10.0f);
-				if (ImGui::InputInt("Stage", &curStage))
-				{
-					if (curStage < 0)
-						curStage = AREAJUMP_MAX_STAGE;
-					if (curStage > AREAJUMP_MAX_STAGE)
-						curStage = 0;
-
-					curRoomIdx = 0;
-					UI_AreaJump::UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
-				}
-
-				cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
-				if (stage)
-				{
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Room").x - 10.0f);
-					std::string curRoomStr = UI_AreaJump::RoomDisplayString(curStage, curRoomIdx);
-					if (ImGui::BeginCombo("Room", curRoomStr.c_str()))
-					{
-						for (uint32_t i = 0; i < stage->nData_0; i++)
-						{
-							std::string roomStr = UI_AreaJump::RoomDisplayString(curStage, i);
-
-							bool is_selected = (curRoomIdx == i);
-							if (ImGui::Selectable(roomStr.c_str(), is_selected))
-							{
-								curRoomIdx = i;
-								UI_AreaJump::UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
-							}
-
-							if (is_selected)
-								ImGui::SetItemDefaultFocus();
-						}
-						ImGui::EndCombo();
-					}
-					ImGui::PopItemWidth();
-
-					CRoomInfo* roomData = stage->GetRoom(curRoomIdx);
-					if (roomData)
-					{
-						char* person1 = roomData->getPerson();
-						char* person2 = roomData->getPerson2();
-
-						bool hasPerson1 = person1 && strlen(person1) > 0;
-						bool hasPerson2 = person2 && strlen(person2) > 0;
-
-						ImGui::BeginDisabled(true);
-						if (hasPerson1)
-							ImGui::Text("Scenario: %s", person1);
-						if (hasPerson2)
-						{
-							if (hasPerson1)
-								ImGui::SameLine();
-
-							ImGui::Text("Program: %s", person2);
-						}
-						ImGui::EndDisabled();
-
-						ImGui_ItemSeparator();
-						ImGui::Dummy(ImVec2(10, 5));
-
-						//ImGui::InputText("Room", curRoomNo, 256); // some reason this breaks combo box?
-
-						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
-						ImGui::InputFloat3("Position", (float*)&curRoomPosition);
-						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Rotation").x - 10.0f);
-						ImGui::InputFloat("Rotation", &curRoomRotation);
-
-						if (ImGui::Button("Jump!"))
-						{
-							GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
-							AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
-						}
-					}
-				}
-
-				// FilterTool
-				{
-					ImGui_ColumnSwitch();
-
-					ImGui::Spacing();
-					ImGui::TextWrapped("%s  Filter Tool", ICON_FA_CAMERA);
-
-					ImGui::SameLine();
-					ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new Filter Tool window").x - 15.0f, 0.0f));
-					ImGui::SameLine();
-					if (ImGui::Button("Open new Filter Tool window"))
-						UI_NewFilterTool();
-
-					ImGui_ItemSeparator();
-
-					ImGui::Dummy(ImVec2(10, 10));
-
-					cLightEnv* LightEnv = &LightMgr->LightEnv_20;
-
-					bool env_changed = false;
-
-					ImGui::Text("DoF / Filter01:");
-
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("ContrastLevel").x - 10.0f);
-
-					if (ImGui::SliderInt("Distance", &LightEnv->FocusZ_28, 0, 65535))
-						env_changed = true;
-
-					int alphaLvl = LightEnv->FocusLevel_2D;
-					if (ImGui::SliderInt("AlphaLvl", &alphaLvl, 0, 10))
-					{
-						env_changed = true;
-						LightEnv->FocusLevel_2D = uint8_t(alphaLvl);
-					}
-
-					const char* DoFModeNames[] = { "NEAR", "FAR", "FollowPL NEAR", "FollowPL FAR" };
-					const char* curMode = DoFModeNames[LightEnv->FocusMode_2E];
-					if (ImGui::BeginCombo("Mode", curMode))
-					{
-						for (int i = 0; i < 4; i++)
-						{
-							bool selected = false;
-							if (ImGui::Selectable(DoFModeNames[i], &selected))
-								if (selected)
-								{
-									env_changed = true;
-									LightEnv->FocusMode_2E = uint8_t(i);
-								}
-						}
-						ImGui::EndCombo();
-					}
-
-					ImGui::Dummy(ImVec2(10, 10));
-
-					ImGui::Text("Blur / Filter00:");
-
-					cFilter00Params* params = cFilter00Params::get();
-					cFilter00Params2* params2 = cFilter00Params2::get();
-
-					const char* BlurTypeNames[] = { "NORMAL", "SPREAD", "ADD", "SUBTRACT" };
-					const char* curType = BlurTypeNames[LightEnv->blur_type_F0];
-					if (ImGui::BeginCombo("Type", curType))
-					{
-						for (int i = 0; i < 4; i++)
-						{
-							bool selected = false;
-							if (ImGui::Selectable(BlurTypeNames[i], &selected))
-								if (selected)
-								{
-									env_changed = true;
-									LightEnv->blur_type_F0 = uint8_t(i);
-								}
-						}
-						ImGui::EndCombo();
-					}
-
-					int blurRate = LightEnv->blur_rate_2F;
-					if (ImGui::SliderInt("Rate", &blurRate, 0, 255))
-					{
-						env_changed = true;
-						LightEnv->blur_rate_2F = uint8_t(blurRate);
-					}
-
-					int blurPower = LightEnv->blur_power_F1;
-					if (ImGui::SliderInt("Power", &blurPower, 0, 255))
-					{
-						env_changed = true;
-						LightEnv->blur_power_F1 = uint8_t(blurPower);
-					}
-
-					int contLevel = LightEnv->contrast_level_F5;
-					if (ImGui::SliderInt("ContrastLevel", &contLevel, 0, 255))
-					{
-						env_changed = true;
-						LightEnv->contrast_level_F5 = uint8_t(contLevel);
-					}
-
-					int contPow = LightEnv->contrast_pow_F6;
-					if (ImGui::SliderInt("ContrastPow", &contPow, 0, 255))
-					{
-						env_changed = true;
-						LightEnv->contrast_pow_F6 = uint8_t(contPow);
-					}
-
-					int contBias = LightEnv->contrast_bias_F7;
-					if (ImGui::SliderInt("ContrastBias", &contBias, 0, 255))
-					{
-						env_changed = true;
-						LightEnv->contrast_bias_F7 = uint8_t(contBias);
-					}
-
-					int effRate = params->eff_blur_rate;
-					if (ImGui::SliderInt("EffBlurRate", &effRate, 0, 255))
-						params->eff_blur_rate = uint8_t(effRate);
-
-					ImGui::SliderFloat("EffSpreadNum", &params->eff_spread_num, 0, 255);
-
-					if (env_changed)
-						LightMgr->setEnv(LightEnv, LightMgr->m_Hokan_178);
-
-					ImGui::PopItemWidth();
-				}
-
-				ImGui_ColumnFinish();
-				ImGui::EndTable();
+				static auto AreaJmp = new UI_AreaJump();
+				AreaJmp->Render(false);
 			}
+				
+			// FilterTool
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::Spacing();
+				ImGui::TextWrapped("%s  Filter Tool", ICON_FA_CAMERA);
+
+				ImGui::SameLine();
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new Filter Tool window").x - 15.0f, 0.0f));
+				ImGui::SameLine();
+				if (ImGui::Button("Open new Filter Tool window"))
+					UI_NewFilterTool();
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				static auto FilterTool = new UI_FilterTool();
+				FilterTool->Render(false);
+			}
+
+			ImGui_ColumnFinish();
+			ImGui::EndTable();
 		}
 	}
+
+	ImGui::EndChild();
 }

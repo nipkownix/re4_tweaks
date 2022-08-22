@@ -18,7 +18,7 @@ protected:
 public:
 	UI_Window(std::string_view title) : origWindowTitle(title) { UpdateWindowTitle(); };
 	virtual bool Init() = 0;
-	virtual bool Render() = 0;
+	virtual bool Render(bool WindowMode) = 0;
 
 	void UpdateWindowTitle();
 };
@@ -40,11 +40,13 @@ class UI_EmManager : public UI_Window
 	bool AtariFlagBackupSet = false;
 
 	float addPosition[3] = { 0 };
+
+	std::string EmDisplayString(int i, cEm& em, bool showEmPointers);
 public:
-	UI_EmManager(std::string_view title, int selectedIndex = -1) : UI_Window(title), emIdx(selectedIndex) {}
-	static std::string EmDisplayString(int i, cEm& em, bool showEmPointers);
+	UI_EmManager(std::string_view title = "Em Manager", int selectedIndex = -1) : UI_Window(title), emIdx(selectedIndex) {}
+
 	bool Init() { return true; }
-	bool Render();
+	bool Render(bool WindowMode);
 };
 
 class UI_Globals : public UI_Window
@@ -52,7 +54,7 @@ class UI_Globals : public UI_Window
 public:
 	UI_Globals(std::string_view title) : UI_Window(title) {}
 	bool Init() { return true; }
-	bool Render();
+	bool Render(bool WindowMode);
 };
 
 class UI_AreaJump : public UI_Window
@@ -63,18 +65,19 @@ class UI_AreaJump : public UI_Window
 	char curRoomNo[256] = { 0 };
 	Vec curRoomPosition = { 0 };
 	float curRoomRotation = 0;
+
+	std::string RoomDisplayString(int stage, int room);
+	void UpdateRoomInfo();
 public:
-	static std::string RoomDisplayString(int stage, int room);
-	static void UpdateRoomInfo(int* curStage, int* curRoomIdx, Vec* curRoomPosition, float* curRoomRotation);
-	UI_AreaJump(std::string_view title) : UI_Window(title) { Init(); }
+	UI_AreaJump(std::string_view title = "Area Jump") : UI_Window(title) { Init(); }
 	bool Init();
-	bool Render();
+	bool Render(bool WindowMode);
 };
 
 class UI_FilterTool : public UI_Window
 {
 public:
-	UI_FilterTool(std::string_view title) : UI_Window(title) { Init(); }
+	UI_FilterTool(std::string_view title = "Filter Tool") : UI_Window(title) { Init(); }
 	bool Init() { return true; }
-	bool Render();
+	bool Render(bool WindowMode);
 };

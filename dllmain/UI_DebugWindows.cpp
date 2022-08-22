@@ -26,23 +26,34 @@ std::string UI_EmManager::EmDisplayString(int i, cEm& em, bool showEmPointers)
 
 void ImGui_ItemSeparator(); // cfgMenu.cpp
 
-bool UI_EmManager::Render()
+bool UI_EmManager::Render(bool WindowMode)
 {
-	ImGui::SetNextWindowSize(ImVec2(320, 120), ImGuiCond_Appearing);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(320, 120), ImVec2(420, 630));
-
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal);
-	{
-		auto pos = ImGui::GetWindowPos();
-		auto draw = ImGui::GetWindowDrawList();
 
+	if (WindowMode)
+	{
+		ImGui::SetNextWindowSize(ImVec2(320, 120), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSizeConstraints(ImVec2(320, 120), ImVec2(420, 630));
+
+		ImGui::Begin(windowTitle.c_str(), &retVal);
+	}
+
+	{
 		auto& emMgr = *EmMgrPtr();
 		// cEm list
 		{
 			ImGui::Text("Em Count: %d | Max: %d", emMgr.count_valid(), emMgr.count());
 			ImGui::SameLine();
-			ImGui::Checkbox("Show addresses", &showEmPointers);
+
+			if (WindowMode)
+				ImGui::Checkbox("Show addresses", &showEmPointers);
+			else
+			{
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new Em Manager window").x - 25, 0));
+				ImGui::SameLine();
+				if (ImGui::Button("Open new Em Manager window"))
+					UI_NewEmManager();
+			}
 
 			std::string currentEmStr = "N/A";
 			if (emIdx >= 0)
@@ -52,13 +63,26 @@ bool UI_EmManager::Render()
 					currentEmStr = EmDisplayString(emIdx, *em, showEmPointers);
 			}
 
-			if (emIdx >= 0 && !WindowResized)
+			if (WindowMode)
 			{
-				ImGui::SetWindowSize(ImVec2(0, 0)); // Auto-fit
-				WindowResized = true;
+				if (emIdx >= 0 && !WindowResized)
+				{
+					ImGui::SetWindowSize(ImVec2(0, 0)); // Auto-fit
+					WindowResized = true;
+				}
+			}
+			else
+			{
+				ImGui::Checkbox("Only active", &onlyShowValidEms); ImGui::SameLine();
+				ImGui::Checkbox("Only ESL-spawned", &onlyShowESLSpawned); ImGui::SameLine();
+				ImGui::Checkbox("Show addresses", &showEmPointers);
 			}
 
-			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Em").x - 10.0f);
+			if (WindowMode)
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Em").x - 10.0f);
+			else
+				ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - 375.0f) * pConfig->fFontSizeScale);
+
 			if (ImGui::BeginCombo("Em", currentEmStr.c_str()))
 			{
 				int i = 0;
@@ -86,8 +110,11 @@ bool UI_EmManager::Render()
 			}
 			ImGui::PopItemWidth();
 
-			ImGui::Checkbox("Only active", &onlyShowValidEms); ImGui::SameLine();
-			ImGui::Checkbox("Only ESL-spawned", &onlyShowESLSpawned);
+			if (WindowMode)
+			{
+				ImGui::Checkbox("Only active", &onlyShowValidEms); ImGui::SameLine();
+				ImGui::Checkbox("Only ESL-spawned", &onlyShowESLSpawned);
+			}
 		}
 
 		// cEm info
@@ -166,80 +193,171 @@ bool UI_EmManager::Render()
 						}
 					}
 
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Flags").x - 60.0f);
-					if (ImGui::BeginListBox("Flags"))
+					if (WindowMode)
 					{
-						bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
-						if (ImGui::Checkbox("MapCollision", &collisionEnabled))
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Flags").x - 60.0f);
+						if (ImGui::BeginListBox("Flags"))
 						{
-							if (collisionEnabled)
-								em->atari_2B4.m_flag_1A |= 0x100;
-							else
-								em->atari_2B4.m_flag_1A &= ~0x100;
-						}
-						bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
-						if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
-						{
-							if (emCollisionEnabled)
-								em->atari_2B4.m_flag_1A |= 0x200;
-							else
-								em->atari_2B4.m_flag_1A &= ~0x200;
-						}
-
-						for (int i = 0; i < 32; i++)
-						{
-							bool bitSet = (em->be_flag_4 & (1 << i)) != 0;
-
-							std::string lbl = cUnit::GetBeFlagName(i);
-							if (ImGui::Checkbox(lbl.c_str(), &bitSet))
+							bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
+							if (ImGui::Checkbox("MapCollision", &collisionEnabled))
 							{
-								if (bitSet)
-									em->be_flag_4 = em->be_flag_4 | (1 << i);
+								if (collisionEnabled)
+									em->atari_2B4.m_flag_1A |= 0x100;
 								else
-									em->be_flag_4 = em->be_flag_4 & ~(1 << i);
+									em->atari_2B4.m_flag_1A &= ~0x100;
 							}
+							bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
+							if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
+							{
+								if (emCollisionEnabled)
+									em->atari_2B4.m_flag_1A |= 0x200;
+								else
+									em->atari_2B4.m_flag_1A &= ~0x200;
+							}
+
+							for (int i = 0; i < 32; i++)
+							{
+								bool bitSet = (em->be_flag_4 & (1 << i)) != 0;
+
+								std::string lbl = cUnit::GetBeFlagName(i);
+								if (ImGui::Checkbox(lbl.c_str(), &bitSet))
+								{
+									if (bitSet)
+										em->be_flag_4 = em->be_flag_4 | (1 << i);
+									else
+										em->be_flag_4 = em->be_flag_4 & ~(1 << i);
+								}
+							}
+							ImGui::EndListBox();
 						}
-						ImGui::EndListBox();
-					}
-					ImGui::PopItemWidth();
+						ImGui::PopItemWidth();
 
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
-					if (ImGui::InputFloat3("Position", (float*)&em->pos_94, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
-						em->matUpdate();
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
+						if (ImGui::InputFloat3("Position", (float*)&em->pos_94, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+							em->matUpdate();
 
-					if (ImGui::InputFloat3("Rotation", (float*)&em->ang_A0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
-						em->matUpdate();
+						if (ImGui::InputFloat3("Rotation", (float*)&em->ang_A0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+							em->matUpdate();
 
-					if (ImGui::InputFloat3("Scale", (float*)&em->scale_AC, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
-					{
-						if (IsGanado(em->id_100))
+						if (ImGui::InputFloat3("Scale", (float*)&em->scale_AC, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
 						{
-							// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
-							// make sure we update that as well
-							Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
-							*scale_bk_498 = em->scale_AC;
+							if (IsGanado(em->id_100))
+							{
+								// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
+								// make sure we update that as well
+								Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
+								*scale_bk_498 = em->scale_AC;
+							}
+							em->matUpdate();
 						}
-						em->matUpdate();
+						ImGui::PopItemWidth();
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
+						ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
+
+						int hpCur = em->hp_324;
+						if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+							em->hp_324 = hpCur;
+
+						int hpMax = em->hp_max_326;
+						if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+							em->hp_max_326 = hpMax;
+						ImGui::PopItemWidth();
+
+						ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
+						ImGui::Text("Parts count: %d", em->PartCount());
+						if (em->emListIndex_3A0 != 255)
+							ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+
 					}
-					ImGui::PopItemWidth();
+					else
+					{
+						ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
+						if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 225 * pConfig->fFontSizeScale)))
+						{
+							ImGui::TableNextColumn();
 
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
-					ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
+							ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Position").x - 10.0f);
+							if (ImGui::InputFloat3("Position", (float*)&em->pos_94, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+								em->matUpdate();
 
-					int hpCur = em->hp_324;
-					if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
-						em->hp_324 = hpCur;
+							if (ImGui::InputFloat3("Rotation", (float*)&em->ang_A0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+								em->matUpdate();
 
-					int hpMax = em->hp_max_326;
-					if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
-						em->hp_max_326 = hpMax;
-					ImGui::PopItemWidth();
+							if (ImGui::InputFloat3("Scale", (float*)&em->scale_AC, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+							{
+								if (IsGanado(em->id_100))
+								{
+									// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
+									// make sure we update that as well
+									Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
+									*scale_bk_498 = em->scale_AC;
+								}
+								em->matUpdate();
+							}
+							ImGui::PopItemWidth();
 
-					ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
-					ImGui::Text("Parts count: %d", em->PartCount());
-					if (em->emListIndex_3A0 != 255)
-						ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+							ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
+							ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
 
+							int hpCur = em->hp_324;
+							if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+								em->hp_324 = hpCur;
+
+							int hpMax = em->hp_max_326;
+							if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+								em->hp_max_326 = hpMax;
+							ImGui::PopItemWidth();
+
+							ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
+							ImGui::Text("Parts count: %d", em->PartCount());
+							if (em->emListIndex_3A0 != 255)
+								ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+
+							ImGui::TableNextColumn();
+
+							float flagsWidth = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Flags").x - 20.0f;
+							float flagsHeight = ImGui::GetContentRegionAvail().y - 10.0f;
+							if (ImGui::BeginListBox("Flags", ImVec2(flagsWidth, flagsHeight)))
+							{
+								bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
+								if (ImGui::Checkbox("MapCollision", &collisionEnabled))
+								{
+									if (collisionEnabled)
+										em->atari_2B4.m_flag_1A |= 0x100;
+									else
+										em->atari_2B4.m_flag_1A &= ~0x100;
+								}
+								bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
+								if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
+								{
+									if (emCollisionEnabled)
+										em->atari_2B4.m_flag_1A |= 0x200;
+									else
+										em->atari_2B4.m_flag_1A &= ~0x200;
+								}
+
+								for (int i = 0; i < 32; i++)
+								{
+									bool bitSet = (em->be_flag_4 & (1 << i)) != 0;
+
+									std::string lbl = cUnit::GetBeFlagName(i);
+									if (ImGui::Checkbox(lbl.c_str(), &bitSet))
+									{
+										if (bitSet)
+											em->be_flag_4 = em->be_flag_4 | (1 << i);
+										else
+											em->be_flag_4 = em->be_flag_4 & ~(1 << i);
+									}
+								}
+								ImGui::EndListBox();
+							}
+
+							ImGui::EndTable();
+						}
+						ImGui::PopStyleVar();
+					}
+					
 					// works, but unsure what to display atm
 					/*
 					static int partIdx = -1;
@@ -266,7 +384,12 @@ bool UI_EmManager::Render()
 					ImGui::Dummy(ImVec2(10, 5));
 
 					ImGui::Text("Modification:");
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("PositionChange").x - 10.0f);
+
+					if (WindowMode)
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("PositionChange").x - 10.0f);
+					else
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("PositionChange").x - 200.0f);
+
 					ImGui::InputFloat3("PositionChange", addPosition, "%.3f");
 					ImGui::PopItemWidth();
 					if (ImGui::Button("Apply"))
@@ -280,13 +403,14 @@ bool UI_EmManager::Render()
 			}
 		}
 
-		ImGui::End();
+		if (WindowMode)
+			ImGui::End();
 	}
 
 	return retVal;
 }
 
-bool UI_Globals::Render()
+bool UI_Globals::Render(bool WindowMode)
 {
 	cRoomJmp_data* test = cRoomJmp_data::get();
 	cRoomJmp_stage* stage = test->GetStage(1);
@@ -415,21 +539,21 @@ std::string UI_AreaJump::RoomDisplayString(int stageIdx, int roomIdx)
 	return ret;
 }
 
-void UI_AreaJump::UpdateRoomInfo(int *curStage, int *curRoomIdx, Vec *curRoomPosition, float *curRoomRotation)
+void UI_AreaJump::UpdateRoomInfo()
 {
 	cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
-	cRoomJmp_stage* stage = roomJmpData->GetStage(*curStage);
-	CRoomInfo* room = stage->GetRoom(*curRoomIdx);
+	cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
+	CRoomInfo* room = stage->GetRoom(curRoomIdx);
 	//sprintf_s(curRoomNo, "%03X", int(room->roomNo_2 & 0xFFF));
 	if ((room->flag_0 & 1) != 0)
 	{
-		*curRoomPosition = room->pos_4;
-		*curRoomRotation = room->r_10;
+		curRoomPosition = room->pos_4;
+		curRoomRotation = room->r_10;
 	}
 	else
 	{
-		*curRoomPosition = { 0 };
-		*curRoomRotation = 0;
+		curRoomPosition = { 0 };
+		curRoomRotation = 0;
 	};
 }
 
@@ -447,12 +571,17 @@ bool UI_AreaJump::Init()
 	return true;
 }
 
-bool UI_AreaJump::Render()
+bool UI_AreaJump::Render(bool WindowMode)
 {
-	ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 350));
-
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_AlwaysAutoResize);
+
+	if (WindowMode)
+	{
+		ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 350));
+
+		ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_AlwaysAutoResize);
+	}
+
 	{
 		cRoomJmp_data* roomJmpData = cRoomJmp_data::get();
 
@@ -465,7 +594,7 @@ bool UI_AreaJump::Render()
 				curStage = 0;
 
 			curRoomIdx = 0;
-			UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
+			UpdateRoomInfo();
 		}
 
 		cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
@@ -483,7 +612,7 @@ bool UI_AreaJump::Render()
 					if (ImGui::Selectable(roomStr.c_str(), is_selected))
 					{
 						curRoomIdx = i;
-						UpdateRoomInfo(&curStage, &curRoomIdx, &curRoomPosition, &curRoomRotation);
+						UpdateRoomInfo();
 					}
 
 					if (is_selected)
@@ -531,20 +660,26 @@ bool UI_AreaJump::Render()
 				}
 			}
 		}
-
-		ImGui::End();
+		
+		if (WindowMode)
+			ImGui::End();
 	}
 
 	return retVal;
 }
 
-bool UI_FilterTool::Render()
+bool UI_FilterTool::Render(bool WindowMode)
 {
-	ImGui::SetNextWindowSize(ImVec2(300, 410), ImGuiCond_Appearing);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 410));
-
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal);
+
+	if (WindowMode)
+	{
+		ImGui::SetNextWindowSize(ImVec2(300, 410), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 410));
+
+		ImGui::Begin(windowTitle.c_str(), &retVal);
+	}
+
 	{
 		cLightEnv* LightEnv = &LightMgr->LightEnv_20;
 
@@ -651,7 +786,8 @@ bool UI_FilterTool::Render()
 
 		ImGui::PopItemWidth();
 
-		ImGui::End();
+		if (WindowMode)
+			ImGui::End();
 	}
 
 	return retVal;

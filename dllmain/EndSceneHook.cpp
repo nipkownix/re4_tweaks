@@ -391,7 +391,7 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	while (it != DebugWindows.end())
 	{
 		auto* window = *it;
-		bool remainVisible = window->Render();
+		bool remainVisible = window->Render(true);
 		if (!remainVisible)
 		{
 			delete window;
