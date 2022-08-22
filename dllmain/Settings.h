@@ -127,6 +127,24 @@ public:
 	std::string sTrainerSpeedOverrideKeyCombo = "";
 	std::string sTrainerMoveAshToPlayerKeyCombo = "";
 
+	// WEAPON_HOTKEYS
+	std::string sWeaponHotkeys[5] = { "1", "2", "3", "4", "5" };
+	int iWeaponHotkeyWepIds[5] = { 0,0,0,0,0 };
+	std::vector<int> iWeaponHotkeyCycle[5] = { 
+		{ 35,37,33,39,3,41,42,55 }, // pistols
+		{ 44,45,148 }, // shotguns
+		{ 46,47,48,52 }, // rifle/machine guns
+		{ 53,109,54 }, // rocket/mine launchers
+		{ 1,2,14,8,9,10 }, // throwables
+	};
+	std::string iWeaponHotkeyCycleString[5] = {
+		"35,37,33,39,3,41,42,55",
+		"44,45,148",
+		"46,47,48,52",
+		"53,109,54",
+		"1,2,14,8,9,10"
+	};
+
 	// TRAINER
 	bool bTrainerEnable = false;
 	bool bTrainerPlayerSpeedOverride = false;

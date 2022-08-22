@@ -363,6 +363,40 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
 	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
 
+	// WEAPON HOTKEYS
+	pConfig->sWeaponHotkeys[0] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", pConfig->sWeaponHotkeys[0]);
+	pConfig->sWeaponHotkeys[1] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", pConfig->sWeaponHotkeys[1]);
+	pConfig->sWeaponHotkeys[2] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);
+	pConfig->sWeaponHotkeys[3] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", pConfig->sWeaponHotkeys[3]);
+	pConfig->sWeaponHotkeys[4] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", pConfig->sWeaponHotkeys[4]);
+	pConfig->iWeaponHotkeyWepIds[0] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
+	pConfig->iWeaponHotkeyWepIds[1] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
+	pConfig->iWeaponHotkeyWepIds[2] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
+	pConfig->iWeaponHotkeyWepIds[3] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", pConfig->iWeaponHotkeyWepIds[3]);
+	pConfig->iWeaponHotkeyWepIds[4] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", pConfig->iWeaponHotkeyWepIds[4]);
+	auto readIntVect = [&iniReader](std::string section, std::string key, std::string& default_value)
+	{
+		std::vector<int> ret;
+
+		default_value = iniReader.ReadString(section, key, default_value);
+
+		std::stringstream ss(default_value);
+
+		for (int i; ss >> i;) {
+			ret.push_back(i);
+			int peeked = ss.peek();
+			if (peeked == ',' || peeked == ' ')
+				ss.ignore();
+		}
+
+		return ret;
+	};
+	pConfig->iWeaponHotkeyCycle[0] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", pConfig->iWeaponHotkeyCycleString[0]);
+	pConfig->iWeaponHotkeyCycle[1] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", pConfig->iWeaponHotkeyCycleString[1]);
+	pConfig->iWeaponHotkeyCycle[2] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", pConfig->iWeaponHotkeyCycleString[2]);
+	pConfig->iWeaponHotkeyCycle[3] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", pConfig->iWeaponHotkeyCycleString[3]);
+	pConfig->iWeaponHotkeyCycle[4] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", pConfig->iWeaponHotkeyCycleString[4]);
+
 	// Parse all hotkeys
 	ParseHotkeys();
 
@@ -442,6 +476,33 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + pConfig->sTrainerMoveAshToPlayerKeyCombo);
+
+		// WEAPON HOTKEYS
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", pConfig->sWeaponHotkeys[0]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", pConfig->sWeaponHotkeys[1]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", pConfig->sWeaponHotkeys[3]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", pConfig->sWeaponHotkeys[4]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", pConfig->iWeaponHotkeyWepIds[3]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", pConfig->iWeaponHotkeyWepIds[4]);
+
+		auto writeIntVect = [&iniReader](std::string section, std::string key, std::vector<int>& vect) {
+			std::string val = "";
+			for (int num : vect)
+				val += std::to_string(num) + ", ";
+			if (!val.empty())
+				val = val.substr(0, val.size() - 2);
+			iniReader.WriteString(section, key, val);
+		};
+
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", pConfig->iWeaponHotkeyCycle[0]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", pConfig->iWeaponHotkeyCycle[1]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", pConfig->iWeaponHotkeyCycle[2]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", pConfig->iWeaponHotkeyCycle[3]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", pConfig->iWeaponHotkeyCycle[4]);
 
 		return;
 	}

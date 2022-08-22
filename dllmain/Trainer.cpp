@@ -88,18 +88,7 @@ std::vector<uint32_t> KeyComboNoclipToggle;
 std::vector<uint32_t> KeyComboSpeedOverride;
 std::vector<uint32_t> KeyComboAshToPlayer;
 
-std::vector<uint32_t> KeyWeaponSlot1;
-std::vector<uint32_t> KeyWeaponSlot2;
-std::vector<uint32_t> KeyWeaponSlot3;
-std::vector<uint32_t> KeyWeaponSlot4;
-std::vector<uint32_t> KeyWeaponSlot5;
-
-ITEM_ID BoundWeapons[5] = { 0 };
-void BindWeaponSlot(int slotIdx)
-{
-	if (ItemPiecePtr())
-		BoundWeapons[slotIdx] = ItemPiecePtr()->pItem_24->id_0;
-}
+std::vector<uint32_t> KeyComboWeaponHotkey[5];
 
 void HotkeySlotPressed(int slotIdx)
 {
@@ -117,8 +106,8 @@ void HotkeySlotPressed(int slotIdx)
 				{
 					if (ItemPiece->pItem_24)
 					{
-						BoundWeapons[slotIdx] = ItemPiece->pItem_24->id_0;
-						// TODO: save weapon bindings to config file...
+						pConfig->iWeaponHotkeyWepIds[slotIdx] = ItemPiece->pItem_24->id_0;
+						pConfig->WriteSettings();
 						
 						// fall-thru to weapon switch code below, acts as an indicator that binding was set
 					}
@@ -128,9 +117,37 @@ void HotkeySlotPressed(int slotIdx)
 	}
 
 	// Not binding weapon, must be trying to switch to weapon instead
-	if (BoundWeapons[slotIdx])
+	int weaponId = pConfig->iWeaponHotkeyWepIds[slotIdx];
+	if (!weaponId)
 	{
-		cItem* item = ItemMgr->search(BoundWeapons[slotIdx]);
+		static size_t weaponCycleIndex[5] = { 0 };
+
+		std::vector<int>& weaponCycle = pConfig->iWeaponHotkeyCycle[slotIdx];
+		size_t idx = weaponCycleIndex[slotIdx];
+		if (idx >= weaponCycle.size())
+			idx = 0;
+
+		// Search inventory for each weapon in the cycle following the current weaponCycleIndex...
+
+		int cycleIdx = idx;
+		for (int i = 0; i < weaponCycle.size(); i++)
+		{
+			cycleIdx = (idx + i) % weaponCycle.size();
+
+			cItem* item = ItemMgr->search(weaponCycle[cycleIdx]);
+			if (item)
+			{
+				weaponId = weaponCycle[cycleIdx];
+				break;
+			}
+		}
+
+		weaponCycleIndex[slotIdx] = cycleIdx + 1;
+	}
+
+	if (weaponId)
+	{
+		cItem* item = ItemMgr->search(weaponId);
 		if (ItemMgr->arm(item))
 		{
 			RequestWeaponChange();
@@ -171,16 +188,19 @@ void Trainer_ParseKeyCombos()
 		}, &KeyComboAshToPlayer });
 	}
 
-	KeyWeaponSlot1 = ParseKeyCombo("1");
-	KeyWeaponSlot2 = ParseKeyCombo("2");
-	KeyWeaponSlot3 = ParseKeyCombo("3");
-	KeyWeaponSlot4 = ParseKeyCombo("4");
-	KeyWeaponSlot5 = ParseKeyCombo("5");
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(0); }, &KeyWeaponSlot1 });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(1); }, &KeyWeaponSlot2 });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(2); }, &KeyWeaponSlot3 });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(3); }, &KeyWeaponSlot4 });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(4); }, &KeyWeaponSlot5 });
+	for (int i = 0; i < 5; i++)
+	{
+		KeyComboWeaponHotkey[i].clear();
+		KeyComboWeaponHotkey[i] = ParseKeyCombo(pConfig->sWeaponHotkeys[i]);
+	}
+
+	// TODO: make RegisterHotkey use std::function so that we could include `i` in the capture and handle this in the loop above...
+
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(0); }, &KeyComboWeaponHotkey[0] });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(1); }, &KeyComboWeaponHotkey[1] });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(2); }, &KeyComboWeaponHotkey[2] });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(3); }, &KeyComboWeaponHotkey[3] });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(4); }, &KeyComboWeaponHotkey[4] });
 }
 
 std::vector<FlagPatch> flagPatches;
