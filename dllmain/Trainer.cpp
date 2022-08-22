@@ -92,6 +92,9 @@ std::vector<uint32_t> KeyComboWeaponHotkey[5];
 
 void HotkeySlotPressed(int slotIdx)
 {
+	if (!pConfig->bWeaponHotkeysEnable)
+		return;
+
 	if (SubScreenWk)
 	{
 		// If subscreen is open and we're on inventory menu...
@@ -731,6 +734,41 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("Focus/unfocus trainer UIs");
 			}
 
+			// Weapon Hotkeys
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Enable Weapon Hotkeys", &pConfig->bWeaponHotkeysEnable))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Allows switching weapons via hotkeys rather than needing to use inventory.");
+				ImGui::TextWrapped("By default hotkeys will select different weapon types, they can also be assigned to a weapon directly by highlighting the weapon in inventory and pressing the hotkey on it.");
+				ImGui::Spacing();
+
+				ImGui::BeginDisabled(!pConfig->bWeaponHotkeysEnable);
+
+				for (int i = 0; i < 5; i++)
+				{
+					ImGui::PushID(2 + i);
+					if (ImGui::Button(pConfig->sWeaponHotkeys[i].c_str(), ImVec2(150, 0)))
+					{
+						pConfig->HasUnsavedChanges = true;
+						CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sWeaponHotkeys[i], 0, NULL);
+					}
+					ImGui::PopID();
+
+					ImGui::SameLine();
+					std::string text = "Weapon Slot " + std::to_string(i + 1);
+					ImGui::TextWrapped(text.c_str());
+				}
+
+				ImGui::EndDisabled();
+			}
+
 			// No-clip
 			{
 				ImGui_ColumnSwitch();
@@ -738,7 +776,7 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("Key combination to toggle the \"Disable Player Collision\" / no-clip patch.");
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::PushID(2);
+				ImGui::PushID(7);
 				if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(150, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
@@ -759,7 +797,7 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("(set your player speed override value in the Patches section first)");
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::PushID(3);
+				ImGui::PushID(8);
 				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(150, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
@@ -779,7 +817,7 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("Key combination to move Ashley to the player's position.");
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::PushID(4);
+				ImGui::PushID(9);
 				if (ImGui::Button(pConfig->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(150, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;

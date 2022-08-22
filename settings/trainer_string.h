@@ -19,6 +19,9 @@ UseNumpadMovement = True
 UseMouseWheelUpDown = True
 
 [WEAPON_HOTKEYS]
+; Enables usage of weapon hotkeys, to quickly switch weapons without needing to open inventory
+Enable = false
+
 ; Per-slot key bindings, set to number keys by default
 WeaponHotkeySlot1 = 1
 WeaponHotkeySlot2 = 2

@@ -364,6 +364,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
 
 	// WEAPON HOTKEYS
+	pConfig->bWeaponHotkeysEnable = iniReader.ReadBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
 	pConfig->sWeaponHotkeys[0] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", pConfig->sWeaponHotkeys[0]);
 	pConfig->sWeaponHotkeys[1] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", pConfig->sWeaponHotkeys[1]);
 	pConfig->sWeaponHotkeys[2] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);
@@ -478,6 +479,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + pConfig->sTrainerMoveAshToPlayerKeyCombo);
 
 		// WEAPON HOTKEYS
+		iniReader.WriteBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
 		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", pConfig->sWeaponHotkeys[0]);
 		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", pConfig->sWeaponHotkeys[1]);
 		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);

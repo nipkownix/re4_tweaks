@@ -128,6 +128,7 @@ public:
 	std::string sTrainerMoveAshToPlayerKeyCombo = "";
 
 	// WEAPON_HOTKEYS
+	bool bWeaponHotkeysEnable = false;
 	std::string sWeaponHotkeys[5] = { "1", "2", "3", "4", "5" };
 	int iWeaponHotkeyWepIds[5] = { 0,0,0,0,0 };
 	std::vector<int> iWeaponHotkeyCycle[5] = { 
