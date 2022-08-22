@@ -563,7 +563,7 @@ bool UI_AreaJump::Init()
 	if (pG)
 	{
 		// Init current stage to whatever stage player is currently on
-		curStage = (pG->curRoomId_4FAC & 0xFFF) >> 8;
+		curStage = (pG->curRoomId_4FAC & 0xFF00) >> 8;
 		// ...but don't let us init it to the boring 0 stage
 		if (curStage <= 0)
 			curStage = 1;
