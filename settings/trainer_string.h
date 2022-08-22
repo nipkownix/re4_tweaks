@@ -45,8 +45,8 @@ WeaponIdSlot5 = 0
 ; slot 4 cycles through rocket/mine launchers
 ; slot 5 cycles through throwables
 WeaponCycleSlot1 = 35, 37, 33, 39, 3, 41, 42, 55
-WeaponCycleSlot2 = 44, 45, 148
-WeaponCycleSlot3 = 46, 47, 48, 52
+WeaponCycleSlot2 = 44, 45, 71, 148
+WeaponCycleSlot3 = 16, 46, 47, 48, 52, 83
 WeaponCycleSlot4 = 53, 109, 54
 WeaponCycleSlot5 = 1, 2, 14, 8, 9, 10
 
