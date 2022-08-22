@@ -133,7 +133,7 @@ void HotkeySlotPressed(int slotIdx)
 		// Search inventory for each weapon in the cycle following the current weaponCycleIndex...
 
 		int cycleIdx = idx;
-		for (int i = 0; i < weaponCycle.size(); i++)
+		for (size_t i = 0; i < weaponCycle.size(); i++)
 		{
 			cycleIdx = (idx + i) % weaponCycle.size();
 

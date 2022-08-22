@@ -53,4 +53,3 @@ struct cFilter00Params2
         return Filter00Params2;
     }
 };
-#pragma pack(pop)
