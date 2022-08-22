@@ -854,7 +854,7 @@ void Trainer_RenderUI()
 			int numValues;
 		};
 
-		// TODO: ITEM_SET, KEY_LOCK, ROOM, ROOM_SAVE
+		// TODO: ROOM, ROOM_SAVE
 		CategoryInfo flagCategoryInfo[] = {
 			{ "DEBUG", GlobalPtr()->flags_DEBUG_0_60, Flags_DEBUG_Names, 128 },
 			{ "STOP", GlobalPtr()->flags_STOP_0_170, Flags_STOP_Names, 32 },
@@ -863,9 +863,9 @@ void Trainer_RenderUI()
 			{ "ITEM_SET", GlobalPtr()->flags_ITEM_SET_0_528C, Flags_ITEM_SET_Names, 150 },
 			{ "SCENARIO", GlobalPtr()->flags_SCENARIO_0_52CC, Flags_SCENARIO_Names, 195 },
 			{ "KEY_LOCK", GlobalPtr()->flags_KEY_LOCK_52EC, Flags_KEY_LOCK_Names, 150 },
+			{ "DISP", GlobalPtr()->Flags_DISP_0_58, Flags_DISP_Names, 32 },
 			{ "EXTRA", SystemSavePtr()->flags_EXTRA_4, Flags_EXTRA_Names, 21 },
 			{ "CONFIG", SystemSavePtr()->flags_CONFIG_0, Flags_CONFIG_Names, 6 },
-			{ "DISP", GlobalPtr()->Flags_DISP_0_58, Flags_DISP_Names, 32 }
 		};
 
 		static char searchText[256] = { 0 };
@@ -920,24 +920,25 @@ void Trainer_RenderUI()
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
 		if (ImGui::BeginTable("##flags", columns, ImGuiTableFlags_ScrollY))
 		{
-			for (int i = 0; i < curFlagCategory->numValues; i++)
-			{
-				bool makeVisible = true;
-				if (!searchTextUpper.empty())
+			if (curFlagCategory)
+				for (int i = 0; i < curFlagCategory->numValues; i++)
 				{
-					std::string flagNameUpper = StrToUpper(curFlagCategory->valueNames[i]);
+					bool makeVisible = true;
+					if (!searchTextUpper.empty())
+					{
+						std::string flagNameUpper = StrToUpper(curFlagCategory->valueNames[i]);
 
-					makeVisible = flagNameUpper.find(searchTextUpper) != std::string::npos;
-				}
+						makeVisible = flagNameUpper.find(searchTextUpper) != std::string::npos;
+					}
 
-				if (makeVisible)
-				{
-					ImGui::TableNextColumn();
-					bool selected = FlagIsSet(curFlagCategory->values, i);
-					if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
-						FlagSet(curFlagCategory->values, i, selected);
+					if (makeVisible)
+					{
+						ImGui::TableNextColumn();
+						bool selected = FlagIsSet(curFlagCategory->values, i);
+						if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
+							FlagSet(curFlagCategory->values, i, selected);
+					}
 				}
-			}
 			ImGui::EndTable();
 		}
 		ImGui::PopStyleVar();
