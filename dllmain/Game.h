@@ -10,6 +10,8 @@
 #include "SDK/snd.h"
 #include "SDK/title.h"
 #include "SDK/light.h"
+#include "SDK/item.h"
+#include "SDK/puzzle.h"
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];

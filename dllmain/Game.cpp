@@ -7,10 +7,19 @@ std::string gameVersion;
 bool gameIsDebugBuild = false;
 
 SND_CTRL* Snd_ctrl_work = nullptr; // extern inside Game.h
-cLightMgr* LightMgr = nullptr; // extern inside light.h
-cLightMgr__setEnv_Fn cLightMgr__setEnv = nullptr; // extern inside light.h
-cFilter00Params* Filter00Params = nullptr; // extern inside filter00.h
-cFilter00Params2* Filter00Params2 = nullptr; // extern inside filter00.h
+
+// light.h externs
+cLightMgr* LightMgr = nullptr;
+cLightMgr__setEnv_Fn cLightMgr__setEnv = nullptr;
+
+// filter00.h externs
+cFilter00Params* Filter00Params = nullptr;
+cFilter00Params2* Filter00Params2 = nullptr;
+
+// item.h externs
+cItemMgr* ItemMgr = nullptr;
+cItemMgr__search_Fn cItemMgr__search = nullptr;
+cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 
 // a lot missing from here sadly ;_;
 std::unordered_map<int, std::string> UnitBeFlagNames =
@@ -200,6 +209,15 @@ TITLE_WORK* TitleWork_ptr = nullptr;
 TITLE_WORK* TitleWorkPtr()
 {
 	return TitleWork_ptr;
+}
+
+itemPiece** g_p_Item_piece = nullptr; // not actual name...
+itemPiece* ItemPiecePtr()
+{
+	if (!g_p_Item_piece)
+		return nullptr;
+
+	return *g_p_Item_piece;
 }
 
 bool IsGanado(int id) // same as games IsGanado func
@@ -450,6 +468,18 @@ bool Init_Game()
 	// cLightMgr::setEnv ptr
 	pattern = hook::pattern("55 8B EC 51 53 56 8B 75 ? 8B 46 ? A3 ? ? ? ? 8B D9 8B 4E ?");
 	cLightMgr__setEnv = (cLightMgr__setEnv_Fn)pattern.count(1).get(0).get<uint8_t>(0);
+
+	// ItemMgr
+	pattern = hook::pattern("80 B9 C0 4F 00 00 10 0F 84 ? ? ? ? B9");
+	ItemMgr = *pattern.count(1).get(0).get<cItemMgr*>(0xE);
+	pattern = hook::pattern("83 C4 08 50 B9 ? ? ? ? E8 ? ? ? ? 85 C0 0F 94 45 FF");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(9), cItemMgr__search);
+	pattern = hook::pattern("8B 0D ? ? ? ? 51 B9 ? ? ? ? E8 ? ? ? ? 5F 5E 5B 8B E5");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(12), cItemMgr__arm);
+
+	// g_p_Item_piece ptr (not actual name)
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 8B 35 ? ? ? ? 85 F6 0F 84");
+	g_p_Item_piece = *pattern.count(1).get(0).get<itemPiece**>(10);
 
 	return true;
 }
