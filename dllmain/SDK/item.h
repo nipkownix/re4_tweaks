@@ -14,12 +14,14 @@ public:
 	int8_t orientation_C;
 	uint8_t onboard_D;
 };
+assert_size(cItem, 0xE);
 
 struct ITEM_ORDER
 {
 	cItem* p_item_0;
 	uint16_t num_4;
 };
+assert_size(ITEM_ORDER, 8);
 
 class cItemMgr;
 
@@ -57,5 +59,6 @@ public:
 		return cItemMgr__arm(this, nullptr, pItem);
 	}
 };
+assert_size(cItemMgr, 0x30);
 
 extern cItemMgr* ItemMgr;

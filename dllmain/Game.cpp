@@ -7,6 +7,8 @@ std::string gameVersion;
 bool gameIsDebugBuild = false;
 
 SND_CTRL* Snd_ctrl_work = nullptr; // extern inside Game.h
+SUB_SCREEN* SubScreenWk = nullptr; // extern inside sscrn.h
+pzlPlayer__ptrPiece_Fn pzlPlayer__ptrPiece = nullptr; // extern inside puzzle.h
 
 // light.h externs
 cLightMgr* LightMgr = nullptr;
@@ -507,6 +509,14 @@ bool Init_Game()
 	// WeaponChange funcptr
 	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), WeaponChange);
+
+	// SubScreenWk ptr
+	pattern = hook::pattern("68 ? ? ? ? E8 ? ? ? ? 68 00 00 00 F0 E8");
+	SubScreenWk = *pattern.count(1).get(0).get<SUB_SCREEN*>(1);
+
+	// pzlPlayer::ptrPiece
+	pattern = hook::pattern("8B 41 30 50 E8 ? ? ? ? C3");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(4), pzlPlayer__ptrPiece);
 
 	return true;
 }

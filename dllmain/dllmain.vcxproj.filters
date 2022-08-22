@@ -450,6 +450,9 @@
     <ClInclude Include="SDK\puzzle.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\sscrn.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

@@ -88,17 +88,11 @@ std::vector<uint32_t> KeyComboNoclipToggle;
 std::vector<uint32_t> KeyComboSpeedOverride;
 std::vector<uint32_t> KeyComboAshToPlayer;
 
-std::vector<uint32_t> KeyBindWepSlot1;
-std::vector<uint32_t> KeyBindWepSlot2;
-std::vector<uint32_t> KeyBindWepSlot3;
-std::vector<uint32_t> KeyBindWepSlot4;
-std::vector<uint32_t> KeyBindWepSlot5;
-
-std::vector<uint32_t> KeySelWepSlot1;
-std::vector<uint32_t> KeySelWepSlot2;
-std::vector<uint32_t> KeySelWepSlot3;
-std::vector<uint32_t> KeySelWepSlot4;
-std::vector<uint32_t> KeySelWepSlot5;
+std::vector<uint32_t> KeyWeaponSlot1;
+std::vector<uint32_t> KeyWeaponSlot2;
+std::vector<uint32_t> KeyWeaponSlot3;
+std::vector<uint32_t> KeyWeaponSlot4;
+std::vector<uint32_t> KeyWeaponSlot5;
 
 ITEM_ID BoundWeapons[5] = { 0 };
 void BindWeaponSlot(int slotIdx)
@@ -107,8 +101,33 @@ void BindWeaponSlot(int slotIdx)
 		BoundWeapons[slotIdx] = ItemPiecePtr()->pItem_24->id_0;
 }
 
-void ChangeWeaponToSlot(int slotIdx)
+void HotkeySlotPressed(int slotIdx)
 {
+	if (SubScreenWk)
+	{
+		// If subscreen is open and we're on inventory menu...
+		if (SubScreenWk->open_flag_2C != 0 && SubScreenWk->menu_no_260 == 1)
+		{
+			// Treat the key-press as weapon binding request
+			if (SubScreenWk->puzzlePlayer_2AC)
+			{
+				// Fetch current highlighted item piece
+				itemPiece* ItemPiece = (itemPiece*)SubScreenWk->puzzlePlayer_2AC->ptrPiece(SubScreenWk->puzzlePlayer_2AC->m_p_active_board_30);
+				if (ItemPiece && ItemPiece->be_flag_0 == 1)
+				{
+					if (ItemPiece->pItem_24)
+					{
+						BoundWeapons[slotIdx] = ItemPiece->pItem_24->id_0;
+						// TODO: save weapon bindings to config file...
+						
+						// fall-thru to weapon switch code below, acts as an indicator that binding was set
+					}
+				}
+			}
+		}
+	}
+
+	// Not binding weapon, must be trying to switch to weapon instead
 	if (BoundWeapons[slotIdx])
 	{
 		cItem* item = ItemMgr->search(BoundWeapons[slotIdx]);
@@ -152,27 +171,16 @@ void Trainer_ParseKeyCombos()
 		}, &KeyComboAshToPlayer });
 	}
 
-	KeyBindWepSlot1 = ParseKeyCombo("CTRL+1");
-	KeyBindWepSlot2 = ParseKeyCombo("CTRL+2");
-	KeyBindWepSlot3 = ParseKeyCombo("CTRL+3");
-	KeyBindWepSlot4 = ParseKeyCombo("CTRL+4");
-	KeyBindWepSlot5 = ParseKeyCombo("CTRL+5");
-	pInput->RegisterHotkey({ []() { BindWeaponSlot(0); }, &KeyBindWepSlot1 });
-	pInput->RegisterHotkey({ []() { BindWeaponSlot(1); }, &KeyBindWepSlot2 });
-	pInput->RegisterHotkey({ []() { BindWeaponSlot(2); }, &KeyBindWepSlot3 });
-	pInput->RegisterHotkey({ []() { BindWeaponSlot(3); }, &KeyBindWepSlot4 });
-	pInput->RegisterHotkey({ []() { BindWeaponSlot(4); }, &KeyBindWepSlot5 });
-
-	KeySelWepSlot1 = ParseKeyCombo("1");
-	KeySelWepSlot2 = ParseKeyCombo("2");
-	KeySelWepSlot3 = ParseKeyCombo("3");
-	KeySelWepSlot4 = ParseKeyCombo("4");
-	KeySelWepSlot5 = ParseKeyCombo("5");
-	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(0); }, &KeySelWepSlot1 });
-	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(1); }, &KeySelWepSlot2 });
-	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(2); }, &KeySelWepSlot3 });
-	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(3); }, &KeySelWepSlot4 });
-	pInput->RegisterHotkey({ []() { ChangeWeaponToSlot(4); }, &KeySelWepSlot5 });
+	KeyWeaponSlot1 = ParseKeyCombo("1");
+	KeyWeaponSlot2 = ParseKeyCombo("2");
+	KeyWeaponSlot3 = ParseKeyCombo("3");
+	KeyWeaponSlot4 = ParseKeyCombo("4");
+	KeyWeaponSlot5 = ParseKeyCombo("5");
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(0); }, &KeyWeaponSlot1 });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(1); }, &KeyWeaponSlot2 });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(2); }, &KeyWeaponSlot3 });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(3); }, &KeyWeaponSlot4 });
+	pInput->RegisterHotkey({ []() { HotkeySlotPressed(4); }, &KeyWeaponSlot5 });
 }
 
 std::vector<FlagPatch> flagPatches;
