@@ -483,6 +483,12 @@ bool UI_Globals::Render(bool WindowMode)
 
 		ImGui::Text("Chapter: %d", globals->chapter_4F9A);
 
+		if (player)
+			ImGui::Text("Player HP: %d", globals->playerHpCur_4FB4);
+
+		if (ashley)
+			ImGui::Text("Ashley HP: %d", globals->subHpCur_4FB8);
+
 		static std::string diff;
 		switch (globals->gameDifficulty_847C) {
 		case GameDifficulty::VeryEasy:
@@ -510,7 +516,7 @@ bool UI_Globals::Render(bool WindowMode)
 
 		ImGui::Text("Pesetas: %d", globals->goldAmount_4FA8);
 
-		ImGui::Text("Total kills: %d", globals->g_kill_cnt_8468);
+		ImGui::Text("Kills: %d", globals->g_kill_cnt_8468);
 
 		ImGui::End();
 	}

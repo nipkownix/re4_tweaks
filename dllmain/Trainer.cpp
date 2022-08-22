@@ -366,6 +366,27 @@ void ImGui_ItemBG(float RowSize, ImColor bgCol);
 extern ImColor itmbgColor;
 void SetHotkeyComboThread(std::string* cfgHotkey);
 
+bool ImGui_ButtonSameLine(const char* label, bool samelinecheck = true, float offset = 0.0f, const ImVec2 size = ImVec2(0, 0))
+{
+	bool ret = ImGui::Button(label, size);
+
+	if (samelinecheck)
+	{
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		float window_visible_x2 = ImGui::GetCursorScreenPos().x + offset + ImGui::GetContentRegionAvail().x;
+		float last_button_x2;
+		float next_button_x2;
+
+		last_button_x2 = ImGui::GetItemRectMax().x;
+		next_button_x2 = last_button_x2 + style.ItemSpacing.x + size.x; // Expected position if next button was on same line
+		if (next_button_x2 < window_visible_x2)
+			ImGui::SameLine();
+	}
+
+	return ret;
+}
+
 bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& activeCol,
 	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor iconColor,
 	const ImColor textColor, const ImVec2& size = ImVec2(0, 0), const bool samelinecheck = true)
@@ -373,7 +394,7 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
 	ImGui::PushStyleColor(ImGuiCol_Button, CurTrainerTab == tabID ? activeCol : inactiveCol);
-	bool ret = ImGui::Button(btnID, size);
+	bool ret = ImGui_ButtonSameLine(btnID, samelinecheck, 0.0f, size);
 	ImGui::PopStyleColor();
 
 	auto p0 = ImGui::GetItemRectMin();
@@ -391,20 +412,6 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_icon_offset - 14.0f, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_text_offset - 7.0f, p0.y + y_text_offset), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-
-	if (samelinecheck)
-	{
-		ImGuiStyle& style = ImGui::GetStyle();
-
-		float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-		float last_button_x2;
-		float next_button_x2;
-
-		last_button_x2 = ImGui::GetItemRectMax().x;
-		next_button_x2 = last_button_x2 + style.ItemSpacing.x + size.x; // Expected position if next button was on same line
-		if (next_button_x2 < window_visible_x2)
-			ImGui::SameLine();
-	}
 
 	if (ret && tabID != TrainerTab::NumTabs)
 		CurTrainerTab = tabID;
@@ -454,6 +461,27 @@ void Trainer_RenderUI()
 		if (ImGui::BeginTable("TrainerPatches", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 		{
 			ImGui_ColumnInit();
+
+			// Misc
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::Spacing();
+
+				if (ImGui_ButtonSameLine("Heal player", true, -70.0f))
+					GlobalPtr()->playerHpCur_4FB4 = GlobalPtr()->playerHpMax_4FB6;
+
+				if (ImGui_ButtonSameLine("Heal Ashley", true, -70.0f))
+					GlobalPtr()->subHpCur_4FB8 = GlobalPtr()->subHpMax_4FBA;
+
+				if (ImGui_ButtonSameLine("Move Ashley to player", false))
+					MoveAshleyToPlayer();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::SetNextItemWidth(200.0f * pConfig->fFontSizeScale);
+				ImGui::InputInt("Pesetas", &GlobalPtr()->goldAmount_4FA8);
+			}
 
 			// Invincibility
 			{
@@ -570,12 +598,6 @@ void Trainer_RenderUI()
 				ImGui::RadioButton("Area Default", &AshleyStateOverride, AshleyState::Default);
 				ImGui::RadioButton("Present", &AshleyStateOverride, AshleyState::Present);
 				ImGui::RadioButton("Not present", &AshleyStateOverride, AshleyState::NotPresent);
-
-				// Should this be in another tab?
-				if (ImGui::Button("Move Ashley to Player"))
-				{
-					MoveAshleyToPlayer();
-				}
 			}
 
 			ImGui_ColumnFinish();
