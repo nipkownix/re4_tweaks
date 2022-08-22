@@ -746,7 +746,7 @@ void Trainer_RenderUI()
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Allows switching weapons via hotkeys rather than needing to use inventory.");
-				ImGui::TextWrapped("By default hotkeys will select different weapon types, they can also be assigned to a weapon directly by highlighting the weapon in inventory and pressing the hotkey on it.");
+				ImGui::TextWrapped("By default hotkeys will cycle between weapons of different types, they can also be assigned to a weapon directly by highlighting the weapon in inventory and pressing the hotkey on it.");
 				ImGui::Spacing();
 
 				ImGui::BeginDisabled(!pConfig->bWeaponHotkeysEnable);
@@ -764,6 +764,15 @@ void Trainer_RenderUI()
 					ImGui::SameLine();
 					std::string text = "Weapon Slot " + std::to_string(i + 1);
 					ImGui::TextWrapped(text.c_str());
+				}
+
+				ImGui::Text("Assigned hotkey weapon IDs: %d %d %d %d %d",
+					pConfig->iWeaponHotkeyWepIds[0], pConfig->iWeaponHotkeyWepIds[1], pConfig->iWeaponHotkeyWepIds[2], pConfig->iWeaponHotkeyWepIds[3], pConfig->iWeaponHotkeyWepIds[4]);
+
+				if (ImGui::Button("Reset assignments (use weapon cycling)"))
+				{
+					pConfig->iWeaponHotkeyWepIds[0] = pConfig->iWeaponHotkeyWepIds[1] = pConfig->iWeaponHotkeyWepIds[2] = pConfig->iWeaponHotkeyWepIds[3] = pConfig->iWeaponHotkeyWepIds[4] = 0;
+					pConfig->HasUnsavedChanges = true;
 				}
 
 				ImGui::EndDisabled();
