@@ -420,7 +420,7 @@ bool UI_Globals::Render(bool WindowMode)
 	char* room_person = room->getPerson();
 	char* room_person2 = room->getPerson2();
 
-	ImGui::SetNextWindowSizeConstraints(ImVec2(250, 100), ImVec2(250, 350));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(250, 100), ImVec2(250, 550));
 
 	bool retVal = true; // set to false on window close
 	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_AlwaysAutoResize);
@@ -517,6 +517,8 @@ bool UI_Globals::Render(bool WindowMode)
 		ImGui::Text("Pesetas: %d", globals->goldAmount_4FA8);
 
 		ImGui::Text("Kills: %d", globals->g_kill_cnt_8468);
+
+		ImGui::Text("Play time: %d:%02d:%02d", iCurPlayTime[0], iCurPlayTime[1], iCurPlayTime[2]);
 
 		if (ItemMgr->m_pWep_C)
 			ImGui::Text("Weapon ID: %d", ItemMgr->m_pWep_C->id_0);

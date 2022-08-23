@@ -28,6 +28,7 @@ static_assert(sizeof(DAMAGE) == 0x54, "sizeof(ATTACK_VALUE)");
 extern SND_CTRL* Snd_ctrl_work;
 
 std::string GameVersion();
+extern int iCurPlayTime[3];
 bool GameVersionIsDebug();
 InputDevices LastUsedDevice();
 bool isController();

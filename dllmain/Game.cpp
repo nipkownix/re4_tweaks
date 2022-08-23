@@ -23,6 +23,9 @@ cItemMgr* ItemMgr = nullptr;
 cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 
+// Current play time (H, M, S)
+int iCurPlayTime[3] = { 0, 0, 0 };
+
 // a lot missing from here sadly ;_;
 std::unordered_map<int, std::string> UnitBeFlagNames =
 {
@@ -517,6 +520,22 @@ bool Init_Game()
 	// pzlPlayer::ptrPiece
 	pattern = hook::pattern("8B 41 30 50 E8 ? ? ? ? C3");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(4), pzlPlayer__ptrPiece);
+
+	// Store current game time that's being calculated inside GetGameTime
+	pattern = hook::pattern("8B 55 ? 8B 45 ? 51 8B 4D ? 52 50 51 68");
+	struct GetGameTime_hook
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			iCurPlayTime[0] = *(uint32_t*)(regs.ebp - 0xC); // Hours
+			iCurPlayTime[1] = *(uint32_t*)(regs.ebp - 0x8); // Minutes
+			iCurPlayTime[2] = *(uint32_t*)(regs.ebp - 0x4); // Seconds
+
+			// Code we replaced
+			regs.edx = *(uint32_t*)(regs.ebp - 0x4);
+			regs.eax = *(uint32_t*)(regs.ebp - 0x8);
+		}
+	}; injector::MakeInline<GetGameTime_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 	return true;
 }
