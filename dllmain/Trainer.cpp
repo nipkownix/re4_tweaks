@@ -100,7 +100,15 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 	if (forceUseWepID && slotIdx < 1)
 		return;
 
-	// If forceUseWepID, we are probably just trying to equip the last wep id, so we can skip this part
+	cPlayer* player = PlayerPtr();
+	if (!player)
+		return;
+
+	// Routine 4 = reloading, 2 = shooting
+	if (player->r_no_2_FE == 4 || player->r_no_2_FE == 2)
+		return;
+
+	// If forceUseWepID is true, we are probably just trying to equip the last wep id, so we can skip this part
 	if (SubScreenWk && !forceUseWepID)
 	{
 		// If subscreen is open and we're on inventory menu...
@@ -128,7 +136,7 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 	// Not binding weapon, must be trying to switch to weapon instead
 	int weaponId = pConfig->iWeaponHotkeyWepIds[slotIdx];
 
-	// slotIdx is the actual weaponId in this case
+	// slotIdx is the actual weaponId if forceUseWepID is true
 	if (!forceUseWepID)
 		weaponId = pConfig->iWeaponHotkeyWepIds[slotIdx];
 	else
@@ -169,9 +177,6 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 		cItem* item = ItemMgr->search(weaponId);
 		if (ItemMgr->arm(item))
 		{
-			con.AddConcatLog("last wep = ", last_weaponId);
-			con.AddConcatLog("cur wep = ", weaponId);
-
 			RequestWeaponChange();
 		}
 	}
