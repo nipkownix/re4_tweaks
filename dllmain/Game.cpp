@@ -298,7 +298,8 @@ const char* GetEmListEnumName(int emListNumber)
 // Original game funcs
 bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
-
+void(__cdecl* game_CardSave)(uint8_t a1, char a2);
+void(__cdecl* game_SubScreenOpen)(int a1, int a2);
 
 void* (__cdecl* mem_calloc)(size_t Size, char* Str, int a3, int a4, int a5);
 void* __cdecl mem_calloc_TITLE_WORK_hook(size_t Size, char* Str, int a3, int a4, int a5)
@@ -322,6 +323,18 @@ void RequestWeaponChange()
 	WeaponChangeRequested = true; // signal main thread
 }
 
+bool SaveGameRequested = false;
+void RequestSaveGame()
+{
+	SaveGameRequested = true; // signal main thread
+}
+
+bool MerchantRequested = false;
+void RequestMerchant()
+{
+	MerchantRequested = true; // signal main thread
+}
+
 void(__cdecl* WeaponChange)();
 void(__cdecl* TaskScheduler)();
 void TaskScheduler_Hook()
@@ -331,6 +344,25 @@ void TaskScheduler_Hook()
 		WeaponChange();
 		WeaponChangeRequested = false;
 	}
+
+	/* Not wurking?
+	if (SaveGameRequested)
+	{
+		game_CardSave(0, 1);
+
+		SaveGameRequested = false;
+	}
+	*/
+
+	if (MerchantRequested)
+	{
+		// If SubScreen is closed and game status is "playing"
+		if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
+			game_SubScreenOpen(16, 0);
+
+		MerchantRequested = false;
+	}
+
 	TaskScheduler();
 }
 
@@ -512,6 +544,14 @@ bool Init_Game()
 	// WeaponChange funcptr
 	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), WeaponChange);
+
+	// CardSave funcptr
+	pattern = hook::pattern("E8 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 15 ? ? ? ? A1");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), game_CardSave);
+
+	// SubScreenOpen funcptr
+	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
+	game_SubScreenOpen = (decltype(game_SubScreenOpen))pattern.count(1).get(0).get<uint32_t>(0);
 
 	// SubScreenWk ptr
 	pattern = hook::pattern("68 ? ? ? ? E8 ? ? ? ? 68 00 00 00 F0 E8");

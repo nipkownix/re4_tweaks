@@ -590,16 +590,55 @@ void Trainer_RenderUI()
 				if (ImGui_ButtonSameLine("Heal player", true, -70.0f))
 					GlobalPtr()->playerHpCur_4FB4 = GlobalPtr()->playerHpMax_4FB6;
 
-				if (ImGui_ButtonSameLine("Heal Ashley", true, -70.0f))
+				if (ImGui_ButtonSameLine("Heal Ashley", false))
 					GlobalPtr()->subHpCur_4FB8 = GlobalPtr()->subHpMax_4FBA;
 
-				if (ImGui_ButtonSameLine("Move Ashley to player", false))
+				ImGui::Spacing();
+
+				if (ImGui::Button("Move Ashley to player"))
 					MoveAshleyToPlayer();
 
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::SetNextItemWidth(200.0f * pConfig->fFontSizeScale);
+				ImGui::SetNextItemWidth(210.0f);
 				ImGui::InputInt("Pesetas", &GlobalPtr()->goldAmount_4FA8);
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				// Max HP sliders
+				{
+					int Plr_maxHP;
+					int Ash_maxHP;
+
+					Plr_maxHP = GlobalPtr()->playerHpMax_4FB6;
+					Ash_maxHP = GlobalPtr()->subHpMax_4FBA;
+
+					ImGui::SliderInt("Player max HP", &Plr_maxHP, 1, 2400);
+					if (ImGui::IsItemEdited())
+					{
+						GlobalPtr()->playerHpMax_4FB6 = Plr_maxHP;
+						GlobalPtr()->playerHpCur_4FB4 = Plr_maxHP;
+					}
+
+					ImGui::Spacing();
+
+					ImGui::SliderInt("Ashley max HP", &Ash_maxHP, 1, 1200);
+					if (ImGui::IsItemEdited())
+					{
+						GlobalPtr()->subHpMax_4FBA = Ash_maxHP;
+						GlobalPtr()->subHpCur_4FB8 = Ash_maxHP;
+					}
+				}
+				
+				ImGui::Dummy(ImVec2(10, 10));
+
+				/* Not working?
+				if (ImGui::Button("Save game"))
+					RequestSaveGame();
+				*/
+
+				if (ImGui::Button("Open Merchant"))
+					RequestMerchant();
 			}
 
 			// Invincibility

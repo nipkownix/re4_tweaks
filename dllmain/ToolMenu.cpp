@@ -19,8 +19,6 @@ void(__cdecl* GX_ScreenDisp)(void* a1, float a2, float a3, float a4, float a5, f
 uint32_t(__cdecl* DvdReadN)(const char* a1, int a2, int a3, int a4, int a5, __int16 a6);
 int(__fastcall* cDvd__ReadCheck)(void* thisptr, void* unused, uint32_t a2, void* a3, void* a4, void* a5);
 int(__fastcall* cDvd__FileExistCheck)(void* thisptr, void* unused, const char* path, void* a2);
-void(__cdecl* CardSave)(uint8_t a1, char a2);
-void(__cdecl* SubScreenOpen)(int a1, int a2);
 void(*FlagEdit_die)();
 
 uintptr_t* ptrtitleInitMovAddr;
@@ -329,7 +327,7 @@ void ToolMenu_ToggleHUD()
 const char* ToolMenu_SaveGameName = "SAVE GAME";
 void ToolMenu_SaveGame()
 {
-	CardSave(0, 1);
+	game_CardSave(0, 1);
 
 	ToolMenu_Exit();
 }
@@ -339,7 +337,7 @@ void OpenMerchant()
 	while (IsInDebugMenu())
 		Sleep(50);
 
-	SubScreenOpen(16, 0);
+	game_SubScreenOpen(16, 0);
 }
 
 const char* ToolMenu_OpenMerchantName = "OPEN MERCHANT";
@@ -372,12 +370,6 @@ void GetToolMenuPointers()
 
 	pattern = hook::pattern("E8 ? ? ? ? 8B 85 ? ? ? ? 8B 0D ? ? ? ? 8B 15 ? ? ? ? 8D 44 08 0C");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cDvd__FileExistCheck);
-
-	pattern = hook::pattern("E8 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 15 ? ? ? ? A1");
-	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CardSave);
-
-	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
-	SubScreenOpen = (decltype(SubScreenOpen))pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
 	FlagEdit_die = (decltype(FlagEdit_die))pattern.count(1).get(0).get<uint8_t>(0);

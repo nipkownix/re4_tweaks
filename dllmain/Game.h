@@ -49,6 +49,8 @@ cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
 
 void RequestWeaponChange();
+void RequestSaveGame();
+void RequestMerchant();
 void AreaJump(uint16_t roomNo, Vec& position, float rotation);
 
 bool IsGanado(int id);
@@ -61,3 +63,5 @@ const char* GetEmListEnumName(int emListNumber);
 // Original game funcs
 extern bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 extern void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
+extern void(__cdecl* game_CardSave)(uint8_t a1, char a2);
+extern void(__cdecl* game_SubScreenOpen)(int a1, int a2);
