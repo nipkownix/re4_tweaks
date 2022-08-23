@@ -29,6 +29,9 @@ WeaponHotkeySlot3 = 3
 WeaponHotkeySlot4 = 4
 WeaponHotkeySlot5 = 5
 
+; Siwtch to the last used weapon
+LastWeaponHotkey = C
+
 ; User-chosen per-slot weapon IDs, for each weapon hotkey to switch to
 ; 0 (default) will make the slot cycle through a list of available weapons (see WeaponCycle values below)
 ; These can be changed in-game by highlighting a weapon in inventory and pressing the hotkey binding for the slot

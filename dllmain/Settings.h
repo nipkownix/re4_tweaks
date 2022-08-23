@@ -145,6 +145,7 @@ public:
 		"53,109,54",
 		"1,2,14,8,9,10"
 	};
+	std::string sLastWeaponHotkey = "C";
 
 	// TRAINER
 	bool bTrainerEnable = false;

@@ -9,6 +9,7 @@
 #include "Trainer.h"
 
 int AshleyStateOverride;
+int last_weaponId;
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
@@ -89,13 +90,18 @@ std::vector<uint32_t> KeyComboSpeedOverride;
 std::vector<uint32_t> KeyComboAshToPlayer;
 
 std::vector<uint32_t> KeyComboWeaponHotkey[5];
+std::vector<uint32_t> KeyComboLastWeaponHotkey;
 
-void HotkeySlotPressed(int slotIdx)
+void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 {
 	if (!pConfig->bWeaponHotkeysEnable)
 		return;
 
-	if (SubScreenWk)
+	if (forceUseWepID && slotIdx < 1)
+		return;
+
+	// If forceUseWepID, we are probably just trying to equip the last wep id, so we can skip this part
+	if (SubScreenWk && !forceUseWepID)
 	{
 		// If subscreen is open and we're on inventory menu...
 		if (SubScreenWk->open_flag_2C != 0 && SubScreenWk->menu_no_260 == 1)
@@ -121,6 +127,13 @@ void HotkeySlotPressed(int slotIdx)
 
 	// Not binding weapon, must be trying to switch to weapon instead
 	int weaponId = pConfig->iWeaponHotkeyWepIds[slotIdx];
+
+	// slotIdx is the actual weaponId in this case
+	if (!forceUseWepID)
+		weaponId = pConfig->iWeaponHotkeyWepIds[slotIdx];
+	else
+		weaponId = slotIdx;
+
 	if (!weaponId)
 	{
 		static size_t weaponCycleIndex[5] = { 0 };
@@ -150,9 +163,15 @@ void HotkeySlotPressed(int slotIdx)
 
 	if (weaponId)
 	{
+		if (ItemMgr->m_pWep_C)
+			last_weaponId = ItemMgr->m_pWep_C->id_0;
+
 		cItem* item = ItemMgr->search(weaponId);
 		if (ItemMgr->arm(item))
 		{
+			con.AddConcatLog("last wep = ", last_weaponId);
+			con.AddConcatLog("cur wep = ", weaponId);
+
 			RequestWeaponChange();
 		}
 	}
@@ -191,19 +210,29 @@ void Trainer_ParseKeyCombos()
 		}, &KeyComboAshToPlayer });
 	}
 
-	for (int i = 0; i < 5; i++)
+	// WeaponHotkey
 	{
-		KeyComboWeaponHotkey[i].clear();
-		KeyComboWeaponHotkey[i] = ParseKeyCombo(pConfig->sWeaponHotkeys[i]);
+		for (int i = 0; i < 5; i++)
+		{
+			KeyComboWeaponHotkey[i].clear();
+			KeyComboWeaponHotkey[i] = ParseKeyCombo(pConfig->sWeaponHotkeys[i]);
+		}
+
+		{
+			KeyComboLastWeaponHotkey.clear();
+			KeyComboLastWeaponHotkey = ParseKeyCombo(pConfig->sLastWeaponHotkey);
+		}
+
+		// TODO: make RegisterHotkey use std::function so that we could include `i` in the capture and handle this in the loop above...
+
+		pInput->RegisterHotkey({ []() { HotkeySlotPressed(0); }, &KeyComboWeaponHotkey[0] });
+		pInput->RegisterHotkey({ []() { HotkeySlotPressed(1); }, &KeyComboWeaponHotkey[1] });
+		pInput->RegisterHotkey({ []() { HotkeySlotPressed(2); }, &KeyComboWeaponHotkey[2] });
+		pInput->RegisterHotkey({ []() { HotkeySlotPressed(3); }, &KeyComboWeaponHotkey[3] });
+		pInput->RegisterHotkey({ []() { HotkeySlotPressed(4); }, &KeyComboWeaponHotkey[4] });
+
+		pInput->RegisterHotkey({ []() { HotkeySlotPressed(last_weaponId, true); }, &KeyComboLastWeaponHotkey });
 	}
-
-	// TODO: make RegisterHotkey use std::function so that we could include `i` in the capture and handle this in the loop above...
-
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(0); }, &KeyComboWeaponHotkey[0] });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(1); }, &KeyComboWeaponHotkey[1] });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(2); }, &KeyComboWeaponHotkey[2] });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(3); }, &KeyComboWeaponHotkey[3] });
-	pInput->RegisterHotkey({ []() { HotkeySlotPressed(4); }, &KeyComboWeaponHotkey[4] });
 }
 
 std::vector<FlagPatch> flagPatches;
@@ -765,6 +794,17 @@ void Trainer_RenderUI()
 					std::string text = "Weapon Slot " + std::to_string(i + 1);
 					ImGui::TextWrapped(text.c_str());
 				}
+
+				ImGui::PushID(25);
+				if (ImGui::Button(pConfig->sLastWeaponHotkey.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sLastWeaponHotkey, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+				ImGui::TextWrapped("Last used weapon");
 
 				ImGui::Text("Assigned hotkey weapon IDs: %d %d %d %d %d",
 					pConfig->iWeaponHotkeyWepIds[0], pConfig->iWeaponHotkeyWepIds[1], pConfig->iWeaponHotkeyWepIds[2], pConfig->iWeaponHotkeyWepIds[3], pConfig->iWeaponHotkeyWepIds[4]);

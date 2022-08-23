@@ -370,6 +370,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->sWeaponHotkeys[2] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);
 	pConfig->sWeaponHotkeys[3] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", pConfig->sWeaponHotkeys[3]);
 	pConfig->sWeaponHotkeys[4] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", pConfig->sWeaponHotkeys[4]);
+	pConfig->sLastWeaponHotkey = iniReader.ReadString("WEAPON_HOTKEYS", "LastWeaponHotkey", pConfig->sLastWeaponHotkey);
 	pConfig->iWeaponHotkeyWepIds[0] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
 	pConfig->iWeaponHotkeyWepIds[1] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
 	pConfig->iWeaponHotkeyWepIds[2] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
@@ -480,11 +481,11 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 
 		// WEAPON HOTKEYS
 		iniReader.WriteBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", pConfig->sWeaponHotkeys[0]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", pConfig->sWeaponHotkeys[1]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", pConfig->sWeaponHotkeys[3]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", pConfig->sWeaponHotkeys[4]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", " " + pConfig->sWeaponHotkeys[0]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", " " + pConfig->sWeaponHotkeys[1]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", " " + pConfig->sWeaponHotkeys[2]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", " " + pConfig->sWeaponHotkeys[3]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", " " + pConfig->sWeaponHotkeys[4]);
 		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
 		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
 		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
@@ -505,6 +506,8 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", pConfig->iWeaponHotkeyCycle[2]);
 		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", pConfig->iWeaponHotkeyCycle[3]);
 		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", pConfig->iWeaponHotkeyCycle[4]);
+
+		iniReader.WriteString("WEAPON_HOTKEYS", "LastWeaponHotkey", " " + pConfig->sLastWeaponHotkey);
 
 		return;
 	}
