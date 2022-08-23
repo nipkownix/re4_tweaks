@@ -118,7 +118,7 @@ More info in the .ini file.
 Extract dinput8.dll and dinput8.ini to "Steam\steamapps\common\Resident Evil 4\Bin32".
 Options can be configured either by manually editing dinput8.ini, or by pressing F1 to bring up the [in-game configuration menu](https://raw.githubusercontent.com/nipkownix/nipkownix.github.io/master/assets/img/RE4T/cfgMenu.png).
 
-**Linux** users need to add **WINEDLLOVERRIDES=”dinput8=n,b” %command%** into Resident Evil 4’s Steam's launch options.
+**Linux** users need to add **WINEDLLOVERRIDES="dinput8=n,b" %command%** into Resident Evil 4’s Steam's launch options.
 
 **If you use Raz0r's "Ultimate Trainer Companion"**, you will notice both mods use the same "dinput8" name. In this case, for them to work together, rename re4_tweaks's files to either "winmm" or "xinput1_3".
 
