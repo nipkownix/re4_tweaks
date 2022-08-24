@@ -147,16 +147,26 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 		static size_t weaponCycleIndex[5] = { 0 };
 
 		std::vector<int>& weaponCycle = pConfig->iWeaponHotkeyCycle[slotIdx];
-		size_t idx = weaponCycleIndex[slotIdx];
-		if (idx >= weaponCycle.size())
-			idx = 0;
 
-		// Search inventory for each weapon in the cycle following the current weaponCycleIndex...
+		size_t desiredIndex = weaponCycleIndex[slotIdx];
 
-		int cycleIdx = idx;
+		// Search cycle for the current equipped wep, if it contains it, then pick the weapon that comes after it
+		// else if it doesn't contain current equipped wep, our desiredIndex will be whatever the previously selected index for this slot was
+		if (ItemMgr->m_pWep_C)
+		{
+			for (size_t i = 0; i < weaponCycle.size(); i++)
+				if (ItemMgr->m_pWep_C->id_0 == weaponCycle[i])
+				{
+					desiredIndex = i + 1;
+					break;
+				}
+		}
+
+		// Check that we have the desired weapon in inventory, continue through all possible weaponCycle values until we find one
+		size_t cycleIdx = desiredIndex;
 		for (size_t i = 0; i < weaponCycle.size(); i++)
 		{
-			cycleIdx = (idx + i) % weaponCycle.size();
+			cycleIdx = (desiredIndex + i) % weaponCycle.size();
 
 			cItem* item = ItemMgr->search(weaponCycle[cycleIdx]);
 			if (item)
@@ -166,7 +176,8 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 			}
 		}
 
-		weaponCycleIndex[slotIdx] = cycleIdx + 1;
+		// Save our new index in the cycle
+		weaponCycleIndex[slotIdx] = cycleIdx;
 	}
 
 	if (weaponId)
