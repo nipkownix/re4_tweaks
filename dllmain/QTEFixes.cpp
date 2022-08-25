@@ -368,6 +368,32 @@ void Init_QTEfixes()
 			ReadCall(pattern.count(1).get(0).get<uint32_t>(0), sub_8064B0_orig);
 			InjectHook(pattern.count(1).get(0).get<uint32_t>(0), sub_8064B0_hook);
 		}
+
+		// Bridges during Saddler's final fight
+		{
+			auto pattern = hook::pattern("D9 9C C6 ? ? ? ? E9 ? ? ? ? 68 ? ? ? ? 6A ? E8");
+			struct SaddlerBridge
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					// Game did a bunch of math earlier to calculate a timer for the bridges to open. We just replace the timer
+					// with 0 right before the fstp, so it never reaches the value where the bridges open. (around 120 or so)
+
+					// Grab new time that the game calculated and wants to write
+					float new_timer = 0;
+					__asm {fstp new_timer}
+
+					// Get pointer to the timer float where the new time is going to be written
+					float* timer = (float*)(regs.esi + regs.eax * 0x8 + 0xA0);
+
+					// Write 0 if needed, otherwise write what the game calcualted
+					if (pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
+						*timer = 0.0f;
+					else
+						*timer = new_timer;
+				}
+			}; injector::MakeInline<SaddlerBridge>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+		}
 	}
 
 	// Fix QTE mashing speed issues
