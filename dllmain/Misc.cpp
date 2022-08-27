@@ -480,7 +480,8 @@ bool cPlayer__keyReload_hook()
 {
 	bool ret = false;
 
-	if (pConfig->bAllowReloadWithoutAiming_kbm || pConfig->bAllowReloadWithoutAiming_controller)
+	if ((pConfig->bAllowReloadWithoutAiming_kbm && isKeyboardMouse()) || 
+		(pConfig->bAllowReloadWithoutAiming_controller && isController()))
 	{
 		bool isAiming = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
 		bool reloadWithoutZoom = false;

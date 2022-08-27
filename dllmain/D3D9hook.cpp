@@ -253,7 +253,27 @@ HRESULT hook_Direct3DDevice9::Reset(D3DPRESENT_PARAMETERS* pPresentationParamete
 
 HRESULT hook_Direct3DDevice9::Present(const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion)
 {
-	return m_direct3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+	static bool restorePickupTransparency = false;
+	HRESULT res = m_direct3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+	if (res == D3DERR_DEVICELOST)
+	{
+		if (pConfig->bRestorePickupTransparency)
+		{
+			// Avoid alt-tab crash when on item-pickup screen with bRestorePickupTransparency active
+			pConfig->bRestorePickupTransparency = false;
+			restorePickupTransparency = true;
+		}
+	}
+	else if (res == D3D_OK)
+	{
+		// Restore bRestorePickupTransparency if needed
+		if (restorePickupTransparency)
+		{
+			pConfig->bRestorePickupTransparency = true;
+			restorePickupTransparency = false;
+		}
+	}
+	return res;
 }
 
 HRESULT hook_Direct3DDevice9::GetBackBuffer(UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)

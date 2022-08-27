@@ -10,12 +10,13 @@ public:
 	// DISPLAY
 	float fFOVAdditional = 0.0f;
 	bool bEnableFOV = false;
+	bool bDisableVsync = false;
 	bool bUltraWideAspectSupport = true;
 	bool bSideAlignHUD = true;
 	bool bStretchFullscreenImages = false;
 	bool bStretchVideos = false;
 	bool bRemove16by10BlackBars = true;
-	bool bDisableVsync = false;
+	bool bReplaceFramelimiter = true;
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
 	int iCustomRefreshRate = -1;
@@ -165,6 +166,8 @@ public:
 	// DEBUG
 	bool bVerboseLog = false;
 	bool bNeverHideCursor = false;
+	bool bUseDynamicFrametime = false;
+	bool bDisableFramelimiting = false;
 
 	bool HasUnsavedChanges = false;
 

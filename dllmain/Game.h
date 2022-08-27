@@ -30,6 +30,7 @@ extern SND_CTRL* Snd_ctrl_work;
 std::string GameVersion();
 extern int iCurPlayTime[3];
 bool GameVersionIsDebug();
+int GameVariableFrameRate();
 InputDevices LastUsedDevice();
 bool isController();
 bool isKeyboardMouse();

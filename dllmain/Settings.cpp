@@ -159,13 +159,15 @@ void Config::ReadSettings(std::string_view ini_path)
 	else
 		pConfig->bEnableFOV = false;
 
+	pConfig->bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
+
 	pConfig->bUltraWideAspectSupport = iniReader.ReadBoolean("DISPLAY", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport);
 	pConfig->bSideAlignHUD = iniReader.ReadBoolean("DISPLAY", "SideAlignHUD", pConfig->bSideAlignHUD);
 	pConfig->bStretchFullscreenImages = iniReader.ReadBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
 	pConfig->bStretchVideos = iniReader.ReadBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
 	pConfig->bRemove16by10BlackBars = iniReader.ReadBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
 
-	pConfig->bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
+	pConfig->bReplaceFramelimiter = iniReader.ReadBoolean("DISPLAY", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter);
 	pConfig->bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
 	pConfig->bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
 	pConfig->iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", pConfig->iCustomRefreshRate);
@@ -414,6 +416,8 @@ void Config::ReadSettings(std::string_view ini_path)
 	// DEBUG
 	pConfig->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", pConfig->bVerboseLog);
 	pConfig->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", pConfig->bNeverHideCursor);
+	pConfig->bUseDynamicFrametime = iniReader.ReadBoolean("DEBUG", "UseDynamicFrametime", pConfig->bUseDynamicFrametime);
+	pConfig->bDisableFramelimiting = iniReader.ReadBoolean("DEBUG", "DisableFramelimiting", pConfig->bDisableFramelimiting);
 }
 
 std::mutex settingsThreadRunningMutex;
@@ -514,14 +518,14 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 
 	// DISPLAY
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", pConfig->fFOVAdditional);
+	iniReader.WriteBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
 
 	iniReader.WriteBoolean("DISPLAY", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport);
 	iniReader.WriteBoolean("DISPLAY", "SideAlignHUD", pConfig->bSideAlignHUD);
 	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
 	iniReader.WriteBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
 	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
-
-	iniReader.WriteBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
+	iniReader.WriteBoolean("DISPLAY", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter);
 	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
 	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", pConfig->iCustomRefreshRate);
@@ -666,12 +670,13 @@ void Config::LogSettings()
 	// DISPLAY
 	spd::log()->info("+ DISPLAY------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "FOVAdditional", pConfig->fFOVAdditional);
+	spd::log()->info("| {:<30} | {:>15} |", "DisableVsync", pConfig->bDisableVsync ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SideAlignHUD", pConfig->bSideAlignHUD ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "StretchFullscreenImages", pConfig->bStretchFullscreenImages ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "StretchVideos", pConfig->bStretchVideos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "DisableVsync", pConfig->bDisableVsync ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", pConfig->bFixDPIScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", pConfig->bFixDisplayMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", pConfig->iCustomRefreshRate);
@@ -818,5 +823,7 @@ void Config::LogSettings()
 	spd::log()->info("+ DEBUG--------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "VerboseLog", pConfig->bVerboseLog ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "NeverHideCursor", pConfig->bNeverHideCursor ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UseDynamicFrametime", pConfig->bUseDynamicFrametime ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableFramelimiting", pConfig->bDisableFramelimiting ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 }
