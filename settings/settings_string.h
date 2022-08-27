@@ -4,6 +4,9 @@ const char* defaultSettings = R""""(
 ; Additional FOV value. 20 seems good for most cases.
 FOVAdditional = 0.0
 
+; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
+DisableVsync = false
+
 ; Fixes the incorrect aspect ratio when playing in ultrawide resolutions, 
 ; preventing the image from being cut off and the HUD appearing off-screen.
 UltraWideAspectSupport = true
@@ -21,14 +24,11 @@ StretchVideos = false
 
 ; Removes top and bottom black bars that are present when playing in 16:10.
 ; Will crop a few pixels from each side of the screen.
-Remove16by10BlackBars = false
-
-; Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.
-DisableVsync = false
+Remove16by10BlackBars = true
 
 ; Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.
 ; (experimental, not known if the new framelimiter performs the same as the old one yet)
-ReplaceFramelimiter = false
+ReplaceFramelimiter = true
 
 ; Forces game to run at normal 100% DPI scaling, fixes resolution issues for players that have above 100% DPI scaling set.
 FixDPIScale = true

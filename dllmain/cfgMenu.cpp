@@ -422,6 +422,22 @@ void cfgMenuRender()
 							pConfig->fFOVAdditional = 0.0f;
 					}
 
+					// DisableVsync
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("DisableVsync", &pConfig->bDisableVsync))
+						{
+							pConfig->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
+					}
+
 					// Aspect ratio tweaks
 					{
 						ImGui_ColumnSwitch();
@@ -461,22 +477,6 @@ void cfgMenuRender()
 						pConfig->HasUnsavedChanges |= ImGui::Checkbox("Remove16by10BlackBars", &pConfig->bRemove16by10BlackBars);
 						ImGui::TextWrapped("Removes top and bottom black bars that are present when playing in 16:10. Will crop a few pixels from each side of the screen.");
 						ImGui::TextWrapped("(Change the resolution for this setting to take effect)");
-					}
-
-					// DisableVsync
-					{
-						ImGui_ColumnSwitch();
-
-						if (ImGui::Checkbox("DisableVsync", &pConfig->bDisableVsync))
-						{
-							pConfig->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
 					}
 
 					// ReplaceFramelimiter

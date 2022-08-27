@@ -159,6 +159,7 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 
 void Init_DisplayTweaks()
 {
+	// Implements new reduced-CPU-usage limiter
 	if (pConfig->bReplaceFramelimiter)
 	{
 		// nop beginning of framelimiter code (sets up thread affinity to core 0)
@@ -178,6 +179,8 @@ void Init_DisplayTweaks()
 		Patch(framelimiterStart, uint8_t(0x50)); // push eax (pass return value of EventMgr::IsAliveEvt)
 		InjectHook(framelimiterStart + 1, Framelimiter_Hook, PATCH_CALL);
 		Patch(framelimiterStart + 1 + 5, { 0x83, 0xc4, 0x04 }); // add esp, 4 (needed to allow WinMain to exit properly)
+
+		spd::log()->info("Framelimiter replaced");
 	}
 
 	// Fix broken effects
