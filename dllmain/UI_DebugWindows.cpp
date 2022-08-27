@@ -273,7 +273,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					else
 					{
 						ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
-						if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 225 * pConfig->fFontSizeScale)))
+						if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 245 * pConfig->fFontSizeScale)))
 						{
 							ImGui::TableNextColumn();
 
