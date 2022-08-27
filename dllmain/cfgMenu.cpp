@@ -422,6 +422,22 @@ void cfgMenuRender()
 							pConfig->fFOVAdditional = 0.0f;
 					}
 
+					// DisableVsync
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("DisableVsync", &pConfig->bDisableVsync))
+						{
+							pConfig->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
+					}
+
 					// Aspect ratio tweaks
 					{
 						ImGui_ColumnSwitch();
@@ -463,11 +479,11 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(Change the resolution for this setting to take effect)");
 					}
 
-					// DisableVsync
+					// ReplaceFramelimiter
 					{
 						ImGui_ColumnSwitch();
 
-						if (ImGui::Checkbox("DisableVsync", &pConfig->bDisableVsync))
+						if (ImGui::Checkbox("ReplaceFramelimiter", &pConfig->bReplaceFramelimiter))
 						{
 							pConfig->HasUnsavedChanges = true;
 							NeedsToRestart = true;
@@ -476,7 +492,8 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10));
-						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
+						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
+						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
 					}
 
 					// FixDPIScale

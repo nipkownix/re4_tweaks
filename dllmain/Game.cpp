@@ -17,6 +17,12 @@ bool GameVersionIsDebug()
 	return gameIsDebugBuild;
 }
 
+uint32_t* ptrGameVariableFrameRate;
+int GameVariableFrameRate()
+{
+	return *(int32_t*)(ptrGameVariableFrameRate);
+}
+
 uint32_t* ptrLastUsedDevice = nullptr;
 InputDevices LastUsedDevice()
 {
@@ -165,6 +171,10 @@ bool Init_Game()
 	#ifdef VERBOSE
 	con.AddConcatLog("Game version = ", GameVersion().data());
 	#endif
+
+	// Pointer to users variableframerate setting value
+	pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
+	ptrGameVariableFrameRate = *pattern.count(1).get(0).get<uint32_t*>(2);
 
 	// LastUsedDevice pointer
 	pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");

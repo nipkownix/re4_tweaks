@@ -3,6 +3,7 @@
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
+#include <timeapi.h>
 
 int g_UserRefreshRate;
 
@@ -76,8 +77,112 @@ BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight,
 	return MoveWindow(hWnd, windowX, windowY, nWidth, nHeight, bRepaint);
 }
 
+double FramelimiterFrequency = 0;
+double FramelimiterPrevTicks = 0;
+void Framelimiter_Hook(uint8_t isAliveEvt_result)
+{
+	// Change thread to core 0 before running QueryPerformance* funcs, game does this, so guess we should too
+	HANDLE curThread = GetCurrentThread();
+	DWORD_PTR prevAffinityMask = SetThreadAffinityMask(curThread, 0);
+
+	static bool framelimiterInited = false;
+	if (!framelimiterInited)
+	{
+		LARGE_INTEGER result;
+		QueryPerformanceFrequency(&result);
+		FramelimiterFrequency = (double)result.QuadPart / 1000.0;
+
+		QueryPerformanceCounter(&result);
+		FramelimiterPrevTicks = (double)result.QuadPart / FramelimiterFrequency;
+
+		typedef MMRESULT(__stdcall* timeBeginPeriod_Fn) (UINT Period);
+		timeBeginPeriod_Fn timeBeginPeriod_actual = (timeBeginPeriod_Fn)GetProcAddress(LoadLibraryA("winmm.dll"), "timeBeginPeriod");
+		timeBeginPeriod_actual(1);
+
+		framelimiterInited = true;
+	}
+
+	int gameFramerate = GameVariableFrameRate();
+
+	// The games IsAliveEvt check seems to (indirectly) result in framelimiter loop limiting to 60FPS
+	// maybe a remnant of some time when more framerate options were available?
+	if (isAliveEvt_result && gameFramerate != 30)
+		gameFramerate = 60;
+
+	double TargetFrametime = 1000.0 / (double)gameFramerate;
+
+	double timeElapsed = 0;
+	double timeCurrent = 0;
+	do
+	{
+		// Framelimiter based on FPS_ACCURATE code from
+		// https://github.com/ThirteenAG/d3d9-wrapper/blob/c1480b0c1b40e0ba7b55b8660bd67f911a967421/source/dllmain.cpp#L46
+
+		LARGE_INTEGER counter;
+		QueryPerformanceCounter(&counter);
+		timeCurrent = (double)counter.QuadPart / FramelimiterFrequency;
+		timeElapsed = timeCurrent - FramelimiterPrevTicks;
+
+		if (TargetFrametime <= timeElapsed || pConfig->bDisableFramelimiting)
+			break;
+		else if (TargetFrametime - timeElapsed > 2.0) // > 2ms
+			Sleep(1); // Sleep for ~1ms
+		else
+			Sleep(0); // yield thread's time-slice (does not actually sleep)
+	}
+	while (TargetFrametime > timeElapsed);
+
+	FramelimiterPrevTicks = timeCurrent;
+
+	// Not really sure what the second part of IsAliveEvt check is doing
+	// Seems to skip setting timeElapsed to the fixed FramelimiterTargetFrametime at least
+	// Guess that means the true timeElapsed gets passed to the game? (after being limited to 60 like above)
+	if (isAliveEvt_result && gameFramerate != 30)
+	{
+		if (timeElapsed > 33.333333333333333)
+			timeElapsed = 33.333333333333333;
+	}
+	else
+	{
+		// TODO: using the actual time elapsed since last frame instead of FramelimiterTargetFrametime would solve slowdown issues
+		// (similar to https://github.com/nipkownix/re4_tweaks/pull/25)
+		// but it's not known how well the game works with values that aren't 0.5 (60fps) or 1 (30fps)
+		// so for now we'll just work pretty much the same as the game itself, unless UseDynamicFrametime is set
+		if (!pConfig->bUseDynamicFrametime)
+			timeElapsed = TargetFrametime;
+	}
+
+	GlobalPtr()->deltaTime_70 = float((timeElapsed / 1000) * 30.0);
+
+	SetThreadAffinityMask(curThread, prevAffinityMask);
+}
+
 void Init_DisplayTweaks()
 {
+	// Implements new reduced-CPU-usage limiter
+	if (pConfig->bReplaceFramelimiter)
+	{
+		// nop beginning of framelimiter code (sets up thread affinity to core 0)
+		auto pattern = hook::pattern("A3 ? ? ? ? 6A 00 FF 15 ? ? ? ? 50 FF");
+		uint8_t* framelimiterStart = pattern.count(1).get(0).get<uint8_t>(5);
+		pattern = hook::pattern("E8 ? ? ? ? 85 C0 75 ? D9 EE EB ?");
+		uint8_t* framelimiterEnd = pattern.count(1).get(0).get<uint8_t>(0);
+		Nop(framelimiterStart, framelimiterEnd - framelimiterStart); // 6549C3 to 6549D9 (1.1.0)
+
+		pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 84 C0 74 ? E8 ? ? ? ? 83 F8 1E");
+		framelimiterStart = pattern.count(1).get(0).get<uint8_t>(0xA); // 654A1E
+		pattern = hook::pattern("8D 85 ? ? ? ? 50 FF D3 DF AD ? ? ? ? 8D 8D");
+		framelimiterEnd = pattern.count(1).get(0).get<uint8_t>(0); // 654B0A
+
+		Nop(framelimiterStart, framelimiterEnd - framelimiterStart);
+
+		Patch(framelimiterStart, uint8_t(0x50)); // push eax (pass return value of EventMgr::IsAliveEvt)
+		InjectHook(framelimiterStart + 1, Framelimiter_Hook, PATCH_CALL);
+		Patch(framelimiterStart + 1 + 5, { 0x83, 0xc4, 0x04 }); // add esp, 4 (needed to allow WinMain to exit properly)
+
+		spd::log()->info("Framelimiter replaced");
+	}
+
 	// Fix broken effects
 	Init_FilterXXFixes();
 
