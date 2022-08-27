@@ -438,6 +438,9 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		#ifdef VERBOSE
 		con.AddLogChar("ini file doesn't exist in folder. Creating new one.");
 		#endif
+
+		std::filesystem::create_directory(std::filesystem::path(iniPath).parent_path()); // Create the dir if it doesn't exist
+
 		std::ofstream iniFile(iniPath.data());
 
 		if(!trainerIni)
@@ -502,7 +505,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 				val += std::to_string(num) + ", ";
 			if (!val.empty())
 				val = val.substr(0, val.size() - 2);
-			iniReader.WriteString(section, key, val);
+			iniReader.WriteString(section, key, " " + val);
 		};
 
 		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", pConfig->iWeaponHotkeyCycle[0]);
