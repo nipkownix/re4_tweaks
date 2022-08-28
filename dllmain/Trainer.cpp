@@ -347,6 +347,84 @@ void Trainer_Init()
 			}
 		}; injector::MakeInline<ScenarioRoomInit_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 	}
+
+	// Enemy HP multiplier
+	{
+		auto pattern = hook::pattern("66 89 88 ? ? ? ? 0F BF 56 ? 89 55 ? DB 45 ? D8 C9 D9 98");
+		struct EmSetFromList_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we repalced
+				*(int16_t*)(regs.eax + 0x326) = (int16_t)regs.ecx;
+
+				// Get pointer to cEm
+				cEm* Em_ptr = (cEm*)(regs.eax);
+
+				if (pConfig->bTrainerEnemyHPMultiplier)
+				{
+					float multi = 0.0f;
+					if (pConfig->bTrainerRandomHPMultiplier)
+						multi = GetRandomFloat(pConfig->fTrainerRandomHPMultiMin, pConfig->fTrainerRandomHPMultiMax);
+					else
+						multi = pConfig->fTrainerEnemyHPMultiplier;
+
+					Em_ptr->hp_324 = (int16_t)(Em_ptr->hp_324 * multi);
+					Em_ptr->hp_max_326 = (int16_t)(Em_ptr->hp_max_326 * multi);
+				}
+			}
+		}; injector::MakeInline<EmSetFromList_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		pattern = hook::pattern("66 89 86 ? ? ? ? 0F BF 57 12 89 55 08 DB 45 08 D8 C9 D9");
+		struct EmSetFromList2_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we repalced
+				*(int16_t*)(regs.esi + 0x326) = (int16_t)regs.eax;
+
+				// Get pointer to cEm
+				cEm* Em_ptr = (cEm*)(regs.esi);
+
+				if (pConfig->bTrainerEnemyHPMultiplier)
+				{
+					float multi = 0.0f;
+					if (pConfig->bTrainerRandomHPMultiplier)
+						multi = GetRandomFloat(pConfig->fTrainerRandomHPMultiMin, pConfig->fTrainerRandomHPMultiMax);
+					else
+						multi = pConfig->fTrainerEnemyHPMultiplier;
+
+					Em_ptr->hp_324 = (int16_t)(Em_ptr->hp_324 * multi);
+					Em_ptr->hp_max_326 = (int16_t)(Em_ptr->hp_max_326 * multi);
+				}
+			}
+		}; injector::MakeInline<EmSetFromList2_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		pattern = hook::pattern("66 89 86 ? ? ? ? 0F BF 4F ? 89 4D ? DB 45 ? D8 C9");
+		struct EmSetEvent_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we repalced
+				*(int16_t*)(regs.esi + 0x326) = (int16_t)regs.eax;
+
+				// Get pointer to cEm
+				cEm* Em_ptr = (cEm*)(regs.esi);
+
+				if (pConfig->bTrainerEnemyHPMultiplier)
+				{
+					float multi = 0.0f;
+					if (pConfig->bTrainerRandomHPMultiplier)
+						multi = GetRandomFloat(pConfig->fTrainerRandomHPMultiMin, pConfig->fTrainerRandomHPMultiMax);
+					else
+						multi = pConfig->fTrainerEnemyHPMultiplier;
+
+					Em_ptr->hp_324 = (int16_t)(Em_ptr->hp_324 * multi);
+					Em_ptr->hp_max_326 = (int16_t)(Em_ptr->hp_max_326 * multi);
+				}
+			}
+		}; injector::MakeInline<EmSetEvent_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+	}
 }
 
 void Trainer_Update()
@@ -737,7 +815,7 @@ void Trainer_RenderUI()
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Allows overriding player speed value.");
-				ImGui::TextWrapped("Ctrl+Click to set input a custom value.");
+				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
 
 				ImGui::Spacing();
 
@@ -745,11 +823,68 @@ void Trainer_RenderUI()
 				if (ImGui::SliderFloat("Speed", &pConfig->fTrainerPlayerSpeedOverride, 0.0f, 50.0f, "%.2f"))
 					pConfig->HasUnsavedChanges = true;
 
-				if (ImGui::Button("Reset"))
+				if (ImGui::Button("Reset##spdoverrid"))
 				{
 					pConfig->fTrainerPlayerSpeedOverride = 1.0f;
 					pConfig->HasUnsavedChanges = true;
 				}
+				ImGui::EndDisabled();
+			}
+
+			// Enemy HP multiplier
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Enemy HP Multiplier", &pConfig->bTrainerEnemyHPMultiplier))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Allows overriding the HP of enemies.");
+				ImGui::TextWrapped("The new HP will be whatever their original HP was, multiplied by the value set here.");
+				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
+
+				ImGui::Spacing();
+
+				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || pConfig->bTrainerRandomHPMultiplier);
+				if (ImGui::SliderFloat("HP Multiplier", &pConfig->fTrainerEnemyHPMultiplier, 0.1f, 15.0f, "%.2f"))
+					pConfig->HasUnsavedChanges = true;
+
+				if (ImGui::Button("Reset##hpmulti"))
+				{
+					pConfig->fTrainerEnemyHPMultiplier = 1.0f;
+					pConfig->HasUnsavedChanges = true;
+				}
+				ImGui::EndDisabled();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || !pConfig->bTrainerRandomHPMultiplier);
+				pConfig->HasUnsavedChanges |= ImGui::Checkbox("Use random HP multiplier", &pConfig->bTrainerRandomHPMultiplier);
+				ImGui::TextWrapped("Randomly pick the HP multiplier of each enemy.");
+				ImGui::TextWrapped("You can also set the minimum and maximum values that can be generated.");
+				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
+
+				ImGui::Spacing();
+
+				if (ImGui::SliderFloat("Random Min", &pConfig->fTrainerRandomHPMultiMin, 0.1f, 15.0f, "%.2f"))
+				{
+					if (pConfig->fTrainerRandomHPMultiMin > pConfig->fTrainerRandomHPMultiMax)
+						pConfig->fTrainerRandomHPMultiMin = pConfig->fTrainerRandomHPMultiMax;
+
+					pConfig->HasUnsavedChanges = true;
+				}
+
+				if (ImGui::SliderFloat("Random Max", &pConfig->fTrainerRandomHPMultiMax, 0.1f, 15.0f, "%.2f"))
+				{
+					if (pConfig->fTrainerRandomHPMultiMax < pConfig->fTrainerRandomHPMultiMin)
+						pConfig->fTrainerRandomHPMultiMax = pConfig->fTrainerRandomHPMultiMin;
+
+					pConfig->HasUnsavedChanges = true;
+				}
+
 				ImGui::EndDisabled();
 			}
 

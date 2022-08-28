@@ -152,9 +152,13 @@ public:
 	bool bTrainerEnable = false;
 	bool bTrainerPlayerSpeedOverride = false;
 	float fTrainerPlayerSpeedOverride = 1.0f;
-
 	bool bTrainerUseNumpadMovement = true;
 	bool bTrainerUseMouseWheelUpDown = true;
+	bool bTrainerEnemyHPMultiplier = false;
+	float fTrainerEnemyHPMultiplier = 1.0f;
+	bool bTrainerRandomHPMultiplier = false;
+	float fTrainerRandomHPMultiMin = 0.3f;
+	float fTrainerRandomHPMultiMax = 7.0f;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;

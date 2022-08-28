@@ -18,6 +18,18 @@ UseNumpadMovement = True
 ; Allows using mouse-wheel to move character up/down when using noclip / "Disable Player Collision" patch
 UseMouseWheelUpDown = True
 
+; Allows overriding the HP of enemies.
+; The new HP will be whatever their original HP was, multiplied by the value set here.
+; Min 0.1, max 15.
+EnableEnemyHPMultiplier = False
+EnemyHPMultiplier = 1.0
+
+; Randomly pick the HP multiplier of each enemy. You can also set the minimum and maximum values that can be generated.
+; Min 0.1, max 15.
+UseRandomHPMultiplier = False
+RandomHPMultiplierMin = 0.3
+RandomHPMultiplierMax = 7.0
+
 [WEAPON_HOTKEYS]
 ; Enables usage of weapon hotkeys, to quickly switch weapons without needing to open inventory
 Enable = false

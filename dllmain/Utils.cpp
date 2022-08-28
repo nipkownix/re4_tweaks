@@ -1,5 +1,6 @@
 #include <iostream>
 #include "dllmain.h"
+#include <random>
 
 std::string WstrToStr(const std::wstring& wstr)
 {
@@ -35,6 +36,13 @@ std::string StrToUpper(std::string str)
 {
 	std::transform(str.begin(), str.end(), str.begin(), ::toupper);
 	return str;
+}
+
+float GetRandomFloat(float min, float max)
+{
+	static std::mt19937 engi;
+	std::uniform_real_distribution<float> num(min, max); // range min - max
+	return num(engi);
 }
 
 void CreateThreadAutoClose(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId)

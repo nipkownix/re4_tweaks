@@ -358,6 +358,14 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
 	pConfig->bTrainerUseNumpadMovement = iniReader.ReadBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
 	pConfig->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+	pConfig->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
+	pConfig->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
+	pConfig->fTrainerEnemyHPMultiplier = fmin(fmax(pConfig->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
+	pConfig->bTrainerRandomHPMultiplier = iniReader.ReadBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
+	pConfig->fTrainerRandomHPMultiMin = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMin", pConfig->fTrainerRandomHPMultiMin);
+	pConfig->fTrainerRandomHPMultiMin = fmin(fmax(pConfig->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
+	pConfig->fTrainerRandomHPMultiMax = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
+	pConfig->fTrainerRandomHPMultiMax = fmin(fmax(pConfig->fTrainerRandomHPMultiMax, fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
 
 	// TRAINER HOTKEYS
 	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
@@ -479,6 +487,11 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
 		iniReader.WriteBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
 		iniReader.WriteBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+		iniReader.WriteBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
+		iniReader.WriteFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
+		iniReader.WriteBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
+		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMin", pConfig->fTrainerRandomHPMultiMin);
+		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
 
 		// TRAINER_HOTKEYS
 		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
