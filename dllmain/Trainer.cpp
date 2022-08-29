@@ -425,6 +425,90 @@ void Trainer_Init()
 			}
 		}; injector::MakeInline<EmSetEvent_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
+
+	// Disable enemy spawn
+	{
+		auto pattern = hook::pattern("38 8F ? ? ? ? 0F 85 ? ? ? ? 38 87 ? ? ? ? 0F 85 ? ? ? ? 53");
+		struct EmSetFromList_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Original cmp we replaced
+				bool isEqual = (*(uint8_t*)(regs.edi + 0x4FAD) == (uint8_t)regs.ecx);
+
+				if (!pConfig->bTrainerDisableEnemySpawn && isEqual)
+					regs.ef |= (1 << regs.zero_flag);
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<EmSetFromList_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("8B 15 ? ? ? ? 85 C0 75 22 0F B7 47 18");
+		struct EmSetFromList2_hook1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				regs.edx = (uint32_t)GlobalPtr();
+
+				con.AddLogChar("emlist2");
+
+				if (pConfig->bTrainerDisableEnemySpawn)
+					regs.eax = 0;
+			}
+		}; injector::MakeInline<EmSetFromList2_hook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("38 8a ? ? ? ? 75 ? 38 82 ? ? ? ? 74 ? a1 ? ? ? ? 5f 5b");
+		struct EmSetFromList2_hook2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Original cmp we replaced
+				bool isEqual = (*(uint8_t*)(regs.edx + 0x4FAD) == (uint8_t)regs.ecx);
+
+				if (!pConfig->bTrainerDisableEnemySpawn && isEqual)
+					regs.ef |= (1 << regs.zero_flag);
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<EmSetFromList2_hook2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
+	// Dead bodies never disappear
+	{
+		auto pattern = hook::pattern("8b 8e ? ? ? ? f7 c1 ? ? ? ? 74 ? b8");
+		struct em10_R1_Die_Cramp_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				regs.ecx = *(uint32_t*)(regs.esi + 0x3D0);
+
+				// Dead bodies have to disappear in room 11C, otherwise the game won't advance. Something about enemy recycling?
+				bool is11C = (GlobalPtr()->curRoomId_4FAC == 0x11C);
+
+				if (pConfig->bTrainerDeadBodiesNeverDisappear && !is11C)
+					regs.eax = 1;
+			}
+		}; injector::MakeInline<em10_R1_Die_Cramp_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
+	// AllowEnterDoorsWithoutAsh
+	{
+		auto pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 7A 05 ? ? ? ? 50 A1 ? ? ? ? 05 ? ? ? ? 50 E8");
+		struct CheckAshleyActive_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				regs.eax = (uint32_t)AshleyPtr();
+
+				// Make game check for Leon's position against itself, instead of checking against Ashley's position.
+				if (pConfig->bTrainerAllowEnterDoorsWithoutAsh)
+					regs.eax = (uint32_t)PlayerPtr();
+			}
+		}; injector::MakeInline<CheckAshleyActive_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
 }
 
 void Trainer_Update()
@@ -831,6 +915,22 @@ void Trainer_RenderUI()
 				ImGui::EndDisabled();
 			}
 
+			// Ashley presence
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::Spacing();
+				ImGui::TextWrapped("Override Ashley's Presence");
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::RadioButton("Area Default", &AshleyStateOverride, AshleyState::Default);
+				ImGui::RadioButton("Present", &AshleyStateOverride, AshleyState::Present);
+				ImGui::RadioButton("Not present", &AshleyStateOverride, AshleyState::NotPresent);
+			}
+
 			// Enemy HP multiplier
 			{
 				ImGui_ColumnSwitch();
@@ -843,12 +943,14 @@ void Trainer_RenderUI()
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Allows overriding the HP of enemies.");
+
+				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || pConfig->bTrainerRandomHPMultiplier);
+
 				ImGui::TextWrapped("The new HP will be whatever their original HP was, multiplied by the value set here.");
 				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
 
 				ImGui::Spacing();
 
-				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || pConfig->bTrainerRandomHPMultiplier);
 				if (ImGui::SliderFloat("HP Multiplier", &pConfig->fTrainerEnemyHPMultiplier, 0.1f, 15.0f, "%.2f"))
 					pConfig->HasUnsavedChanges = true;
 
@@ -861,8 +963,10 @@ void Trainer_RenderUI()
 
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || !pConfig->bTrainerRandomHPMultiplier);
+				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier);
 				pConfig->HasUnsavedChanges |= ImGui::Checkbox("Use random HP multiplier", &pConfig->bTrainerRandomHPMultiplier);
+				ImGui::EndDisabled();
+				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || !pConfig->bTrainerRandomHPMultiplier);
 				ImGui::TextWrapped("Randomly pick the HP multiplier of each enemy.");
 				ImGui::TextWrapped("You can also set the minimum and maximum values that can be generated.");
 				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
@@ -888,20 +992,47 @@ void Trainer_RenderUI()
 				ImGui::EndDisabled();
 			}
 
-			// Ashley presence
+			// DisableEnemySpawn
 			{
 				ImGui_ColumnSwitch();
 
-				ImGui::Spacing();
-				ImGui::TextWrapped("Override Ashley's Presence");
+				if (ImGui::Checkbox("Disable enemy spawn", &pConfig->bTrainerDisableEnemySpawn))
+					pConfig->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::RadioButton("Area Default", &AshleyStateOverride, AshleyState::Default);
-				ImGui::RadioButton("Present", &AshleyStateOverride, AshleyState::Present);
-				ImGui::RadioButton("Not present", &AshleyStateOverride, AshleyState::NotPresent);
+				ImGui::TextWrapped("Make it so enemies don't spawn.");
+				ImGui::TextWrapped("May cause crashes during events/cutscenes that expect enemies to be present! Use with caution!");
+			}
+
+			// Dead bodies never disappear
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Dead bodies never disappear", &pConfig->bTrainerDeadBodiesNeverDisappear))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Make it so enemies never disappear/despawn when killed.");
+			}
+
+			// AllowEnterDoorsWithoutAsh
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Allow entering doors without Ashley", &pConfig->bTrainerAllowEnterDoorsWithoutAsh))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Allows the player to go through doors even if Ashley is far away.");
 			}
 
 			ImGui_ColumnFinish();

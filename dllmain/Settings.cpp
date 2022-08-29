@@ -366,6 +366,9 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->fTrainerRandomHPMultiMin = fmin(fmax(pConfig->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
 	pConfig->fTrainerRandomHPMultiMax = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
 	pConfig->fTrainerRandomHPMultiMax = fmin(fmax(pConfig->fTrainerRandomHPMultiMax, fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
+	pConfig->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
+	pConfig->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
+	pConfig->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
 
 	// TRAINER HOTKEYS
 	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
@@ -492,6 +495,9 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
 		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMin", pConfig->fTrainerRandomHPMultiMin);
 		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
+		iniReader.WriteBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
+		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
+		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
 
 		// TRAINER_HOTKEYS
 		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);

@@ -30,6 +30,16 @@ UseRandomHPMultiplier = False
 RandomHPMultiplierMin = 0.3
 RandomHPMultiplierMax = 7.0
 
+; Make it so enemies don't spawn.
+; May cause crashes during events/cutscenes that expect enemies to be present! Use with caution!
+DisableEnemySpawn = False
+
+; Make it so enemies never disappear/despawn when killed.
+DeadBodiesNeverDisappear = False
+
+; Allows the player to go through doors even if Ashley is far away.
+AllowEnterDoorsWithoutAshley = False
+
 [WEAPON_HOTKEYS]
 ; Enables usage of weapon hotkeys, to quickly switch weapons without needing to open inventory
 Enable = false

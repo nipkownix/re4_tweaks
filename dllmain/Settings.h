@@ -159,6 +159,9 @@ public:
 	bool bTrainerRandomHPMultiplier = false;
 	float fTrainerRandomHPMultiMin = 0.3f;
 	float fTrainerRandomHPMultiMax = 7.0f;
+	bool bTrainerDisableEnemySpawn = false;
+	bool bTrainerDeadBodiesNeverDisappear = false;
+	bool bTrainerAllowEnterDoorsWithoutAsh = false;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;
