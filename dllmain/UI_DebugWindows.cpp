@@ -430,7 +430,7 @@ bool UI_Globals::Render(bool WindowMode)
 		TITLE_WORK* titleWork = TitleWorkPtr();
 		if (titleWork)
 		{
-			ImGui::Text("Menu Routine: %d-%d-%d-%d", int(titleWork->Rno0_0), int(titleWork->Rno1_1), int(titleWork->Rno2_2), int(titleWork->Rno3_3));
+			ImGui::Text("Menu Routine: %d-%d-%d-%d-%d", int(titleWork->Rno0_0), int(titleWork->Rno1_1), int(titleWork->Rno2_2), int(titleWork->Rno3_3), int(titleWork->titleStart_Rno_8));
 			const char* menuRoutine0Names[] = {"Init", "Wait", "Nintendo", "Warning", "Logo", "Main", "Sub", "Exit", "Ada" };
 			if(titleWork->Rno0_0 >= int(TITLE_WORK::Routine0::Init) && titleWork->Rno0_0 <= int(TITLE_WORK::Routine0::Ada))
 				ImGui::Text("Menu Routine0: %s", menuRoutine0Names[titleWork->Rno0_0]);

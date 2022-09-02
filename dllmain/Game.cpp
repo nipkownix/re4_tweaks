@@ -553,10 +553,21 @@ void TaskScheduler_Hook()
 	TaskScheduler();
 }
 
-void AreaJump(uint16_t roomNo, Vec& position, float rotation)
+bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
 {
 	// proceed with the jumpening
 	GLOBAL_WK* pG = GlobalPtr();
+
+	// Prevent jump during "PRESS ANY KEY" screen, as system info (unlocked flags etc) hasn't been loaded in yet
+	// TODO: check if save has been loaded instead of checking TITLE_WORK Rno, would be more accurate...
+	TITLE_WORK* titleWork = TitleWorkPtr();
+	if (titleWork)
+	{
+		if (titleWork->Rno0_0 < int(TITLE_WORK::Routine0::Main))
+			return false; // don't allow jump during fade/logos
+		if (titleWork->Rno0_0 == int(TITLE_WORK::Routine0::Main) && titleWork->Rno1_1 == 17)
+			return false; // don't allow jump during "PRESS ANY KEY"
+	}
 
 	// roomJumpExec begin
 	// pG->flags_STOP_0_170[0] = 0xFFFFFFFF;
@@ -591,12 +602,13 @@ void AreaJump(uint16_t roomNo, Vec& position, float rotation)
 	pG->SetRoutine(GLOBAL_WK::Routine0::Doordemo, 0, 0, 0);
 
 	// Force title screen to Exit state, allows AreaJump from main menu
-	TITLE_WORK* titleWork = TitleWorkPtr();
 	if (titleWork)
 		titleWork->SetRoutine(TITLE_WORK::Routine0::Exit, 0, 0, 0);
 
 	pG->Flags_SYSTEM_0_54[0] &= 0x40;
 	pG->flags_DEBUG_0_60[0] &= ~0x80000000;
+
+	return true;
 }
 
 bool Init_Game()

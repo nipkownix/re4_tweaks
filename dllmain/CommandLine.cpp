@@ -12,7 +12,9 @@ typedef void(__cdecl* titleMain_Fn)(TITLE_WORK* pT);
 titleMain_Fn titleMain;
 void __cdecl titleMain_Hook(TITLE_WORK* pT)
 {
-	if (paramRoomValue > 0)
+	// Wait till Rno1_1 == 1 before jumping, to ensure system save data is loaded in
+	// (makes it a little slower to load in though, maybe a -fast option would be useful, or some way to speed up the fade-ins)
+	if (paramRoomValue > 0 && pT->Rno1_1 == 1)
 	{
 		int stageNum = (paramRoomValue & 0xFF00) >> 8;
 		if (stageNum >= 0 && stageNum <= 7)

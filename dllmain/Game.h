@@ -52,7 +52,7 @@ TITLE_WORK* TitleWorkPtr();
 void RequestWeaponChange();
 void RequestSaveGame();
 void RequestMerchant();
-void AreaJump(uint16_t roomNo, Vec& position, float rotation);
+bool AreaJump(uint16_t roomNo, Vec& position, float rotation);
 
 bool IsGanado(int id);
 bool IsEnemy(int id);

@@ -1152,6 +1152,14 @@ void Init_Misc()
 		Patch(titleLogoCode + 0xE, uint16_t(0x9090));
 		Patch(titleLogoCode + 0x24, uint16_t(0x9090));
 
+		// Skip key checks on "PRESS ANY KEY" screen
+		pattern = hook::pattern("0F 84 ? ? ? ? 6A 00 68 00 00 00 40 E8");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
+		pattern = hook::pattern("84 C0 74 ? 6A 00 68 00 00 00 40 E8");
+		Patch(pattern.count(1).get(0).get<uint8_t>(2), uint8_t(0xEB));
+
+		// TODO: skip JP warning screen
+
 		spd::log()->info("SkipIntroLogos enabled");
 	}
 

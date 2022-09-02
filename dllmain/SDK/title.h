@@ -23,7 +23,7 @@ struct __declspec(align(4)) TITLE_WORK
 	int8_t TITLE_WORK_field_5;
 	int8_t TITLE_WORK_field_6;
 	int8_t TITLE_WORK_field_7;
-	int8_t TITLE_WORK_field_8;
+	int8_t titleStart_Rno_8; // guessed name
 	uint8_t TITLE_WORK_field_9[3];
 	uint32_t TITLE_WORK_field_timer_mb_C;
 	char TITLE_WORK_field_10;
