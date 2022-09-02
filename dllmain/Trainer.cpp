@@ -7,9 +7,31 @@
 #include <FAhashes.h>
 #include "UI_DebugWindows.h"
 #include "Trainer.h"
+#include <DirectXMath.h>
 
 int AshleyStateOverride;
 int last_weaponId;
+
+// Side info
+bool ShowSideInfo = false;
+bool SideShowEmCount = true;
+bool SideShowEmList = true;
+bool SideOnlyShowESLSpawned = false;
+int SideClosestEmsAmount = 5;
+float SideMaxEmDistance = 30000.0f;
+int SideInfoEmHPMode = 1;
+
+// ESP
+bool ShowESP = false;
+bool EspOnlyShowEnemies = true;
+bool EspOnlyShowValidEms = true;
+bool EspOnlyShowESLSpawned = false;
+bool EspOnlyShowAlive = true;
+bool EspOnlyShowClosestEms = false;
+int EspClosestEmsAmount = 3;
+float EspMaxEmDistance = 30000.0f;
+bool EspDrawLines = false;
+int EspEmHPMode = 1;
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
@@ -637,12 +659,167 @@ void Trainer_Update()
 	}
 }
 
+void Trainer_ESP()
+{
+	if (!(ShowSideInfo || ShowESP))
+		return;
+
+	auto& io = ImGui::GetIO();
+	Vec screenpos;
+
+	auto screen_width = io.DisplaySize.x;
+	auto screen_height = io.DisplaySize.y;
+
+	cEmMgr& emMgr = *EmMgrPtr();
+
+	GLOBAL_WK* pG = GlobalPtr();
+	if (!pG)
+		return;
+
+	// Draw side info
+	if (ShowSideInfo)
+	{
+		// Drw Em count
+		if (SideShowEmCount)
+		{
+			std::stringstream emCnt;
+			emCnt << "Em Count: " << emMgr.count_valid() << " | " << "Max: " << emMgr.count();
+
+			ImGui::GetBackgroundDrawList()->AddText(ImVec2(20, 20), ImColor(255, 255, 255, 255), emCnt.str().c_str());
+		}
+
+		// Draw Em list
+		if (SideShowEmList)
+		{
+			std::vector<cEm*> EnemiesVec = cEmMgr::GetVecClosestEms(SideClosestEmsAmount, SideMaxEmDistance, true, true, SideOnlyShowESLSpawned, true);
+			std::reverse(EnemiesVec.begin(), EnemiesVec.end());
+
+			float InfoOffsetY = 60.0f;
+			for (auto& em : EnemiesVec)
+			{
+				char EmName[256];
+				sprintf(EmName, "#%d %s (type %x)", em->guid_F8, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+
+				ImGui::GetBackgroundDrawList()->AddText(ImVec2(10, screen_height - InfoOffsetY), ImColor(255, 255, 255, 255), EmName);
+
+				if ((SideInfoEmHPMode != 0) && (em->hp_max_326 > 0))
+				{
+					float hp_percent = 0;
+					float hp_max = (float)em->hp_max_326;
+
+					if (hp_max < em->hp_324)
+						hp_max = (float)em->hp_324;
+
+					hp_percent = (float)em->hp_324 * 100.0f / hp_max;
+
+
+					// HP Bar
+					if (SideInfoEmHPMode == 1)
+					{
+						float barScalex = 1.0f;
+
+						ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(30, screen_height - InfoOffsetY + 28.0f), ImVec2(30.0f + 100.0f * barScalex, screen_height - InfoOffsetY + 18.0f), ImColor(105, 105, 105));
+						ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(30, screen_height - InfoOffsetY + 28.0f), ImVec2(30.0f + hp_percent * barScalex, screen_height - InfoOffsetY + 18.0f), getHealthColor(hp_percent));
+
+						InfoOffsetY += 12;
+					}
+					else if (SideInfoEmHPMode == 2) // HP Text
+					{
+						char CurEmHp[256];
+						sprintf(CurEmHp, "Cur HP: %d", em->hp_324);
+
+						char MaxEmHp[256];
+						sprintf(MaxEmHp, "Max HP: %d", em->hp_max_326);
+
+
+						ImGui::GetBackgroundDrawList()->AddText(ImVec2(30, screen_height - InfoOffsetY + 15), getHealthColor(hp_percent), CurEmHp);
+						ImGui::GetBackgroundDrawList()->AddText(ImVec2(30, screen_height - InfoOffsetY + 30), getHealthColor(hp_percent), MaxEmHp);
+
+						InfoOffsetY += 30;
+					}
+				}
+
+				InfoOffsetY += 20; // No HP
+			}
+		}
+	}
+
+	// Draw ESP
+	if (ShowESP)
+	{
+		std::vector<cEm*> EmsVector;
+		if (EspOnlyShowClosestEms)
+			EmsVector = cEmMgr::GetVecClosestEms(EspClosestEmsAmount, EspMaxEmDistance, EspOnlyShowValidEms, EspOnlyShowEnemies, EspOnlyShowESLSpawned, EspOnlyShowAlive);
+		else
+			EmsVector = cEmMgr::GetVecClosestEms(emMgr.count(), EspMaxEmDistance, EspOnlyShowValidEms, EspOnlyShowEnemies, EspOnlyShowESLSpawned, EspOnlyShowAlive);
+
+		for (auto& em : EmsVector)
+		{
+			auto coords = em->pos_94;
+
+			if (WorldToScreen(coords, screenpos, pG->Camera_74.v_mat_30, pG->Camera_74.CamPoint_A4.Fovy_1C, screen_width, screen_height))
+			{
+				// Draw Em Name
+				char EmName[256];
+				sprintf(EmName, "#%d %s (type %x)", em->guid_F8, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+
+				ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y), ImColor(255, 255, 255, 255), EmName);
+
+				if ((EspEmHPMode != 0) && (em->hp_max_326 > 0))
+				{
+					float hp_percent = 0;
+					float hp_max = (float)em->hp_max_326;
+
+					// Workaround for an issue with the HP Multiplier: Some special cases in the game's code can set the curHP/maxHP of Ems
+					// after they have been spawned, and after our hook has increased the HP. This can result in situations where the maxHP
+					// value is lower than the curHP value. Doesn't seem to be a problem for the game, but it does overflow our HP bar.
+					if (hp_max < em->hp_324)
+						hp_max = (float)em->hp_324;
+
+					hp_percent = (float)em->hp_324 * 100.0f / hp_max;
+
+					if (hp_percent)
+					{
+						// HP Bar
+						if (EspEmHPMode == 1)
+						{
+							float barScalex = 1.0f;
+
+							ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(screenpos.x, screenpos.y + 20.0f), ImVec2(screenpos.x + 100.0f * barScalex, screenpos.y + 30.0f), ImColor(105, 105, 105));
+							ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(screenpos.x, screenpos.y + 20.0f), ImVec2(screenpos.x + hp_percent * barScalex, screenpos.y + 30.0f), getHealthColor(hp_percent));
+						}
+						else // HP Text
+						{
+							if (em->hp_max_326 > 0)
+							{
+								char CurEmHp[256];
+								sprintf(CurEmHp, "Cur HP: %d", em->hp_324);
+
+								char MaxEmHp[256];
+								sprintf(MaxEmHp, "Max HP: %d", em->hp_max_326);
+
+								ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y + 15), ImColor(getHealthColor(hp_percent)), CurEmHp);
+								ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y + 30), ImColor(getHealthColor(hp_percent)), MaxEmHp);
+							}
+						}
+					}
+				}
+
+				// Draw lines pointing to the Em
+				if (EspDrawLines)
+					ImGui::GetBackgroundDrawList()->AddLine(ImVec2(io.DisplaySize.x / 2, io.DisplaySize.y), ImVec2(screenpos.x, screenpos.y), ImColor(255, 255, 255));
+			}
+		}
+	}
+}
+
 enum class TrainerTab
 {
 	Patches,
 	Hotkeys,
 	FlagEdit,
 	EmMgr,
+	ESP,
 	DebugTools,
 	NumTabs
 };
@@ -731,6 +908,9 @@ void Trainer_RenderUI()
 
 	// EmMgr
 	ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::EmMgr, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size);
+	
+	// EmMgr
+	ImGui_TrainerTabButton("##esp", "ESP", active, inactive, TrainerTab::ESP, ICON_FA_SUITCASE, icn_color, IM_COL32_WHITE, button_size);
 
 	// DebugTools
 	ImGui_TrainerTabButton("##dbgtools", "Debug Tools", active, inactive, TrainerTab::DebugTools, ICON_FA_VIRUS, icn_color, IM_COL32_WHITE, button_size);
@@ -1309,6 +1489,106 @@ void Trainer_RenderUI()
 	{
 		static auto EmMgr = new UI_EmManager();
 		EmMgr->Render(false);
+	}
+
+	if (CurTrainerTab == TrainerTab::ESP)
+	{
+		if (ImGui::BeginTable("DebugTools", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		{
+			ImGui_ColumnInit();
+
+			// Screen info
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Show ESP", &ShowESP))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::BeginDisabled(!ShowESP);
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Displays information on Ems");
+				ImGui::Spacing();
+
+				ImGui::Checkbox("Only show enemies", &EspOnlyShowEnemies);
+				ImGui::Checkbox("Only show alive", &EspOnlyShowAlive);
+				ImGui::Checkbox("Only show valid Ems", &EspOnlyShowValidEms);
+				ImGui::Checkbox("Only show ESL-spawned##esp", &EspOnlyShowESLSpawned);
+				ImGui::Checkbox("Draw Lines", &EspDrawLines);
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("HP display mode:");
+				ImGui::RadioButton("Don't show##side", &EspEmHPMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Bar##side", &EspEmHPMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Text##side", &EspEmHPMode, 2);
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::Checkbox("Only show closest Ems", &EspOnlyShowClosestEms);
+				ImGui::Spacing();
+
+				ImGui::BeginDisabled(!EspOnlyShowClosestEms);
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max ammount of Ems").x - 10);
+				ImGui::InputInt("Max ammount of Ems##side", &EspClosestEmsAmount);
+				ImGui::Spacing();
+
+				ImGui::SliderFloat("Max distance of Ems##side", &EspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+
+				ImGui::EndDisabled();
+			}
+
+			// Side info
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Show side info", &ShowSideInfo))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::BeginDisabled(!ShowSideInfo);
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Displays information on the left side of the screen.");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::Checkbox("Show Em count", &SideShowEmCount);
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::Checkbox("Show Em list", &SideShowEmList);
+				ImGui::TextWrapped("Ems are listed from bottom to top, with the top one being the closes to the player, and the bottom one being the farthest.");
+				ImGui::Dummy(ImVec2(10, 10));
+				
+				ImGui::BeginDisabled(!SideShowEmList);
+				ImGui::Checkbox("Only show ESL-spawned##side", &SideOnlyShowESLSpawned);
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("HP display mode:");
+				ImGui::RadioButton("Don't show##side", &SideInfoEmHPMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Bar##side", &SideInfoEmHPMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Text##side", &SideInfoEmHPMode, 2);
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max ammount of enemies").x - 10);
+				ImGui::Spacing();
+				ImGui::InputInt("Max ammount of enemies##side", &SideClosestEmsAmount);
+
+				ImGui::Spacing();
+				ImGui::SliderFloat("Max distance of enemies##side", &SideMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+
+				ImGui::EndDisabled();
+			}
+
+			ImGui_ColumnFinish();
+			ImGui::EndTable();
+		}
 	}
 
 	if (CurTrainerTab == TrainerTab::DebugTools)

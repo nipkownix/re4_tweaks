@@ -413,6 +413,9 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		}
 	}
 
+	// Draw trainer ESP
+	Trainer_ESP();
+
 	// Show cursor if needed
 	ImGui::GetIO().MouseDrawCursor = ImGuiShouldAcceptInput();
 

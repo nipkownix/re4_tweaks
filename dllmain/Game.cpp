@@ -52,33 +52,198 @@ std::unordered_map<int, std::string> UnitBeFlagNames =
 std::unordered_map<int, std::string> EmNames =
 {
 	{0x00, "Player"},
-	{0x50, "EmObj"},
-	{0x51, "EmDoor"},
-	{0x52, "EmWep"},
-	{0x53, "EmBox"},
+	{0x01, "??"},
+	{0x02, "Leon"},
+	{0x03, "Ashley"},
+	{0x04, "Luis"},
+	{0x05, "Ashley"},
+	{0x06, "Ganado"},
+	{0x07, "Ganado"},
+	{0x08, "Ganado"},
+	{0x09, "Ganado"},
+	{0x0A, "Ganado"},
+	{0x0B, "Ganado"},
+	{0x0C, "Ashley"},
+	{0x0D, "Ganado"},
+	{0x0E, "Jet-ski"},
+	{0x0F, "Boat"},
+	{0x11, "Zealot"},
+	{0x12, "Ganado"},
+	{0x13, "Ganado"},
+	{0x13, "Ganado / Merchant"},
+	{0x14, "Zealot / Merchant"},
+	{0x15, "Ganado"},
+	{0x16, "Ganado"},
+	{0x17, "Ganado"},
+	{0x18, "Merchant"},
+	{0x19, "Zealot"},
+	{0x1A, "Zealot"},
+	{0x1B, "Garrador / Zealot"},
+	{0x1C, "Garrador / Zealot"},
+	{0x1D, "Soldier / J.J."},
+	{0x1E, "Soldier / Merchant"},
+	{0x1F, "Soldier"},
+	{0x20, "SW Soldier / WW Super Salvador"},
+	{0x21, "Dog"},
+	{0x22, "Colmillo"},
+	{0x23, "Crow"},
+	{0x24, "Snake"},
+	{0x25, "Parasite"},
+	{0x26, "Cow"},
+	{0x27, "Bass"},
+	{0x28, "Chicken"},
+	{0x29, "Bat"},
+	{0x2A, "Bear trap / Mine trap"},
+	{0x2B, "El Gigante"},
+	{0x2C, "Verdugo"},
+	{0x2D, "Novistador"},
+	{0x2E, "Spider"},
+	{0x2F, "Del Lago"},
+	{0x31, "Saddler"},
+	{0x32, "IT (U-3)"},
+	{0x35, "Mendez"},
+	{0x36, "Regenerator / Iron Maiden"},
+	{0x38, "Salazar"},
+	{0x39, "Krauser"},
+	{0x3A, "Robot"},
+	{0x3B, "Truck / Ammo wagon"},
+	{0x3C, "Knight"},
+	{0x3D, "Helicopter"},
+	{0x3F, "Saddler"},
+	{0x42, "SW Ganado"},
+	{0x43, "SW Soldier"},
+	{0x44, "SW Ganado"},
+	{0x4E, "Cannon"},
+
+	// Misc stuff
+	{0x50, "Obj"},
+	{0x51, "Door"},
+	{0x52, "Wep"},
+	{0x53, "Box"},
 	//0x54 unused?
-	{0x55, "EmRack"},
-	{0x56, "EmWindow"},
-	{0x57, "EmTorch"},
-	{0x58, "EmBarrel"},
-	{0x59, "EmTree"},
-	{0x5A, "EmRock"},
-	{0x5B, "EmSwitch"},
-	{0x5C, "EmItem"},
-	{0x5D, "EmHit"},
-	{0x5E, "EmBarred"},
-	{0x5F, "EmMine"},
-	{0x60, "EmShield"},
-	{0x61, "EmBar"},
+	{0x55, "Rack"},
+	{0x56, "Window"},
+	{0x57, "Torch"},
+	{0x58, "Barrel"},
+	{0x59, "Tree"},
+	{0x5A, "Rock"},
+	{0x5B, "Switch"},
+	{0x5C, "Item"},
+	{0x5D, "Hit"},
+	{0x5E, "Barred"},
+	{0x5F, "Mine"},
+	{0x60, "Shield"},
+	{0x61, "Bar"},
 };
 
 std::string cEmMgr::EmIdToName(int id)
 {
+	std::stringstream emIdStr;
+
+	emIdStr << "cEm" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << id;
+
 	if (EmNames.count(id))
-		return EmNames[id];
-	std::stringstream ss;
-	ss << "Em" << std::setfill('0') << std::setw(2) << id;
-	return ss.str();
+	{
+		std::stringstream ss;
+		ss << EmNames[id] << " (" << emIdStr.str() << ")";
+		return ss.str();
+	}
+
+	return emIdStr.str();
+}
+
+cEm* cEmMgr::GetClosestEm(bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans)
+{
+	auto& emMgr = *EmMgrPtr();
+	cPlayer* player = PlayerPtr();
+
+	float ClosestEmDist = 100000.0f;
+	cEm* ClosestEmPtr = nullptr;
+
+	// Get the closest Em
+	for (auto& em : emMgr)
+	{
+		if (onlyValidEms && !em.IsValid())
+			continue;
+
+		if (onlyEnemies && !IsEnemy(em.id_100))
+			continue;
+
+		if (onlyESLSpawned && !em.IsSpawnedByESL())
+			continue;
+
+		if (onlyTrans && !em.IsTransSet())
+			continue;
+
+		float distFromPl = get_distance(em.pos_94.x, em.pos_94.y, em.pos_94.z, player->pos_94.x, player->pos_94.y, player->pos_94.z);
+
+		// Must be something invalid
+		if (distFromPl < 200.0f)
+			continue;
+
+		if (distFromPl < ClosestEmDist)
+		{
+			ClosestEmDist = distFromPl;
+			ClosestEmPtr = &em;
+		}
+	}
+
+	return ClosestEmPtr;
+}
+
+
+std::vector<cEm*> cEmMgr::GetVecClosestEms(int DesiredNumEms, float maxDistance, bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans)
+{
+	auto& emMgr = *EmMgrPtr();
+	cPlayer* player = PlayerPtr();
+
+	// Get list of Ems and their distances
+	std::vector<std::pair<float, cEm*>> dists;
+	for (auto& em : emMgr)
+	{
+		if (onlyValidEms && !em.IsValid())
+			continue;
+
+		if (onlyEnemies && !IsEnemy(em.id_100))
+			continue;
+
+		if (onlyESLSpawned && !em.IsSpawnedByESL())
+			continue;
+
+		if (onlyTrans && !em.IsTransSet())
+			continue;
+
+		float distFromPl = get_distance(em.pos_94.x, em.pos_94.y, em.pos_94.z, player->pos_94.x, player->pos_94.y, player->pos_94.z);
+
+		// Must be something invalid
+		if (distFromPl < 200.0f)
+			continue;
+
+		// Too far
+		if (distFromPl >= maxDistance)
+			continue;
+
+		dists.emplace_back(distFromPl, &em);
+	}
+
+	// Sort list. Shortest distance first.
+	std::sort(dists.begin(), dists.end());
+
+	// Put Em pointers in a vector and return
+	std::vector<cEm*> EmVector;
+
+	int i = 0;
+	for (auto& emdists : dists)
+	{
+		EmVector.push_back(emdists.second);
+
+		i++;
+
+		if (i == DesiredNumEms)
+			break;
+	}
+
+	return EmVector;
 }
 
 std::string cUnit::GetBeFlagName(int flagIndex)
@@ -240,6 +405,22 @@ bool IsGanado(int id) // same as games IsGanado func
 	if (id < 0x10)
 		return 0;
 	return id <= 0x20;
+}
+
+
+bool IsEnemy(int id) // Since the game's IsGanado doesn't account for some enemies, we have this as an alternative
+{
+	bool blacklist = false;
+
+	blacklist |= (id == 0x2A); // Mine trap / bear trap
+	blacklist |= (id == 0x3B); // Truck / Wagon
+	blacklist |= (id == 0x3D); // Mike's helicopter
+	blacklist |= (id == 0x4E); // SW Ship cannon
+
+	if (blacklist)
+		return false;
+
+	return (id > 0x10 && id < 0x4F);
 }
 
 const char* emlist_name[] = {

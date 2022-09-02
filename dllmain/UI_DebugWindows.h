@@ -41,7 +41,7 @@ class UI_EmManager : public UI_Window
 
 	float addPosition[3] = { 0 };
 
-	std::string EmDisplayString(int i, cEm& em, bool showEmPointers);
+	std::string EmDisplayString(cEm& em, bool showEmPointers);
 public:
 	UI_EmManager(std::string_view title = "Em Manager", int selectedIndex = -1) : UI_Window(title), emIdx(selectedIndex) {}
 

@@ -103,6 +103,11 @@ public:
 	{
 		return IsValid() && emListIndex_3A0 != 255;
 	}
+
+	inline bool IsTransSet()
+	{
+		return (be_flag_4 & (1 << 1)) != 0;
+	}
 };
 assert_size(cEm, 0x408);
 
@@ -116,5 +121,7 @@ public:
 	int count_valid() { int i = 0; for (auto& em : *this) if (em.IsValid()) i++; return i; }
 
 	static std::string EmIdToName(int id);
+	static cEm* cEmMgr::GetClosestEm(bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans);
+	static std::vector<cEm*> GetVecClosestEms(int DesiredNumEms, float maxDistance, bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans);
 };
 assert_size(cEmMgr, 0x20);

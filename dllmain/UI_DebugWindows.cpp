@@ -13,13 +13,13 @@ void UI_Window::UpdateWindowTitle()
 		windowTitle = origWindowTitle + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
 }
 
-std::string UI_EmManager::EmDisplayString(int i, cEm& em, bool showEmPointers)
+std::string UI_EmManager::EmDisplayString(cEm& em, bool showEmPointers)
 {
 	char tmpBuf[256];
 	if (showEmPointers)
-		sprintf(tmpBuf, "#%d:0x%x c%s (type %x) flags %x", i, (uint32_t)&em, cEmMgr::EmIdToName(em.id_100).c_str(), int(em.type_101), int(em.be_flag_4));
+		sprintf(tmpBuf, "#%d:0x%x %s (type %x) flags %x", em.guid_F8, (uint32_t)&em, cEmMgr::EmIdToName(em.id_100).c_str(), int(em.type_101), int(em.be_flag_4));
 	else
-		sprintf(tmpBuf, "#%d c%s (type %x) flags %x", i, cEmMgr::EmIdToName(em.id_100).c_str(), int(em.type_101), int(em.be_flag_4));
+		sprintf(tmpBuf, "#%d %s (type %x) flags %x", em.guid_F8, cEmMgr::EmIdToName(em.id_100).c_str(), int(em.type_101), int(em.be_flag_4));
 
 	return tmpBuf;
 }
@@ -60,7 +60,7 @@ bool UI_EmManager::Render(bool WindowMode)
 			{
 				cEm* em = emMgr[emIdx];
 				if (em)
-					currentEmStr = EmDisplayString(emIdx, *em, showEmPointers);
+					currentEmStr = EmDisplayString(*em, showEmPointers);
 			}
 
 			if (WindowMode)
@@ -92,7 +92,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					{
 						if (!onlyShowESLSpawned || em.IsSpawnedByESL())
 						{
-							std::string emStr = EmDisplayString(i, em, showEmPointers);
+							std::string emStr = EmDisplayString(em, showEmPointers);
 
 							const bool is_selected = (emIdx == i);
 							if (ImGui::Selectable(emStr.c_str(), is_selected))
@@ -128,9 +128,9 @@ bool UI_EmManager::Render(bool WindowMode)
 					ImGui::Dummy(ImVec2(10, 5));
 
 					if (showEmPointers)
-						ImGui::Text("#%d:0x%x c%s (type %x)", emIdx, em, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+						ImGui::Text("#%d:0x%x %s (type %x)", em->guid_F8, em, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
 					else
-						ImGui::Text("#%d c%s (type %x)", emIdx, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+						ImGui::Text("#%d %s (type %x)", em->guid_F8, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
 
 					static Vec copyPosition = { 0 };
 					if (ImGui::Button("Copy position"))

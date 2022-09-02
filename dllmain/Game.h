@@ -55,6 +55,7 @@ void RequestMerchant();
 void AreaJump(uint16_t roomNo, Vec& position, float rotation);
 
 bool IsGanado(int id);
+bool IsEnemy(int id);
 const char* GetEmListName(int emListNumber);
 const char* GetEmListEnumName(int emListNumber);
 
