@@ -18,6 +18,7 @@ bool ShowSideInfo = false;
 bool SideShowEmCount = true;
 bool SideShowEmList = true;
 bool SideOnlyShowESLSpawned = false;
+bool SideShowSimpleNames = false;
 int SideClosestEmsAmount = 5;
 float SideMaxEmDistance = 30000.0f;
 int SideInfoEmHPMode = 1;
@@ -28,9 +29,10 @@ bool EspOnlyShowEnemies = true;
 bool EspOnlyShowValidEms = true;
 bool EspOnlyShowESLSpawned = false;
 bool EspOnlyShowAlive = true;
+bool EspShowSimpleNames = false;
+float EspMaxEmDistance = 30000.0f;
 bool EspOnlyShowClosestEms = false;
 int EspClosestEmsAmount = 3;
-float EspMaxEmDistance = 30000.0f;
 bool EspDrawLines = false;
 int EspEmHPMode = 1;
 bool EspDrawDebugInfo = false;
@@ -734,10 +736,15 @@ void Trainer_ESP()
 			float InfoOffsetY = 60.0f;
 			for (auto& em : EnemiesVec)
 			{
-				char EmName[256];
-				sprintf(EmName, "#%d %s (type %x)", em->guid_F8, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+				// Draw Em Name
+				std::stringstream EmName;
+				EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, SideShowSimpleNames);
+				if (!SideShowSimpleNames)
+				{
+					EmName << " (type " << (int)em->type_101 << ")";
+				}
 
-				ImGui::GetBackgroundDrawList()->AddText(ImVec2(10, screen_height - InfoOffsetY), ImColor(255, 255, 255, 255), EmName);
+				ImGui::GetBackgroundDrawList()->AddText(ImVec2(10, screen_height - InfoOffsetY), ImColor(255, 255, 255, 255), EmName.str().c_str());
 
 				if ((SideInfoEmHPMode != 0) && (em->hp_max_326 > 0))
 				{
@@ -797,10 +804,14 @@ void Trainer_ESP()
 			if (WorldToScreen(coords, screenpos, pG->Camera_74.v_mat_30, pG->Camera_74.CamPoint_A4.Fovy_1C, screen_width, screen_height))
 			{
 				// Draw Em Name
-				char EmName[256];
-				sprintf(EmName, "#%d %s (type %x)", em->guid_F8, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
+				std::stringstream EmName;
+				EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, EspShowSimpleNames);
+				if (!EspShowSimpleNames)
+				{
+					EmName << " (type " << (int)em->type_101 << ")";
+				}
 
-				ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y), ImColor(255, 255, 255, 255), EmName);
+				ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y), ImColor(255, 255, 255, 255), EmName.str().c_str());
 
 				if ((EspEmHPMode != 0) && (em->hp_max_326 > 0))
 				{
@@ -844,8 +855,9 @@ void Trainer_ESP()
 
 				if (EspDrawDebugInfo)
 				{
-					sprintf(EmName, "0x%p, Rno %d-%d-%d-%d", em, int(em->r_no_0_FC), int(em->r_no_1_FD), int(em->r_no_2_FE), int(em->r_no_3_FF));
-					ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y + 30), ImColor(255, 255, 255), EmName);
+					char EmDbgInfo[256];
+					sprintf(EmDbgInfo, "0x%p, Rno %d-%d-%d-%d", em, int(em->r_no_0_FC), int(em->r_no_1_FD), int(em->r_no_2_FE), int(em->r_no_3_FF));
+					ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y + 30), ImColor(255, 255, 255), EmDbgInfo);
 				}
 
 				// Draw lines pointing to the Em
@@ -1498,6 +1510,7 @@ void Trainer_RenderUI()
 				ImGui::Checkbox("Only show alive", &EspOnlyShowAlive);
 				ImGui::Checkbox("Only show valid Ems", &EspOnlyShowValidEms);
 				ImGui::Checkbox("Only show ESL-spawned##esp", &EspOnlyShowESLSpawned);
+				ImGui::Checkbox("Show simplified names##esp", &EspShowSimpleNames);
 				ImGui::Checkbox("Draw Lines", &EspDrawLines);
 				ImGui::Checkbox("Draw Debug Info", &EspDrawDebugInfo);
 				ImGui::Dummy(ImVec2(10, 10));
@@ -1508,16 +1521,16 @@ void Trainer_RenderUI()
 				ImGui::RadioButton("Text##side", &EspEmHPMode, 2);
 				ImGui::Dummy(ImVec2(10, 10));
 
+				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max distance of Ems").x - 10);
+				ImGui::SliderFloat("Max distance of Ems##side", &EspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::Spacing();
+
 				ImGui::Checkbox("Only show closest Ems", &EspOnlyShowClosestEms);
 				ImGui::Spacing();
 
 				ImGui::BeginDisabled(!EspOnlyShowClosestEms);
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max ammount of Ems").x - 10);
 				ImGui::InputInt("Max ammount of Ems##side", &EspClosestEmsAmount);
-				ImGui::Spacing();
-
-				ImGui::SliderFloat("Max distance of Ems##side", &EspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
-				ImGui::PopItemWidth();
 				ImGui::EndDisabled();
 
 				ImGui::EndDisabled();
@@ -1548,6 +1561,7 @@ void Trainer_RenderUI()
 				
 				ImGui::BeginDisabled(!SideShowEmList);
 				ImGui::Checkbox("Only show ESL-spawned##side", &SideOnlyShowESLSpawned);
+				ImGui::Checkbox("Show simplified names##side", &SideShowSimpleNames);
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("HP display mode:");

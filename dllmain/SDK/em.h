@@ -120,7 +120,7 @@ class cEmMgr : public cManager<cEm>
 public:
 	int count_valid() { int i = 0; for (auto& em : *this) if (em.IsValid()) i++; return i; }
 
-	static std::string EmIdToName(int id);
+	static std::string EmIdToName(int id, bool simplified = false);
 	static cEm* cEmMgr::GetClosestEm(bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans);
 	static std::vector<cEm*> GetVecClosestEms(int DesiredNumEms, float maxDistance, bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans);
 };

@@ -152,8 +152,11 @@ std::unordered_map<int, std::string> EmNames =
 	{0x61, "Bar"},
 };
 
-std::string cEmMgr::EmIdToName(int id)
+std::string cEmMgr::EmIdToName(int id, bool simplified)
 {
+	if (simplified)
+		return EmNames[id];
+
 	std::stringstream emIdStr;
 
 	emIdStr << "cEm" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << id;
