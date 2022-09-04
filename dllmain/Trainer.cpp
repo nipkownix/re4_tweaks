@@ -287,6 +287,16 @@ void Trainer_Init()
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 5, true);
 	}
 
+	// Game seems to set DBG_NO_DEATH & DBG_INF_BULLET2 flags during gameRoomInit
+	// Ordinarilly those get cleared by the bzero mentioned above, but we had to disable that to allow using DBG flags...
+	// For now we'll just patch out the code that sets up those flags
+	{
+		auto pattern = hook::pattern("81 48 68 00 00 80 00");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7, true);
+		pattern = hook::pattern("B9 00 00 00 80 09 48 6C");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 8, true);
+	}
+
 	// DBG_NO_DEATH2
 	{
 		// EmAtkHitCk patch
