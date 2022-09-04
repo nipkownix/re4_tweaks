@@ -1158,6 +1158,17 @@ void Init_Misc()
 		pattern = hook::pattern("84 C0 74 ? 6A 00 68 00 00 00 40 E8");
 		Patch(pattern.count(1).get(0).get<uint8_t>(2), uint8_t(0xEB));
 
+		// Remove delays from cCard::loadMain
+		pattern = hook::pattern("D9 E8 5E DE E1 DC 05 ? ? ? ? D9 9B FC 04 00 00");
+		uint8_t* addr1 = pattern.count(2).get(0).get<uint8_t>(0);
+		uint8_t* addr2 = pattern.count(2).get(1).get<uint8_t>(0);
+		// fld1 -> fldz
+		Patch(addr1 + 1, uint8_t(0xEE));
+		Patch(addr2 + 1, uint8_t(0xEE));
+		// nop out insn that adds 15 to count
+		injector::MakeNOP(addr1 + 5, 6, true);
+		injector::MakeNOP(addr2 + 5, 6, true);
+
 		// TODO: skip JP warning screen
 
 		spd::log()->info("SkipIntroLogos enabled");
