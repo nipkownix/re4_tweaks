@@ -297,6 +297,15 @@ void Trainer_Init()
 		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 8, true);
 	}
 
+	// gameRoomMemInit clears most DBG flags when loading new room
+	// patch out the code responsible so players trainer settings won't get reset between rooms
+	{
+		auto pattern = hook::pattern("8B 15 ? ? ? ? 89 72 60");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 9, true);
+		pattern = hook::pattern("A1 ? ? ? ? 89 70 64");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 8, true);
+	}
+
 	// DBG_NO_DEATH2
 	{
 		// EmAtkHitCk patch
