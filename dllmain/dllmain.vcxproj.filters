@@ -453,6 +453,12 @@
     <ClInclude Include="SDK\sscrn.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\em10.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cloth.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

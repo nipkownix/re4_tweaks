@@ -245,8 +245,8 @@ bool UI_EmManager::Render(bool WindowMode)
 							{
 								// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
 								// make sure we update that as well
-								Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
-								*scale_bk_498 = em->scale_AC;
+								cEm10* em10 = (cEm10*)em;
+								em10->Scale_498 = em->scale_AC;
 							}
 							em->matUpdate();
 						}
@@ -290,8 +290,8 @@ bool UI_EmManager::Render(bool WindowMode)
 								{
 									// cEm10 holds a seperate scale value that it seems to grow/shrink the actual scale towards each frame
 									// make sure we update that as well
-									Vec* scale_bk_498 = (Vec*)((uint8_t*)em + 0x498);
-									*scale_bk_498 = em->scale_AC;
+									cEm10* em10 = (cEm10*)em;
+									em10->Scale_498 = em->scale_AC;
 								}
 								em->matUpdate();
 							}

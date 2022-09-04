@@ -4,6 +4,7 @@
 
 #include "SDK/event.h"
 #include "SDK/EtcModel.h"
+#include "SDK/em10.h"
 #include "SDK/player.h"
 #include "SDK/pad.h"
 #include "SDK/global.h"

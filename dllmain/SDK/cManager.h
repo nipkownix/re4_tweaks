@@ -56,7 +56,6 @@ public:
 	private:
 		void increment() { m_ptr = (pointer)(((uint8_t*)m_ptr) + m_ptr_size); }
 		pointer m_ptr;
-		pointer m_end_ptr;
 		int m_ptr_size = sizeof(value_type);
 	};
 
