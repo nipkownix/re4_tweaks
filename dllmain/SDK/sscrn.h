@@ -157,3 +157,8 @@ struct SUB_SCREEN
 assert_size(SUB_SCREEN, 0x358);
 
 extern SUB_SCREEN* SubScreenWk; // extern from Game.cpp
+
+namespace bio4
+{
+	extern bool(__cdecl* SubScreenOpen)(SS_OPEN_FLAG open_flag, SS_ATTR_FLAG attr_flag);
+}

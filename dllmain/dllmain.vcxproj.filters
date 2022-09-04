@@ -459,6 +459,9 @@
     <ClInclude Include="SDK\cloth.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\card.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

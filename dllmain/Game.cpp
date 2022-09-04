@@ -23,6 +23,16 @@ cItemMgr* ItemMgr = nullptr;
 cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 
+// Original game funcs
+bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
+void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
+
+namespace bio4 {
+	bool(__cdecl* SubScreenOpen)(SS_OPEN_FLAG open_flag, SS_ATTR_FLAG attr_flag);
+	bool(__cdecl* CardCheckDone)();
+	void(__cdecl* CardSave)(uint8_t terminal_no, uint8_t attr);
+};
+
 // Current play time (H, M, S)
 int iCurPlayTime[3] = { 0, 0, 0 };
 
@@ -483,12 +493,6 @@ const char* GetEmListEnumName(int emListNumber)
 	return "unknown";
 }
 
-// Original game funcs
-bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
-void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
-void(__cdecl* game_CardSave)(uint8_t a1, char a2);
-void(__cdecl* game_SubScreenOpen)(int a1, int a2);
-
 void* (__cdecl* mem_calloc)(size_t Size, char* Str, int a3, int a4, int a5);
 void* __cdecl mem_calloc_TITLE_WORK_hook(size_t Size, char* Str, int a3, int a4, int a5)
 {
@@ -546,7 +550,7 @@ void TaskScheduler_Hook()
 	{
 		// If SubScreen is closed and game status is "playing"
 		if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
-			game_SubScreenOpen(16, 0);
+			bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
 
 		MerchantRequested = false;
 	}
@@ -559,16 +563,10 @@ bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
 	// proceed with the jumpening
 	GLOBAL_WK* pG = GlobalPtr();
 
-	// Prevent jump during "PRESS ANY KEY" screen, as system info (unlocked flags etc) hasn't been loaded in yet
-	// TODO: check if save has been loaded instead of checking TITLE_WORK Rno, would be more accurate...
-	TITLE_WORK* titleWork = TitleWorkPtr();
-	if (titleWork)
-	{
-		if (titleWork->Rno0_0 < int(TITLE_WORK::Routine0::Main))
-			return false; // don't allow jump during fade/logos
-		if (titleWork->Rno0_0 == int(TITLE_WORK::Routine0::Main) && titleWork->Rno1_1 == 17)
-			return false; // don't allow jump during "PRESS ANY KEY"
-	}
+	// Only allow jumping after save has been loaded (after "PRESS ANY KEY" screen)
+	// Otherwise there's a chance system info (unlocked flags etc) could be lost
+	if (!bio4::CardCheckDone())
+		return false;
 
 	// roomJumpExec begin
 	// pG->flags_STOP_0_170[0] = 0xFFFFFFFF;
@@ -603,6 +601,7 @@ bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
 	pG->SetRoutine(GLOBAL_WK::Routine0::Doordemo, 0, 0, 0);
 
 	// Force title screen to Exit state, allows AreaJump from main menu
+	TITLE_WORK* titleWork = TitleWorkPtr();
 	if (titleWork)
 		titleWork->SetRoutine(TITLE_WORK::Routine0::Exit, 0, 0, 0);
 
@@ -749,13 +748,15 @@ bool Init_Game()
 	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), WeaponChange);
 
-	// CardSave funcptr
+	// Card related funcptrs
+	pattern = hook::pattern("E8 ? ? ? ? 3C 01 75 ? 8B 4D ? 8B 55");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::CardCheckDone);
 	pattern = hook::pattern("E8 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 15 ? ? ? ? A1");
-	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), game_CardSave);
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::CardSave);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
-	game_SubScreenOpen = (decltype(game_SubScreenOpen))pattern.count(1).get(0).get<uint32_t>(0);
+	bio4::SubScreenOpen = (decltype(bio4::SubScreenOpen))pattern.count(1).get(0).get<uint32_t>(0);
 
 	// SubScreenWk ptr
 	pattern = hook::pattern("68 ? ? ? ? E8 ? ? ? ? 68 00 00 00 F0 E8");

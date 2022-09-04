@@ -327,7 +327,7 @@ void ToolMenu_ToggleHUD()
 const char* ToolMenu_SaveGameName = "SAVE GAME";
 void ToolMenu_SaveGame()
 {
-	game_CardSave(0, 1);
+	bio4::CardSave(0, 1);
 
 	ToolMenu_Exit();
 }
@@ -337,7 +337,7 @@ void OpenMerchant()
 	while (IsInDebugMenu())
 		Sleep(50);
 
-	game_SubScreenOpen(16, 0);
+	bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
 }
 
 const char* ToolMenu_OpenMerchantName = "OPEN MERCHANT";

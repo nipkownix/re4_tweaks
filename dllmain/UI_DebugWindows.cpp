@@ -674,11 +674,13 @@ bool UI_AreaJump::Render(bool WindowMode)
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Rotation").x - 10.0f);
 				ImGui::InputFloat("Rotation", &curRoomRotation);
 
+				ImGui::BeginDisabled(!bio4::CardCheckDone());
 				if (ImGui::Button("Jump!"))
 				{
 					GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
 					AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
 				}
+				ImGui::EndDisabled();
 			}
 		}
 		
