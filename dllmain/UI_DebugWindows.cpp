@@ -29,6 +29,7 @@ void ImGui_ItemSeparator(); // cfgMenu.cpp
 bool UI_EmManager::Render(bool WindowMode)
 {
 	bool retVal = true; // set to false on window close
+	GLOBAL_WK* pG = GlobalPtr();
 
 	if (WindowMode)
 	{
@@ -160,6 +161,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					}
 
 					cPlayer* player = PlayerPtr();
+					cPlayer* ashley = AshleyPtr();
 					if (em != player)
 					{
 						if (ImGui::Button("Teleport player"))
@@ -252,22 +254,44 @@ bool UI_EmManager::Render(bool WindowMode)
 						}
 						ImGui::PopItemWidth();
 
-						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
-						ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
-
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Motion Speed").x - 10.0f);
+						ImGui::InputFloat("Motion Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
+						
 						int hpCur = em->hp_324;
+						if (em == player)
+							hpCur = pG->playerHpCur_4FB4;
+						else if (em == ashley)
+							hpCur = pG->subHpCur_4FB8;
+
 						if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+						{
 							em->hp_324 = hpCur;
+							if (em == player)
+								pG->playerHpCur_4FB4 = hpCur;
+							else if (em == ashley)
+								pG->subHpCur_4FB8 = hpCur;
+						}
 
 						int hpMax = em->hp_max_326;
+						if (em == player)
+							hpMax = pG->playerHpMax_4FB6;
+						else if (em == ashley)
+							hpMax = pG->subHpMax_4FBA;
 						if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+						{
 							em->hp_max_326 = hpMax;
+							if (em == player)
+								pG->playerHpMax_4FB6 = hpMax;
+							else if (em == ashley)
+								pG->subHpMax_4FBA = hpMax;
+						}
+
 						ImGui::PopItemWidth();
 
 						ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
 						ImGui::Text("Parts count: %d", em->PartCount());
 						if (em->emListIndex_3A0 != 255)
-							ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+							ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(pG->curEmListNumber_4FB3), GetEmListName(pG->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
 
 					}
 					else
@@ -297,22 +321,44 @@ bool UI_EmManager::Render(bool WindowMode)
 							}
 							ImGui::PopItemWidth();
 
-							ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("MotInfo.Speed").x - 10.0f);
-							ImGui::InputFloat("MotInfo.Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
+							ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Motion Speed").x - 10.0f);
+							ImGui::InputFloat("Motion Speed", &em->Motion_1D8.Seq_speed_C0, 0.1f);
 
 							int hpCur = em->hp_324;
+							if (em == player)
+								hpCur = pG->playerHpCur_4FB4;
+							else if (em == ashley)
+								hpCur = pG->subHpCur_4FB8;
+
 							if (ImGui::InputInt("HpCur", &hpCur, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+							{
 								em->hp_324 = hpCur;
+								if (em == player)
+									pG->playerHpCur_4FB4 = hpCur;
+								else if (em == ashley)
+									pG->subHpCur_4FB8 = hpCur;
+							}
 
 							int hpMax = em->hp_max_326;
+							if (em == player)
+								hpMax = pG->playerHpMax_4FB6;
+							else if (em == ashley)
+								hpMax = pG->subHpMax_4FBA;
 							if (ImGui::InputInt("HpMax", &hpMax, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+							{
 								em->hp_max_326 = hpMax;
+								if (em == player)
+									pG->playerHpMax_4FB6 = hpMax;
+								else if (em == ashley)
+									pG->subHpMax_4FBA = hpMax;
+							}
+
 							ImGui::PopItemWidth();
 
 							ImGui::Text("Routine: %02X %02X %02X %02X", em->r_no_0_FC, em->r_no_1_FD, em->r_no_2_FE, em->r_no_3_FF);
 							ImGui::Text("Parts count: %d", em->PartCount());
 							if (em->emListIndex_3A0 != 255)
-								ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(GlobalPtr()->curEmListNumber_4FB3), GetEmListName(GlobalPtr()->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
+								ImGui::Text("ESL: %s (%s) @ #%d (offset 0x%x)", GetEmListEnumName(pG->curEmListNumber_4FB3), GetEmListName(pG->curEmListNumber_4FB3), int(em->emListIndex_3A0), int(em->emListIndex_3A0) * sizeof(EM_LIST));
 
 							ImGui::TableNextColumn();
 
@@ -438,6 +484,9 @@ bool UI_Globals::Render(bool WindowMode)
 			ImGui::Separator();
 		}
 
+		// fGPUUsagePtr is almost always 100% or higher, not sure if it's actually valid...
+		ImGui::Text("Engine load (CPU / GPU): %.0f%% / %.0f%%", *fCPUUsagePtr * 100.f, *fGPUUsagePtr * 100.f);
+
 		ImGui::Text("Area: R%03x", int(globals->curRoomId_4FAC & 0xFFF));
 		
 		ImGui::Text("Routine: %d-%d-%d-%d", int(globals->Rno0_20), int(globals->Rno1_21), int(globals->Rno2_22), int(globals->Rno3_23));
@@ -459,7 +508,7 @@ bool UI_Globals::Render(bool WindowMode)
 			if (playerIdx >= 0)
 			{
 				ImGui::SameLine();
-				if (ImGui::Button("View"))
+				if (ImGui::Button("View##viewpl"))
 					UI_NewEmManager(playerIdx);
 			}
 		}
@@ -474,7 +523,7 @@ bool UI_Globals::Render(bool WindowMode)
 			if (ashleyIdx >= 0)
 			{
 				ImGui::SameLine();
-				if (ImGui::Button("View"))
+				if (ImGui::Button("View##viewsub"))
 					UI_NewEmManager(ashleyIdx);
 			}
 		}

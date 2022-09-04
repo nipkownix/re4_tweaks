@@ -120,6 +120,10 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 	if (!pConfig->bWeaponHotkeysEnable)
 		return;
 
+	bool ImGuiShouldAcceptInput(); // EndSceneHook.cpp
+	if (ImGuiShouldAcceptInput())
+		return; // don't apply hotkeys while in ImGui
+
 	if (forceUseWepID && slotIdx < 1)
 		return;
 

@@ -37,6 +37,10 @@ namespace bio4 {
 // Current play time (H, M, S)
 int iCurPlayTime[3] = { 0, 0, 0 };
 
+// CPU/GPU usage meters
+double* fCPUUsagePtr = nullptr;
+double* fGPUUsagePtr = nullptr;
+
 // a lot missing from here sadly ;_;
 std::unordered_map<int, std::string> UnitBeFlagNames =
 {
@@ -692,6 +696,11 @@ bool Init_Game()
 	// g_GameSave_BufPtr pointer (not actual name)
 	pattern = hook::pattern("89 15 ? ? ? ? C7 05 ? ? ? ? A0 FA 0F 00");
 	g_GameSave_BufPtr = *pattern.count(1).get(0).get<uint8_t**>(2);
+
+	// GPU/CPU usage values
+	pattern = hook::pattern("DD 05 ? ? ? ? DD 05 ? ? ? ? DC C9 D9 C9 E8 ? ? ? ? DC 0D");
+	fGPUUsagePtr = *pattern.count(1).get(0).get<double*>(2);
+	fCPUUsagePtr = *pattern.count(1).get(0).get<double*>(0x17);
 
 	// Pointer to the original KeyOnCheck
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");

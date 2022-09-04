@@ -50,6 +50,8 @@ cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
+extern double* fGPUUsagePtr;
+extern double* fCPUUsagePtr;
 
 void RequestWeaponChange();
 void RequestSaveGame();
