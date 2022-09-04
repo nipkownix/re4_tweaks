@@ -1,6 +1,5 @@
 #include "dllmain.h"
 #include "UI_DebugWindows.h"
-#include "Game.h"
 #include "Settings.h"
 #include "SDK/room_jmp.h"
 #include "SDK/filter00.h"

@@ -154,6 +154,9 @@
     <ClCompile Include="GameFlags.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="UI_Utility.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
@@ -464,6 +467,9 @@
     </ClInclude>
     <ClInclude Include="SDK\cDataSwap.h">
       <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="UI_Utility.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

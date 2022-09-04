@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include <FAhashes.h>
 #include "UI_DebugWindows.h"
+#include "UI_Utility.h"
 #include "Trainer.h"
 #include <DirectXMath.h>
 
@@ -120,7 +121,6 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 	if (!pConfig->bWeaponHotkeysEnable)
 		return;
 
-	bool ImGuiShouldAcceptInput(); // EndSceneHook.cpp
 	if (ImGuiShouldAcceptInput())
 		return; // don't apply hotkeys while in ImGui
 
@@ -854,81 +854,6 @@ void Trainer_ESP()
 			}
 		}
 	}
-}
-
-enum class TrainerTab
-{
-	Patches,
-	Hotkeys,
-	FlagEdit,
-	EmMgr,
-	ESP,
-	DebugTools,
-	NumTabs
-};
-TrainerTab CurTrainerTab = TrainerTab::Patches;
-
-// Helper funcs from cfgMenu.cpp
-// TODO: move these to seperate cpp/h to help make cfgMenu less crowded?
-void ImGui_ItemSeparator();
-void ImGui_ColumnInit();
-void ImGui_ColumnSwitch();
-void ImGui_ColumnFinish();
-void ImGui_ItemBG(float RowSize, ImColor bgCol);
-extern ImColor itmbgColor;
-void SetHotkeyComboThread(std::string* cfgHotkey);
-
-bool ImGui_ButtonSameLine(const char* label, bool samelinecheck = true, float offset = 0.0f, const ImVec2 size = ImVec2(0, 0))
-{
-	bool ret = ImGui::Button(label, size);
-
-	if (samelinecheck)
-	{
-		ImGuiStyle& style = ImGui::GetStyle();
-
-		float window_visible_x2 = ImGui::GetCursorScreenPos().x + offset + ImGui::GetContentRegionAvail().x;
-		float last_button_x2;
-		float next_button_x2;
-
-		last_button_x2 = ImGui::GetItemRectMax().x;
-		next_button_x2 = last_button_x2 + style.ItemSpacing.x + size.x; // Expected position if next button was on same line
-		if (next_button_x2 < window_visible_x2)
-			ImGui::SameLine();
-	}
-
-	return ret;
-}
-
-bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& activeCol,
-	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor iconColor,
-	const ImColor textColor, const ImVec2& size = ImVec2(0, 0), const bool samelinecheck = true)
-{
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-	ImGui::PushStyleColor(ImGuiCol_Button, CurTrainerTab == tabID ? activeCol : inactiveCol);
-	bool ret = ImGui_ButtonSameLine(btnID, samelinecheck, 0.0f, size);
-	ImGui::PopStyleColor();
-
-	auto p0 = ImGui::GetItemRectMin();
-	auto p1 = ImGui::GetItemRectMax();
-
-	float textWidth = ImGui::CalcTextSize(text).x;
-	float textHeight = ImGui::CalcTextSize(text).y;
-	float iconWidth = ImGui::CalcTextSize(icon).x;
-
-	float x_text_offset = iconWidth + ((size.x - textWidth) * 0.5f);
-	float y_text_offset = (size.y - textHeight) * 0.5f;
-
-	float x_icon_offset = x_text_offset - iconWidth;
-	float y_icon_offset = y_text_offset + 2.0f;
-
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_icon_offset - 14.0f, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_text_offset - 7.0f, p0.y + y_text_offset), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-
-	if (ret && tabID != TrainerTab::NumTabs)
-		CurTrainerTab = tabID;
-
-	return ret;
 }
 
 void Trainer_RenderUI()
