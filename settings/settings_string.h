@@ -360,4 +360,8 @@ UseDynamicFrametime = false
 ; Useful for comparing "true" FPS/frametime when making performance-related changes.
 ; (requires ReplaceFramelimiter = true, recommend DisableVsync too)
 DisableFramelimiting = false
+
+; Enables certain developer-oriented features, even in non-debug re4_tweaks builds
+; Currently only makes Globals Viewer show up on game launch, maybe more things can be added down the line
+TweaksDevMode = false
 )"""";

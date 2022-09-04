@@ -337,9 +337,8 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 	cfgMenuTitle.append(" v");
 	cfgMenuTitle.append(APP_VERSION);
 
-#ifdef _DEBUG
-	UI_NewGlobalsViewer();
-#endif
+	if (TweaksDevMode)
+		UI_NewGlobalsViewer();
 }
 
 // Add our new code right before the game calls EndScene

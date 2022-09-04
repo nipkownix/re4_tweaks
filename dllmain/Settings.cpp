@@ -429,6 +429,9 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", pConfig->bNeverHideCursor);
 	pConfig->bUseDynamicFrametime = iniReader.ReadBoolean("DEBUG", "UseDynamicFrametime", pConfig->bUseDynamicFrametime);
 	pConfig->bDisableFramelimiting = iniReader.ReadBoolean("DEBUG", "DisableFramelimiting", pConfig->bDisableFramelimiting);
+
+	if (iniReader.ReadBoolean("DEBUG", "TweaksDevMode", TweaksDevMode))
+		TweaksDevMode = true; // let the INI enable it if it's disabled, but not disable it
 }
 
 std::mutex settingsThreadRunningMutex;

@@ -5,9 +5,18 @@
 #include "Settings.h"
 #include "SDK/room_jmp.h"
 #include <shellapi.h>
+#include <optional>
 
 uint32_t paramRoomValue = 0;
 int paramLoadSaveSlot = 0;
+#if _DEBUG
+bool TweaksDevMode = true;
+#else
+bool TweaksDevMode = false;
+#endif
+
+std::optional<Vec> paramPosition;
+std::optional<float> paramRotation;
 
 int loadSaveSlot = 0; // copy value for our dataSelect hook to use
 
@@ -66,7 +75,14 @@ void __cdecl titleMain_Hook(TITLE_WORK* pT)
 					if (roomInfo)
 					{
 						GlobalPtr()->JumpPoint_4FAF = roomInfoIdx;
-						AreaJump(roomInfo->roomNo_2, roomInfo->pos_4, roomInfo->r_10);
+
+						if (!paramPosition.has_value())
+							paramPosition = roomInfo->pos_4;
+
+						if (!paramRotation.has_value())
+							paramRotation = roomInfo->r_10;
+
+						AreaJump(roomInfo->roomNo_2, *paramPosition, *paramRotation);
 					}
 				}
 			}
@@ -102,21 +118,45 @@ void Init_CommandLine()
 
 		WCHAR* roomNum = nullptr;
 		WCHAR* loadNum = nullptr;
+		WCHAR* posX = nullptr;
+		WCHAR* posY = nullptr;
+		WCHAR* posZ = nullptr;
+		WCHAR* posR = nullptr;
 
 		for (int i = 0; i < nArgs; i++)
 		{
-			if (nArgs <= i + 1)
+			WCHAR* arg = szArglist[i];
+			if (!wcscmp(arg, L"-dev") || !wcscmp(arg, L"-d"))
+				TweaksDevMode = true;
+
+			else if (nArgs <= i + 1)
 				break; // no param following this, end it...
 
-			WCHAR* arg = szArglist[i];
-			if (!wcscmp(arg, L"-room"))
+			else if (!wcscmp(arg, L"-room") || !wcscmp(arg, L"-r"))
 			{
 				roomNum = szArglist[i + 1];
 			}
-			else if (!wcscmp(arg, L"-load"))
+			else if (!wcscmp(arg, L"-load") || !wcscmp(arg, L"-l"))
 			{
 				loadNum = szArglist[i + 1];
 			}
+			else if (!wcscmp(arg, L"-pos") || !wcscmp(arg, L"-position") || !wcscmp(arg, L"-p"))
+			{
+				if (i + 3 < nArgs) // do we have 3 params following it?
+				{
+					posX = szArglist[i + 1];
+					posY = szArglist[i + 2];
+					posZ = szArglist[i + 3];
+				}
+			}
+			else if (!wcscmp(arg, L"-x"))
+				posX = szArglist[i + 1];
+			else if (!wcscmp(arg, L"-y"))
+				posY = szArglist[i + 1];
+			else if (!wcscmp(arg, L"-z"))
+				posZ = szArglist[i + 1];
+			else if (!wcscmp(arg, L"-angle") || !wcscmp(arg, L"-a"))
+				posR = szArglist[i + 1];
 		}
 
 		if (roomNum && wcslen(roomNum) > 0)
@@ -148,6 +188,60 @@ void Init_CommandLine()
 
 			if (paramLoadSaveSlot > MAX_SAVE_SLOTS || paramLoadSaveSlot <= 0)
 				paramLoadSaveSlot = 0;
+		}
+
+		if (posX)
+		{
+			if (!paramPosition.has_value())
+				paramPosition = { 0 };
+			try
+			{
+				(*paramPosition).x = std::stof(posX);
+			}
+			catch (std::exception e)
+			{
+				(*paramPosition).x = 0;
+			}
+		}
+
+		if (posY)
+		{
+			if (!paramPosition.has_value())
+				paramPosition = { 0 };
+			try
+			{
+				(*paramPosition).y = std::stof(posY);
+			}
+			catch (std::exception e)
+			{
+				(*paramPosition).y = 0;
+			}
+		}
+
+		if (posZ)
+		{
+			if (!paramPosition.has_value())
+				paramPosition = { 0 };
+			try
+			{
+				(*paramPosition).z = std::stof(posZ);
+			}
+			catch (std::exception e)
+			{
+				(*paramPosition).z = 0;
+			}
+		}
+
+		if (posR)
+		{
+			try
+			{
+				paramRotation = std::stof(posR);
+			}
+			catch (std::exception e)
+			{
+				paramRotation.reset();
+			}
 		}
 
 		if (paramRoomValue || paramLoadSaveSlot > 0)
