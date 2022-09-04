@@ -363,6 +363,19 @@ void Trainer_Init()
 		flagPatches.push_back(patch_cItemMgr__dump_0);
 	}
 
+	// DBG_EM_NO_ATK
+	{
+		// TODO: this only affects em10FindCk right now, other Ems also have their own FindCk funcs though, might need to patch those too
+		// (unless we can find a func used by all of them - haven't had any luck with that yet...)
+		// RouteCk / em10RouteCk also seem involved with searching/routing to player, but patching those can make Em movement buggy...
+		auto pattern = hook::pattern("33 D2 8B C6 E8 ? ? ? ? 85 C0 75");
+		auto em10FindCk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(4));
+
+		FlagPatch patch_em10FindCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK));
+		patch_em10FindCk.SetPatch((uint8_t*)em10FindCk.as_int(), { 0x31, 0xC0, 0xC3 });
+		flagPatches.push_back(patch_em10FindCk);
+	}
+
 	// Ashley presence
 	{
 		auto pattern = hook::pattern("F7 80 ? ? ? ? ? ? ? ? 74 22 D9 80 ? ? ? ? 51");
@@ -1047,6 +1060,21 @@ void Trainer_RenderUI()
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Makes most enemies die in 1 hit.");
+			}
+
+			// Notarget
+			{
+				ImGui_ColumnSwitch();
+
+				bool noTarget = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK));
+				if (ImGui::Checkbox("Disable Enemy Targeting", &noTarget))
+					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK), noTarget);
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Prevents enemies from targeting player character, unless player attacks them. (only for enemies using Em10 right now)");
 			}
 
 			// Inf Ammo

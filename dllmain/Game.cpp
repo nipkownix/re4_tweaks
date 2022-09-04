@@ -42,6 +42,7 @@ std::unordered_map<int, std::string> UnitBeFlagNames =
 								   // seems to skip following nextParts_F4 pointers and accesses part by index directly if set
 	{ 0x4000, "DisableAnimation" }, // code for this doesn't actually seem anim/motion related, but anims do get disabled by it...
 	{ 0x8000, "DisableLighting" },
+	{ 0x10000, "AttempedItemDrop" }, // set by EmSetDropItem, presense doesn't mean item is guaranteed, seems to be used just to prevent Em from trying to drop more than once
 	{ 0x20000, "UseSimpleLighting" },
 	{ 0x100000, "ClothNoScaleApply" }, // PenClothMove3
 	{ 0x200000, "ClothReset" }, // PenClothMove3
