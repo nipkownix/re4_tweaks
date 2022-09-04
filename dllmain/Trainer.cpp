@@ -32,6 +32,7 @@ int EspClosestEmsAmount = 3;
 float EspMaxEmDistance = 30000.0f;
 bool EspDrawLines = false;
 int EspEmHPMode = 1;
+bool EspDrawDebugInfo = false;
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
@@ -824,6 +825,12 @@ void Trainer_ESP()
 					}
 				}
 
+				if (EspDrawDebugInfo)
+				{
+					sprintf(EmName, "0x%p, Rno %d-%d-%d-%d", em, int(em->r_no_0_FC), int(em->r_no_1_FD), int(em->r_no_2_FE), int(em->r_no_3_FF));
+					ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y + 30), ImColor(255, 255, 255), EmName);
+				}
+
 				// Draw lines pointing to the Em
 				if (EspDrawLines)
 					ImGui::GetBackgroundDrawList()->AddLine(ImVec2(io.DisplaySize.x / 2, io.DisplaySize.y), ImVec2(screenpos.x, screenpos.y), ImColor(255, 255, 255));
@@ -1537,6 +1544,7 @@ void Trainer_RenderUI()
 				ImGui::Checkbox("Only show valid Ems", &EspOnlyShowValidEms);
 				ImGui::Checkbox("Only show ESL-spawned##esp", &EspOnlyShowESLSpawned);
 				ImGui::Checkbox("Draw Lines", &EspDrawLines);
+				ImGui::Checkbox("Draw Debug Info", &EspDrawDebugInfo);
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("HP display mode:");
