@@ -1169,6 +1169,29 @@ void Init_Misc()
 		injector::MakeNOP(addr1 + 5, 6, true);
 		injector::MakeNOP(addr2 + 5, 6, true);
 
+		/* the following lets us speed up cCard::saveMain a lot
+		but it might be confusing for users since "save successful!" message won't appear
+		if we could make it so just the "successful!" message shows for a small period then this might be useful
+		for now leaving it disabled here... */
+#if 0
+		// cCard::saveMain
+		pattern = hook::pattern("D9 E8 DE E1 DC 05 ? ? ? ? D9 9E FC 04 00 00");
+		uint8_t* addr3 = pattern.count(2).get(0).get<uint8_t>(0);
+		uint8_t* addr4 = pattern.count(2).get(1).get<uint8_t>(0);
+		Patch(addr3 + 1, uint8_t(0xEE));
+		Patch(addr4 + 1, uint8_t(0xEE));
+		injector::MakeNOP(addr3 + 4, 6, true);
+		injector::MakeNOP(addr4 + 4, 6, true);
+		// zero cCard::saveMain tick count check, related to the typewriter animation
+		pattern = hook::pattern("3D B8 0B 00 00");
+		Patch(pattern.count(3).get(0).get<uint8_t>(1), uint32_t(0));
+		Patch(pattern.count(3).get(1).get<uint8_t>(1), uint32_t(0));
+		Patch(pattern.count(3).get(2).get<uint8_t>(1), uint32_t(0));
+		// nop key check to let save screen exit by itself (no "successful message!")
+		pattern = hook::pattern("0F 84 ? ? ? ? 33 FF 8D A4 24 00 00 00 00 57");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
+#endif
+
 		// TODO: skip JP warning screen
 
 		spd::log()->info("SkipIntroLogos enabled");

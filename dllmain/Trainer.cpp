@@ -953,10 +953,8 @@ void Trainer_RenderUI()
 				
 				ImGui::Dummy(ImVec2(10, 10));
 
-				/* Not working?
 				if (ImGui::Button("Save game"))
 					RequestSaveGame();
-				*/
 
 				if (ImGui::Button("Open Merchant"))
 					RequestMerchant();

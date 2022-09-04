@@ -533,34 +533,30 @@ void RequestMerchant()
 }
 
 void(__cdecl* WeaponChange)();
-void(__cdecl* TaskScheduler)();
-void TaskScheduler_Hook()
+void(__fastcall* cSceSys__scheduler)(void* thisptr, void* unused);
+void __fastcall cSceSys__scheduler_Hook(void* thisptr, void* unused)
 {
 	if (WeaponChangeRequested)
 	{
-		WeaponChange();
 		WeaponChangeRequested = false;
+		WeaponChange();
 	}
 
-	/* Not wurking?
 	if (SaveGameRequested)
 	{
-		game_CardSave(0, 1);
-
 		SaveGameRequested = false;
+		bio4::CardSave(0, 1);
 	}
-	*/
 
 	if (MerchantRequested)
 	{
+		MerchantRequested = false;
 		// If SubScreen is closed and game status is "playing"
 		if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
 			bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
-
-		MerchantRequested = false;
 	}
 
-	TaskScheduler();
+	cSceSys__scheduler(thisptr, unused);
 }
 
 bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
@@ -749,10 +745,11 @@ bool Init_Game()
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 8B 35 ? ? ? ? 85 F6 0F 84");
 	g_p_Item_piece = *pattern.count(1).get(0).get<itemPiece**>(10);
 
-	// Hook call to TaskScheduler, so we can run code inside the main thread before other things update
-	pattern = hook::pattern("81 60 54 FF FB FF FF E8 ? ? ? ? 68");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(7), TaskScheduler);
-	InjectHook(pattern.count(1).get(0).get<uint8_t>(7), TaskScheduler_Hook, PATCH_CALL);
+	// Hook call to cSceSys::scheduler, so we can run code inside the main thread before other things update
+	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? F7 80 28 50 00 00 00 00 00 04");
+	auto cSceSys__scheduler_thunk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0));
+	ReadCall(cSceSys__scheduler_thunk.as_int(), cSceSys__scheduler);
+	InjectHook(cSceSys__scheduler_thunk.as_int(), cSceSys__scheduler_Hook, PATCH_JUMP);
 
 	// WeaponChange funcptr
 	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");
