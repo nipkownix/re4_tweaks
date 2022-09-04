@@ -198,21 +198,21 @@ bool UI_EmManager::Render(bool WindowMode)
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Flags").x - 60.0f);
 						if (ImGui::BeginListBox("Flags"))
 						{
-							bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
+							bool collisionEnabled = (em->atari_2B4.m_flag_1A & SAT_SCA_ENABLE) == SAT_SCA_ENABLE;
 							if (ImGui::Checkbox("MapCollision", &collisionEnabled))
 							{
 								if (collisionEnabled)
-									em->atari_2B4.m_flag_1A |= 0x100;
+									em->atari_2B4.m_flag_1A |= SAT_SCA_ENABLE;
 								else
-									em->atari_2B4.m_flag_1A &= ~0x100;
+									em->atari_2B4.m_flag_1A &= ~SAT_SCA_ENABLE;
 							}
-							bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
+							bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & SAT_OBA_ENABLE) == SAT_OBA_ENABLE;
 							if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
 							{
 								if (emCollisionEnabled)
-									em->atari_2B4.m_flag_1A |= 0x200;
+									em->atari_2B4.m_flag_1A |= SAT_OBA_ENABLE;
 								else
-									em->atari_2B4.m_flag_1A &= ~0x200;
+									em->atari_2B4.m_flag_1A &= ~SAT_OBA_ENABLE;
 							}
 
 							for (int i = 0; i < 32; i++)
@@ -320,21 +320,21 @@ bool UI_EmManager::Render(bool WindowMode)
 							float flagsHeight = ImGui::GetContentRegionAvail().y - 10.0f;
 							if (ImGui::BeginListBox("Flags", ImVec2(flagsWidth, flagsHeight)))
 							{
-								bool collisionEnabled = (em->atari_2B4.m_flag_1A & 0x100) == 0x100;
+								bool collisionEnabled = (em->atari_2B4.m_flag_1A & SAT_SCA_ENABLE) == SAT_SCA_ENABLE;
 								if (ImGui::Checkbox("MapCollision", &collisionEnabled))
 								{
 									if (collisionEnabled)
-										em->atari_2B4.m_flag_1A |= 0x100;
+										em->atari_2B4.m_flag_1A |= SAT_SCA_ENABLE;
 									else
-										em->atari_2B4.m_flag_1A &= ~0x100;
+										em->atari_2B4.m_flag_1A &= ~SAT_SCA_ENABLE;
 								}
-								bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & 0x200) == 0x200;
+								bool emCollisionEnabled = (em->atari_2B4.m_flag_1A & SAT_OBA_ENABLE) == SAT_OBA_ENABLE;
 								if (ImGui::Checkbox("EmCollision", &emCollisionEnabled))
 								{
 									if (emCollisionEnabled)
-										em->atari_2B4.m_flag_1A |= 0x200;
+										em->atari_2B4.m_flag_1A |= SAT_OBA_ENABLE;
 									else
-										em->atari_2B4.m_flag_1A &= ~0x200;
+										em->atari_2B4.m_flag_1A &= ~SAT_OBA_ENABLE;
 								}
 
 								for (int i = 0; i < 32; i++)

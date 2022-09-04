@@ -101,7 +101,7 @@ void MoveAshleyToPlayer()
 			ash_atariInfoFlagBackup = ashley->atari_2B4.m_flag_1A;
 			ash_atariInfoFlagSet = true;
 		}
-		ashley->atari_2B4.m_flag_1A &= ~(0x100 | 0x200); // 0x100 = map collision, 0x200 = Em collision
+		ashley->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
 
 		ashley->pos_94 = player->pos_94;
 		ashley->pos_old_110 = player->pos_old_110;
@@ -622,7 +622,7 @@ void Trainer_Update()
 			atariInfoFlagBackup = player->atari_2B4.m_flag_1A;
 			atariInfoFlagSet = true;
 		}
-		player->atari_2B4.m_flag_1A &= ~(0x100 | 0x200); // 0x100 = map collision, 0x200 = Em collision
+		player->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
 
 		Vec positionMod{ 0 };
 		bool positionModded = false;
