@@ -18,11 +18,12 @@ void __cdecl titleMain_Hook(TITLE_WORK* pT)
 	// (makes it a little slower to load in though, maybe a -fast option would be useful, or some way to speed up the fade-ins)
 	if (pT->Rno1_1 == 1)
 	{
-		// TODO: find a way to let -room & -save both work together
-		// (so you could load into any save with eg. the weapons you want, but then get moved to any room you chose)
-		// atm it seems our AreaJump request gets overriden with whatever room the save is on
+		// -load & -room should hopefully both work together
+		// you can use -load to pick a save with the chara/inventory/etc you want
+		// and then use -room to pick the room to load into
+		// (some rooms are only designed to work with certain charas though, hopefully can be fixed in future...)
 
-		if (paramLoadSaveSlot > 0)
+		if (paramLoadSaveSlot > 0) // "-load #" argument
 		{
 			loadSaveSlot = paramLoadSaveSlot;
 
@@ -37,7 +38,7 @@ void __cdecl titleMain_Hook(TITLE_WORK* pT)
 			paramLoadSaveSlot = 0; // only run this once
 		}
 
-		if (paramRoomValue > 0 && pT->Rno1_1 == 1)
+		if (paramRoomValue > 0) // "-room rXXX" argument
 		{
 			int stageNum = (paramRoomValue & 0xFF00) >> 8;
 			if (stageNum >= 0 && stageNum <= 7)
