@@ -1169,6 +1169,16 @@ void Init_Misc()
 		injector::MakeNOP(addr1 + 5, 6, true);
 		injector::MakeNOP(addr2 + 5, 6, true);
 
+		// cCard: patch FadeSet time to speed up entering/exiting save menu
+		pattern = hook::pattern("F6 41 04 80 75 ? 6A 00 6A 00 6A 0A C7 45");
+		Patch(pattern.count(1).get(0).get<uint8_t>(0xB), uint8_t(0)); // cCard::exit
+		pattern = hook::pattern("F6 40 04 08 75 ? 53 53 6A 0A C7 45");
+		Patch(pattern.count(1).get(0).get<uint8_t>(0x9), uint8_t(0)); // cCard::initialize
+
+		// cCard::firstCheck10: skip timer check, speeds up initial "Loading, please wait..." text
+		pattern = hook::pattern("8D 8B FC 04 00 00 6A 00 E8 ? ? ? ? 84 C0 74");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0xF), 2, true);
+
 		/* the following lets us speed up cCard::saveMain a lot
 		but it might be confusing for users since "save successful!" message won't appear
 		if we could make it so just the "successful!" message shows for a small period then this might be useful
@@ -1192,6 +1202,15 @@ void Init_Misc()
 		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
 #endif
 
+#if 0
+		// Patch FadeSet to automatically skip all fading animations
+		// TODO: check if everything still works fine with this
+		// could be worth adding as a [DEBUG] option since it might be able to speed up a lot of places
+		pattern = hook::pattern("BA 01 00 00 00 85 C9 78 ? BA 03 00 00 00");
+		uint8_t* addr = pattern.count(1).get(0).get<uint8_t>(0);
+		Patch(addr + 1, uint32_t(0)); // remove FADE_BE_ALIVE flag
+		Patch(addr + 0xA, uint32_t(0)); // remove FADE_BE_ALIVE & FADE_BE_CONTINUE flags
+#endif
 		// TODO: skip JP warning screen
 
 		spd::log()->info("SkipIntroLogos enabled");
