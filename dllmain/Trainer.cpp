@@ -791,7 +791,7 @@ void Trainer_ESP()
 	// Draw ESP
 	if (ShowESP)
 	{
-		float EspOffsetY = 0.0f;
+		
 
 		std::vector<cEm*> EmsVector;
 		if (EspOnlyShowClosestEms)
@@ -803,6 +803,7 @@ void Trainer_ESP()
 		{
 			auto coords = em->pos_94;
 
+			float EspOffsetY = 0.0f;
 			if (WorldToScreen(coords, screenpos, pG->Camera_74.v_mat_30, pG->Camera_74.CamPoint_A4.Fovy_1C, screen_width, screen_height))
 			{
 				// Draw Em Name
