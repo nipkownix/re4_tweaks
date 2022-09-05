@@ -25,6 +25,7 @@ int SideInfoEmHPMode = 1;
 
 // ESP
 bool ShowESP = false;
+bool EspShowInfoOnTop = false;
 bool EspOnlyShowEnemies = true;
 bool EspOnlyShowValidEms = true;
 bool EspOnlyShowESLSpawned = false;
@@ -803,6 +804,24 @@ void Trainer_ESP()
 		{
 			auto coords = em->pos_94;
 
+			if (EspShowInfoOnTop)
+			{
+				// Replace coords.y with the y from the highest part instead
+				float highestPart = -FLT_MAX;
+				cParts* part = em->childParts_F4;
+				while (part != nullptr)
+				{
+					if (part->world_70.y > highestPart)
+						highestPart = part->world_70.y;
+
+					part = part->nextParts_F4;
+				}
+
+				coords.y = highestPart + 200.0f;
+				coords.x -= 200.0f;
+				coords.z += 200.0f;
+			}
+
 			float EspOffsetY = 0.0f;
 			if (WorldToScreen(coords, screenpos, pG->Camera_74.v_mat_30, pG->Camera_74.CamPoint_A4.Fovy_1C, screen_width, screen_height))
 			{
@@ -811,14 +830,14 @@ void Trainer_ESP()
 				{
 					bool useSimpleNames = (EspEmNameMode == 2);
 
-				std::stringstream EmName;
+					std::stringstream EmName;
 					EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, useSimpleNames);
 					if (!useSimpleNames)
-				{
-					EmName << " (type " << (int)em->type_101 << ")";
-				}
+					{
+						EmName << " (type " << (int)em->type_101 << ")";
+					}
 
-				ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y), ImColor(255, 255, 255, 255), EmName.str().c_str());
+					ImGui::GetBackgroundDrawList()->AddText(ImVec2(screenpos.x, screenpos.y), ImColor(255, 255, 255, 255), EmName.str().c_str());
 					EspOffsetY += 20.0f;
 				}
 
@@ -1521,6 +1540,7 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("Displays information on Ems");
 				ImGui::Spacing();
 
+				ImGui::Checkbox("Show info on top of Ems", &EspShowInfoOnTop);
 				ImGui::Checkbox("Only show enemies", &EspOnlyShowEnemies);
 				ImGui::Checkbox("Only show alive", &EspOnlyShowAlive);
 				ImGui::Checkbox("Only show valid Ems", &EspOnlyShowValidEms);
