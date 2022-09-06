@@ -13,13 +13,8 @@ void SetEmListParamExtensions(cEm* em, EM_LIST* emData)
 	if (emData < pG->Em_list_5410 || emData >= &pG->Em_list_5410[256])
 		return;
 
-	// check emset_no_A field to see if custom speed/scale params have been set
-	// emset_no_A seems to mostly be unused, but the field is defined in the struct, so maybe something has it set
-	// hopefully nothing has all upper bits set though
-	if ((emData->emset_no_A & 0xF0) != 0xF0)
+	if ((emData->be_flag_0 & EM_BE_FLAG_MODEXP_SPEEDSCALE) != EM_BE_FLAG_MODEXP_SPEEDSCALE)
 		return;
-
-	emData->emset_no_A &= ~0xF0; // unset upper bits that we checked
 
 	if (!emData->percentageMotionSpeed_1C && !emData->percentageScale_1E)
 		return;
