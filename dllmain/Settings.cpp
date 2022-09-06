@@ -398,7 +398,7 @@ void Config::ReadSettings(std::string_view ini_path)
 		if (buf == "Text") pConfig->iEspEmHPMode = 2;
 	}
 
-	iniReader.ReadBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
+	pConfig->bEspDrawDebugInfo = iniReader.ReadBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
 
 	// SIDEINFO
 	pConfig->bShowSideInfo = iniReader.ReadBoolean("SIDEINFO", "ShowSideInfo", pConfig->bShowSideInfo);
