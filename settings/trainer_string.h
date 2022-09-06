@@ -40,6 +40,33 @@ DeadBodiesNeverDisappear = False
 ; Allows the player to go through doors even if Ashley is far away.
 AllowEnterDoorsWithoutAshley = False
 
+[ESP]
+; Displays information on Ems
+ShowESP = False
+ShowInfoOnTop = False
+OnlyShowEnemies = True
+OnlyShowValidEms = True
+OnlyShowESLSpawned = False
+OnlyShowAlive = True
+MaxEmDistance = 30000
+OnlyShowClosestEms = False
+ClosestEmsAmount = 3
+DrawLines = False
+EmNameMode = Normal
+EmHPMode = Bar
+DrawDebugInfo = False
+
+[SIDEINFO]
+; Displays information on the left side of the screen.
+ShowSideInfo = False
+ShowEmCount = True
+ShowEmList = True
+OnlyShowESLSpawned = False
+ShowSimpleNames = False
+ClosestEmsAmount = 5
+MaxEmDistance = 30000
+EmHPMode = Bar
+
 [WEAPON_HOTKEYS]
 ; Enables usage of weapon hotkeys, to quickly switch weapons without needing to open inventory
 Enable = false

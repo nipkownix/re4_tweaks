@@ -301,7 +301,7 @@ void Config::ReadSettings(std::string_view ini_path)
 		if (buf == "Spy") pConfig->CostumeOverride.Ada = AdaCostume::Spy;
 		if (buf == "Normal") pConfig->CostumeOverride.Ada = AdaCostume::Normal;
 
-	iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
+		iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
 
 		// Normal is id 3, but we're lying to ImGui by pretending Normal is id 2 instead.
 		if (pConfig->CostumeOverride.Ada == AdaCostume::Normal)
@@ -369,6 +369,53 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
 	pConfig->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
 	pConfig->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
+
+	// ESP
+	pConfig->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", pConfig->bShowESP);
+	pConfig->bEspShowInfoOnTop = iniReader.ReadBoolean("ESP", "ShowInfoOnTop", pConfig->bEspShowInfoOnTop);
+	pConfig->bEspOnlyShowEnemies = iniReader.ReadBoolean("ESP", "OnlyShowEnemies", pConfig->bEspOnlyShowEnemies);
+	pConfig->bEspOnlyShowValidEms = iniReader.ReadBoolean("ESP", "OnlyShowValidEms", pConfig->bEspOnlyShowValidEms);
+	pConfig->bEspOnlyShowESLSpawned = iniReader.ReadBoolean("ESP", "OnlyShowESLSpawned", pConfig->bEspOnlyShowESLSpawned);
+	pConfig->bEspOnlyShowAlive = iniReader.ReadBoolean("ESP", "OnlyShowAlive", pConfig->bEspOnlyShowAlive);
+	pConfig->fEspMaxEmDistance = iniReader.ReadFloat("ESP", "MaxEmDistance", pConfig->fEspMaxEmDistance);
+	pConfig->bEspOnlyShowClosestEms = iniReader.ReadBoolean("ESP", "OnlyShowClosestEms", pConfig->bEspOnlyShowClosestEms);
+	pConfig->iEspClosestEmsAmount = iniReader.ReadInteger("ESP", "ClosestEmsAmount", pConfig->iEspClosestEmsAmount);
+	pConfig->bEspDrawLines = iniReader.ReadBoolean("ESP", "DrawLines", pConfig->bEspDrawLines);
+
+	buf = iniReader.ReadString("ESP", "EmNameMode", "");
+	if (!buf.empty())
+	{
+		if (buf == "DontShow") pConfig->iEspEmNameMode = 0;
+		if (buf == "Normal") pConfig->iEspEmNameMode = 1;
+		if (buf == "Simplified") pConfig->iEspEmNameMode = 2;
+	}
+
+	buf = iniReader.ReadString("ESP", "EmHPMode", "");
+	if (!buf.empty())
+	{
+		if (buf == "DontShow") pConfig->iEspEmHPMode = 0;
+		if (buf == "Bar") pConfig->iEspEmHPMode = 1;
+		if (buf == "Text") pConfig->iEspEmHPMode = 2;
+	}
+
+	iniReader.ReadBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
+
+	// SIDEINFO
+	pConfig->bShowSideInfo = iniReader.ReadBoolean("SIDEINFO", "ShowSideInfo", pConfig->bShowSideInfo);
+	pConfig->bSideShowEmCount = iniReader.ReadBoolean("SIDEINFO", "ShowEmCount", pConfig->bSideShowEmCount);
+	pConfig->bSideShowEmList = iniReader.ReadBoolean("SIDEINFO", "ShowEmList", pConfig->bSideShowEmList);
+	pConfig->bSideOnlyShowESLSpawned = iniReader.ReadBoolean("SIDEINFO", "OnlyShowESLSpawned", pConfig->bSideOnlyShowESLSpawned);
+	pConfig->bSideShowSimpleNames = iniReader.ReadBoolean("SIDEINFO", "ShowSimpleNames", pConfig->bSideShowSimpleNames);
+	pConfig->iSideClosestEmsAmount = iniReader.ReadInteger("SIDEINFO", "ClosestEmsAmount", pConfig->iSideClosestEmsAmount);
+	pConfig->fSideMaxEmDistance = iniReader.ReadFloat("SIDEINFO", "MaxEmDistance", pConfig->fSideMaxEmDistance);
+
+	buf = iniReader.ReadString("SIDEINFO", "EmHPMode", "");
+	if (!buf.empty())
+	{
+		if (buf == "DontShow") pConfig->iSideEmHPMode = 0;
+		if (buf == "Bar") pConfig->iSideEmHPMode = 1;
+		if (buf == "Text") pConfig->iSideEmHPMode = 2;
+	}
 
 	// TRAINER HOTKEYS
 	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
@@ -501,6 +548,66 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
 		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
 		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
+
+		// ESP
+		iniReader.WriteBoolean("ESP", "ShowESP", pConfig->bShowESP);
+		iniReader.WriteBoolean("ESP", "ShowInfoOnTop", pConfig->bEspShowInfoOnTop);
+		iniReader.WriteBoolean("ESP", "OnlyShowEnemies", pConfig->bEspOnlyShowEnemies);
+		iniReader.WriteBoolean("ESP", "OnlyShowValidEms", pConfig->bEspOnlyShowValidEms);
+		iniReader.WriteBoolean("ESP", "OnlyShowESLSpawned", pConfig->bEspOnlyShowESLSpawned);
+		iniReader.WriteBoolean("ESP", "OnlyShowAlive", pConfig->bEspOnlyShowAlive);
+		iniReader.WriteFloat("ESP", "MaxEmDistance", pConfig->fEspMaxEmDistance);
+		iniReader.WriteBoolean("ESP", "OnlyShowClosestEms", pConfig->bEspOnlyShowClosestEms);
+		iniReader.WriteInteger("ESP", "ClosestEmsAmount", pConfig->iEspClosestEmsAmount);
+		iniReader.WriteBoolean("ESP", "DrawLines", pConfig->bEspDrawLines);
+
+		std::string buf;
+		switch (pConfig->iEspEmNameMode) {
+		case 0:
+			buf = "DontShow";
+			break;
+		case 1:
+			buf = "Normal";
+			break;
+		case 2:
+			buf = "Simplified";
+			break;
+		} iniReader.WriteString("ESP", "EmNameMode", " " + buf);
+
+		switch (pConfig->iEspEmHPMode) {
+		case 0:
+			buf = "DontShow";
+			break;
+		case 1:
+			buf = "Bar";
+			break;
+		case 2:
+			buf = "Text";
+			break;
+		} iniReader.WriteString("ESP", "EmHPMode", " " + buf);
+
+		iniReader.WriteBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
+
+		// SIDEINFO
+		iniReader.WriteBoolean("SIDEINFO", "ShowSideInfo", pConfig->bShowSideInfo);
+		iniReader.WriteBoolean("SIDEINFO", "ShowEmCount", pConfig->bSideShowEmCount);
+		iniReader.WriteBoolean("SIDEINFO", "ShowEmList", pConfig->bSideShowEmList);
+		iniReader.WriteBoolean("SIDEINFO", "OnlyShowESLSpawned", pConfig->bSideOnlyShowESLSpawned);
+		iniReader.WriteBoolean("SIDEINFO", "ShowSimpleNames", pConfig->bSideShowSimpleNames);
+		iniReader.WriteInteger("SIDEINFO", "ClosestEmsAmount", pConfig->iSideClosestEmsAmount);
+		iniReader.WriteFloat("SIDEINFO", "MaxEmDistance", pConfig->fSideMaxEmDistance);
+
+		switch (pConfig->iSideEmHPMode) {
+		case 0:
+			buf = "DontShow";
+			break;
+		case 1:
+			buf = "Bar";
+			break;
+		case 2:
+			buf = "Text";
+			break;
+		} iniReader.WriteString("SIDEINFO", "EmHPMode", " " + buf);
 
 		// TRAINER_HOTKEYS
 		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);

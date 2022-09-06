@@ -13,31 +13,6 @@
 int AshleyStateOverride;
 int last_weaponId;
 
-// Side info
-bool ShowSideInfo = false;
-bool SideShowEmCount = true;
-bool SideShowEmList = true;
-bool SideOnlyShowESLSpawned = false;
-bool SideShowSimpleNames = false;
-int SideClosestEmsAmount = 5;
-float SideMaxEmDistance = 30000.0f;
-int SideInfoEmHPMode = 1;
-
-// ESP
-bool ShowESP = false;
-bool EspShowInfoOnTop = false;
-bool EspOnlyShowEnemies = true;
-bool EspOnlyShowValidEms = true;
-bool EspOnlyShowESLSpawned = false;
-bool EspOnlyShowAlive = true;
-float EspMaxEmDistance = 30000.0f;
-bool EspOnlyShowClosestEms = false;
-int EspClosestEmsAmount = 3;
-bool EspDrawLines = false;
-int EspEmNameMode = 1;
-int EspEmHPMode = 1;
-bool EspDrawDebugInfo = false;
-
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
 // Unfortunately, most existing trainer-like-mods for the game are done as code patches
@@ -701,7 +676,7 @@ void Trainer_Update()
 
 void Trainer_ESP()
 {
-	if (!(ShowSideInfo || ShowESP))
+	if (!(pConfig->bShowSideInfo || pConfig->bShowESP))
 		return;
 
 	auto& io = ImGui::GetIO();
@@ -717,10 +692,10 @@ void Trainer_ESP()
 		return;
 
 	// Draw side info
-	if (ShowSideInfo)
+	if (pConfig->bShowSideInfo)
 	{
 		// Drw Em count
-		if (SideShowEmCount)
+		if (pConfig->bSideShowEmCount)
 		{
 			std::stringstream emCnt;
 			emCnt << "Em Count: " << emMgr.count_valid() << " | " << "Max: " << emMgr.count();
@@ -729,9 +704,9 @@ void Trainer_ESP()
 		}
 
 		// Draw Em list
-		if (SideShowEmList)
+		if (pConfig->bSideShowEmList)
 		{
-			std::vector<cEm*> EnemiesVec = cEmMgr::GetVecClosestEms(SideClosestEmsAmount, SideMaxEmDistance, true, true, SideOnlyShowESLSpawned, true);
+			std::vector<cEm*> EnemiesVec = cEmMgr::GetVecClosestEms(pConfig->iSideClosestEmsAmount, pConfig->fSideMaxEmDistance, true, true, pConfig->bSideOnlyShowESLSpawned, true);
 			std::reverse(EnemiesVec.begin(), EnemiesVec.end());
 
 			float InfoOffsetY = 60.0f;
@@ -739,15 +714,15 @@ void Trainer_ESP()
 			{
 				// Draw Em Name
 				std::stringstream EmName;
-				EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, SideShowSimpleNames);
-				if (!SideShowSimpleNames)
+				EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, pConfig->bSideShowSimpleNames);
+				if (!pConfig->bSideShowSimpleNames)
 				{
 					EmName << " (type " << (int)em->type_101 << ")";
 				}
 
 				ImGui::GetBackgroundDrawList()->AddText(ImVec2(10, screen_height - InfoOffsetY), ImColor(255, 255, 255, 255), EmName.str().c_str());
 
-				if ((SideInfoEmHPMode != 0) && (em->hp_max_326 > 0))
+				if ((pConfig->iSideEmHPMode != 0) && (em->hp_max_326 > 0))
 				{
 					float hp_percent = 0;
 					float hp_max = (float)em->hp_max_326;
@@ -759,7 +734,7 @@ void Trainer_ESP()
 
 
 					// HP Bar
-					if (SideInfoEmHPMode == 1)
+					if (pConfig->iSideEmHPMode == 1)
 					{
 						float barScalex = 1.0f;
 
@@ -768,7 +743,7 @@ void Trainer_ESP()
 
 						InfoOffsetY += 12;
 					}
-					else if (SideInfoEmHPMode == 2) // HP Text
+					else if (pConfig->iSideEmHPMode == 2) // HP Text
 					{
 						char CurEmHp[256];
 						sprintf(CurEmHp, "Cur HP: %d", em->hp_324);
@@ -790,21 +765,19 @@ void Trainer_ESP()
 	}
 
 	// Draw ESP
-	if (ShowESP)
+	if (pConfig->bShowESP)
 	{
-		
-
 		std::vector<cEm*> EmsVector;
-		if (EspOnlyShowClosestEms)
-			EmsVector = cEmMgr::GetVecClosestEms(EspClosestEmsAmount, EspMaxEmDistance, EspOnlyShowValidEms, EspOnlyShowEnemies, EspOnlyShowESLSpawned, EspOnlyShowAlive);
+		if (pConfig->bEspOnlyShowClosestEms)
+			EmsVector = cEmMgr::GetVecClosestEms(pConfig->iEspClosestEmsAmount, pConfig->fEspMaxEmDistance, pConfig->bEspOnlyShowValidEms, pConfig->bEspOnlyShowEnemies, pConfig->bEspOnlyShowESLSpawned, pConfig->bEspOnlyShowAlive);
 		else
-			EmsVector = cEmMgr::GetVecClosestEms(emMgr.count(), EspMaxEmDistance, EspOnlyShowValidEms, EspOnlyShowEnemies, EspOnlyShowESLSpawned, EspOnlyShowAlive);
+			EmsVector = cEmMgr::GetVecClosestEms(emMgr.count(), pConfig->fEspMaxEmDistance, pConfig->bEspOnlyShowValidEms, pConfig->bEspOnlyShowEnemies, pConfig->bEspOnlyShowESLSpawned, pConfig->bEspOnlyShowAlive);
 
 		for (auto& em : EmsVector)
 		{
 			auto coords = em->pos_94;
 
-			if (EspShowInfoOnTop)
+			if (pConfig->bEspShowInfoOnTop)
 			{
 				// Replace coords.y with the y from the highest part instead
 				float highestPart = -FLT_MAX;
@@ -826,9 +799,9 @@ void Trainer_ESP()
 			if (WorldToScreen(coords, screenpos, pG->Camera_74.v_mat_30, pG->Camera_74.CamPoint_A4.Fovy_1C, screen_width, screen_height))
 			{
 				// Draw Em Name
-				if (EspEmNameMode != 0)
+				if (pConfig->iEspEmNameMode != 0)
 				{
-					bool useSimpleNames = (EspEmNameMode == 2);
+					bool useSimpleNames = (pConfig->iEspEmNameMode == 2);
 
 					std::stringstream EmName;
 					EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, useSimpleNames);
@@ -842,7 +815,7 @@ void Trainer_ESP()
 				}
 
 				// Draw debug info
-				if (EspDrawDebugInfo)
+				if (pConfig->bEspDrawDebugInfo)
 				{
 					char EmDbgInfo[256];
 					sprintf(EmDbgInfo, "0x%p, Rno %d-%d-%d-%d", em, int(em->r_no_0_FC), int(em->r_no_1_FD), int(em->r_no_2_FE), int(em->r_no_3_FF));
@@ -852,7 +825,7 @@ void Trainer_ESP()
 				}
 
 				// Draw HP
-				if ((EspEmHPMode != 0) && (em->hp_max_326 > 0))
+				if ((pConfig->iEspEmHPMode != 0) && (em->hp_max_326 > 0))
 				{
 					float hp_percent = 0;
 					float hp_max = (float)em->hp_max_326;
@@ -868,7 +841,7 @@ void Trainer_ESP()
 					if (hp_percent)
 					{
 						// HP Bar
-						if (EspEmHPMode == 1)
+						if (pConfig->iEspEmHPMode == 1)
 						{
 							float barScalex = 1.0f;
 
@@ -895,7 +868,7 @@ void Trainer_ESP()
 				}
 
 				// Draw lines pointing to the Em
-				if (EspDrawLines)
+				if (pConfig->bEspDrawLines)
 					ImGui::GetBackgroundDrawList()->AddLine(ImVec2(io.DisplaySize.x / 2, io.DisplaySize.y), ImVec2(screenpos.x, screenpos.y + 5.0f), ImColor(255, 255, 255));
 			}
 		}
@@ -1528,49 +1501,49 @@ void Trainer_RenderUI()
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Show ESP", &ShowESP))
+				if (ImGui::Checkbox("Show ESP", &pConfig->bShowESP))
 					pConfig->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
-				ImGui::BeginDisabled(!ShowESP);
+				ImGui::BeginDisabled(!pConfig->bShowESP);
 
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Displays information on Ems");
 				ImGui::Spacing();
 
-				ImGui::Checkbox("Show info on top of Ems", &EspShowInfoOnTop);
-				ImGui::Checkbox("Only show enemies", &EspOnlyShowEnemies);
-				ImGui::Checkbox("Only show alive", &EspOnlyShowAlive);
-				ImGui::Checkbox("Only show valid Ems", &EspOnlyShowValidEms);
-				ImGui::Checkbox("Only show ESL-spawned##esp", &EspOnlyShowESLSpawned);
-				ImGui::Checkbox("Draw Lines", &EspDrawLines);
-				ImGui::Checkbox("Draw Debug Info", &EspDrawDebugInfo);
+				ImGui::Checkbox("Show info on top of Ems", &pConfig->bEspShowInfoOnTop);
+				ImGui::Checkbox("Only show enemies", &pConfig->bEspOnlyShowEnemies);
+				ImGui::Checkbox("Only show alive", &pConfig->bEspOnlyShowAlive);
+				ImGui::Checkbox("Only show valid Ems", &pConfig->bEspOnlyShowValidEms);
+				ImGui::Checkbox("Only show ESL-spawned##esp", &pConfig->bEspOnlyShowESLSpawned);
+				ImGui::Checkbox("Draw Lines", &pConfig->bEspDrawLines);
+				ImGui::Checkbox("Draw Debug Info", &pConfig->bEspDrawDebugInfo);
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Name display mode:");
+				ImGui::RadioButton("Don't show##nameesp", &pConfig->iEspEmNameMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Normal##esp", &pConfig->iEspEmNameMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Simplified##esp", &pConfig->iEspEmNameMode, 2);
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("HP display mode:");
-				ImGui::RadioButton("Don't show##nameesp", &EspEmNameMode, 0); ImGui::SameLine();
-				ImGui::RadioButton("Normal##esp", &EspEmNameMode, 1); ImGui::SameLine();
-				ImGui::RadioButton("Simplified##esp", &EspEmNameMode, 2);
-				ImGui::Dummy(ImVec2(10, 10));
-
-				ImGui::TextWrapped("HP display mode:");
-				ImGui::RadioButton("Don't show##hpesp", &EspEmHPMode, 0); ImGui::SameLine();
-				ImGui::RadioButton("Bar##esp", &EspEmHPMode, 1); ImGui::SameLine();
-				ImGui::RadioButton("Text##esp", &EspEmHPMode, 2);
+				ImGui::RadioButton("Don't show##hpesp", &pConfig->iEspEmHPMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Bar##esp", &pConfig->iEspEmHPMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Text##esp", &pConfig->iEspEmHPMode, 2);
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max distance of Ems").x - 10);
-				ImGui::SliderFloat("Max distance of Ems##esp", &EspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::SliderFloat("Max distance of Ems##esp", &pConfig->fEspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::Checkbox("Only show closest Ems", &EspOnlyShowClosestEms);
+				ImGui::Checkbox("Only show closest Ems", &pConfig->bEspOnlyShowClosestEms);
 				ImGui::Spacing();
 
-				ImGui::BeginDisabled(!EspOnlyShowClosestEms);
+				ImGui::BeginDisabled(!pConfig->bEspOnlyShowClosestEms);
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max amount of Ems").x - 10);
-				ImGui::InputInt("Max amount of Ems##esp", &EspClosestEmsAmount);
+				ImGui::InputInt("Max amount of Ems##esp", &pConfig->iEspClosestEmsAmount);
 				ImGui::EndDisabled();
 
 				ImGui::EndDisabled();
@@ -1580,42 +1553,42 @@ void Trainer_RenderUI()
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Show side info", &ShowSideInfo))
+				if (ImGui::Checkbox("Show side info", &pConfig->bShowSideInfo))
 					pConfig->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
-				ImGui::BeginDisabled(!ShowSideInfo);
+				ImGui::BeginDisabled(!pConfig->bShowSideInfo);
 
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("Displays information on the left side of the screen.");
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::Checkbox("Show Em count", &SideShowEmCount);
+				ImGui::Checkbox("Show Em count", &pConfig->bSideShowEmCount);
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::Checkbox("Show Em list", &SideShowEmList);
+				ImGui::Checkbox("Show Em list", &pConfig->bSideShowEmList);
 				ImGui::TextWrapped("Ems are listed from bottom to top, with the top one being the closes to the player, and the bottom one being the farthest.");
 				ImGui::Dummy(ImVec2(10, 10));
 				
-				ImGui::BeginDisabled(!SideShowEmList);
-				ImGui::Checkbox("Only show ESL-spawned##side", &SideOnlyShowESLSpawned);
-				ImGui::Checkbox("Show simplified names##side", &SideShowSimpleNames);
+				ImGui::BeginDisabled(!pConfig->bSideShowEmList);
+				ImGui::Checkbox("Only show ESL-spawned##side", &pConfig->bSideOnlyShowESLSpawned);
+				ImGui::Checkbox("Show simplified names##side", &pConfig->bSideShowSimpleNames);
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::TextWrapped("HP display mode:");
-				ImGui::RadioButton("Don't show##side", &SideInfoEmHPMode, 0); ImGui::SameLine();
-				ImGui::RadioButton("Bar##side", &SideInfoEmHPMode, 1); ImGui::SameLine();
-				ImGui::RadioButton("Text##side", &SideInfoEmHPMode, 2);
+				ImGui::RadioButton("Don't show##side", &pConfig->iSideEmHPMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Bar##side", &pConfig->iSideEmHPMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Text##side", &pConfig->iSideEmHPMode, 2);
 				ImGui::Dummy(ImVec2(10, 10));
 
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max amount of enemies").x - 10);
 				ImGui::Spacing();
-				ImGui::InputInt("Max amount of enemies##side", &SideClosestEmsAmount);
+				ImGui::InputInt("Max amount of enemies##side", &pConfig->iSideClosestEmsAmount);
 
 				ImGui::Spacing();
-				ImGui::SliderFloat("Max distance of enemies##side", &SideMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::SliderFloat("Max distance of enemies##side", &pConfig->fSideMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
 				ImGui::EndDisabled();
 

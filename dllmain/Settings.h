@@ -128,6 +128,31 @@ public:
 	std::string sTrainerSpeedOverrideKeyCombo = "";
 	std::string sTrainerMoveAshToPlayerKeyCombo = "";
 
+	// ESP
+	bool bShowESP = false;
+	bool bEspShowInfoOnTop = false;
+	bool bEspOnlyShowEnemies = true;
+	bool bEspOnlyShowValidEms = true;
+	bool bEspOnlyShowESLSpawned = false;
+	bool bEspOnlyShowAlive = true;
+	float fEspMaxEmDistance = 30000.0f;
+	bool bEspOnlyShowClosestEms = false;
+	int iEspClosestEmsAmount = 3;
+	bool bEspDrawLines = false;
+	int iEspEmNameMode = 1;
+	int iEspEmHPMode = 1;
+	bool bEspDrawDebugInfo = false;
+
+	// SIDEINFO
+	bool bShowSideInfo = false;
+	bool bSideShowEmCount = true;
+	bool bSideShowEmList = true;
+	bool bSideOnlyShowESLSpawned = false;
+	bool bSideShowSimpleNames = false;
+	int iSideClosestEmsAmount = 5;
+	float fSideMaxEmDistance = 30000.0f;
+	int iSideEmHPMode = 1;
+
 	// WEAPON_HOTKEYS
 	bool bWeaponHotkeysEnable = false;
 	std::string sWeaponHotkeys[5] = { "1", "2", "3", "4", "5" };
