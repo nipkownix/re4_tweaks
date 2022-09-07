@@ -9,6 +9,7 @@ bool gameIsDebugBuild = false;
 SND_CTRL* Snd_ctrl_work = nullptr; // extern inside Game.h
 SUB_SCREEN* SubScreenWk = nullptr; // extern inside sscrn.h
 pzlPlayer__ptrPiece_Fn pzlPlayer__ptrPiece = nullptr; // extern inside puzzle.h
+CameraControl* CamCtrl = nullptr; // extern inside cam_ctrl.h
 
 // light.h externs
 cLightMgr* LightMgr = nullptr;
@@ -777,6 +778,10 @@ bool Init_Game()
 	// pzlPlayer::ptrPiece
 	pattern = hook::pattern("8B 41 30 50 E8 ? ? ? ? C3");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(4), pzlPlayer__ptrPiece);
+
+	// CamCtrl ptr
+	pattern = hook::pattern("D9 EE B9 ? ? ? ? D9 9E A4 00 00 00 E8 ? ? ? ? D9 EE");
+	CamCtrl = *pattern.count(1).get(0).get<CameraControl*>(3);
 
 	// Store current game time that's being calculated inside GetGameTime
 	pattern = hook::pattern("8B 55 ? 8B 45 ? 51 8B 4D ? 52 50 51 68");

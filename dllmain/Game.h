@@ -15,6 +15,7 @@
 #include "SDK/puzzle.h"
 #include "SDK/sscrn.h"
 #include "SDK/card.h"
+#include "SDK/cam_ctrl.h"
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];

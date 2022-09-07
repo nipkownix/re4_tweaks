@@ -10,8 +10,9 @@ struct CAMERA_POINT
 };
 assert_size(CAMERA_POINT, 0x20);
 
-struct CAMERA
+class CAMERA
 {
+public:
 	Mtx mat_0;
 	Mtx v_mat_30;
 	float cam_field_60;
@@ -36,3 +37,13 @@ struct ATTACH_CAMERA // maybe meant to be in cam_ctrl.h
 	uint16_t history_78[5][3];
 };
 assert_size(ATTACH_CAMERA, 0x98);
+
+// might be part of cam_extra.h
+class cCamera
+{
+public:
+	CAMERA camData_4;
+
+	virtual ~cCamera() = 0;
+	virtual void move() = 0;
+};
