@@ -24,6 +24,10 @@ cItemMgr* ItemMgr = nullptr;
 cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 
+// atari.h externs
+cSatMgr* SatMgr = nullptr;
+cSatMgr* EatMgr = nullptr;
+
 // Original game funcs
 bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
@@ -782,6 +786,12 @@ bool Init_Game()
 	// CamCtrl ptr
 	pattern = hook::pattern("D9 EE B9 ? ? ? ? D9 9E A4 00 00 00 E8 ? ? ? ? D9 EE");
 	CamCtrl = *pattern.count(1).get(0).get<CameraControl*>(3);
+
+	// SatMgr/EatMgr ptrs
+	pattern = hook::pattern("8D 8E B4 02 00 00 E8 ? ? ? ? 6A 00 56 B9");
+	SatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0xF);
+	pattern = hook::pattern("6A 00 53 56 50 51 B9 ? ? ? ? E8");
+	EatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0x7);
 
 	// Store current game time that's being calculated inside GetGameTime
 	pattern = hook::pattern("8B 55 ? 8B 45 ? 51 8B 4D ? 52 50 51 68");

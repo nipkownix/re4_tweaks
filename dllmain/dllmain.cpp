@@ -94,6 +94,8 @@ void Init_Main()
 
 	Init_MathReimpl();
 
+	Init_DebugDisplay();
+
 	Trainer_Init();
 
 	// Apply changes needed by the HD Project

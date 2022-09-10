@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "GameFlags.h"
 
+#include "SDK/atari.h"
 #include "SDK/event.h"
 #include "SDK/EtcModel.h"
 #include "SDK/em10.h"
@@ -16,6 +17,9 @@
 #include "SDK/sscrn.h"
 #include "SDK/card.h"
 #include "SDK/cam_ctrl.h"
+#include "SDK/event.h"
+#include "SDK/GX.h"
+#include "SDK/gc_math.h"
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];

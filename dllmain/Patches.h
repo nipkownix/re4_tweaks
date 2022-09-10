@@ -14,6 +14,7 @@ void Init_AudioTweaks();
 void Init_CameraTweaks();
 void Init_ControllerTweaks();
 void Init_CommandLine();
+void Init_DebugDisplay();
 void Init_D3D9Hook();
 void Init_DisplayTweaks();
 void Init_ExceptionHandler();

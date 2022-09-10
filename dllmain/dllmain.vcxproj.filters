@@ -157,6 +157,9 @@
     <ClCompile Include="UI_Utility.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="DebugDisplay.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
@@ -472,6 +475,18 @@
       <Filter>dllmain</Filter>
     </ClInclude>
     <ClInclude Include="SDK\cam_ctrl.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\GX.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\GXEnums.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\atari.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\gc_math.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
   </ItemGroup>

@@ -47,3 +47,7 @@ public:
 	virtual ~cCamera() = 0;
 	virtual void move() = 0;
 };
+
+namespace bio4 {
+	extern void(__cdecl* CameraCurrentProjection)();
+};

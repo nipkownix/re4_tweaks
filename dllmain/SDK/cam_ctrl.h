@@ -27,6 +27,7 @@ assert_size(QFPS_OFS_ARRAY, 0x108);
 
 class CameraQuasiFPS : public CAMERA
 {
+public:
   QFPS_OFS_ARRAY* m_p_ready_tbl_F8[15];
   QFPS_OFS_ARRAY* m_p_trans_134[6];
   QFPS_OFS_ARRAY* m_p_ready_array_14C;
