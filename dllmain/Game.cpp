@@ -753,8 +753,8 @@ bool Init_Game()
 	g_p_Item_piece = *pattern.count(1).get(0).get<itemPiece**>(10);
 
 	// Hook call to cSceSys::scheduler, so we can run code inside the main thread before other things update
-	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? F7 80 28 50 00 00 00 00 00 04");
-	auto cSceSys__scheduler_thunk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0));
+	pattern = hook::pattern("74 ? B9 ? ? ? ? E8 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? E8");
+	auto cSceSys__scheduler_thunk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(17));
 	ReadCall(cSceSys__scheduler_thunk.as_int(), cSceSys__scheduler);
 	InjectHook(cSceSys__scheduler_thunk.as_int(), cSceSys__scheduler_Hook, PATCH_JUMP);
 
