@@ -922,7 +922,7 @@ std::unordered_map<int, std::string> Flags_DEBUG_Descriptions = {
 	{int(Flags_DEBUG::DBG_FOG_FAR_GREEN), "Changes fog background color to green (? untested)"},
 	{int(Flags_DEBUG::DBG_ROOMJMP), "Disables certain code during room jump (? untested)"},
 	{int(Flags_DEBUG::DBG_CINESCO_OFF), "Disables cinesco processing (? untested)"},
-	{int(Flags_DEBUG::DBG_SLOW_MODE), "Disables certain code during room jump (? untested)"},
+	{int(Flags_DEBUG::DBG_SLOW_MODE), "Changes GXCopyDisp call during Render_done (? untested)"},
 	{int(Flags_DEBUG::DBG_PL_LOCK_FOLLOW), "Actives weapon auto-track (? untested)"},
 	{int(Flags_DEBUG::DBG_NO_SCE_EXE), "Disables room/scenario code from executing (? untested)"},
 	{int(Flags_DEBUG::DBG_EVENT_TOOL), "Allows event related debug messages to be shown (? untested)"},
