@@ -122,41 +122,17 @@ void Draw_poly_local(Vec* dpos, Mtx mat, GXColor col, bool zmode)
 
 void cSat__disp(cSat* pSat, uint32_t poly_num, GXColor col, uint32_t mode)
 {
-	uint16_t(*v7)[10]; // r22
-	float(*v9)[3]; // r31
-	unsigned int v10; // r8
-	uint32_t v11; // r20
-	uint16_t* v12; // r30
-	unsigned int v13; // r10
-	int v14; // r9
-	float* v16; // r9
-	uint16_t* v17; // r30
-	GXColor v18; // r6
-	float(*v22)[3]; // r8
-	uint16_t* v23; // r11
-	Vec v24[3]; // [sp+8h] [-A8h] BYREF
 	Mtx v25; // [sp+30h] [-80h] BYREF
-	Vec v26; // [sp+60h] [-50h] BYREF
-	Vec v27; // [sp+70h] [-40h] BYREF
+	MTXConcat(GlobalPtr()->Camera_74.v_mat_30, pSat->mat_60, v25);
 
-	GLOBAL_WK* pG = GlobalPtr();
-	v7 = pSat->poly_p_18;
-	v9 = pSat->vert_p_C;
-	MTXConcat(pG->Camera_74.v_mat_30, pSat->mat_60, v25);
-	v10 = 0;
-	v11 = poly_num;
-	v12 = v7[poly_num];
-	do
+	Vec v24[3]; // [sp+8h] [-A8h] BYREF
+	for (int i = 0; i < 3; i++)
 	{
-		v13 = v10;
-		v14 = v12[v10];
-		v10 = (unsigned __int16)(v10 + 1);
-		v14 *= 0xC;
-		v16 = (float*)((char*)v9 + v14);
-		v24[v13].x = v16[0];
-		v24[v13].y = v16[1];
-		v24[v13].z = v16[2];
-	} while (v10 <= 2);
+		int v14 = pSat->poly_p_18[poly_num][i];
+		v24[i] = pSat->vert_p_C[v14];
+	}
+
+	GXColor v18; // r6
 	if ((mode & 3) != 0)
 	{
 		if ((mode & 3) == 1)
@@ -164,17 +140,16 @@ void cSat__disp(cSat* pSat, uint32_t poly_num, GXColor col, uint32_t mode)
 	}
 	else
 	{
-		v17 = v7[v11];
 		*(uint32_t*)&v18 = 0x80808080;
-		if ((v7[v11][4] & 0x2000) == 0)
+		if ((pSat->poly_p_18[poly_num][4] & 0x2000) == 0)
 			v18 = col;
 		Draw_line3d_local(v24, &v24[1], v25, v18, 0);
 		*(uint32_t*)&v18 = 0x80808080;
-		if ((v17[4] & 0x4000) == 0)
+		if ((pSat->poly_p_18[poly_num][4] & 0x4000) == 0)
 			v18 = col;
 		Draw_line3d_local(&v24[1], &v24[2], v25, v18, 0);
 		*(uint32_t*)&v18 = 0x80808080;
-		if ((v17[4] & 0x8000) == 0)
+		if ((pSat->poly_p_18[poly_num][4] & 0x8000) == 0)
 			v18 = col;
 		Draw_line3d_local(v24, &v24[2], v25, v18, 0);
 	}
@@ -185,114 +160,88 @@ void cSat__disp(cSat* pSat, uint32_t poly_num, GXColor col, uint32_t mode)
 
 	VECAdd(v24, &v24[2], v24);
 	VECScale(v24, v24, 0.33333334f);
-	v22 = pSat->norm_p_10;
-	v23 = pSat->poly_p_18[v11];
-	v26.x = v22[v23[3]][0];
-	v26.y = v22[v23[3]][1];
-	v26.z = v22[v23[3]][2];
+
+	uint16_t v23 = pSat->poly_p_18[poly_num][3];
+
+	Vec v26 = pSat->norm_p_10[v23]; // [sp+60h] [-50h] BYREF
 	VECScale(&v26, &v24[1], 100);
 	VECAdd(v24, &v24[1], &v24[1]);
+
+	Vec v27; // [sp+70h] [-40h] BYREF
 	MTXMultVec(pSat->mat_60, v24, &v27);
-	VECSubtract(&v27, &pG->Camera_74.CamPoint_A4.Campos_0, &v27);
+	VECSubtract(&v27, &GlobalPtr()->Camera_74.CamPoint_A4.Campos_0, &v27);
 	MTXMultVecSR(pSat->mat_60, &v26, &v26);
 	if (VECDotProduct(&v26, &v27) > 0.0f)
 		*(uint32_t*)&v18 = 0xFFFFFFFF;
+
 	Draw_line3d_local(v24, &v24[1], v25, v18, 0);
 }
 
 void cSatMgr__disp(cSatMgr* pMgr, uint32_t mode)
 {
-	uint32_t v4; // r24
-	uint32_t v5; // r10
-	uint32_t v6; // r28
-	uint32_t v7; // r9
-	cSat* v8; // r30
-	int v9; // r0
-	uint32_t v11; // r0
-	signed int v12; // r4
-	signed int v13; // r27
-	signed int v14; // r31
-	int v15; // r29
-	uint32_t v16; // r11
-	uint32_t v17; // r5
-	uint32_t v18; // r6
-
 	//GXSetLineWidth(6u, 0);
-	v5 = 0;
-	if (pMgr->m_nArray_8)
+	if (!pMgr->m_nArray_8)
+		return;
+
+	for (cSat& pAt : *pMgr)
 	{
-		do
+		if (!pAt.IsValid())
+			continue;
+		if ((pAt.m_Flag_2A & cSat::FLAG::FLAG_ENABLE_VAL) != cSat::FLAG::FLAG_ENABLE_VAL)
+			continue;
+
+		int start_idx = 0;
+		int poly_count = 0;
+
+		switch (mode & 0xF)
 		{
-			v6 = v5 + 1;
-			v7 = pMgr->m_blockSize_C * v5;
-			v8 = (cSat*)((char*)pMgr->m_Array_4 + v7);
-			//if ((int)v8 < 0 && (unsigned int)v8 <= 0x82FFFFFF)
+		case 1:
+			start_idx = 0;
+			poly_count = pAt.floor_num_20;
+			break;
+		case 2:
+			start_idx = pAt.floor_num_20;
+			poly_count = start_idx + pAt.slope_num_22;
+			break;
+		case 3:
+			poly_count = pAt.polygon_num_1E;
+			start_idx = poly_count - pAt.wall_num_24;
+			break;
+		case 0:
+			start_idx = 0;
+			poly_count = pAt.polygon_num_1E;
+		}
+
+		if (start_idx < poly_count)
+		{
+			int i = start_idx;
+			uint32_t v4 = (mode >> 8) & 0xFF0000;
+
+			for (int i = start_idx; i < poly_count; i++)
 			{
-				v9 = *(uint32_t*)((char*)&pMgr->m_Array_4->be_flag_4 + v7);
-				v6 = v5 + 1;
-				if ((v9 & 0x201) == 1 && (v8->m_Flag_2A & 4) != 0)
+				uint32_t col = (LOBYTE(pAt.poly_p_18[i][8]) << 0x10) | pAt.poly_p_18[i][9];
+				uint32_t disp_mode = 0;
+				if (col)
 				{
-					v11 = mode & 0xF;
-					v12 = 0;
-					v13 = 0;
-					if (v11 == 1)
+					col = col | 0x40000000;
+					if (v4)
 					{
-						v12 = 0;
-						v13 = v8->floor_num_20;
+						col = 0;
+						if ((pAt.poly_p_18[i][9] & 1) != 0)
+							col = 0x80808080;
 					}
-					else if ((mode & 0xF) != 0)
-					{
-						if (v11 == 2)
-						{
-							v12 = v8->floor_num_20;
-							v13 = v12 + v8->slope_num_22;
-						}
-						else if (v11 == 3)
-						{
-							v13 = v8->polygon_num_1E;
-							v12 = v13 - v8->wall_num_24;
-						}
-					}
-					else
-					{
-						v12 = 0;
-						v13 = v8->polygon_num_1E;
-					}
-					v14 = v12;
-					v6 = v5 + 1;
-					if (v12 < v13)
-					{
-						v15 = v12;
-						v4 = (mode >> 8) & 0xFF0000;
-						do
-						{
-							v16 = (LOBYTE(v8->poly_p_18[v15][8]) << 0x10) | v8->poly_p_18[v15][9];
-							if (v16)
-							{
-								v17 = v16 | 0x40000000;
-								if (v4)
-								{
-									v17 = 0;
-									if ((v8->poly_p_18[v15][9] & 1) != 0)
-										v17 = 0x80808080;
-								}
-								v18 = 1;
-							}
-							else
-							{
-								v17 = 0xA0A0A0A0;
-								if (!v4)
-									v17 = 0xFFFFFFFF;
-								v18 = 0;
-							}
-							cSat__disp(v8, v14++, *(GXColor*)&v17, v18);
-							++v15;
-						} while (v14 < v13);
-					}
+					disp_mode = 1;
 				}
+				else
+				{
+					col = 0xA0A0A0A0;
+					if (!v4)
+						col = 0xFFFFFFFF;
+					disp_mode = 0;
+				}
+				cSat__disp(&pAt, i, *(GXColor*)&col, disp_mode);
 			}
-			v5 = v6;
-		} while (v6 < pMgr->m_nArray_8);
+		}
 	}
 }
 

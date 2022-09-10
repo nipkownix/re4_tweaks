@@ -24,9 +24,9 @@ public:
 		FLAG_ENABLE_VAL = 0x4,
 	};
 
-	float(*vert_p_C)[3];
-	float(*norm_p_10)[3];
-	float(*edge_p_14)[3];
+	Vec* vert_p_C; // originally float(*vert_p_C)[3];
+	Vec* norm_p_10;
+	Vec* edge_p_14;
 
 	uint16_t(*poly_p_18)[10];
 	uint16_t vertex_num_1C;
