@@ -162,6 +162,7 @@ enum class Flags_DEBUG
 };
 
 extern const char* Flags_DEBUG_Names[];
+extern std::unordered_map<int, std::string> Flags_DEBUG_Descriptions;
 
 enum class Flags_STOP
 {
@@ -195,6 +196,7 @@ enum class Flags_STOP
 };
 
 extern const char* Flags_STOP_Names[];
+extern std::unordered_map<int, std::string> Flags_STOP_Descriptions;
 
 enum class Flags_STATUS
 {
@@ -329,6 +331,7 @@ enum class Flags_STATUS
 };
 
 extern const char* Flags_STATUS_Names[];
+extern std::unordered_map<int, std::string> Flags_STATUS_Descriptions;
 
 enum class Flags_SYSTEM
 {
@@ -367,6 +370,7 @@ enum class Flags_SYSTEM
 };
 
 extern const char* Flags_SYSTEM_Names[];
+extern std::unordered_map<int, std::string> Flags_SYSTEM_Descriptions;
 
 enum class Flags_ITEM_SET
 {
@@ -523,6 +527,7 @@ enum class Flags_ITEM_SET
 };
 
 extern const char* Flags_ITEM_SET_Names[];
+extern std::unordered_map<int, std::string> Flags_ITEM_SET_Descriptions;
 
 enum class Flags_SCENARIO
 {
@@ -724,6 +729,7 @@ enum class Flags_SCENARIO
 };
 
 extern const char* Flags_SCENARIO_Names[];
+extern std::unordered_map<int, std::string> Flags_SCENARIO_Descriptions;
 
 enum class Flags_KEY_LOCK
 {
@@ -880,6 +886,7 @@ enum class Flags_KEY_LOCK
 };
 
 extern const char* Flags_KEY_LOCK_Names[];
+extern std::unordered_map<int, std::string> Flags_KEY_LOCK_Descriptions;
 
 enum class Flags_ROOM
 {
@@ -915,6 +922,7 @@ enum class Flags_EXTRA
 };
 
 extern const char* Flags_EXTRA_Names[];
+extern std::unordered_map<int, std::string> Flags_EXTRA_Descriptions;
 
 enum class Flags_CONFIG
 {
@@ -927,6 +935,7 @@ enum class Flags_CONFIG
 };
 
 extern const char* Flags_CONFIG_Names[];
+extern std::unordered_map<int, std::string> Flags_CONFIG_Descriptions;
 
 enum class Flags_DISP
 {
@@ -956,6 +965,7 @@ enum class Flags_DISP
 };
 
 extern const char* Flags_DISP_Names[];
+extern std::unordered_map<int, std::string> Flags_DISP_Descriptions;
 
 struct FlagCategoryInfo
 {

@@ -1,3 +1,6 @@
+#include <unordered_map>
+#include "GameFlags.h"
+
 const char* Flags_DEBUG_Names[] = {
 	"DBG_TEST_MODE", // 0x80000000 (@ 0x0)
 	"DBG_SCR_TEST", // 0x40000000 (@ 0x0)
@@ -900,4 +903,90 @@ const char* Flags_DISP_Names[] = {
 	"DPF_1D",
 	"DPF_1E",
 	"DPF_1F"
+};
+
+std::unordered_map<int, std::string> Flags_DEBUG_Descriptions = {
+	{int(Flags_DEBUG::DBG_SAT_DISP), "Displays SAT collision polygons"},
+	{int(Flags_DEBUG::DBG_EAT_DISP), "Displays EAT collision polygons"},
+	{int(Flags_DEBUG::DBG_NO_DEATH2), "Invulnerability"},
+	{int(Flags_DEBUG::DBG_EM_WEAK), "Weakens enemies, making them die in one or two hits"},
+	{int(Flags_DEBUG::DBG_INF_BULLET), "Prevents ammo from being removed after firing"},
+	{int(Flags_DEBUG::DBG_EM_NO_ATK), "Prevents enemies from becoming hostile to player (Em10 only)"},
+	{int(Flags_DEBUG::DBG_NO_PARASITE), "Prevents Em10 enemies from spawning parasites (? untested)"},
+	{int(Flags_DEBUG::DBG_EM_NO_DEATH), "Prevents Em25 enemies from dying  (? untested)"},
+	{int(Flags_DEBUG::DBG_DBG_CAM), "Prevents camera from being changed during CameraMove (? untested)"},
+	{int(Flags_DEBUG::DBG_LOG_OFF), "Prevents cLog messages from being printed (? untested)"},
+	{int(Flags_DEBUG::DBG_TEST_MODE), "Enables certain debug-related code paths (? untested)"},
+	{int(Flags_DEBUG::DBG_TEST_MODE_CK), "Enables certain debug-related code paths (? untested)"},
+	{int(Flags_DEBUG::DBG_EFF_NUM_DISP), "Allows EFF debug messages to be printed (? untested)"},
+	{int(Flags_DEBUG::DBG_FOG_FAR_GREEN), "Changes fog background color to green (? untested)"},
+	{int(Flags_DEBUG::DBG_ROOMJMP), "Disables certain code during room jump (? untested)"},
+	{int(Flags_DEBUG::DBG_CINESCO_OFF), "Disables cinesco processing (? untested)"},
+	{int(Flags_DEBUG::DBG_SLOW_MODE), "Disables certain code during room jump (? untested)"},
+	{int(Flags_DEBUG::DBG_PL_LOCK_FOLLOW), "Actives weapon auto-track (? untested)"},
+	{int(Flags_DEBUG::DBG_NO_SCE_EXE), "Disables room/scenario code from executing (? untested)"},
+	{int(Flags_DEBUG::DBG_EVENT_TOOL), "Allows event related debug messages to be shown (? untested)"},
+	{int(Flags_DEBUG::DBG_DOOR_SET_MODE), "Changes memory access patterns? (? untested)"},
+	{int(Flags_DEBUG::DBG_WARN_LEVEL_LOW), "Debug message level to low? (? untested)"},
+	{int(Flags_DEBUG::DBG_EMW_ERR_NO_DISP), "Prevents cEmWrap debug messages from being printed (? untested)"},
+	{int(Flags_DEBUG::DBG_BGM_STOP), "Prevents BGM audio from playing (? untested)"}
+};
+
+std::unordered_map<int, std::string> Flags_STOP_Descriptions = {
+	{int(Flags_STOP::SPF_EM), "Pause enemy (Em) processing"},
+	{int(Flags_STOP::SPF_PL), "Pause player processing"},
+	{int(Flags_STOP::SPF_OBJ), "Pause equipped enemy objects"},
+};
+
+std::unordered_map<int, std::string> Flags_STATUS_Descriptions = {
+	{int(Flags_STATUS::STA_SUSPEND), "Suspends all object/actor processing (except objects marked NO_SUSPEND)"},
+	{int(Flags_STATUS::STA_THERMO_GRAPH), "Toggles thermal scope effect"},
+	{int(Flags_STATUS::STA_ITEM_GET), "Simplifies game scene for item pickup screen"},
+	{int(Flags_STATUS::STA_NO_FENCE), "Disables fence jump command"},
+	{int(Flags_STATUS::STA_SLOW), "Toggles slow-motion game effect"},
+	{int(Flags_STATUS::STA_KLAUSER_TRANSFORM), "Changes camera to act like transformed Krauser"},
+};
+
+std::unordered_map<int, std::string> Flags_SYSTEM_Descriptions = {
+	{int(Flags_SYSTEM::SYS_SOFT_RESET), "Resets game back to main menu"},
+	{int(Flags_SYSTEM::SYS_TRANS_STOP), "Pauses rendering updates on game objects"},
+	{int(Flags_SYSTEM::SYS_SCREEN_STOP), "Pauses screen frame updates"},
+};
+
+std::unordered_map<int, std::string> Flags_ITEM_SET_Descriptions = {
+};
+
+std::unordered_map<int, std::string> Flags_SCENARIO_Descriptions = {
+};
+
+std::unordered_map<int, std::string> Flags_KEY_LOCK_Descriptions = {
+};
+
+std::unordered_map<int, std::string> Flags_EXTRA_Descriptions = {
+	{int(Flags_EXTRA::CFG_AIM_REVERSE), "Toggles inverted aiming"},
+	{int(Flags_EXTRA::CFG_WIDE_MODE), "Toggles wide-screen mode (? untested)"},
+	{int(Flags_EXTRA::CFG_LOCK_ON), "Toggles auto-aiming mode (? untested)"},
+	{int(Flags_EXTRA::CFG_KNIFE_MODE), "Toggles knife availability (? untested)"},
+};
+
+std::unordered_map<int, std::string> Flags_CONFIG_Descriptions = {
+	{int(Flags_CONFIG::CFG_AIM_REVERSE), "Toggles inverted aiming"},
+	{int(Flags_CONFIG::CFG_WIDE_MODE), "Toggles wide-screen mode (? untested)"},
+	{int(Flags_CONFIG::CFG_LOCK_ON), "Toggles auto-aiming mode (? untested)"},
+	{int(Flags_CONFIG::CFG_KNIFE_MODE), "Toggles knife availability (? untested)"},
+};
+
+std::unordered_map<int, std::string> Flags_DISP_Descriptions = {
+	{int(Flags_DISP::DPF_EM), "Toggles enemy (Em) rendering"},
+	{int(Flags_DISP::DPF_PL), "Toggles player rendering"},
+	{int(Flags_DISP::DPF_SUBCHAR), "Toggles sub-character (Ashley) rendering"},
+	{int(Flags_DISP::DPF_OBJ), "Toggles equipment rendering"},
+	{int(Flags_DISP::DPF_SCR), "Toggles scenery rendering"},
+	{int(Flags_DISP::DPF_ESP), "Toggles effect rendering"},
+	{int(Flags_DISP::DPF_FILTER), "Toggles post-process rendering"},
+	{int(Flags_DISP::DPF_GLB_ILM), "Toggles global illumination rendering"},
+	{int(Flags_DISP::DPF_COCKPIT), "Toggles the in-game HUD display"},
+	{int(Flags_DISP::DPF_FOG), "Toggles fog rendering"},
+	{int(Flags_DISP::DPF_ID_SYSTEM), "Toggles UI rendering"},
+	{int(Flags_DISP::DPF_MESSAGE), "Toggles key prompt rendering"},
 };

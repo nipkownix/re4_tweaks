@@ -1772,32 +1772,35 @@ void Trainer_RenderUI()
 			const char* categoryName;
 			uint32_t* values;
 			const char** valueNames;
+			std::unordered_map<int, std::string>* valueDescriptions;
 			int numValues;
 		};
 
 		// TODO: ROOM, ROOM_SAVE
 		CategoryInfo flagCategoryInfo[] = {
-			{ "DEBUG", GlobalPtr()->flags_DEBUG_0_60, Flags_DEBUG_Names, 128 },
-			{ "STOP", GlobalPtr()->flags_STOP_0_170, Flags_STOP_Names, 32 },
-			{ "STATUS", GlobalPtr()->flags_STATUS_0_501C, Flags_STATUS_Names, 128 },
-			{ "SYSTEM", GlobalPtr()->Flags_SYSTEM_0_54, Flags_SYSTEM_Names, 32 },
-			{ "ITEM_SET", GlobalPtr()->flags_ITEM_SET_0_528C, Flags_ITEM_SET_Names, 150 },
-			{ "SCENARIO", GlobalPtr()->flags_SCENARIO_0_52CC, Flags_SCENARIO_Names, 195 },
-			{ "KEY_LOCK", GlobalPtr()->flags_KEY_LOCK_52EC, Flags_KEY_LOCK_Names, 150 },
-			{ "DISP", GlobalPtr()->Flags_DISP_0_58, Flags_DISP_Names, 32 },
-			{ "EXTRA", SystemSavePtr()->flags_EXTRA_4, Flags_EXTRA_Names, 21 },
-			{ "CONFIG", SystemSavePtr()->flags_CONFIG_0, Flags_CONFIG_Names, 6 },
+			{ "DEBUG", GlobalPtr()->flags_DEBUG_0_60, Flags_DEBUG_Names, &Flags_DEBUG_Descriptions, 128 },
+			{ "STOP", GlobalPtr()->flags_STOP_0_170, Flags_STOP_Names, &Flags_STOP_Descriptions, 32 },
+			{ "STATUS", GlobalPtr()->flags_STATUS_0_501C, Flags_STATUS_Names, &Flags_STATUS_Descriptions, 128 },
+			{ "SYSTEM", GlobalPtr()->Flags_SYSTEM_0_54, Flags_SYSTEM_Names, &Flags_SYSTEM_Descriptions, 32 },
+			{ "ITEM_SET", GlobalPtr()->flags_ITEM_SET_0_528C, Flags_ITEM_SET_Names, &Flags_ITEM_SET_Descriptions, 150 },
+			{ "SCENARIO", GlobalPtr()->flags_SCENARIO_0_52CC, Flags_SCENARIO_Names, &Flags_SCENARIO_Descriptions, 195 },
+			{ "KEY_LOCK", GlobalPtr()->flags_KEY_LOCK_52EC, Flags_KEY_LOCK_Names, &Flags_KEY_LOCK_Descriptions, 150 },
+			{ "DISP", GlobalPtr()->Flags_DISP_0_58, Flags_DISP_Names, &Flags_DISP_Descriptions, 32 },
+			{ "EXTRA", SystemSavePtr()->flags_EXTRA_4, Flags_EXTRA_Names, &Flags_EXTRA_Descriptions, 21 },
+			{ "CONFIG", SystemSavePtr()->flags_CONFIG_0, Flags_CONFIG_Names, &Flags_CONFIG_Descriptions, 6 },
 		};
+
+		static bool filter_descriptions_only = true;
 
 		static char searchText[256] = { 0 };
 		static int columns = 3;
+		static int flagCategory = 0;
 		CategoryInfo* curFlagCategory = nullptr;
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
 		if (ImGui::BeginTable("##flagtoolheader", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 70)))
 		{
 			ImGui::TableNextColumn();
 
-			static int flagCategory = 0;
 			ImGui::PushItemWidth(120.0f * pConfig->fFontSizeScale);
 			if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
 			{
@@ -1812,6 +1815,9 @@ void Trainer_RenderUI()
 			}
 			ImGui::PopItemWidth();
 			curFlagCategory = &flagCategoryInfo[flagCategory];
+
+			ImGui::SameLine();
+			ImGui::Checkbox("Functional only", &filter_descriptions_only);
 
 			ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale);
 			ImGui::InputText("Search", searchText, 256);
@@ -1844,13 +1850,31 @@ void Trainer_RenderUI()
 			if (curFlagCategory)
 				for (int i = 0; i < curFlagCategory->numValues; i++)
 				{
+					const char* description = nullptr;
+					if (curFlagCategory->valueDescriptions->count(i))
+						description = (*curFlagCategory->valueDescriptions)[i].c_str();
+
 					bool makeVisible = true;
 					if (!searchTextUpper.empty())
 					{
 						std::string flagNameUpper = StrToUpper(curFlagCategory->valueNames[i]);
 
 						makeVisible = flagNameUpper.find(searchTextUpper) != std::string::npos;
+
+						if (!makeVisible && description)
+						{
+							std::string descriptionUpper = StrToUpper(description);
+							makeVisible = descriptionUpper.find(searchTextUpper) != std::string::npos;
+						}
 					}
+
+					// Filter flag list to only ones that we've provided descriptions for (meaning they're functional)
+					// Except for SCENARIO / ITEM_SET / KEY_LOCK / CONFIG / EXTRA flags
+					// (we'll always display them since they're all useful AFAIK)
+					if (filter_descriptions_only)
+						if (flagCategory != 4 && flagCategory != 5 && flagCategory != 6 && flagCategory != 8 && flagCategory != 9)
+							if (!description)
+								makeVisible = false;
 
 					if (makeVisible)
 					{
@@ -1858,6 +1882,10 @@ void Trainer_RenderUI()
 						bool selected = FlagIsSet(curFlagCategory->values, i);
 						if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
 							FlagSet(curFlagCategory->values, i, selected);
+
+						if (description)
+							if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+								ImGui::SetTooltip(description);
 					}
 				}
 			ImGui::EndTable();
