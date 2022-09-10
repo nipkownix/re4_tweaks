@@ -15,8 +15,32 @@ PlayerSpeedOverride = 1.0
 ; Allows moving character via numpad when using noclip / "Disable Player Collision" patch
 UseNumpadMovement = True
 
+; Change the player speed when moving character via numpad
+; Min 0.1, max 10.
+NumpadMovementSpeed = 1.0
+
 ; Allows using mouse-wheel to move character up/down when using noclip / "Disable Player Collision" patch
 UseMouseWheelUpDown = True
+
+; Allows flying around with the camera. Controller and Keybard/Mouse are supported.
+; Controls:
+; 
+; Keyboard/Mouse:
+; * Movement keys (WASD): Move forwards/backwards/sideways
+; * Mouse movement: Rotate camera
+; * Mouse wheel: Move up/down
+; * Run key: Speedup movement
+; 
+; Controller:
+; * Left analog stick: Move forwards/backwards/sideways
+; * Right analog stick: Rotate camera
+; * "Aim Weapon" and "Aim Knife" keys: Move up/down
+; * Run key: Speedup movement
+EnableFreeCamera = False
+
+; Change the camera speed when using free camera
+; Min 0.1, max 10.
+FreeCamSpeed = 1.0
 
 ; Allows overriding the HP of enemies.
 ; The new HP will be whatever their original HP was, multiplied by the value set here.
@@ -108,6 +132,9 @@ FocusUI = F5
 
 ; Key combination to toggle the "Disable Player Collision" / no-clip patch.
 NoclipToggle = 
+
+; Key combination to toggle the "Free Camera" patch.
+FreeCamToggle = 
 
 ; Key combination to toggle the "Player Speed Override" patch
 SpeedOverrideToggle = 

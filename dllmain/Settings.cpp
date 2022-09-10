@@ -358,6 +358,11 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
 	pConfig->bTrainerUseNumpadMovement = iniReader.ReadBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
 	pConfig->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+	pConfig->fTrainerNumMoveSpeed = iniReader.ReadFloat("TRAINER", "NumpadMovementSpeed", pConfig->fTrainerNumMoveSpeed);
+	pConfig->fTrainerNumMoveSpeed = fmin(fmax(pConfig->fTrainerNumMoveSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
+	pConfig->bTrainerEnableFreeCam = iniReader.ReadBoolean("TRAINER", "EnableFreeCamera", pConfig->bTrainerEnableFreeCam);
+	pConfig->fTrainerFreeCamSpeed = iniReader.ReadFloat("TRAINER", "FreeCamSpeed", pConfig->fTrainerFreeCamSpeed);
+	pConfig->fTrainerFreeCamSpeed = fmin(fmax(pConfig->fTrainerFreeCamSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
 	pConfig->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
 	pConfig->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
 	pConfig->fTrainerEnemyHPMultiplier = fmin(fmax(pConfig->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
@@ -420,6 +425,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	// TRAINER HOTKEYS
 	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
 	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo);
+	pConfig->sTrainerFreeCamKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FreeCamToggle", pConfig->sTrainerFreeCamKeyCombo);
 	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
 	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
 
@@ -540,6 +546,9 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
 		iniReader.WriteBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
 		iniReader.WriteBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+		iniReader.WriteFloat("TRAINER", "NumpadMovementSpeed", pConfig->fTrainerNumMoveSpeed);
+		iniReader.WriteBoolean("TRAINER", "EnableFreeCamera", pConfig->bTrainerEnableFreeCam);
+		iniReader.WriteFloat("TRAINER", "FreeCamSpeed", pConfig->fTrainerFreeCamSpeed);
 		iniReader.WriteBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
 		iniReader.WriteFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
 		iniReader.WriteBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
@@ -612,6 +621,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		// TRAINER_HOTKEYS
 		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "FreeCamToggle", " " + pConfig->sTrainerFreeCamKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + pConfig->sTrainerMoveAshToPlayerKeyCombo);
 

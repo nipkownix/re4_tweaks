@@ -215,7 +215,6 @@ cEm* cEmMgr::GetClosestEm(bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawn
 	return ClosestEmPtr;
 }
 
-
 std::vector<cEm*> cEmMgr::GetVecClosestEms(int DesiredNumEms, float maxDistance, bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans)
 {
 	auto& emMgr = *EmMgrPtr();

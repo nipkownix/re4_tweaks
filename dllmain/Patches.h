@@ -105,6 +105,8 @@ extern int8_t* AnalogRY_9;
 // Mouse vars
 extern float* fMousePosX;
 extern float* fMousePosY;
+extern int32_t* MouseDeltaX;
+extern int32_t* MouseDeltaY;
 
 enum MouseTurnTypes
 {

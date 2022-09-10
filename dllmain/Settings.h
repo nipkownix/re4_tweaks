@@ -125,6 +125,7 @@ public:
 	// TRAINER_HOTKEYS
 	std::string sTrainerFocusUIKeyCombo = "F5";
 	std::string sTrainerNoclipKeyCombo = "";
+	std::string sTrainerFreeCamKeyCombo = "";
 	std::string sTrainerSpeedOverrideKeyCombo = "";
 	std::string sTrainerMoveAshToPlayerKeyCombo = "";
 
@@ -178,7 +179,10 @@ public:
 	bool bTrainerPlayerSpeedOverride = false;
 	float fTrainerPlayerSpeedOverride = 1.0f;
 	bool bTrainerUseNumpadMovement = true;
+	float fTrainerNumMoveSpeed = 1.0f;
 	bool bTrainerUseMouseWheelUpDown = true;
+	bool bTrainerEnableFreeCam = false;
+	float fTrainerFreeCamSpeed = 1.0f;
 	bool bTrainerEnemyHPMultiplier = false;
 	float fTrainerEnemyHPMultiplier = 1.0f;
 	bool bTrainerRandomHPMultiplier = false;

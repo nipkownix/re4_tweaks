@@ -13,6 +13,18 @@
 int AshleyStateOverride;
 int last_weaponId;
 
+float fFreeCam_direction;
+float fFreeCam_depression;
+
+bool bRequestedPlayerTPtoCam;
+bool bRequestedAshleyTPtoCam;
+
+uint16_t pl_atariInfoFlagBackup = 0;
+bool pl_atariInfoFlagSet = false;
+
+uint16_t ash_atariInfoFlagBackup = 0;
+bool ash_atariInfoFlagSet = false;
+
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
 // Unfortunately, most existing trainer-like-mods for the game are done as code patches
@@ -65,8 +77,6 @@ struct FlagPatch
 
 };
 
-uint16_t ash_atariInfoFlagBackup = 0;
-bool ash_atariInfoFlagSet = false;
 void MoveAshleyToPlayer()
 {
 	cPlayer* ashley = AshleyPtr();
@@ -88,6 +98,7 @@ void MoveAshleyToPlayer()
 }
 
 std::vector<uint32_t> KeyComboNoclipToggle;
+std::vector<uint32_t> KeyComboFreeCamToggle;
 std::vector<uint32_t> KeyComboSpeedOverride;
 std::vector<uint32_t> KeyComboAshToPlayer;
 
@@ -211,6 +222,16 @@ void Trainer_ParseKeyCombos()
 		}, &KeyComboNoclipToggle });
 	}
 
+	// Free cam
+	{
+		KeyComboFreeCamToggle.clear();
+		KeyComboFreeCamToggle = ParseKeyCombo(pConfig->sTrainerFreeCamKeyCombo);
+
+		pInput->RegisterHotkey({ []() {
+			pConfig->bTrainerEnableFreeCam = !pConfig->bTrainerEnableFreeCam;
+		}, &KeyComboFreeCamToggle });
+	}
+
 	// SpeedOverride
 	{
 		KeyComboSpeedOverride.clear();
@@ -255,6 +276,16 @@ void Trainer_ParseKeyCombos()
 		pInput->RegisterHotkey({ []() { HotkeySlotPressed(last_weaponId, true); }, &KeyComboLastWeaponHotkey });
 	}
 }
+
+bool(__cdecl* cameraHitCheck_orig)(Vec *pCross, Vec *pNorm, Vec p0, Vec p1);
+bool __cdecl cameraHitCheck_hook(Vec *pCross, Vec *pNorm, Vec p0, Vec p1)
+{
+	if (pConfig->bTrainerEnableFreeCam)
+		return false;
+	else
+		return cameraHitCheck_orig(pCross, pNorm, p0, p1);
+}
+
 
 std::vector<FlagPatch> flagPatches;
 void Trainer_Init()
@@ -488,8 +519,6 @@ void Trainer_Init()
 				// Code we replaced
 				regs.edx = (uint32_t)GlobalPtr();
 
-				con.AddLogChar("emlist2");
-
 				if (pConfig->bTrainerDisableEnemySpawn)
 					regs.eax = 0;
 			}
@@ -546,6 +575,62 @@ void Trainer_Init()
 			}
 		}; injector::MakeInline<CheckAshleyActive_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
+
+	// Free cam
+	{
+		// Hook cameraHitCheck to disable hit detection
+		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 20 84 C0 74 2A");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_orig);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_hook, PATCH_JUMP);
+
+		// Redirect m_direction_ratio_208 and m_depression_ratio_204 when using free cam
+		pattern = hook::pattern("D9 83 ? ? ? ? DA E9 89 85 ? ? ? ? DF E0");
+		struct calcOffset_direction
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float direction;
+
+				if (pConfig->bTrainerEnableFreeCam)
+					direction = fFreeCam_direction;
+				else
+					direction = CamCtrl->m_QuasiFPS_278.m_direction_ratio_208;
+
+				__asm {fld direction}
+			}
+		}; injector::MakeInline<calcOffset_direction>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("D9 83 ? ? ? ? 51 D9 1C ? 8D 85 ? ? ? ? 6A ? 50");
+		injector::MakeInline<calcOffset_direction>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("D9 83 ? ? ? ? D9 EE D9 C0 DD EA DF E0 DD D9 F6 C4 ? 7A ? 8B 75");
+		struct calcOffset_depression
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				float depression;
+
+				if (pConfig->bTrainerEnableFreeCam)
+					depression = fFreeCam_depression;
+				else
+					depression = CamCtrl->m_QuasiFPS_278.m_depression_ratio_204;
+
+				__asm {fld depression}
+			}
+		}; injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("D9 83 ? ? ? ? D8 D9 DF E0 F6 C4 ? 0F 85");
+		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("D9 83 ? ? ? ? 52 D9 9D ? ? ? ? 51 D9 85 ? ? ? ? 8D 45");
+		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("D9 83 ? ? ? ? D8 D9 DF E0 F6 C4 ? 0F 8A ? ? ? ? DD D8 8D 95");
+		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("D9 83 ? ? ? ? 52 DC 0D ? ? ? ? 51 8D 45 ? D9 9D");
+		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
 }
 
 void Trainer_Update()
@@ -582,9 +667,19 @@ void Trainer_Update()
 			player->Motion_1D8.Seq_speed_C0 = pConfig->fTrainerPlayerSpeedOverride;
 	}
 
+	// Handle the player's collision
+	if (pl_atariInfoFlagSet && 
+		!FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT)) &&
+		!pConfig->bTrainerEnableFreeCam)
+	{
+		// Restore collision flags
+		player->atari_2B4.m_flag_1A = pl_atariInfoFlagBackup;
+		pl_atariInfoFlagSet = false;
+	}
+
 	// Handle Ashley's collision
 	cPlayer* ashley = AshleyPtr();
-	if (ashley)
+	if (ashley && !pConfig->bTrainerEnableFreeCam)
 	{
 		// Restore collision flags
 		if (ash_atariInfoFlagSet)
@@ -594,83 +689,281 @@ void Trainer_Update()
 		}
 	}
 
-	static uint16_t atariInfoFlagBackup = 0;
-	static bool atariInfoFlagSet = false;
 	if (FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT)))
 	{
 		// Backup original collision flags and then unset collision-enabled bit
-		if (!atariInfoFlagSet)
+		if (!pl_atariInfoFlagSet)
 		{
-			atariInfoFlagBackup = player->atari_2B4.m_flag_1A;
-			atariInfoFlagSet = true;
+			pl_atariInfoFlagBackup = player->atari_2B4.m_flag_1A;
+			pl_atariInfoFlagSet = true;
 		}
 		player->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
 
-		Vec positionMod{ 0 };
-		bool positionModded = false;
-
-		// Handle numpad-movement
-		if (pConfig->bTrainerUseNumpadMovement)
+		// Handle numpad/mouse wheel movement
+		if (pConfig->bTrainerUseNumpadMovement && !pConfig->bTrainerEnableFreeCam)
 		{
+			// Speed calculation
+			float movSpeed = 140.0f * pConfig->fTrainerNumMoveSpeed;
+
+			// Cam directions
+			float Sine = CamCtrl->Camera_60.mat_0[2][0];
+			float Cosine = CamCtrl->Camera_60.mat_0[0][0];
+			float Pitch = fFreeCam_depression;
+
+			Sine *= movSpeed;
+			Cosine *= movSpeed;
+			Pitch *= movSpeed;
+
+			// Forwards
 			if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
 			{
-				positionMod.x = 100;
-				positionModded = true;
+				player->pos_94.x += Sine;
+				player->pos_94.z -= Cosine;
 			}
+
+			// Backwards
 			if (pInput->is_key_down(0x62)) //VK_NUMPAD_2
 			{
-				positionMod.x = -100;
-				positionModded = true;
+				player->pos_94.x -= Sine;
+				player->pos_94.z += Cosine;
 			}
+
+			// Left
 			if (pInput->is_key_down(0x64)) //VK_NUMPAD_4
 			{
-				positionMod.z = -100;
-				positionModded = true;
+				player->pos_94.x -= Cosine;
+				player->pos_94.z -= Sine;
 			}
+
+			// Right
 			if (pInput->is_key_down(0x66)) //VK_NUMPAD_6
 			{
-				positionMod.z = 100;
-				positionModded = true;
+				player->pos_94.x += Cosine;
+				player->pos_94.z += Sine;
 			}
-			if (pInput->is_key_down(0x61)) //VK_NUMPAD_1
-			{
-				positionMod.y = -100;
-				positionModded = true;
-			}
+
+			// Up
 			if (pInput->is_key_down(0x67)) //VK_NUMPAD_7
 			{
-				positionMod.y = 100;
-				positionModded = true;
+				player->pos_94.y += movSpeed;
 			}
-		}
 
-		// Handle mouse wheel
-		if (pConfig->bTrainerUseMouseWheelUpDown)
-		{
-			if (pInput->mouse_wheel_delta() > 0) // Mouse wheel up
+			// Down
+			if (pInput->is_key_down(0x61)) //VK_NUMPAD_1
 			{
-				positionMod.y = pInput->mouse_wheel_delta() * 200.0f;
-				positionModded = true;
+				player->pos_94.y -= movSpeed;
 			}
 
-			if (pInput->mouse_wheel_delta() < 0) // Mouse wheel down
+			// Handle mouse wheel
+			if (pConfig->bTrainerUseMouseWheelUpDown && !ImGuiShouldAcceptInput())
 			{
-				positionMod.y = -pInput->mouse_wheel_delta() * -200.0f;
-				positionModded = true;
-			}
-		}
+				// Up
+				if (pInput->mouse_wheel_delta() > 0)
+				{
+					movSpeed += pInput->mouse_wheel_delta() * 200.0f;
 
-		if (positionModded)
-		{
-			player->pos_94.x += positionMod.x;
-			player->pos_94.y += positionMod.y;
-			player->pos_94.z += positionMod.z;
+					player->pos_94.y += movSpeed;
+				}
+
+				// Down
+				if ((pInput->mouse_wheel_delta() < 0))
+				{
+					movSpeed -= pInput->mouse_wheel_delta() * 200.0f;
+
+					player->pos_94.y -= movSpeed;
+				}
+			}
 		}
 	}
-	else if (atariInfoFlagSet) // Restore collision flags
+
+	// Handle free camera
+	static bool stopPlFlagSet = false;
+	static float CamXYZbackup[3] = {0, 0, 0};
+	if (pConfig->bTrainerEnableFreeCam)
 	{
-		player->atari_2B4.m_flag_1A = atariInfoFlagBackup;
-		atariInfoFlagSet = false;
+		// Camera rotation
+		if (isController())
+		{
+			fFreeCam_direction -= *AnalogRX_8 / 800.0f;
+			fFreeCam_depression += *AnalogRY_9 / 800.0f;
+		}
+		else
+		{
+			fFreeCam_direction -= *MouseDeltaX / 600.0f;
+			fFreeCam_depression += *MouseDeltaY / 600.0f;
+		}
+
+		fFreeCam_depression = std::clamp(fFreeCam_depression, -2.33f, 2.33f);
+
+		// Flag and backup
+		bool isFlagSet = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL));
+
+		if (!isFlagSet)
+		{
+			// Backup cam pos
+			CamXYZbackup[0] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
+			CamXYZbackup[1] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
+			CamXYZbackup[2] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
+
+			// Backup original collision flags and then unset collision-enabled bit
+			if (!pl_atariInfoFlagSet)
+			{
+				pl_atariInfoFlagBackup = player->atari_2B4.m_flag_1A;
+				pl_atariInfoFlagSet = true;
+			}
+			player->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
+
+			if (ashley)
+			{
+				if (!ash_atariInfoFlagSet)
+				{
+					ash_atariInfoFlagBackup = ashley->atari_2B4.m_flag_1A;
+					ash_atariInfoFlagSet = true;
+				}
+				ashley->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
+			}
+
+			// Set pl stop flag
+			FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL), true);
+			stopPlFlagSet = true;
+		}
+
+		// Input handling
+		bool isPressingFwd = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_FORWARD) == (uint64_t)KEY_BTN::KEY_FORWARD);
+		bool isPressingBack = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_BACK) == (uint64_t)KEY_BTN::KEY_BACK);
+		bool isPressingLeft = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT);
+		bool isPressingRight = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT);
+		bool isPressingRun = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RUN) == (uint64_t)KEY_BTN::KEY_RUN);
+		bool isPressingUp = false;
+		bool isPressingDown = false;
+
+		if (isController())
+			isPressingUp = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE_KNIFE) == (uint64_t)KEY_BTN::KEY_KAMAE_KNIFE);
+		else
+		{
+			if (!ImGuiShouldAcceptInput())
+				isPressingUp = (pInput->mouse_wheel_delta() > 0); // Mouse wheel up
+		}
+
+		if (isController())
+			isPressingDown = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
+		else
+		{
+			if (!ImGuiShouldAcceptInput())
+				isPressingDown = (pInput->mouse_wheel_delta() < 0); // Mouse wheel down
+		}
+
+		// Speed calculation
+		float movSpeed = 140.0f * pConfig->fTrainerFreeCamSpeed;
+
+		if (isPressingRun)
+			movSpeed *= 2.0f;
+
+		// Directions
+		float Sine = CamCtrl->Camera_60.mat_0[2][0];
+		float Cosine = CamCtrl->Camera_60.mat_0[0][0];
+		float Pitch = fFreeCam_depression;
+
+		Sine *= movSpeed;
+		Cosine *= movSpeed;
+		Pitch *= movSpeed;
+
+		float *X = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
+		float *Y = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
+		float *Z = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
+
+		// Forwards
+		if (isPressingFwd)
+		{
+			*X += Sine;
+			*Y += Pitch;
+			*Z -= Cosine;
+		}
+
+		// Backwards
+		if (isPressingBack)
+		{
+			*X -= Sine;
+			*Y -= Pitch;
+			*Z += Cosine;
+		}
+
+		// Left
+		if (isPressingLeft)
+		{
+			*X -= Cosine;
+			*Z -= Sine;
+		}
+
+		// Right
+		if (isPressingRight)
+		{
+			*X += Cosine;
+			*Z += Sine;
+		}
+
+		// Up
+		if (isPressingUp)
+		{
+			if (isKeyboardMouse())
+			{
+				movSpeed += pInput->mouse_wheel_delta() * 200.0f;
+
+				if (isPressingRun)
+					movSpeed *= 3.0f;
+			}
+
+			*Y += movSpeed;
+		}
+
+		// Down
+		if (isPressingDown)
+		{
+			if (isKeyboardMouse())
+			{
+				movSpeed -= pInput->mouse_wheel_delta() * 200.0f;
+
+				if (isPressingRun)
+					movSpeed *= 3.0f;
+			}
+
+			*Y -= movSpeed;
+		}
+
+		// TP if needed
+		if (bRequestedPlayerTPtoCam)
+		{
+			player->pos_94.x = *X;
+			player->pos_94.y = *Y;
+			player->pos_94.z = *Z;
+
+			// Has to be set to false, or else the game won't read the new position. 
+			// Will be automatically be set to true again once the loop reaches this function again.
+			FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL), false);
+
+			bRequestedPlayerTPtoCam = false;
+		}
+
+		if (bRequestedAshleyTPtoCam)
+		{
+			if (ashley)
+			{
+				ashley->pos_94.x = *X;
+				ashley->pos_94.y = *Y;
+				ashley->pos_94.z = *Z;
+			}
+
+			bRequestedAshleyTPtoCam = false;
+		}
+	}
+	else if (stopPlFlagSet) // Disable Pl stop flag and restore cam backup
+	{
+		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3] = CamXYZbackup[0];
+		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3] = CamXYZbackup[1];
+		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3] = CamXYZbackup[2];
+
+		FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL), false);
+		stopPlFlagSet = false;
 	}
 }
 
@@ -1064,6 +1357,72 @@ void Trainer_RenderUI()
 				if (ImGui::Checkbox("Use Mouse Wheel", &pConfig->bTrainerUseMouseWheelUpDown))
 					pConfig->HasUnsavedChanges = true;
 				ImGui::TextWrapped("Allows using the mouse wheel to go up and down.");
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				if (ImGui::SliderFloat("Speed##numpmov", &pConfig->fTrainerNumMoveSpeed, 0.0f, 10.0f, "%.2f"))
+					pConfig->HasUnsavedChanges = true;
+
+				if (ImGui::Button("Reset##numpmov"))
+				{
+					pConfig->fTrainerNumMoveSpeed = 1.0f;
+					pConfig->HasUnsavedChanges = true;
+				}
+				ImGui::EndDisabled();
+			}
+			
+			// Free camera
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Enable Free Camera", &pConfig->bTrainerEnableFreeCam))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::TextWrapped("Allows flying around with the camera. Controller and Keybard/Mouse are supported.");
+
+				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::TextWrapped("Controls:");
+
+				ImGui::Spacing();
+				ImGui::TextWrapped("Keyboard/Mouse:");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Movement keys (WASD): Move forwards/backwards/sideways");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Mouse movement: Rotate camera");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Mouse wheel: Move up/down");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Run key: Speedup movement");
+
+				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::TextWrapped("Controller:");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Left analog stick: Move forwards/backwards/sideways");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Right analog stick: Rotate camera");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("\"Aim Weapon\" and \"Aim Knife\" keys: Move up/down");
+				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Run key: Speedup movement");
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::BeginDisabled(!pConfig->bTrainerEnableFreeCam);
+				if (ImGui::SliderFloat("Speed##freecam", &pConfig->fTrainerFreeCamSpeed, 0.0f, 10.0f, "%.2f"))
+					pConfig->HasUnsavedChanges = true;
+
+				if (ImGui::Button("Reset##fcspdoverrid"))
+				{
+					pConfig->fTrainerFreeCamSpeed = 1.0f;
+					pConfig->HasUnsavedChanges = true;
+				}
+
+				ImGui::Dummy(ImVec2(10, 10));
+
+				if (ImGui::Button("Teleport player to camera##freecam"))
+					bRequestedPlayerTPtoCam = true;
+
+				ImGui::SameLine();
+
+				if (ImGui::Button("Teleport Ashley to camera##freecam"))
+					bRequestedAshleyTPtoCam = true;
+
 				ImGui::EndDisabled();
 			}
 
@@ -1264,6 +1623,67 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("Focus/unfocus trainer UIs");
 			}
 
+			// No-clip
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Key combination to toggle the \"Disable Player Collision\" / no-clip patch.");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushID(2);
+				if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerNoclipKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Toggle no-clip");
+			}
+
+			// Free cam
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Key combination to toggle the \"Free Camera\"patch.");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushID(3);
+				if (ImGui::Button(pConfig->sTrainerFreeCamKeyCombo.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerFreeCamKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Toggle free cam");
+			}
+
+			// Speed override
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Key combination to toggle the \"Player Speed Override\" patch.");
+				ImGui::TextWrapped("(set your player speed override value in the Patches section first)");
+				ImGui::Dummy(ImVec2(10, 10));
+
+				ImGui::PushID(4);
+				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(150, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerSpeedOverrideKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("Toggle speed override");
+			}
+
 			// Weapon Hotkeys
 			{
 				ImGui_ColumnSwitch();
@@ -1283,7 +1703,7 @@ void Trainer_RenderUI()
 
 				for (int i = 0; i < 5; i++)
 				{
-					ImGui::PushID(2 + i);
+					ImGui::PushID(250 + i);
 					if (ImGui::Button(pConfig->sWeaponHotkeys[i].c_str(), ImVec2(150, 0)))
 					{
 						pConfig->HasUnsavedChanges = true;
@@ -1296,7 +1716,7 @@ void Trainer_RenderUI()
 					ImGui::TextWrapped(text.c_str());
 				}
 
-				ImGui::PushID(25);
+				ImGui::PushID(200);
 				if (ImGui::Button(pConfig->sLastWeaponHotkey.c_str(), ImVec2(150, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
@@ -1319,46 +1739,6 @@ void Trainer_RenderUI()
 				ImGui::EndDisabled();
 			}
 
-			// No-clip
-			{
-				ImGui_ColumnSwitch();
-
-				ImGui::TextWrapped("Key combination to toggle the \"Disable Player Collision\" / no-clip patch.");
-				ImGui::Dummy(ImVec2(10, 10));
-
-				ImGui::PushID(7);
-				if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(150, 0)))
-				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerNoclipKeyCombo, 0, NULL);
-				}
-				ImGui::PopID();
-
-				ImGui::SameLine();
-
-				ImGui::TextWrapped("Toggle no-clip");
-			}
-
-			// Speed override
-			{
-				ImGui_ColumnSwitch();
-
-				ImGui::TextWrapped("Key combination to toggle the \"Player Speed Override\" patch.");
-				ImGui::TextWrapped("(set your player speed override value in the Patches section first)");
-				ImGui::Dummy(ImVec2(10, 10));
-
-				ImGui::PushID(8);
-				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(150, 0)))
-				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerSpeedOverrideKeyCombo, 0, NULL);
-				}
-				ImGui::PopID();
-
-				ImGui::SameLine();
-
-				ImGui::TextWrapped("Toggle speed override");
-			}
 
 			// Move Ash to Player
 			{
@@ -1367,7 +1747,7 @@ void Trainer_RenderUI()
 				ImGui::TextWrapped("Key combination to move Ashley to the player's position.");
 				ImGui::Dummy(ImVec2(10, 10));
 
-				ImGui::PushID(9);
+				ImGui::PushID(5);
 				if (ImGui::Button(pConfig->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(150, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
