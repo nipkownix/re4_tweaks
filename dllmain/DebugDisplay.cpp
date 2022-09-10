@@ -219,7 +219,16 @@ void cSatMgr__disp(cSatMgr* pMgr, uint32_t mode)
 
 			for (int i = start_idx; i < poly_count; i++)
 			{
-				uint32_t col = (LOBYTE(pAt.poly_p_18[i][8]) << 0x10) | pAt.poly_p_18[i][9];
+				uint16_t b0 = pAt.poly_p_18[i][8];
+				uint16_t b1 = pAt.poly_p_18[i][9];
+
+				// TODO: need to figure out if this is creating the correct color or not
+				// on GC fall-down polygons are colored red, but this colors them blue
+				// it's possible they might have changed the color of fall-down polygons to make them different to jump-over ones though
+				// NOTE: ((uint16_t(b0) << 16) | b1) is what the Get_poly_attr func returns, seems to match with SAT_ATTR enum?
+				// (but this uses the value as the color directly...)
+
+				uint32_t col = (LOBYTE(b0) << 16) | b1;
 				uint32_t disp_mode = 0;
 				if (col)
 				{
@@ -306,4 +315,21 @@ void Init_DebugDisplay()
 
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0x0)).as_int(), SubScreenCall);
 	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x0)).as_int(), SubScreenCall_Hook);
+
+	// blkPolySphereCkCore: reimplement call to cSat::disp when polygon is collided with
+	pattern = hook::pattern("C7 45 F8 01 00 00 00 85 C9");
+	struct blkPolySphereCkCore_cSat__disp
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			// Orig code we patched over
+			*(uint32_t*)(regs.ebp - 8) = 1;
+
+			// Code from GC debug
+			cSat* pAt = (cSat*)regs.edi;
+			GXColor col{ 0xFF, 0x00, 0x00, 0x40 };
+			if (FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_SAT_DISP)))
+				cSat__disp(pAt, regs.esi, col, 1);
+		}
+	}; injector::MakeInline<blkPolySphereCkCore_cSat__disp>(pattern.count(1).get(0).get<uint8_t>(0x0), pattern.count(1).get(0).get<uint8_t>(0x7));
 }
