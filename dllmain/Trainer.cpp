@@ -1881,13 +1881,16 @@ void Trainer_RenderUI()
 						ImGui::TableNextColumn();
 						bool selected = FlagIsSet(curFlagCategory->values, i);
 
+						ImU32 col = ImGui::GetColorU32(ImGuiCol_Text);
 						if (!description)
-							ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, 0.70f));
+							col = ImGui::GetColorU32(ImGuiCol_Text, 0.70f);
+						else if (strstr(description, "reimplementation"))
+							col = IM_COL32(243, 229, 171, 255); // vanilla gold
+
+						ImGui::PushStyleColor(ImGuiCol_Text, col);
 						if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
 							FlagSet(curFlagCategory->values, i, selected);
-
-						if (!description)
-							ImGui::PopStyleColor();
+						ImGui::PopStyleColor();
 
 						if (description)
 							if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))

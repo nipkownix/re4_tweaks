@@ -906,12 +906,12 @@ const char* Flags_DISP_Names[] = {
 };
 
 std::unordered_map<int, std::string> Flags_DEBUG_Descriptions = {
-	{int(Flags_DEBUG::DBG_SAT_DISP), "Displays SAT collision polygons"},
-	{int(Flags_DEBUG::DBG_EAT_DISP), "Displays EAT collision polygons"},
-	{int(Flags_DEBUG::DBG_NO_DEATH2), "Invulnerability"},
-	{int(Flags_DEBUG::DBG_EM_WEAK), "Weakens enemies, making them die in one or two hits"},
-	{int(Flags_DEBUG::DBG_INF_BULLET), "Prevents ammo from being removed after firing"},
-	{int(Flags_DEBUG::DBG_EM_NO_ATK), "Prevents enemies from becoming hostile to player (Em10 only)"},
+	{int(Flags_DEBUG::DBG_SAT_DISP), "Displays SAT collision polygons (re4_tweaks reimplementation)"},
+	{int(Flags_DEBUG::DBG_EAT_DISP), "Displays EAT collision polygons (re4_tweaks reimplementation)"},
+	{int(Flags_DEBUG::DBG_NO_DEATH2), "Invulnerability (re4_tweaks reimplementation)"},
+	{int(Flags_DEBUG::DBG_EM_WEAK), "Weakens enemies, making them die in one or two hits (re4_tweaks reimplementation)"},
+	{int(Flags_DEBUG::DBG_INF_BULLET), "Prevents ammo from being removed after firing (re4_tweaks reimplementation)"},
+	{int(Flags_DEBUG::DBG_EM_NO_ATK), "Prevents enemies from becoming hostile to player (Em10 only) (re4_tweaks reimplementation)"},
 	{int(Flags_DEBUG::DBG_NO_PARASITE), "Prevents Em10 enemies from spawning parasites (? untested)"},
 	{int(Flags_DEBUG::DBG_EM_NO_DEATH), "Prevents Em25 enemies from dying  (? untested)"},
 	{int(Flags_DEBUG::DBG_DBG_CAM), "Prevents camera from being changed during CameraMove (? untested)"},
