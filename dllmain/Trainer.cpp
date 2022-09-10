@@ -1880,8 +1880,14 @@ void Trainer_RenderUI()
 					{
 						ImGui::TableNextColumn();
 						bool selected = FlagIsSet(curFlagCategory->values, i);
+
+						if (!description)
+							ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, 0.70f));
 						if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
 							FlagSet(curFlagCategory->values, i, selected);
+
+						if (!description)
+							ImGui::PopStyleColor();
 
 						if (description)
 							if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))

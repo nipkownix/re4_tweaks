@@ -936,6 +936,14 @@ std::unordered_map<int, std::string> Flags_STOP_Descriptions = {
 	{int(Flags_STOP::SPF_EM), "Pause enemy (Em) processing"},
 	{int(Flags_STOP::SPF_PL), "Pause player processing"},
 	{int(Flags_STOP::SPF_OBJ), "Pause equipped enemy objects"},
+	{int(Flags_STOP::SPF_SUBCHAR), "Pause sub-character (Ashley) processing"},
+	{int(Flags_STOP::SPF_ESP), "Pause effect processing"},
+	{int(Flags_STOP::SPF_ESP_AREA), "Pause EspArea processing (? untested)"},
+	{int(Flags_STOP::SPF_WATER), "Pause water processing (? untested)"},
+	{int(Flags_STOP::SPF_EVT), "Skip events/cutscenes (? untested)"},
+	{int(Flags_STOP::SPF_SCE), "Pause scenario/room processing"},
+	{int(Flags_STOP::SPF_LIGHT), "Pause light processing"},
+	{int(Flags_STOP::SPF_BLOCK), "Pause block-area processing"},
 };
 
 std::unordered_map<int, std::string> Flags_STATUS_Descriptions = {
@@ -983,10 +991,15 @@ std::unordered_map<int, std::string> Flags_DISP_Descriptions = {
 	{int(Flags_DISP::DPF_OBJ), "Toggles equipment rendering"},
 	{int(Flags_DISP::DPF_SCR), "Toggles scenery rendering"},
 	{int(Flags_DISP::DPF_ESP), "Toggles effect rendering"},
+	{int(Flags_DISP::DPF_TEX_RENDER), "Toggles TexRender effect rendering"},
 	{int(Flags_DISP::DPF_FILTER), "Toggles post-process rendering"},
 	{int(Flags_DISP::DPF_GLB_ILM), "Toggles global illumination rendering"},
 	{int(Flags_DISP::DPF_COCKPIT), "Toggles the in-game HUD display"},
 	{int(Flags_DISP::DPF_FOG), "Toggles fog rendering"},
 	{int(Flags_DISP::DPF_ID_SYSTEM), "Toggles UI rendering"},
 	{int(Flags_DISP::DPF_MESSAGE), "Toggles key prompt rendering"},
+	{int(Flags_DISP::DPF_WATER), "Toggles water rendering"},
+	{int(Flags_DISP::DPF_CLOTH), "Toggles cloth rendering"},
+	{int(Flags_DISP::DPF_SHADOW), "Toggles shadow rendering"},
+	// {int(Flags_DISP::DPF_CTRL), "Toggles cCtrl rendering"}, // does nothing? 
 };
