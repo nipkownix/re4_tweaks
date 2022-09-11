@@ -75,7 +75,68 @@ void Draw_line3d_local(Vec* p0, Vec* p1, Mtx mat, GXColor col, uint32_t blend)
 	bio4::GXEnd(0);
 }
 
-void Draw_poly_local(Vec* dpos, Mtx mat, GXColor col, bool zmode)
+void Draw_line3d_local_6parts(
+	Vec* p0, Vec* p1,
+	Vec* p2, Vec* p3,
+	Vec* p4, Vec* p5,
+	Mtx mat,
+	GXColor col1, GXColor col2, GXColor col3,
+	uint32_t blend)
+{
+	if (blend)
+		bio4::GXSetBlendMode(GX_BM_BLEND, GX_BL_ONE, GX_BL_ONE, GX_LO_CLEAR);
+	else
+		bio4::GXSetBlendMode(GX_BM_BLEND, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
+
+	bio4::CameraCurrentProjection();
+	bio4::GXSetCullMode(GX_CULL_NONE);
+	if (col1.a == 0xFE)
+		bio4::GXSetZMode(false, GX_LEQUAL, true);
+	else
+		bio4::GXSetZMode(true, GX_LEQUAL, true);
+	bio4::GXSetNumChans(1);
+	bio4::GXSetChanCtrl(GX_COLOR0A0, false, GX_SRC_REG, GX_SRC_VTX, 0,
+		GX_DF_NONE, GX_AF_NONE);
+
+	bio4::GXSetNumTexGens(0);
+	bio4::GXSetNumTevStages(1);
+	bio4::GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	bio4::GXSetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
+	bio4::GXClearVtxDesc();
+	bio4::GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+	bio4::GXSetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+	bio4::GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_RGBA6, 0);
+	bio4::GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_POS_XYZ, GX_RGBA8, 0);
+	bio4::GXLoadPosMtxImm(mat, 0);
+	bio4::GXSetCurrentMtx(0);
+	bio4::GXBegin(GX_LINESTRIP, GX_VTXFMT0, 8);
+
+	//MEMORY[0xCC008000] = p0->z;
+	//MEMORY[0xCC008000] = 0xFF;
+	//MEMORY[0xCC008000] = p1->z;
+	//MEMORY[0xCC008000] = 0xFF;
+	bio4::GXPosition3f32(p0->x, p0->y, p0->z);
+	bio4::GXColor4u8(col1.r, col1.g, col1.b, 0xFF);
+
+	bio4::GXPosition3f32(p1->x, p1->y, p1->z);
+	bio4::GXColor4u8(col1.r, col1.g, col1.b, 0xFF);
+
+	bio4::GXPosition3f32(p2->x, p2->y, p2->z);
+	bio4::GXColor4u8(col2.r, col2.g, col2.b, 0xFF);
+
+	bio4::GXPosition3f32(p3->x, p3->y, p3->z);
+	bio4::GXColor4u8(col2.r, col2.g, col2.b, 0xFF);
+
+	bio4::GXPosition3f32(p4->x, p4->y, p4->z);
+	bio4::GXColor4u8(col3.r, col3.g, col3.b, 0xFF);
+
+	bio4::GXPosition3f32(p5->x, p5->y, p5->z);
+	bio4::GXColor4u8(col3.r, col3.g, col3.b, 0xFF);
+
+	bio4::GXEnd(0);
+}
+
+void Draw_poly_local(Vec* dpos0, Vec* dpos1, Vec* dpos2, Mtx mat, GXColor col, bool zmode)
 {
 	bio4::CameraCurrentProjection();
 	bio4::GXSetCullMode(GX_CULL_NONE);
@@ -108,13 +169,13 @@ void Draw_poly_local(Vec* dpos, Mtx mat, GXColor col, bool zmode)
 	//MEMORY[0xCC008000] = v9[1].z;
 	//MEMORY[0xCC008000] = v7;
 
-	bio4::GXPosition3f32(dpos[0].x, dpos[0].y, dpos[0].z);
+	bio4::GXPosition3f32(dpos0->x, dpos0->y, dpos0->z);
 	bio4::GXColor4u8(col.r, col.g, col.b, col.a);
 
-	bio4::GXPosition3f32(dpos[1].x, dpos[1].y, dpos[1].z);
+	bio4::GXPosition3f32(dpos1->x, dpos1->y, dpos1->z);
 	bio4::GXColor4u8(col.r, col.g, col.b, col.a);
 
-	bio4::GXPosition3f32(dpos[2].x, dpos[2].y, dpos[2].z);
+	bio4::GXPosition3f32(dpos2->x, dpos2->y, dpos2->z);
 	bio4::GXColor4u8(col.r, col.g, col.b, col.a);
 
 	bio4::GXEnd(0);
@@ -122,59 +183,60 @@ void Draw_poly_local(Vec* dpos, Mtx mat, GXColor col, bool zmode)
 
 void cSat__disp(cSat* pSat, uint32_t poly_num, GXColor col, uint32_t mode)
 {
-	Mtx v25; // [sp+30h] [-80h] BYREF
-	MTXConcat(GlobalPtr()->Camera_74.v_mat_30, pSat->mat_60, v25);
+	Mtx mat; // [sp+30h] [-80h] BYREF
+	MTXConcat(GlobalPtr()->Camera_74.v_mat_30, pSat->mat_60, mat);
 
-	Vec v24[3]; // [sp+8h] [-A8h] BYREF
+	Vec* pos[3]; // [sp+8h] [-A8h] BYREF
 	for (int i = 0; i < 3; i++)
 	{
 		int v14 = pSat->poly_p_18[poly_num][i];
-		v24[i] = pSat->vert_p_C[v14];
+		pos[i] = &pSat->vert_p_C[v14];
 	}
 
-	GXColor v18; // r6
-	if ((mode & 3) != 0)
-	{
-		if ((mode & 3) == 1)
-			Draw_poly_local(v24, v25, col, 1);
-	}
-	else
-	{
-		*(uint32_t*)&v18 = 0x80808080;
-		if ((pSat->poly_p_18[poly_num][4] & 0x2000) == 0)
-			v18 = col;
-		Draw_line3d_local(v24, &v24[1], v25, v18, 0);
-		*(uint32_t*)&v18 = 0x80808080;
-		if ((pSat->poly_p_18[poly_num][4] & 0x4000) == 0)
-			v18 = col;
-		Draw_line3d_local(&v24[1], &v24[2], v25, v18, 0);
-		*(uint32_t*)&v18 = 0x80808080;
-		if ((pSat->poly_p_18[poly_num][4] & 0x8000) == 0)
-			v18 = col;
-		Draw_line3d_local(v24, &v24[2], v25, v18, 0);
-	}
-	VECAdd(v24, &v24[1], v24);
+	if ((mode & 3) == 1)
+		Draw_poly_local(pos[0], pos[1], pos[2], mat, col, 1);
 
-	v18.r = v18.g = v18.b = 0;
-	v18.a = 0xFF;
+	// sets up the diagonal line maybe?
+	Vec diag[2];
+	VECAdd(pos[0], pos[1], diag);
 
-	VECAdd(v24, &v24[2], v24);
-	VECScale(v24, v24, 0.33333334f);
+	GXColor col4{ 0 };
+	col4.a = 0xFF;
+
+	VECAdd(diag, pos[2], diag);
+	VECScale(diag, diag, 0.33333334f);
 
 	uint16_t v23 = pSat->poly_p_18[poly_num][3];
+	Vec v26 = pSat->norm_p_10[v23];
 
-	Vec v26 = pSat->norm_p_10[v23]; // [sp+60h] [-50h] BYREF
-	VECScale(&v26, &v24[1], 100);
-	VECAdd(v24, &v24[1], &v24[1]);
+	VECScale(&v26, &diag[1], 100);
+	VECAdd(diag, &diag[1], &diag[1]);
 
 	Vec v27; // [sp+70h] [-40h] BYREF
-	MTXMultVec(pSat->mat_60, v24, &v27);
+	MTXMultVec(pSat->mat_60, diag, &v27);
 	VECSubtract(&v27, &GlobalPtr()->Camera_74.CamPoint_A4.Campos_0, &v27);
 	MTXMultVecSR(pSat->mat_60, &v26, &v26);
 	if (VECDotProduct(&v26, &v27) > 0.0f)
-		*(uint32_t*)&v18 = 0xFFFFFFFF;
+		*(uint32_t*)&col4 = 0xFFFFFFFF;
 
-	Draw_line3d_local(v24, &v24[1], v25, v18, 0);
+	if ((mode & 3) == 0)
+	{
+		GXColor col1[3];
+		*(uint32_t*)&col1[0] = 0x80808080;
+		*(uint32_t*)&col1[1] = 0x80808080;
+		*(uint32_t*)&col1[2] = 0x80808080;
+		if ((pSat->poly_p_18[poly_num][4] & 0x2000) == 0)
+			col1[0] = col;
+		if ((pSat->poly_p_18[poly_num][4] & 0x4000) == 0)
+			col1[1] = col;
+		if ((pSat->poly_p_18[poly_num][4] & 0x8000) == 0)
+			col1[2] = col;
+
+		Draw_line3d_local_6parts(pos[0], pos[1], pos[1], pos[2], pos[0], pos[2], mat, col1[0], col1[1], col1[2], 0);
+	}
+
+	// Unfortunately can't add this to the 6parts batch above otherwise some strange lines appear...
+	Draw_line3d_local(diag, &diag[1], mat, col4, 0);
 }
 
 void cSatMgr__disp(cSatMgr* pMgr, uint32_t mode)
