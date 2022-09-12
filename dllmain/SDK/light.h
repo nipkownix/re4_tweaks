@@ -67,9 +67,8 @@ struct cLightEnv
 	float lod_bias_F8;
 	GXColor AmbientEm_FC;
 	GXColor AmbientEsp_100;
-	uint8_t light_num_to_construct_cLightWork_begin;
 };
-assert_size(cLightEnv, 0x108);
+assert_size(cLightEnv, 0x104);
 
 class cLight : public cUnit
 {
@@ -117,7 +116,7 @@ class cLightMgr : public cManager<cLight>
 public:
 	struct cLit* pLitHeader_1C;
 	cLightEnv LightEnv_20;
-	uint32_t LightEnableFlag_128[7];
+	uint32_t LightEnableFlag_128[8];
 	uint32_t LightEnableBak_148[8];
 	struct cLightPathHeader* pLitPath_164;
 	void* m_pLitCore_168;
