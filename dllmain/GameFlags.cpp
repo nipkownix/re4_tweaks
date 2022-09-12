@@ -905,6 +905,12 @@ const char* Flags_DISP_Names[] = {
 	"DPF_1F"
 };
 
+// Descriptions of the known effects of game flags can be added here
+// Even if effect isn't useful or not fully understood, it should be documented here
+// Trainer FlagEditor page will display these descriptions when hovering over flags
+// and will also gray out any flags that are missing descriptions from this section (& optionally filter them out)
+// If flag has been reimplemented by RE4T that can also be mentioned in the description ("re4_tweaks reimplementation")
+// The flag will then be colored gold in the FlagEditor to show that it's been added by us
 std::unordered_map<int, std::string> Flags_DEBUG_Descriptions = {
 	{int(Flags_DEBUG::DBG_SAT_DISP), "Displays SAT collision polygons (re4_tweaks reimplementation)"},
 	{int(Flags_DEBUG::DBG_EAT_DISP), "Displays EAT collision polygons (re4_tweaks reimplementation)"},
@@ -933,6 +939,7 @@ std::unordered_map<int, std::string> Flags_DEBUG_Descriptions = {
 };
 
 std::unordered_map<int, std::string> Flags_STOP_Descriptions = {
+	{int(Flags_STOP::SPF_CAMERA), "Pause camera processing"},
 	{int(Flags_STOP::SPF_EM), "Pause enemy (Em) processing"},
 	{int(Flags_STOP::SPF_PL), "Pause player processing"},
 	{int(Flags_STOP::SPF_OBJ), "Pause equipped enemy objects"},
@@ -944,6 +951,9 @@ std::unordered_map<int, std::string> Flags_STOP_Descriptions = {
 	{int(Flags_STOP::SPF_SCE), "Pause scenario/room processing"},
 	{int(Flags_STOP::SPF_LIGHT), "Pause light processing"},
 	{int(Flags_STOP::SPF_BLOCK), "Pause block-area processing"},
+	{int(Flags_STOP::SPF_ACTBTN), "Pause action-button display"},
+	{int(Flags_STOP::SPF_ID_SYSTEM), "Pause UI updating"},
+	{int(Flags_STOP::SPF_SCE_AT), "Pauses AEV events from activating"},
 };
 
 std::unordered_map<int, std::string> Flags_STATUS_Descriptions = {

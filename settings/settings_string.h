@@ -267,6 +267,7 @@ DisableQTE = false
 AutomaticMashingQTE = false
 
 ; Whether to skip the Capcom etc intro logos when starting the game.
+; Will also reduce length of menu fades/messages (eg. 'Load successful!')
 SkipIntroLogos = false
 
 ; Enables the "tool menu" debug menu, present inside the game but unused, and adds a few custom menu entries ("SAVE GAME", "DOF/BLUR MENU", etc).

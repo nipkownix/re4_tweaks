@@ -1290,6 +1290,7 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10));
 						ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");
+						ImGui::TextWrapped("Will also reduce length of menu fades/messages (eg. 'Load successful!')");
 					}
 
 					// EnableDebugMenu
