@@ -33,4 +33,12 @@ namespace bio4
 
   extern void(__cdecl* GXPosition3f32)(f32 x, f32 y, f32 z);
   extern void(__cdecl* GXColor4u8)(u8 r, u8 g, u8 b, u8 a);
+
+  extern void(__cdecl* GXTexCoord2f32)(f32 s, f32 t);
+
+  extern void(__cdecl* GXSetTexCopySrc)(u16 left, u16 top, u16 wd, u16 ht);
+  extern void(__cdecl* GXSetTexCopyDst)(u16 wd, u16 ht, GXTexFmt fmt, bool mipmap);
+  extern void(__cdecl* GXCopyTex)(void* dest, char clear, int a3);
+
+  extern void(__cdecl* GXShaderCall)(int shaderNum); // UHD only
 };

@@ -6,32 +6,6 @@
 #include "dllmain.h"
 #include "Game.h"
 
-namespace bio4
-{
-	void(__cdecl* GXSetBlendMode)(GXBlendMode type, GXBlendFactor src_factor, GXBlendFactor dst_factor, GXLogicOp op);
-	void(__cdecl* GXSetCullMode)(GXCullMode mode);
-	void(__cdecl* GXSetZMode)(bool compare_enable, GXCompare func, bool update_enable);
-	void(__cdecl* GXSetNumChans)(u8 nChans);
-	void(__cdecl* GXSetChanCtrl)(GXChannelID chan, bool enable, GXColorSrc amb_src, GXColorSrc mat_src,
-		u32 light_mask, GXDiffuseFn diff_fn, GXAttnFn attn_fn);
-	void(__cdecl* GXSetNumTexGens)(u8 nTexGens);
-	void(__cdecl* GXSetNumTevStages)(u8 nStages);
-	void(__cdecl* GXSetTevOp)(GXTevStageID id, GXTevMode mode);
-	void(__cdecl* GXSetTevOrder)(GXTevStageID stage, GXTexCoordID coord, GXTexMapID map, GXChannelID color);
-	void(__cdecl* GXClearVtxDesc)();
-	void(__cdecl* GXSetVtxDesc)(GXAttr attr, GXAttrType type);
-	void(__cdecl* GXSetVtxAttrFmt)(GXVtxFmt vtxfmt, GXAttr attr, GXCompCnt cnt, GXCompType type, u8 frac);
-	void(__cdecl* GXLoadPosMtxImm)(const Mtx mtx, u32 id);
-	void(__cdecl* GXSetCurrentMtx)(u32 id);
-	void(__cdecl* GXBegin)(GXPrimitive type, GXVtxFmt vtxfmt, u16 nverts);
-	void(__cdecl* GXEnd)(int a1);
-
-	void(__cdecl* GXPosition3f32)(f32 x, f32 y, f32 z);
-	void(__cdecl* GXColor4u8)(u8 r, u8 g, u8 b, u8 a);
-
-	void(__cdecl* CameraCurrentProjection)();
-};
-
 void Draw_line3d_local(Vec* p0, Vec* p1, Mtx mat, GXColor col, uint32_t blend)
 {
 	if (blend)
@@ -332,54 +306,8 @@ void SubScreenCall_Hook()
 
 void Init_DebugDisplay()
 {
-	auto pattern = hook::pattern("56 53 6A 05 6A 04 6A 01 E8");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x8), bio4::GXSetBlendMode); // 0x956E60
-
-	pattern = hook::pattern("53 E8 ? ? ? ? 6A 01 6A 07 53 E8");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x1), bio4::GXSetCullMode); // 0x957130
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xB), bio4::GXSetZMode); // 0x957FE0
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x11), bio4::GXSetNumTexGens); // 0x9575F0
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x18), bio4::GXSetNumTevStages); // 0x957580
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x20), bio4::GXSetTevOp); // 0x957AC0
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x32), bio4::GXSetTevOrder); // 0x957B30
-
-	pattern = hook::pattern("83 C4 48 6A 01 E8 ? ? ? ? 6A 02 53");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x5), bio4::GXSetNumChans); // 0x9574A0
-
-	pattern = hook::pattern("6A 01 6A 01 53 53 6A 04 E8");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x8), bio4::GXSetChanCtrl); // 0x956F50
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xD), bio4::GXClearVtxDesc); // 0x9558C0
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x16), bio4::GXSetVtxDesc); // 0x957F70
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x2C), bio4::GXSetVtxAttrFmt); // 0x957EF0
-
-	pattern = hook::pattern("52 E8 ? ? ? ? 8D 45 ? 53 50 E8 ? ? ? ? 53 E8");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xB), bio4::GXLoadPosMtxImm); // 0x956310
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x11), bio4::GXSetCurrentMtx); // 0x9571A0
-
-	pattern = hook::pattern("6A 0C 53 68 90 00 00 00 E8");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x8), bio4::GXBegin); // 0x955840
-
-	pattern = hook::pattern("53 53 53 E8 ? ? ? ? 53 E8");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x3), bio4::GXColor4u8); // 0x955B60
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x9), bio4::GXEnd); // 0x955E50
-
-	pattern = hook::pattern("D9 04 08 D9 1C ? E8");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x6), bio4::GXPosition3f32); // 0x956A70
-
-	pattern = hook::pattern("E8 ? ? ? ? 8A 46 30 3C FD");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x0), bio4::CameraCurrentProjection); // 0x59F3A0
-
-	// dbg version includes some extra code after SubScreenCall that we need to change pattern for...
-	if (GameVersionIsDebug())
-		pattern = hook::pattern("E8 ? ? ? ? 8B 0D ? ? ? ? BE 00 00 20 00");
-	else
-		pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 25 00 20 00 00 33 C9");
-
-	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0x0)).as_int(), SubScreenCall);
-	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x0)).as_int(), SubScreenCall_Hook);
-
 	// blkPolySphereCkCore: reimplement call to cSat::disp when polygon is collided with
-	pattern = hook::pattern("C7 45 F8 01 00 00 00 85 C9");
+	auto pattern = hook::pattern("C7 45 F8 01 00 00 00 85 C9");
 	struct blkPolySphereCkCore_cSat__disp
 	{
 		void operator()(injector::reg_pack& regs)
@@ -394,4 +322,13 @@ void Init_DebugDisplay()
 				cSat__disp(pAt, regs.esi, col, 1);
 		}
 	}; injector::MakeInline<blkPolySphereCkCore_cSat__disp>(pattern.count(1).get(0).get<uint8_t>(0x0), pattern.count(1).get(0).get<uint8_t>(0x7));
+
+	// dbg version includes some extra code after SubScreenCall that we need to change pattern for...
+	if (GameVersionIsDebug())
+		pattern = hook::pattern("E8 ? ? ? ? 8B 0D ? ? ? ? BE 00 00 20 00");
+	else
+		pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 25 00 20 00 00 33 C9");
+
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0x0)).as_int(), SubScreenCall);
+	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x0)).as_int(), SubScreenCall_Hook);
 }

@@ -37,6 +37,37 @@ namespace bio4 {
 	bool(__cdecl* CardCheckDone)();
 	bool(__cdecl* CardLoad)(uint8_t a1);
 	void(__cdecl* CardSave)(uint8_t terminal_no, uint8_t attr);
+
+	void(__cdecl* GXSetBlendMode)(GXBlendMode type, GXBlendFactor src_factor, GXBlendFactor dst_factor, GXLogicOp op);
+	void(__cdecl* GXSetCullMode)(GXCullMode mode);
+	void(__cdecl* GXSetZMode)(bool compare_enable, GXCompare func, bool update_enable);
+	void(__cdecl* GXSetNumChans)(u8 nChans);
+	void(__cdecl* GXSetChanCtrl)(GXChannelID chan, bool enable, GXColorSrc amb_src, GXColorSrc mat_src,
+		u32 light_mask, GXDiffuseFn diff_fn, GXAttnFn attn_fn);
+	void(__cdecl* GXSetNumTexGens)(u8 nTexGens);
+	void(__cdecl* GXSetNumTevStages)(u8 nStages);
+	void(__cdecl* GXSetTevOp)(GXTevStageID id, GXTevMode mode);
+	void(__cdecl* GXSetTevOrder)(GXTevStageID stage, GXTexCoordID coord, GXTexMapID map, GXChannelID color);
+	void(__cdecl* GXClearVtxDesc)();
+	void(__cdecl* GXSetVtxDesc)(GXAttr attr, GXAttrType type);
+	void(__cdecl* GXSetVtxAttrFmt)(GXVtxFmt vtxfmt, GXAttr attr, GXCompCnt cnt, GXCompType type, u8 frac);
+	void(__cdecl* GXLoadPosMtxImm)(const Mtx mtx, u32 id);
+	void(__cdecl* GXSetCurrentMtx)(u32 id);
+	void(__cdecl* GXBegin)(GXPrimitive type, GXVtxFmt vtxfmt, u16 nverts);
+	void(__cdecl* GXEnd)(int a1);
+
+	void(__cdecl* GXPosition3f32)(f32 x, f32 y, f32 z);
+	void(__cdecl* GXColor4u8)(u8 r, u8 g, u8 b, u8 a);
+
+	void(__cdecl* GXTexCoord2f32)(f32 s, f32 t);
+
+	void(__cdecl* GXSetTexCopySrc)(u16 left, u16 top, u16 wd, u16 ht);
+	void(__cdecl* GXSetTexCopyDst)(u16 wd, u16 ht, GXTexFmt fmt, bool mipmap);
+	void(__cdecl* GXCopyTex)(void* dest, char clear, int a3);
+
+	void(__cdecl* GXShaderCall)(int shaderNum);
+
+	void(__cdecl* CameraCurrentProjection)();
 };
 
 // Current play time (H, M, S)
@@ -791,6 +822,59 @@ bool Init_Game()
 	SatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0xF);
 	pattern = hook::pattern("6A 00 53 56 50 51 B9 ? ? ? ? E8");
 	EatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0x7);
+
+	// GX function ptrs
+	pattern = hook::pattern("56 53 6A 05 6A 04 6A 01 E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x8), bio4::GXSetBlendMode); // 0x956E60
+
+	pattern = hook::pattern("53 E8 ? ? ? ? 6A 01 6A 07 53 E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x1), bio4::GXSetCullMode); // 0x957130
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xB), bio4::GXSetZMode); // 0x957FE0
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x11), bio4::GXSetNumTexGens); // 0x9575F0
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x18), bio4::GXSetNumTevStages); // 0x957580
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x20), bio4::GXSetTevOp); // 0x957AC0
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x32), bio4::GXSetTevOrder); // 0x957B30
+
+	pattern = hook::pattern("83 C4 48 6A 01 E8 ? ? ? ? 6A 02 53");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x5), bio4::GXSetNumChans); // 0x9574A0
+
+	pattern = hook::pattern("6A 01 6A 01 53 53 6A 04 E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x8), bio4::GXSetChanCtrl); // 0x956F50
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xD), bio4::GXClearVtxDesc); // 0x9558C0
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x16), bio4::GXSetVtxDesc); // 0x957F70
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x2C), bio4::GXSetVtxAttrFmt); // 0x957EF0
+
+	pattern = hook::pattern("52 E8 ? ? ? ? 8D 45 ? 53 50 E8 ? ? ? ? 53 E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xB), bio4::GXLoadPosMtxImm); // 0x956310
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x11), bio4::GXSetCurrentMtx); // 0x9571A0
+
+	pattern = hook::pattern("6A 0C 53 68 90 00 00 00 E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x8), bio4::GXBegin); // 0x955840
+
+	pattern = hook::pattern("53 53 53 E8 ? ? ? ? 53 E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x3), bio4::GXColor4u8); // 0x955B60
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x9), bio4::GXEnd); // 0x955E50
+
+	pattern = hook::pattern("D9 04 08 D9 1C ? E8");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x6), bio4::GXPosition3f32); // 0x956A70
+
+	pattern = hook::pattern("E8 ? ? ? ? 47 83 C4 ? 83 C6 ? 3B 3D ? ? ? ? 0F 82");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::GXShaderCall);
+
+	pattern = hook::pattern("E8 ? ? ? ? 0F B7 4E ? 0F B7 56 ? 6A ? 6A ? 51");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::GXSetTexCopySrc);
+
+	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 6A 04 6A 00 50 E8");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::GXSetTexCopyDst);
+
+	pattern = hook::pattern("E8 ? ? ? ? D9 05 ? ? ? ? D9 7D ? 6A ? 0F B7 45");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::GXCopyTex);
+
+	pattern = hook::pattern("E8 ? ? ? ? 8B 4D ? 51 E8 ? ? ? ? 8B 4D ? 83 C4 ? 33 CD");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::GXTexCoord2f32);
+
+	pattern = hook::pattern("E8 ? ? ? ? 8A 46 30 3C FD");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x0), bio4::CameraCurrentProjection); // 0x59F3A0
 
 	// Store current game time that's being calculated inside GetGameTime
 	pattern = hook::pattern("8B 55 ? 8B 45 ? 51 8B 4D ? 52 50 51 68");
