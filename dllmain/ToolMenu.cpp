@@ -273,12 +273,6 @@ void ToolMenu_SecretOpen()
 	uint32_t* flags_EXTRA = SystemSavePtr()->flags_EXTRA_4;
 
 	// debug exe ORs these seperately, probably part of an enum or something
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_AIM_REVERSE));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_WIDE_MODE));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_LOCK_ON));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_BONUS_GET));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_VIBRATION));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_KNIFE_MODE));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_COSTUME));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_HARD_MODE));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_SW500));
@@ -289,6 +283,12 @@ void ToolMenu_SecretOpen()
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_WESKER));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_OMAKE_ADA_GAME));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_OMAKE_ETC_GAME));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_ASHLEY_ARMOR));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_PS2_ADA_GAME));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_COSTUME_MAFIA));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_LASER));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_ADA_TOMPSON));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_ADAS_REPORT));
 
 	ToolMenu_Exit();
 }
@@ -299,10 +299,10 @@ void ToolMenu_MercenariesAllOpen()
 
 	// TODO: confirm whether these are what this option actually unlocks in the debug build
 	// (as these unlocks seem kinda strange)
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_AIM_REVERSE));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_VIBRATION));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_KNIFE_MODE));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_COSTUME));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_ADA));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_HUNK));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_KLAUSER));
 
 	ToolMenu_Exit();
 }

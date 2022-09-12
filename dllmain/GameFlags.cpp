@@ -838,27 +838,22 @@ const char* Flags_KEY_LOCK_Names[] = {
 };
 
 const char* Flags_EXTRA_Names[] = {
-	"CFG_AIM_REVERSE", // 0x80000000 (@ 0x0)
-	"CFG_WIDE_MODE", // 0x40000000 (@ 0x0)
-	"CFG_LOCK_ON", // 0x20000000 (@ 0x0)
-	"CFG_BONUS_GET", // 0x10000000 (@ 0x0)
-	"CFG_VIBRATION", // 0x8000000 (@ 0x0)
-	"CFG_KNIFE_MODE", // 0x4000000 (@ 0x0)
-	"EXT_COSTUME", // 0x2000000 (@ 0x0)
-	"EXT_HARD_MODE", // 0x1000000 (@ 0x0)
-	"EXT_GET_SW500", // 0x800000 (@ 0x0)
-	"EXT_GET_TOMPSON", // 0x400000 (@ 0x0)
-	"EXT_GET_ADA", // 0x200000 (@ 0x0)
-	"EXT_GET_HUNK", // 0x100000 (@ 0x0)
-	"EXT_GET_KLAUSER", // 0x80000 (@ 0x0)
-	"EXT_GET_WESKER", // 0x40000 (@ 0x0)
-	"EXT_GET_OMAKE_ADA_GAME", // 0x20000 (@ 0x0)
-	"EXT_GET_OMAKE_ETC_GAME", // 0x10000 (@ 0x0)
-	"EXT_ASHLEY_ARMOR", // 0x8000 (@ 0x0)
-	"EXT_GET_PS2_ADA_GAME", // 0x4000 (@ 0x0)
-	"EXT_COSTUME_MAFIA", // 0x2000 (@ 0x0)
-	"EXT_GET_LASER", // 0x1000 (@ 0x0)
-	"EXT_GET_ADA_TOMPSON", // 0x800 (@ 0x0)
+	"EXT_COSTUME", // 0x80000000 (@ 0x0)
+	"EXT_HARD_MODE", // 0x40000000 (@ 0x0)
+	"EXT_GET_SW500", // 0x20000000 (@ 0x0)
+	"EXT_GET_TOMPSON", // 0x10000000 (@ 0x0)
+	"EXT_GET_ADA", // 0x8000000 (@ 0x0)
+	"EXT_GET_HUNK", // 0x4000000 (@ 0x0)
+	"EXT_GET_KLAUSER", // 0x2000000 (@ 0x0)
+	"EXT_GET_WESKER", // 0x1000000 (@ 0x0)
+	"EXT_GET_OMAKE_ADA_GAME", // 0x800000 (@ 0x0)
+	"EXT_GET_OMAKE_ETC_GAME", // 0x400000 (@ 0x0)
+	"EXT_ASHLEY_ARMOR", // 0x200000 (@ 0x0)
+	"EXT_GET_PS2_ADA_GAME", // 0x100000 (@ 0x0)
+	"EXT_COSTUME_MAFIA", // 0x80000 (@ 0x0)
+	"EXT_GET_LASER", // 0x40000 (@ 0x0)
+	"EXT_GET_ADA_TOMPSON", // 0x20000 (@ 0x0)
+	"EXT_GET_ADAS_REPORT", // 0x10000 (@ 0x0)
 };
 
 const char* Flags_CONFIG_Names[] = {
@@ -981,10 +976,19 @@ std::unordered_map<int, std::string> Flags_KEY_LOCK_Descriptions = {
 };
 
 std::unordered_map<int, std::string> Flags_EXTRA_Descriptions = {
-	{int(Flags_EXTRA::CFG_AIM_REVERSE), "Toggles inverted aiming"},
-	{int(Flags_EXTRA::CFG_WIDE_MODE), "Toggles wide-screen mode (? untested)"},
-	{int(Flags_EXTRA::CFG_LOCK_ON), "Toggles auto-aiming mode (? untested)"},
-	{int(Flags_EXTRA::CFG_KNIFE_MODE), "Toggles knife availability (? untested)"},
+	{int(Flags_EXTRA::EXT_COSTUME), "Unlocks \"Special\" costume for Leon, \"Extra\" menu on main menu, and makes menu background scroll"},
+	{int(Flags_EXTRA::EXT_COSTUME_MAFIA), "Unlocks \"Special 2\" / Mafia costume for Leon"},
+	{int(Flags_EXTRA::EXT_HARD_MODE), "Unlocks \"Professional\" difficulty mode"},
+	{int(Flags_EXTRA::EXT_GET_ADAS_REPORT), "Unlocks \"Ada's Report\" availability"},
+	{int(Flags_EXTRA::EXT_GET_ADA), "Unlocks Ada for \"The Mercenaries\" game mode"},
+	{int(Flags_EXTRA::EXT_GET_HUNK), "Unlocks HUNK for \"The Mercenaries\" game mode"},
+	{int(Flags_EXTRA::EXT_GET_KLAUSER), "Unlocks Krauser for \"The Mercenaries\" game mode"},
+	{int(Flags_EXTRA::EXT_GET_WESKER), "Unlocks Wesker for \"The Mercenaries\" game mode"},
+
+	{int(Flags_EXTRA::EXT_GET_SW500), "Makes Handcannon weapon available from merchant during main game mode"},
+	{int(Flags_EXTRA::EXT_GET_TOMPSON), "Makes Chicago Typewriter weapon available from merchant during main game mode"},
+	{int(Flags_EXTRA::EXT_GET_LASER), "Makes P.R.L 412 weapon available from merchant during main game mode"},
+	{int(Flags_EXTRA::EXT_GET_ADA_TOMPSON), "Makes Chicago Typewriter weapon available during \"Separate Ways\" game mode"},
 };
 
 std::unordered_map<int, std::string> Flags_CONFIG_Descriptions = {
@@ -992,6 +996,7 @@ std::unordered_map<int, std::string> Flags_CONFIG_Descriptions = {
 	{int(Flags_CONFIG::CFG_WIDE_MODE), "Toggles wide-screen mode (? untested)"},
 	{int(Flags_CONFIG::CFG_LOCK_ON), "Toggles auto-aiming mode (? untested)"},
 	{int(Flags_CONFIG::CFG_KNIFE_MODE), "Toggles knife availability (? untested)"},
+	{int(Flags_CONFIG::CFG_VIBRATION), "Toggles controller vibration"},
 };
 
 std::unordered_map<int, std::string> Flags_DISP_Descriptions = {
