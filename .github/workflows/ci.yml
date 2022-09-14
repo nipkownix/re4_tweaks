@@ -63,6 +63,7 @@ jobs:
             Debug/re4_tweaks/
             Debug/dinput8.dll
             Debug/dinput8.ini
+            Debug/dinput8.pdb
           name: re4_tweaks_debug_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
 
       - name: Upload Release
@@ -72,4 +73,5 @@ jobs:
             Release/re4_tweaks/
             Release/dinput8.dll
             Release/dinput8.ini
+            Release/dinput8.pdb
           name: re4_tweaks_release_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
