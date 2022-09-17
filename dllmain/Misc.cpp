@@ -1159,6 +1159,17 @@ void Init_Misc()
 		injector::MakeNOP(pattern.count(2).get(1).get<uint8_t>(7), 2);
 	}
 
+	// r315 cabinet door animation direction issue
+	// after opening a cabinet door & leaving + reloading the stage, doors move to opposite side of where they should be opened to, floating out of the side of it awkwardly
+	// comparing original door-opening code with the code that opens it when reloading the stage, seems they accidentally used a "+" instead of a "-" for changing the model position, oops..
+	// interestingly, r515 (a copy of the room for Seperate Ways) seems to have fixed this issue
+	// so they fixed it in the code they copied for r515, but some reason decided not to copy the fix back to r315?
+	// that fix was fortunate for us though since it made the (very subtle) issue easier to spot, but would have been better if issue wasn't there in first place...
+	{
+		auto pattern = hook::pattern("D8 45 08 83 C4 04");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(1), uint8_t(0x65), true); // fadd -> fsub
+	}
+
 	// Patch Ashley suplex glitch back into the game
 	// They originally fixed this by adding a check for Ashley player-type inside em10ActEvtSetFS
 	// However, the caller of that function (em10_R1_Dm_Small) already has player-type checking inside it, which will demote the suplex to a Kick for certain characters
