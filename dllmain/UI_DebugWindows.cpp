@@ -32,10 +32,44 @@ bool UI_EmManager::Render(bool WindowMode)
 
 	if (WindowMode)
 	{
-		ImGui::SetNextWindowSize(ImVec2(320, 120), ImGuiCond_Appearing);
-		ImGui::SetNextWindowSizeConstraints(ImVec2(320, 120), ImVec2(420, 630));
+		// Min/Max window sizes
+		const float min_x = 320.0f * esHook._cur_monitor_dpi;
+		const float min_y = 150.0f * esHook._cur_monitor_dpi;
 
-		ImGui::Begin(windowTitle.c_str(), &retVal);
+		const float max_x = 420.0f * esHook._cur_monitor_dpi;
+		const float max_y = 630.0f * esHook._cur_monitor_dpi;
+
+		ImGui::SetNextWindowSize(ImVec2(min_x, min_y), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
+
+		ImGui::SetNextWindowBgAlpha(backgroundOpacity); // Background transparency
+
+		ImGuiWindowFlags window_flags = 0;
+
+		if (hideTitleBar) window_flags |= ImGuiWindowFlags_NoTitleBar;
+		if (hideScrollBar) window_flags |= ImGuiWindowFlags_NoScrollbar;
+		if (hideBackground) window_flags |= ImGuiWindowFlags_NoBackground;
+
+		ImGui::Begin(windowTitle.c_str(), &retVal, window_flags);
+
+		// Options menu
+		if (ImGui::BeginPopup("Options"))
+		{
+			ImGui::Checkbox("Hide title bar", &hideTitleBar);
+			ImGui::Checkbox("Hide scrollbar", &hideScrollBar);
+			ImGui::Checkbox("Hide background", &hideBackground);
+
+			ImGui::Spacing();
+			ImGui::Text("Background opacity:");
+			ImGui::SetNextItemWidth(100.0f * esHook._cur_monitor_dpi);
+			ImGui::SliderFloat("##bgopacity", &backgroundOpacity, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::EndPopup();
+		}
+
+		// Options button
+		if (ImGui::Button("Options"))
+			ImGui::OpenPopup("Options");
 	}
 
 	{
@@ -81,7 +115,7 @@ bool UI_EmManager::Render(bool WindowMode)
 			if (WindowMode)
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Em").x - 10.0f);
 			else
-				ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - 375.0f) * pConfig->fFontSizeScale);
+				ImGui::PushItemWidth(360.0f * esHook._cur_monitor_dpi);
 
 			if (ImGui::BeginCombo("Em", currentEmStr.c_str()))
 			{
@@ -125,7 +159,7 @@ bool UI_EmManager::Render(bool WindowMode)
 				if (em)
 				{
 					ImGui::Separator();
-					ImGui::Dummy(ImVec2(10, 5));
+					ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
 
 					if (showEmPointers)
 						ImGui::Text("#%d:0x%x %s (type %x)", em->guid_F8, em, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
@@ -296,7 +330,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					else
 					{
 						ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
-						if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 245 * pConfig->fFontSizeScale)))
+						if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 245 * pConfig->fFontSizeScale * esHook._cur_monitor_dpi)))
 						{
 							ImGui::TableNextColumn();
 
@@ -426,7 +460,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					}*/
 
 					ImGui::Separator();
-					ImGui::Dummy(ImVec2(10, 5));
+					ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
 
 					ImGui::Text("Modification:");
 
@@ -465,11 +499,43 @@ bool UI_Globals::Render(bool WindowMode)
 	char* room_person = room->getPerson();
 	char* room_person2 = room->getPerson2();
 
-	ImGui::SetNextWindowSizeConstraints(ImVec2(250, 100), ImVec2(250, 550));
+	const float min_x = 250.0f * esHook._cur_monitor_dpi;
+	const float min_y = 100.0f * esHook._cur_monitor_dpi;
+
+	const float max_x = 250.0f * esHook._cur_monitor_dpi;
+	const float max_y = 550.0f * esHook._cur_monitor_dpi;
+
+	ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
 
 	bool retVal = true; // set to false on window close
-	ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::SetNextWindowBgAlpha(backgroundOpacity); // Background transparency
+
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
+
+	if (hideTitleBar) window_flags |= ImGuiWindowFlags_NoTitleBar;
+	if (hideBackground) window_flags |= ImGuiWindowFlags_NoBackground;
+
+	ImGui::Begin(windowTitle.c_str(), &retVal, window_flags);
 	{
+		// Options menu
+		if (ImGui::BeginPopup("Options"))
+		{
+			ImGui::Checkbox("Hide title bar", &hideTitleBar);
+			ImGui::Checkbox("Hide background", &hideBackground);
+
+			ImGui::Spacing();
+			ImGui::Text("Background opacity:");
+			ImGui::SetNextItemWidth(100.0f * esHook._cur_monitor_dpi);
+			ImGui::SliderFloat("##bgopacity", &backgroundOpacity, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::EndPopup();
+		}
+
+		// Options button
+		if (ImGui::Button("Options"))
+			ImGui::OpenPopup("Options");
+
 		auto& emMgr = *EmMgrPtr();
 		GLOBAL_WK* globals = GlobalPtr();
 		TITLE_WORK* titleWork = TitleWorkPtr();
@@ -646,9 +712,40 @@ bool UI_AreaJump::Render(bool WindowMode)
 
 	if (WindowMode)
 	{
-		ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 350));
+		const float min_x = 300.0f * esHook._cur_monitor_dpi;
+		const float min_y = 130.0f * esHook._cur_monitor_dpi;
 
-		ImGui::Begin(windowTitle.c_str(), &retVal, ImGuiWindowFlags_AlwaysAutoResize);
+		const float max_x = 300.0f * esHook._cur_monitor_dpi;
+		const float max_y = 350.0f * esHook._cur_monitor_dpi;
+
+		ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
+
+		ImGui::SetNextWindowBgAlpha(backgroundOpacity); // Background transparency
+
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
+
+		if (hideTitleBar) window_flags |= ImGuiWindowFlags_NoTitleBar;
+		if (hideBackground) window_flags |= ImGuiWindowFlags_NoBackground;
+
+		ImGui::Begin(windowTitle.c_str(), &retVal, window_flags);
+
+		// Options menu
+		if (ImGui::BeginPopup("Options"))
+		{
+			ImGui::Checkbox("Hide title bar", &hideTitleBar);
+			ImGui::Checkbox("Hide background", &hideBackground);
+
+			ImGui::Spacing();
+			ImGui::Text("Background opacity:");
+			ImGui::SetNextItemWidth(100.0f * esHook._cur_monitor_dpi);
+			ImGui::SliderFloat("##bgopacity", &backgroundOpacity, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::EndPopup();
+		}
+
+		// Options button
+		if (ImGui::Button("Options"))
+			ImGui::OpenPopup("Options");
 	}
 
 	{
@@ -713,7 +810,7 @@ bool UI_AreaJump::Render(bool WindowMode)
 				ImGui::EndDisabled();
 
 				ImGui::Separator();
-				ImGui::Dummy(ImVec2(10, 5));
+				ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
 
 				//ImGui::InputText("Room", curRoomNo, 256); // some reason this breaks combo box?
 
@@ -745,10 +842,44 @@ bool UI_FilterTool::Render(bool WindowMode)
 
 	if (WindowMode)
 	{
-		ImGui::SetNextWindowSize(ImVec2(300, 410), ImGuiCond_Appearing);
-		ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(300, 410));
+		// Min/Max window sizes
+		const float min_x = 300.0f * esHook._cur_monitor_dpi;
+		const float min_y = 100.0f * esHook._cur_monitor_dpi;
 
-		ImGui::Begin(windowTitle.c_str(), &retVal);
+		const float max_x = 300.0f * esHook._cur_monitor_dpi;
+		const float max_y = 440.0f * esHook._cur_monitor_dpi;
+
+		ImGui::SetNextWindowSize(ImVec2(max_x, max_y), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
+
+		ImGui::SetNextWindowBgAlpha(backgroundOpacity); // Background transparency
+
+		ImGuiWindowFlags window_flags = 0;
+
+		if (hideTitleBar) window_flags |= ImGuiWindowFlags_NoTitleBar;
+		if (hideScrollBar) window_flags |= ImGuiWindowFlags_NoScrollbar;
+		if (hideBackground) window_flags |= ImGuiWindowFlags_NoBackground;
+
+		ImGui::Begin(windowTitle.c_str(), &retVal, window_flags);
+
+		// Options menu
+		if (ImGui::BeginPopup("Options"))
+		{
+			ImGui::Checkbox("Hide title bar", &hideTitleBar);
+			ImGui::Checkbox("Hide scrollbar", &hideScrollBar);
+			ImGui::Checkbox("Hide background", &hideBackground);
+
+			ImGui::Spacing();
+			ImGui::Text("Background opacity:");
+			ImGui::SetNextItemWidth(100.0f * esHook._cur_monitor_dpi);
+			ImGui::SliderFloat("##bgopacity", &backgroundOpacity, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::EndPopup();
+		}
+
+		// Options button
+		if (ImGui::Button("Options"))
+			ImGui::OpenPopup("Options");
 	}
 
 	{
@@ -787,7 +918,7 @@ bool UI_FilterTool::Render(bool WindowMode)
 			ImGui::EndCombo();
 		}
 
-		ImGui::Dummy(ImVec2(10, 10));
+		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 		ImGui::Text("Blur / Filter00:");
 

@@ -52,6 +52,10 @@ struct EndSceneHook
 	std::chrono::high_resolution_clock::time_point _start_time;
 	std::chrono::high_resolution_clock::time_point _last_present_time;
 
+	float _cur_monitor_dpi = 1.0f;
+
+	ImFont* ESP_font;
+
 	ImGuiContext* _imgui_context = nullptr;
 };
 

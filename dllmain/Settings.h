@@ -197,6 +197,7 @@ public:
 
 	// IMGUI
 	float fFontSizeScale = 1.0f;
+	bool bEnableDPIScale = true;
 	bool bDisableMenuTip = false;
 	
 	// DEBUG

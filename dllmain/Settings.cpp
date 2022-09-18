@@ -475,6 +475,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->fFontSizeScale = iniReader.ReadFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
 	pConfig->fFontSizeScale = fmin(fmax(pConfig->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
+	pConfig->bEnableDPIScale = iniReader.ReadBoolean("IMGUI", "EnableDPIScale", pConfig->bEnableDPIScale);
 	pConfig->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", pConfig->bDisableMenuTip);
 
 	// DEBUG

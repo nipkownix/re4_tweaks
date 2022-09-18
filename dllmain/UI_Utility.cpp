@@ -1,6 +1,7 @@
 #include "dllmain.h"
 #include "UI_Utility.h"
 #include "input.hpp"
+#include "Settings.h"
 
 MenuTab Tab = MenuTab::Display;
 TrainerTab CurTrainerTab = TrainerTab::Patches;
@@ -145,21 +146,22 @@ bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCo
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
 	ImGui::PushStyleColor(ImGuiCol_Button, Tab == tabID ? activeCol : inactiveCol);
-	bool ret = ImGui::Button(btnID, ImVec2(172, 31));
+	bool ret = ImGui::Button(btnID, size);
 	ImGui::PopStyleColor();
 
 	auto p0 = ImGui::GetItemRectMin();
 	auto p1 = ImGui::GetItemRectMax();
 
-	float textHeight = ImGui::CalcTextSize(text).y;
+	float text_pos_x = (p1.x - p0.x) / 3;
+	float icon_pos_x = text_pos_x / 2;
 
-	float y_text_offset = (size.y - textHeight) * 0.5f;
-	float y_icon_offset = y_text_offset + 2.0f;
+	float text_pos_y = (p1.y - p0.y) / 4;
+	float icon_pos_y = (p1.y - p0.y) / 3;
 
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 35.0f, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + 65.0f, p0.y + y_text_offset), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + icon_pos_x, p0.y + icon_pos_y), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + text_pos_x, p0.y + text_pos_y), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
-	if (ret && tabID != MenuTab::NumTabs)
+	if (ret)
 		Tab = tabID;
 
 	return ret;
@@ -182,14 +184,14 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	float textHeight = ImGui::CalcTextSize(text).y;
 	float iconWidth = ImGui::CalcTextSize(icon).x;
 
-	float x_text_offset = iconWidth + ((size.x - textWidth) * 0.5f);
-	float y_text_offset = (size.y - textHeight) * 0.5f;
+	float x_text_offset = ((p1.x - p0.x) / 2) - textWidth / 3.0f;
+	float y_text_offset = ((p1.y - p0.y) - textHeight) * 0.5f;
 
-	float x_icon_offset = x_text_offset - iconWidth;
-	float y_icon_offset = y_text_offset + 2.0f;
+	float x_icon_offset = x_text_offset - iconWidth - 7.0f;
+	float y_icon_offset = y_text_offset * 1.35f;
 
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_icon_offset - 14.0f, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_text_offset - 7.0f, p0.y + y_text_offset), IM_COL32_WHITE, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_icon_offset, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_text_offset, p0.y + y_text_offset), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret && tabID != TrainerTab::NumTabs)
 		CurTrainerTab = tabID;

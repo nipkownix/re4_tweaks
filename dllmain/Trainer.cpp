@@ -972,6 +972,8 @@ void Trainer_ESP()
 	if (!(pConfig->bShowSideInfo || pConfig->bShowESP))
 		return;
 
+	ImGui::PushFont(esHook.ESP_font);
+
 	auto& io = ImGui::GetIO();
 	Vec screenpos;
 
@@ -1024,7 +1026,6 @@ void Trainer_ESP()
 						hp_max = (float)em->hp_324;
 
 					hp_percent = (float)em->hp_324 * 100.0f / hp_max;
-
 
 					// HP Bar
 					if (pConfig->iSideEmHPMode == 1)
@@ -1166,6 +1167,8 @@ void Trainer_ESP()
 			}
 		}
 	}
+
+	ImGui::PopFont();
 }
 
 void Trainer_RenderUI()
@@ -1175,28 +1178,28 @@ void Trainer_RenderUI()
 	ImColor active = ImColor(150, 10, 40, 255);
 	ImColor inactive = ImColor(31, 30, 31, 0);
 
-	auto button_size = ImVec2(135, 31);
+	ImVec2 btn_size = ImVec2(135 * pConfig->fFontSizeScale * esHook._cur_monitor_dpi, 31 * pConfig->fFontSizeScale * esHook._cur_monitor_dpi);
 
 	// Patches
-	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, button_size);
+	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, btn_size);
 
 	// Hotkeys
-	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, button_size);
+	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, btn_size);
 
 	// FlagEdit
-	ImGui_TrainerTabButton("##flagedit", "Flag Editor", active, inactive, TrainerTab::FlagEdit, ICON_FA_FLAG, icn_color, IM_COL32_WHITE, button_size);
+	ImGui_TrainerTabButton("##flagedit", "Flag Editor", active, inactive, TrainerTab::FlagEdit, ICON_FA_FLAG, icn_color, IM_COL32_WHITE, btn_size);
 
 	// EmMgr
-	ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::EmMgr, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, button_size);
+	ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::EmMgr, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, btn_size);
 	
 	// EmMgr
-	ImGui_TrainerTabButton("##esp", "ESP", active, inactive, TrainerTab::ESP, ICON_FA_SUITCASE, icn_color, IM_COL32_WHITE, button_size);
+	ImGui_TrainerTabButton("##esp", "ESP", active, inactive, TrainerTab::ESP, ICON_FA_SUITCASE, icn_color, IM_COL32_WHITE, btn_size);
 
 	// DebugTools
-	ImGui_TrainerTabButton("##dbgtools", "Debug Tools", active, inactive, TrainerTab::DebugTools, ICON_FA_VIRUS, icn_color, IM_COL32_WHITE, button_size);
+	ImGui_TrainerTabButton("##dbgtools", "Debug Tools", active, inactive, TrainerTab::DebugTools, ICON_FA_VIRUS, icn_color, IM_COL32_WHITE, btn_size);
 
 	// Globals
-	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_GLOBE, icn_color, IM_COL32_WHITE, button_size, false))
+	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_GLOBE, icn_color, IM_COL32_WHITE, btn_size, false))
 	{
 		UI_NewGlobalsViewer();
 	}
@@ -1231,12 +1234,12 @@ void Trainer_RenderUI()
 				if (ImGui::Button("Move Ashley to player"))
 					MoveAshleyToPlayer();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::SetNextItemWidth(210.0f);
+				ImGui::SetNextItemWidth(210.0f * esHook._cur_monitor_dpi);
 				ImGui::InputInt("Pesetas", &GlobalPtr()->goldAmount_4FA8);
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				// Max HP sliders
 				{
@@ -1263,7 +1266,7 @@ void Trainer_RenderUI()
 					}
 				}
 				
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				if (ImGui::Button("Save game"))
 					RequestSaveGame();
@@ -1281,7 +1284,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Prevents taking hits from enemies & automatically skips grabs.");
 			}
@@ -1296,7 +1299,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Makes most enemies die in 1 hit.");
 			}
@@ -1311,7 +1314,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Prevents enemies from targeting player character, unless player attacks them. (only for enemies using Em10 right now)");
 			}
@@ -1326,7 +1329,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Prevents game from removing bullets after firing.");
 			}
@@ -1341,7 +1344,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Disables collision (no-clip).");
 
@@ -1358,7 +1361,7 @@ void Trainer_RenderUI()
 					pConfig->HasUnsavedChanges = true;
 				ImGui::TextWrapped("Allows using the mouse wheel to go up and down.");
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				if (ImGui::SliderFloat("Speed##numpmov", &pConfig->fTrainerNumMoveSpeed, 0.0f, 10.0f, "%.2f"))
 					pConfig->HasUnsavedChanges = true;
@@ -1380,11 +1383,11 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Allows flying around with the camera. Controller and Keybard/Mouse are supported.");
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 				ImGui::TextWrapped("Controls:");
 
 				ImGui::Spacing();
@@ -1394,14 +1397,14 @@ void Trainer_RenderUI()
 				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Mouse wheel: Move up/down");
 				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Run key: Speedup movement");
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 				ImGui::TextWrapped("Controller:");
 				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Left analog stick: Move forwards/backwards/sideways");
 				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Right analog stick: Rotate camera");
 				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("\"Aim Weapon\" and \"Aim Knife\" keys: Move up/down");
 				ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Run key: Speedup movement");
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::BeginDisabled(!pConfig->bTrainerEnableFreeCam);
 				if (ImGui::SliderFloat("Speed##freecam", &pConfig->fTrainerFreeCamSpeed, 0.0f, 10.0f, "%.2f"))
@@ -1413,7 +1416,7 @@ void Trainer_RenderUI()
 					pConfig->HasUnsavedChanges = true;
 				}
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				if (ImGui::Button("Teleport player to camera##freecam"))
 					bRequestedPlayerTPtoCam = true;
@@ -1435,7 +1438,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Allows overriding player speed value.");
 				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
@@ -1463,7 +1466,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::RadioButton("Area Default", &AshleyStateOverride, AshleyState::Default);
 				ImGui::RadioButton("Present", &AshleyStateOverride, AshleyState::Present);
@@ -1479,7 +1482,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Allows overriding the HP of enemies.");
 
@@ -1500,7 +1503,7 @@ void Trainer_RenderUI()
 				}
 				ImGui::EndDisabled();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier);
 				pConfig->HasUnsavedChanges |= ImGui::Checkbox("Use random HP multiplier", &pConfig->bTrainerRandomHPMultiplier);
@@ -1540,7 +1543,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Make it so enemies don't spawn.");
 				ImGui::TextWrapped("May cause crashes during events/cutscenes that expect enemies to be present! Use with caution!");
@@ -1555,7 +1558,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Make it so enemies never disappear/despawn when killed.");
 			}
@@ -1569,7 +1572,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Allows the player to go through doors even if Ashley is far away.");
 			}
@@ -1581,6 +1584,8 @@ void Trainer_RenderUI()
 
 	if (CurTrainerTab == TrainerTab::Hotkeys)
 	{
+		float btn_size_x = 150 * esHook._cur_monitor_dpi;
+
 		if (ImGui::BeginTable("TrainerHotkeysTop", 1, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 		{
 			ImGui::TableNextColumn();
@@ -1608,10 +1613,10 @@ void Trainer_RenderUI()
 				ImGui_ColumnSwitch();
 
 				ImGui::TextWrapped("Key combination to set mouse focus on trainer related UIs (EmManager/Globals)");
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(1);
-				if (ImGui::Button(pConfig->sTrainerFocusUIKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(pConfig->sTrainerFocusUIKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerFocusUIKeyCombo, 0, NULL);
@@ -1628,10 +1633,10 @@ void Trainer_RenderUI()
 				ImGui_ColumnSwitch();
 
 				ImGui::TextWrapped("Key combination to toggle the \"Disable Player Collision\" / no-clip patch.");
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(2);
-				if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerNoclipKeyCombo, 0, NULL);
@@ -1648,10 +1653,10 @@ void Trainer_RenderUI()
 				ImGui_ColumnSwitch();
 
 				ImGui::TextWrapped("Key combination to toggle the \"Free Camera\"patch.");
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(3);
-				if (ImGui::Button(pConfig->sTrainerFreeCamKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(pConfig->sTrainerFreeCamKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerFreeCamKeyCombo, 0, NULL);
@@ -1669,10 +1674,10 @@ void Trainer_RenderUI()
 
 				ImGui::TextWrapped("Key combination to toggle the \"Player Speed Override\" patch.");
 				ImGui::TextWrapped("(set your player speed override value in the Patches section first)");
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(4);
-				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerSpeedOverrideKeyCombo, 0, NULL);
@@ -1693,7 +1698,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Allows switching weapons via hotkeys rather than needing to use inventory.");
 				ImGui::TextWrapped("By default hotkeys will cycle between weapons of different types, they can also be assigned to a weapon directly by highlighting the weapon in inventory and pressing the hotkey on it.");
@@ -1704,7 +1709,7 @@ void Trainer_RenderUI()
 				for (int i = 0; i < 5; i++)
 				{
 					ImGui::PushID(250 + i);
-					if (ImGui::Button(pConfig->sWeaponHotkeys[i].c_str(), ImVec2(150, 0)))
+					if (ImGui::Button(pConfig->sWeaponHotkeys[i].c_str(), ImVec2(btn_size_x, 0)))
 					{
 						pConfig->HasUnsavedChanges = true;
 						CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sWeaponHotkeys[i], 0, NULL);
@@ -1717,7 +1722,7 @@ void Trainer_RenderUI()
 				}
 
 				ImGui::PushID(200);
-				if (ImGui::Button(pConfig->sLastWeaponHotkey.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(pConfig->sLastWeaponHotkey.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sLastWeaponHotkey, 0, NULL);
@@ -1739,16 +1744,15 @@ void Trainer_RenderUI()
 				ImGui::EndDisabled();
 			}
 
-
 			// Move Ash to Player
 			{
 				ImGui_ColumnSwitch();
 
 				ImGui::TextWrapped("Key combination to move Ashley to the player's position.");
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(5);
-				if (ImGui::Button(pConfig->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(150, 0)))
+				if (ImGui::Button(pConfig->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					pConfig->HasUnsavedChanges = true;
 					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerMoveAshToPlayerKeyCombo, 0, NULL);
@@ -1797,11 +1801,11 @@ void Trainer_RenderUI()
 		static int flagCategory = 0;
 		CategoryInfo* curFlagCategory = nullptr;
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
-		if (ImGui::BeginTable("##flagtoolheader", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 70)))
+		if (ImGui::BeginTable("##flagtoolheader", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 70 * esHook._cur_monitor_dpi)))
 		{
 			ImGui::TableNextColumn();
 
-			ImGui::PushItemWidth(120.0f * pConfig->fFontSizeScale);
+			ImGui::PushItemWidth(120.0f * pConfig->fFontSizeScale * esHook._cur_monitor_dpi);
 			if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
 			{
 				for (int i = 0; i < (sizeof(flagCategoryInfo) / sizeof(CategoryInfo)); i++)
@@ -1819,7 +1823,7 @@ void Trainer_RenderUI()
 			ImGui::SameLine();
 			ImGui::Checkbox("Functional only", &filter_descriptions_only);
 
-			ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale);
+			ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale * esHook._cur_monitor_dpi);
 			ImGui::InputText("Search", searchText, 256);
 			ImGui::PopItemWidth();
 
@@ -1925,7 +1929,7 @@ void Trainer_RenderUI()
 
 				ImGui::BeginDisabled(!pConfig->bShowESP);
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Displays information on Ems");
 				ImGui::Spacing();
@@ -1937,23 +1941,23 @@ void Trainer_RenderUI()
 				ImGui::Checkbox("Only show ESL-spawned##esp", &pConfig->bEspOnlyShowESLSpawned);
 				ImGui::Checkbox("Draw Lines", &pConfig->bEspDrawLines);
 				ImGui::Checkbox("Draw Debug Info", &pConfig->bEspDrawDebugInfo);
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Name display mode:");
 				ImGui::RadioButton("Don't show##nameesp", &pConfig->iEspEmNameMode, 0); ImGui::SameLine();
 				ImGui::RadioButton("Normal##esp", &pConfig->iEspEmNameMode, 1); ImGui::SameLine();
 				ImGui::RadioButton("Simplified##esp", &pConfig->iEspEmNameMode, 2);
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("HP display mode:");
 				ImGui::RadioButton("Don't show##hpesp", &pConfig->iEspEmHPMode, 0); ImGui::SameLine();
 				ImGui::RadioButton("Bar##esp", &pConfig->iEspEmHPMode, 1); ImGui::SameLine();
 				ImGui::RadioButton("Text##esp", &pConfig->iEspEmHPMode, 2);
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max distance of Ems").x - 10);
 				ImGui::SliderFloat("Max distance of Ems##esp", &pConfig->fEspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::Checkbox("Only show closest Ems", &pConfig->bEspOnlyShowClosestEms);
 				ImGui::Spacing();
@@ -1977,28 +1981,28 @@ void Trainer_RenderUI()
 
 				ImGui::BeginDisabled(!pConfig->bShowSideInfo);
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Displays information on the left side of the screen.");
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::Checkbox("Show Em count", &pConfig->bSideShowEmCount);
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::Checkbox("Show Em list", &pConfig->bSideShowEmList);
 				ImGui::TextWrapped("Ems are listed from bottom to top, with the top one being the closes to the player, and the bottom one being the farthest.");
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 				
 				ImGui::BeginDisabled(!pConfig->bSideShowEmList);
 				ImGui::Checkbox("Only show ESL-spawned##side", &pConfig->bSideOnlyShowESLSpawned);
 				ImGui::Checkbox("Show simplified names##side", &pConfig->bSideShowSimpleNames);
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("HP display mode:");
 				ImGui::RadioButton("Don't show##side", &pConfig->iSideEmHPMode, 0); ImGui::SameLine();
 				ImGui::RadioButton("Bar##side", &pConfig->iSideEmHPMode, 1); ImGui::SameLine();
 				ImGui::RadioButton("Text##side", &pConfig->iSideEmHPMode, 2);
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max amount of enemies").x - 10);
 				ImGui::Spacing();
@@ -2038,7 +2042,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				static auto AreaJmp = new UI_AreaJump();
 				AreaJmp->Render(false);
@@ -2059,7 +2063,7 @@ void Trainer_RenderUI()
 
 				ImGui_ItemSeparator();
 
-				ImGui::Dummy(ImVec2(10, 10));
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				static auto FilterTool = new UI_FilterTool();
 				FilterTool->Render(false);

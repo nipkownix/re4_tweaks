@@ -344,6 +344,9 @@ IgnoreFPSWarning = false
 ; Min 1.0, max 1.25.
 FontSizeScale = 1.000
 
+; Enable/Disable UI scaling based on Windows' DPI settings.
+EnableDPIScale = true
+
 ; Disables the "Press key to open the configuration menu" tooltip.
 DisableMenuTip = false
 

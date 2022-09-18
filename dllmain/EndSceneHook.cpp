@@ -289,7 +289,9 @@ void BuildFontAtlas()
 
 	io.Fonts->Clear();
 
-	float fFontSize = 18.1f * pConfig->fFontSizeScale;
+	float fFontSize = 18.1f; // Base size
+	fFontSize *= pConfig->fFontSizeScale;
+	fFontSize *= esHook._cur_monitor_dpi;
 
 	// Add IBM Plex Sans JP Medium for text
 	static const ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
@@ -307,7 +309,10 @@ void BuildFontAtlas()
 	ImCustomIcons.PixelSnapH = true;
 	ImCustomIcons.FontDataOwnedByAtlas = false;
 
-	io.Fonts->AddFontFromMemoryTTF(&FAprolight, sizeof FAprolight, 18.0f * pConfig->fFontSizeScale, &ImCustomIcons, icon_ranges);
+	io.Fonts->AddFontFromMemoryTTF(&FAprolight, sizeof FAprolight, fFontSize, &ImCustomIcons, icon_ranges);
+
+	// Fixed-size copy for ESP
+	esHook.ESP_font = io.Fonts->AddFontFromMemoryCompressedTTF(IBMPlexSansJP_M_compressed_data, IBMPlexSansJP_M_compressed_size, 18.1f, &ImCustomFont, ranges);
 
 	// Build atlas
 	io.Fonts->Build();
@@ -316,15 +321,19 @@ void BuildFontAtlas()
 void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 {
 	didInit = true;
-
 	esHook._start_time = std::chrono::high_resolution_clock::now();
 	esHook._last_present_time = std::chrono::high_resolution_clock::now();
 	esHook._last_frame_duration = std::chrono::milliseconds(1);
 
 	esHook._imgui_context = ImGui::CreateContext();
+
+	if (pConfig->bEnableDPIScale)
+		esHook._cur_monitor_dpi = ImGui_ImplWin32_GetDpiScaleForHwnd(hWindow);
+
 	ImGuiIO& io = ImGui::GetIO();
 
-	io.IniFilename = nullptr;
+	static const std::string path = rootPath + "re4_tweaks/imgui.ini";
+	io.IniFilename = path.c_str();
 
 	BuildFontAtlas();
 
@@ -332,6 +341,9 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 
 	ImGui_ImplWin32_Init(hWindow);
 	ImGui_ImplDX9_Init(pDevice);
+
+	// Update console window title
+	con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
 
 	// Update cfgMenu window title
 	cfgMenuTitle.append(" v");

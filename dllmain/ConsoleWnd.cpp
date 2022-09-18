@@ -221,8 +221,8 @@ void Draw(const char* title, bool* p_open = NULL)
 void ConsoleOutput::ShowConsoleOutput()
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 550, viewport->Pos.y + 20));
-    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - (550 * esHook._cur_monitor_dpi), viewport->Pos.y + (20 * esHook._cur_monitor_dpi)));
+    ImGui::SetNextWindowSize(ImVec2(500 * esHook._cur_monitor_dpi, 400 * esHook._cur_monitor_dpi), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
     std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide") + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";

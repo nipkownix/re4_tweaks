@@ -14,6 +14,10 @@ class UI_Window
 
 protected:
 	std::string windowTitle;
+	bool hideTitleBar = false;
+	bool hideScrollBar = false;
+	bool hideBackground = false;
+	float backgroundOpacity = 1.0f;
 
 public:
 	UI_Window(std::string_view title) : origWindowTitle(title) { UpdateWindowTitle(); };
