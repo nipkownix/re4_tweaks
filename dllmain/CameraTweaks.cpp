@@ -368,12 +368,12 @@ void Init_CameraTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
+			float tmp = 0.0f;
+			__asm {fstp tmp}
+
 			// MouseTurn type A needs this regardless of whether or not CameraImprovements is enabled.
 			if (!pConfig->bCameraImprovements && !(pConfig->bUseMouseTurning && (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)))
 			{
-				float tmp = 0.0f;
-				__asm {fstp tmp}
-
 				*fMousePosY = tmp;
 			}
 		}
