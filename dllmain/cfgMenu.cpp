@@ -1300,6 +1300,15 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Whether to skip the Capcom etc intro logos when starting the game.");
 						ImGui::TextWrapped("Will also reduce length of menu fades/messages (eg. 'Load successful!')");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::BeginDisabled(!pConfig->bSkipIntroLogos);
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("SkipMenuLogo", &pConfig->bSkipMenuLogo);
+						ImGui::EndDisabled();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Skips the initial \"Resident Evil 4\" logo / \"PRESS ANY KEY\" screen, letting you load straight into the main menu.");
+						ImGui::TextWrapped("(will only take effect when SkipIntroLogos is also set to true)");
 					}
 
 					// EnableDebugMenu

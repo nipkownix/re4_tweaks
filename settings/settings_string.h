@@ -270,6 +270,11 @@ AutomaticMashingQTE = false
 ; Will also reduce length of menu fades/messages (eg. 'Load successful!')
 SkipIntroLogos = false
 
+; Skips the initial "Resident Evil 4" logo / "PRESS ANY KEY" screen, letting you load straight into the main menu.
+; Mod authors might prefer intro logos to be skipped without skipping the menu logo, this can be used in a mod override-ini if desired.
+; (will only take effect when SkipIntroLogos is also set to true)
+SkipMenuLogo = true
+
 ; Enables the "tool menu" debug menu, present inside the game but unused, and adds a few custom menu entries ("SAVE GAME", "DOF/BLUR MENU", etc).
 ; Can be opened with the LT+LS button combination (or CTRL+F3 by default on keyboard).
 ; If enabled on the 1.0.6 debug build it'll apply some fixes to the existing debug menu, fixing AREA JUMP etc, but won't add our custom entries due to lack of space.

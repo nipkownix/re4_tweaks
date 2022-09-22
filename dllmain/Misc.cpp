@@ -1153,10 +1153,34 @@ void Init_Misc()
 		Patch(titleLogoCode + 0x24, uint16_t(0x9090));
 
 		// Skip key checks on "PRESS ANY KEY" screen
-		pattern = hook::pattern("0F 84 ? ? ? ? 6A 00 68 00 00 00 40 E8");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
-		pattern = hook::pattern("84 C0 74 ? 6A 00 68 00 00 00 40 E8");
-		Patch(pattern.count(1).get(0).get<uint8_t>(2), uint8_t(0xEB));
+		if (pConfig->bSkipMenuLogo)
+		{
+			static uint8_t* anyKeyPressedBool = nullptr;
+
+			auto pattern = hook::pattern("E8 ? ? ? ? 80 3D ? ? ? ? 00 0F 84 ? ? ? ? 6A 00 68 00 00 00 40");
+			anyKeyPressedBool = *pattern.count(1).get(0).get<uint8_t*>(7);
+
+			static bool hasBeenSkipped = false;
+			struct SkipMenuLogo
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					bool noKeyPressed = *anyKeyPressedBool == 0;
+
+					// Only skip the initial logo screen, after that user might back out to logo screen again, which we don't want to skip
+					if (!hasBeenSkipped)
+					{
+						noKeyPressed = false;
+						hasBeenSkipped = true;
+					}
+
+					if (noKeyPressed)
+						regs.ef |= (1 << regs.zero_flag);
+					else
+						regs.ef &= ~(1 << regs.zero_flag);
+				}
+			}; injector::MakeInline<SkipMenuLogo>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(12));
+		}
 
 		// Remove delays from cCard::loadMain
 		pattern = hook::pattern("D9 E8 5E DE E1 DC 05 ? ? ? ? D9 9B FC 04 00 00");

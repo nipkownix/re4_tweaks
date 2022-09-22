@@ -248,6 +248,7 @@ void Init_CommandLine()
 		{
 			// User specified a room/save num, they probably want to skip intro logos too, let's give them a hand
 			pConfig->bSkipIntroLogos = true;
+			pConfig->bSkipMenuLogo = true;
 		}
 	}
 
