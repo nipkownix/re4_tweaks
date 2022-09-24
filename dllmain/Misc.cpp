@@ -1170,6 +1170,27 @@ void Init_Misc()
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(1), uint8_t(0x65), true); // fadd -> fsub
 	}
 
+	// Fix face morphing (PlSetFace) during gameplay
+	// ShapeMove has a bug that makes the current animation frame get set to -1, only letting it stay visible for a single frame
+	// (only happens with face anims that only have a single frame, which were meant to be shown until something disabled it)
+	// Seems to be due to the code at 6CCBDC in 1.1.0, on GC that would just set currentFrame to 0, but some reason UHD changed it to (currentFrame - 2)
+	// This code is only ran when currentFrame >= maxFrames, guess that was changed so once anim reached end it'd repeat the last 1 or 2 frames in the anim, while on GC it repeats from beginning frame 0 instead
+	// Bug happens when currentFrame is 1 and maxFrames is 1, that code will get ran, which results in currentFrame being set to -1...
+	// There is a flag check in that func that can force it to 0 instead, but that flag can affect some other things too, so it's better to hook it & check if below 0 instead
+	{
+		auto pattern = hook::pattern("83 C2 FE 89 55 08");
+		struct ShapeMoveFrameNumberFix
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int shape_frame = regs.edx - 2; // orig code
+				if (shape_frame < 0) // our fix
+					shape_frame = 0;
+				*(int*)(regs.ebp + 8) = shape_frame; // orig code
+			}
+		}; injector::MakeInline<ShapeMoveFrameNumberFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
 	// Patch Ashley suplex glitch back into the game
 	// They originally fixed this by adding a check for Ashley player-type inside em10ActEvtSetFS
 	// However, the caller of that function (em10_R1_Dm_Small) already has player-type checking inside it, which will demote the suplex to a Kick for certain characters
