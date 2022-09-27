@@ -1337,4 +1337,74 @@ void Init_Misc()
 
 		spd::log()->info("st7_0 -> st6_0 patch applied");
 	}
+
+	// Allow merchant item list to skip to top/bottom when going past bounds of the list
+	{
+		// listRangeCheck handles preventing item selector from going below 0 / above max item count, and positioning of the selector
+		// We'll change the selected idx before listRangeCheck is ran on it, which allows position to be updated for us correctly
+		auto pattern = hook::pattern("8B 80 10 03 00 00");
+		struct listRangeCheck_AllowSkipToBottomFix_SellMenu
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				SUB_SCREEN* sscrn = (SUB_SCREEN*)regs.eax;
+				SSCRN_SHOP* shop = sscrn->shop_310;
+
+				regs.eax = (uint32_t)shop; // orig code we patched
+
+				if (shop->_list_num_0)
+				{
+					if (shop->_list_no_8 < 0)
+						shop->_list_no_8 = shop->_list_num_0 - 1;
+					else if (shop->_list_no_8 >= shop->_list_num_0)
+							shop->_list_no_8 = 0;
+				}
+			}
+		}; injector::MakeInline<listRangeCheck_AllowSkipToBottomFix_SellMenu>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(0x6));
+
+		// Buy menu & upgrade menu had listRangeCheck inlined into it, grr...
+		// We'll replace the logic that overwrites _list_no_8 with our own
+		// (since there's not really a good way to hook it, and our change makes it obsolete anyway)
+		pattern = hook::pattern("8B 46 08 85 C0 79");
+		struct listRangeCheck_AllowSkipToBottomFix_BuyMenu
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				SSCRN_SHOP* shop = (SSCRN_SHOP*)regs.esi;
+
+				if (shop->_list_num_0)
+				{
+					if (shop->_list_no_8 < 0)
+						shop->_list_no_8 = shop->_list_num_0 - 1;
+					else if (shop->_list_no_8 >= shop->_list_num_0)
+						shop->_list_no_8 = 0;
+				}
+				else
+					shop->_list_no_8 = 0;
+
+				regs.eax = shop->_list_no_8;
+			}
+		}; injector::MakeInline<listRangeCheck_AllowSkipToBottomFix_BuyMenu>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(0x14));
+
+		pattern = hook::pattern("8B 47 08 85 C0 79");
+		struct listRangeCheck_AllowSkipToBottomFix_LvUpMenu
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				SSCRN_SHOP* shop = (SSCRN_SHOP*)regs.edi;
+
+				if (shop->_list_num_0)
+				{
+					if (shop->_list_no_8 < 0)
+						shop->_list_no_8 = shop->_list_num_0 - 1;
+					else if (shop->_list_no_8 >= shop->_list_num_0)
+						shop->_list_no_8 = 0;
+				}
+				else
+					shop->_list_no_8 = 0;
+
+				regs.eax = shop->_list_no_8;
+			}
+		}; injector::MakeInline<listRangeCheck_AllowSkipToBottomFix_LvUpMenu>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(0x14));
+	}
 }

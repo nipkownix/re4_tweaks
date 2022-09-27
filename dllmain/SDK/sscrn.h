@@ -28,6 +28,24 @@ enum SS_ATTR_FLAG
 	SS_ATTR_ASHLEY = 0x4,
 };
 
+struct SSCRN_SHOP
+{
+	int _list_num_0;
+	int m_list_top_4;
+	int _list_no_8;
+	int _item_num_C;
+	ITEM_ID _item_id_10;
+	cItem _new_item_12;
+	int _puzzle_20;
+	cItem* m_p_item_24;
+	int m_lv_cost_28;
+	int m_level_type_2C;
+	int m_level_no_30[4];
+	int m_ask_flag_40;
+	bool m_close_flag_44;
+};
+assert_size(SSCRN_SHOP, 0x48);
+
 struct SUB_SCREEN
 {
 	struct wep_que
@@ -135,7 +153,7 @@ struct SUB_SCREEN
 	class SSCRN_MAP* map_304;
 	class SSCRN_FILE* file_308;
 	class SSCRN_CAP* cap_30C;
-	class SSCRN_SHOP* shop_310;
+	SSCRN_SHOP* shop_310;
 	class Merchant* merchant_314;
 	uint32_t opeMdtNo_318;
 	int sndId_31C;
