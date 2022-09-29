@@ -2,6 +2,7 @@
 #include "UI_Utility.h"
 #include "input.hpp"
 #include "Settings.h"
+#include <imgui/imgui_internal.h>
 
 MenuTab Tab = MenuTab::Display;
 TrainerTab CurTrainerTab = TrainerTab::Patches;
@@ -28,11 +29,14 @@ void ImGui_ItemSeparator2()
 
 ImColor itmbgColor = ImColor(25, 20, 20, 166);
 int itemIdx = -1;
-float columnLastY[2] = { 0,0 };
+
+std::vector<float> columnLastY;
 void ImGui_ColumnInit()
 {
 	itemIdx = -1;
-	columnLastY[0] = columnLastY[1] = 0;
+
+	columnLastY.clear();
+	columnLastY.resize(ImGui::TableGetColumnCount());
 
 	ImGui::TableNextColumn();
 }
@@ -51,14 +55,20 @@ void ImGui_ColumnSwitch()
 			bgHeights.push_back(ImGui::GetCursorPos().y);
 
 		ImGui::Dummy(ImVec2(10, 25));
-		columnLastY[itemIdx % 2] = ImGui::GetCursorPos().y;
+		columnLastY[ImGui::TableGetColumnIndex()] = ImGui::GetCursorPos().y;
 	}
 
 	itemIdx++;
-	ImGui::TableSetColumnIndex(itemIdx % 2);
 
-	if (itemIdx > 1) // 0/1 are first item on column, no need to restore lastY
-		ImGui::SetCursorPosY(columnLastY[itemIdx % 2]);
+	// Insert new item into smallest column
+	auto smallestColumn = std::min_element(columnLastY.begin(), columnLastY.end());
+	int smallestColumnIdx = std::distance(columnLastY.begin(), smallestColumn);
+
+	ImGui::TableSetColumnIndex(smallestColumnIdx);
+
+	// Restore columnLastY for every item but the first on each column
+	if (itemIdx > (ImGui::TableGetColumnCount() - 1))
+		ImGui::SetCursorPosY(columnLastY[ImGui::TableGetColumnIndex()]);
 
 	float bgHeight = 0;
 	if (bgHeights.size() > size_t(itemIdx))

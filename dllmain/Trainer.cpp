@@ -1171,7 +1171,7 @@ void Trainer_ESP()
 	ImGui::PopFont();
 }
 
-void Trainer_RenderUI()
+void Trainer_RenderUI(int columnCount)
 {
 	ImColor icn_color = ImColor(230, 15, 95);
 
@@ -1213,7 +1213,7 @@ void Trainer_RenderUI()
 
 	if (CurTrainerTab == TrainerTab::Patches)
 	{
-		if (ImGui::BeginTable("TrainerPatches", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		if (ImGui::BeginTable("TrainerPatches", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 		{
 			ImGui_ColumnInit();
 
@@ -1604,7 +1604,7 @@ void Trainer_RenderUI()
 
 		ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
-		if (ImGui::BeginTable("TrainerHotkeys", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		if (ImGui::BeginTable("TrainerHotkeys", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 		{
 			ImGui_ColumnInit();
 
@@ -2023,7 +2023,7 @@ void Trainer_RenderUI()
 
 	if (CurTrainerTab == TrainerTab::DebugTools)
 	{
-		if (ImGui::BeginTable("DebugTools", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		if (ImGui::BeginTable("DebugTools", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 		{
 			ImGui_ColumnInit();
 

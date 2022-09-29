@@ -299,11 +299,13 @@ void cfgMenuRender()
 
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(16.f, 16.f));
 
+			int columnCount = 1 + ((ImGui::GetWindowWidth() / (716.0f * esHook._cur_monitor_dpi)) * 1.5f);
+
 			ImColor itmbgColor = ImColor(25, 20, 20, 166);
 
 			if (Tab == MenuTab::Display)
 			{
-				if (ImGui::BeginTable("Display", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Display", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -680,7 +682,7 @@ void cfgMenuRender()
 						
 			if (Tab == MenuTab::Mouse)
 			{
-				if (ImGui::BeginTable("Mouse", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Mouse", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -832,7 +834,7 @@ void cfgMenuRender()
 
 			if (Tab == MenuTab::Keyboard)
 			{
-				if (ImGui::BeginTable("Keyboard", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Keyboard", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -887,7 +889,7 @@ void cfgMenuRender()
 
 			if (Tab == MenuTab::Controller)
 			{
-				if (ImGui::BeginTable("Controller", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Controller", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -989,7 +991,7 @@ void cfgMenuRender()
 
 			if (Tab == MenuTab::Framerate)
 			{
-				if (ImGui::BeginTable("Framerate", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Framerate", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -1081,7 +1083,7 @@ void cfgMenuRender()
 
 			if (Tab == MenuTab::Misc)
 			{
-				if (ImGui::BeginTable("Misc", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Misc", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -1354,7 +1356,7 @@ void cfgMenuRender()
 
 			if (Tab == MenuTab::Memory)
 			{
-				if (ImGui::BeginTable("Memory", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Memory", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -1435,7 +1437,7 @@ void cfgMenuRender()
 
 				ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
-				if (ImGui::BeginTable("Hotkeys", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Hotkeys", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -1661,7 +1663,7 @@ void cfgMenuRender()
 
 			if (Tab == MenuTab::Trainer)
 			{
-				Trainer_RenderUI();
+				Trainer_RenderUI(columnCount);
 			}
 
 			ImGui::PopStyleVar();
