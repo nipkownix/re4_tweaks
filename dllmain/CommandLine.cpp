@@ -17,6 +17,7 @@ bool TweaksDevMode = false;
 
 std::optional<Vec> paramPosition;
 std::optional<float> paramRotation;
+std::optional<GameDifficulty> paramDifficulty;
 
 int loadSaveSlot = 0; // copy value for our dataSelect hook to use
 
@@ -82,6 +83,9 @@ void __cdecl titleMain_Hook(TITLE_WORK* pT)
 						if (!paramRotation.has_value())
 							paramRotation = roomInfo->r_10;
 
+						if (paramDifficulty.has_value())
+							GlobalPtr()->gameDifficulty_847C = *paramDifficulty;
+
 						AreaJump(roomInfo->roomNo_2, *paramPosition, *paramRotation);
 					}
 				}
@@ -146,6 +150,7 @@ void Init_CommandLine()
 		WCHAR* posY = nullptr;
 		WCHAR* posZ = nullptr;
 		WCHAR* posR = nullptr;
+		WCHAR* difficulty = nullptr;
 
 		for (int i = 0; i < nArgs; i++)
 		{
@@ -157,17 +162,13 @@ void Init_CommandLine()
 				break; // no param following this, end it...
 
 			else if (!wcscmp(arg, L"-gamedir") || !wcscmp(arg, L"-g"))
-			{
 				gameDir = szArglist[i + 1];
-			}
 			else if (!wcscmp(arg, L"-room") || !wcscmp(arg, L"-r"))
-			{
 				roomNum = szArglist[i + 1];
-			}
 			else if (!wcscmp(arg, L"-load") || !wcscmp(arg, L"-l"))
-			{
 				loadNum = szArglist[i + 1];
-			}
+			else if (!wcscmp(arg, L"-difficulty") || !wcscmp(arg, L"-df"))
+				difficulty = szArglist[i + 1];
 			else if (!wcscmp(arg, L"-pos") || !wcscmp(arg, L"-position") || !wcscmp(arg, L"-p"))
 			{
 				if (i + 3 < nArgs) // do we have 3 params following it?
@@ -216,6 +217,35 @@ void Init_CommandLine()
 
 			if (paramLoadSaveSlot > MAX_SAVE_SLOTS || paramLoadSaveSlot <= 0)
 				paramLoadSaveSlot = 0;
+		}
+
+		if (difficulty && wcslen(difficulty) > 0)
+		{
+			GameDifficulty difficultyValue = GameDifficulty::Medium;
+			bool difficultyInvalid = false;
+
+			try
+			{
+				int difficultyLevel = std::stol(difficulty, nullptr, 0);
+				difficultyValue = GameDifficulty(difficultyLevel);
+			}
+			catch (std::exception e)
+			{
+				// not a number? check for some common difficulties
+				if (!_wcsicmp(difficulty, L"veryeasy"))
+					difficultyValue = GameDifficulty::VeryEasy;
+				else if (!_wcsicmp(difficulty, L"easy"))
+					difficultyValue = GameDifficulty::Easy;
+				else if (!_wcsicmp(difficulty, L"medium"))
+					difficultyValue = GameDifficulty::Medium;
+				else if (!_wcsicmp(difficulty, L"pro") || !_wcsicmp(difficulty, L"professional") || !_wcsicmp(difficulty, L"hard"))
+					difficultyValue = GameDifficulty::Pro;
+				else
+					difficultyInvalid = true;
+			}
+
+			if (!difficultyInvalid)
+				paramDifficulty = difficultyValue;
 		}
 
 		if (posX)
