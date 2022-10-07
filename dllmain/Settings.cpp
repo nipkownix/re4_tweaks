@@ -142,7 +142,7 @@ void Config::ParseHotkeys()
 
 void Config::ReadSettings(std::string_view ini_path)
 {
-	CIniReader iniReader(ini_path);
+	CmdIniReader iniReader(ini_path);
 
 	#ifdef VERBOSE
 	con.AddLogChar("Reading settings from: %s", ini_path.data());
