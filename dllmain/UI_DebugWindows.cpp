@@ -825,6 +825,10 @@ bool UI_AreaJump::Render(bool WindowMode)
 					GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
 					AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
 				}
+
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && !bio4::CardCheckDone())
+					ImGui::SetTooltip("Area jump is unavailable during intro/'PRESS ANY KEY' screens.");
+
 				ImGui::EndDisabled();
 			}
 		}

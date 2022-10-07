@@ -1822,6 +1822,8 @@ void Trainer_RenderUI(int columnCount)
 
 			ImGui::SameLine();
 			ImGui::Checkbox("Functional only", &filter_descriptions_only);
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+				ImGui::SetTooltip("Only display flags that are known to have an effect.\n(note that some working flags may be missing!)");
 
 			ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale * esHook._cur_monitor_dpi);
 			ImGui::InputText("Search", searchText, 256);
