@@ -75,6 +75,8 @@ void Init_Main()
 
 	Init_ControllerTweaks();
 
+	Init_UI_MouseTweaks();
+
 	// Install a WndProc hook and register the resulting hWnd for input
 	Init_WndProcHook();
 

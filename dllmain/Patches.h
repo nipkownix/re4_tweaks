@@ -31,6 +31,7 @@ void Init_QTEfixes();
 void Init_sofdec();
 void Init_ToolMenu();
 void Init_ToolMenuDebug();
+void Init_UI_MouseTweaks();
 void Init_WndProcHook();
 
 // Hotkey bindings and parsing
@@ -123,3 +124,7 @@ extern float* fCameraPosX;
 extern float* fCameraPosY;
 
 extern float* wepPitch;
+
+// Res
+extern float fGameWidth;
+extern float fGameHeight;

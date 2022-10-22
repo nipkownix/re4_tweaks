@@ -280,7 +280,7 @@ bool ImGuiShouldAcceptInput()
 	if (DebugWindows.size() < 1 && !bConsoleOpen)
 		bImGuiUIFocus = false;
 
-	return (bCfgMenuOpen || bImGuiUIFocus);
+	return true; // (bCfgMenuOpen || bImGuiUIFocus);
 }
 
 void BuildFontAtlas()
@@ -353,6 +353,180 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 		UI_NewGlobalsViewer();
 }
 
+/// This should be in pzzlCursorDisp_hook (UI_MouseTweaks.cpp), but calling ImGui::GetBackgroundDrawList()->AddRect from inside the game's code
+// doesn't work, so I'm keeping it here for testing
+
+extern bool bIsThinking;
+extern float fDefaultAspectRatio;
+
+void InvTest()
+{
+
+	if (!SubScreenWk->puzzlePlayer_2AC)
+		return;
+
+
+
+	pzlPiece* m_inhand_10 = SubScreenWk->puzzlePlayer_2AC->m_inhand_10;
+	pzlBoard* m_board_0 = SubScreenWk->puzzlePlayer_2AC->m_board_0;
+	pzlBoard* m_space_4 = SubScreenWk->puzzlePlayer_2AC->m_space_4;
+
+	float x_center = ImGui::GetMainViewport()->GetCenter().x;
+	float y_center = ImGui::GetMainViewport()->GetCenter().y;
+	float curMouseXpos = pInput->mouse_position_x();
+	float curMouseYpos = pInput->mouse_position_y();
+
+	//
+
+	float fGameDisplayAspectRatio = fGameWidth / fGameHeight;
+
+	float fX_PosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) * 2;
+
+	fX_PosOffset = std::clamp(fX_PosOffset, 0.0f, fX_PosOffset);
+
+	// The values here were calculated for 1280x720, so we have to scale them to other resolutions.
+	float x_scale = (fGameWidth - fX_PosOffset) / 1280;
+
+	con.AddLogFloat(fX_PosOffset);
+
+	// Main board on the left side
+	if (m_board_0)
+	{
+		float grid_x_start = x_center + (m_board_0->m_mat_C[0][3] * (0.515f * x_scale));
+		float grid_y_start = y_center - 187.0f;
+
+		int inv_size_x = (int)m_board_0->m_size_x_4; // Total number of squares in the X axis
+		int inv_size_y = (int)m_board_0->m_size_y_5; // Total number of squares in the Y axis
+
+		float curSquare = grid_x_start; // Set curSaqure as the first square
+		float curRow = grid_y_start;
+
+		float squareSizeX = 50.0f * x_scale;
+		float squareSizeY = 43.0f;
+		float squarePadding = 2.0f; // Space in between each square
+
+		// For each row
+		for (int row_idx = 0; row_idx < inv_size_y; row_idx++)
+		{
+			bool isHoveringRow = false;
+
+			// Check if the cursor is hovering this row
+			if (curRow <= curMouseYpos && curMouseYpos <= (curRow + squareSizeY))
+				isHoveringRow = true;
+
+			// For each square in a row
+			for (int sqr_idx = 0; sqr_idx < inv_size_x; sqr_idx++)
+			{
+				bool isHoveringSquare = false;
+
+				// Make the squares visible using AddRect for debugging
+				ImGui::GetBackgroundDrawList()->AddRect(ImVec2(curSquare, curRow), ImVec2(curSquare + squareSizeX, curRow + squareSizeY), IM_COL32_WHITE);
+
+				// Check if the cursor is hovering this square
+				if (curSquare <= curMouseXpos && curMouseXpos <= (curSquare + squareSizeX))
+					isHoveringSquare = true;
+
+				if (isHoveringRow && isHoveringSquare)
+				{
+					SubScreenWk->puzzlePlayer_2AC->m_p_active_board_30 = m_board_0;
+
+					if (m_inhand_10)
+					{
+						m_inhand_10->m_pos_x_14 = (float)sqr_idx;
+						m_inhand_10->m_pos_y_18 = (float)row_idx;
+					}
+					else
+					{
+						m_board_0->m_cur_x_3C = sqr_idx;
+						m_board_0->m_cur_y_3D = row_idx;
+					}
+				}
+
+				curSquare += squareSizeX + squarePadding; // Move to next square
+			}
+
+
+			// Gotta adjust each row because the original grid is at an angle.
+			grid_x_start -= 5.5f * x_scale;
+			squareSizeX += 0.5f * x_scale;
+
+			curSquare = grid_x_start; // Reset curSaqure to the first square
+			curRow += squareSizeY + squarePadding;
+		}
+	}
+
+	// Right-side temporary space/board
+	if (bIsThinking)
+	{
+		float grid_x_start = x_center + (m_space_4->m_mat_C[0][3] * 0.512);
+		float grid_y_start = 95.0f;
+
+		int inv_size_x = (int)m_space_4->m_size_x_4; // Total number of squares in the X axis
+		int inv_size_y = (int)m_space_4->m_size_y_5; // Total number of squares in the Y axis
+
+		float curSquare = grid_x_start; // Set curSaqure as the first square
+		float curRow = grid_y_start;
+
+		float squareSizeX = 49.0f;
+		float squareSizeY = 35.5f;
+		float squarePadding = 2.0f; // Space in between each square
+
+		// For each row
+		for (int row_idx = 0; row_idx < inv_size_y; row_idx++)
+		{
+			bool isHoveringRow = false;
+
+			// Check if the cursor is hovering this row
+			if (curRow <= curMouseYpos && curMouseYpos <= (curRow + squareSizeY))
+				isHoveringRow = true;
+
+			// For each square in a row
+			for (int sqr_idx = 0; sqr_idx < inv_size_x; sqr_idx++)
+			{
+				bool isHoveringSquare = false;
+
+				// Make the squares visible using AddRect for debugging
+				ImGui::GetBackgroundDrawList()->AddRect(ImVec2(curSquare, curRow), ImVec2(curSquare + squareSizeX, curRow + squareSizeY), IM_COL32_WHITE);
+
+				// Check if the cursor is hovering this square
+				if (curSquare <= curMouseXpos && curMouseXpos <= (curSquare + squareSizeX))
+					isHoveringSquare = true;
+
+				if (isHoveringRow && isHoveringSquare)
+				{
+
+					SubScreenWk->puzzlePlayer_2AC->m_p_active_board_30 = m_space_4;
+
+					if (m_inhand_10)
+					{
+						m_inhand_10->m_pos_x_14 = (float)sqr_idx;
+						m_inhand_10->m_pos_y_18 = (float)row_idx;
+					}
+					else
+					{
+						m_space_4->m_cur_x_3C = sqr_idx;
+						m_space_4->m_cur_y_3D = row_idx;
+					}
+				}
+
+				curSquare += squareSizeX + squarePadding; // Move to next square
+			}
+
+
+			// Gotta adjust each row because the original grid is at an angle.
+			grid_x_start += 3.0f;
+			squareSizeX += 0.5f;
+			squareSizeY += 1.2f;
+
+			curSquare = grid_x_start; // Reset curSaqure to the first square
+			curRow += squareSizeY + squarePadding;
+		}
+
+
+	}
+}
+
+
 // Add our new code right before the game calls EndScene
 void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -389,6 +563,8 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	// Show the console if in verbose
 	con.ShowConsoleOutput();
 	#endif
+
+	InvTest();
 
 	// Show the cfgMenu
 	if (bCfgMenuOpen)
@@ -435,8 +611,8 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	pInput->block_mouse_input(ImGuiShouldAcceptInput());
-	pInput->block_keyboard_input(ImGuiShouldAcceptInput());
+	//pInput->block_mouse_input(ImGuiShouldAcceptInput());
+	//pInput->block_keyboard_input(ImGuiShouldAcceptInput());
 
 	// Update _last_frame_duration and _last_present_time
 	const auto current_time = std::chrono::high_resolution_clock::now();
