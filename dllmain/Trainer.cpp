@@ -124,6 +124,12 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 	if (player->r_no_2_FE == 4 || player->r_no_2_FE == 2)
 		return;
 
+	// Function used by game to determine whether inventory/subscreens can be opened
+	// Swapping weapons would normally require going through inventory, so we should probably make use of this too
+	// (fixes issues with swapping weapons during certain actions like jumping, which would interrupt the actions anim and usually place player outside of collision)
+	if (!player->subScrCheck())
+		return;
+
 	// If forceUseWepID is true, we are probably just trying to equip the last wep id, so we can skip this part
 	if (SubScreenWk && !forceUseWepID)
 	{

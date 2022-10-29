@@ -10,6 +10,7 @@ SND_CTRL* Snd_ctrl_work = nullptr; // extern inside Game.h
 SUB_SCREEN* SubScreenWk = nullptr; // extern inside sscrn.h
 pzlPlayer__ptrPiece_Fn pzlPlayer__ptrPiece = nullptr; // extern inside puzzle.h
 CameraControl* CamCtrl = nullptr; // extern inside cam_ctrl.h
+cPlayer__subScrCheck_Fn cPlayer__subScrCheck = nullptr; // extern inside player.h
 
 // light.h externs
 cLightMgr* LightMgr = nullptr;
@@ -812,6 +813,10 @@ bool Init_Game()
 	// pzlPlayer::ptrPiece
 	pattern = hook::pattern("8B 41 30 50 E8 ? ? ? ? C3");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(4), pzlPlayer__ptrPiece);
+
+	// cPlayer::subScrCheck
+	pattern = hook::pattern("80 B9 FC 00 00 00 00 75 ? 8A 81 FD 00 00 00");
+	cPlayer__subScrCheck = (cPlayer__subScrCheck_Fn)pattern.count(1).get(0).get<uint32_t>(0);
 
 	// CamCtrl ptr
 	pattern = hook::pattern("D9 EE B9 ? ? ? ? D9 9E A4 00 00 00 E8 ? ? ? ? D9 EE");

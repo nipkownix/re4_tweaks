@@ -11,6 +11,10 @@ enum LASER_TYPE
 	LASER_HIGH = 0x1,
 };
 
+class cPlayer;
+typedef BOOL(__fastcall* cPlayer__subScrCheck_Fn)(cPlayer* thisptr, void* unused);
+extern cPlayer__subScrCheck_Fn cPlayer__subScrCheck;
+
 class cPlayer : public cEm
 {
 public:
@@ -84,5 +88,10 @@ public:
 	uint8_t plunk_field_808;
 	float m_invisi_rate_80C;
 	uint32_t pc_func_810;
+
+	BOOL subScrCheck()
+	{
+		return cPlayer__subScrCheck(this, nullptr);
+	}
 };
 assert_size(cPlayer, 0x814);
