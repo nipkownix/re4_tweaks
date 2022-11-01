@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include "dllmain.h"
+#include "AutoUpdater.h"
 #include "Patches.h"
 #include "..\wrappers\wrapper.h"
 #include "Settings.h"
@@ -63,6 +64,9 @@ void Init_Main()
 
 	// Parse any special command-line options
 	Init_CommandLine();
+
+	// Check for re4_tweaks updates
+	CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&updateCheck, NULL, 0, NULL);
 
 	// Various display-related tweaks
 	Init_DisplayTweaks();

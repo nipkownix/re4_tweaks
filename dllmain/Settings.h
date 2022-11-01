@@ -80,6 +80,7 @@ public:
 
 	// MISC
 	std::string sWrappedDllPath = "";
+	bool bNeverCheckForUpdates = false;
 	bool bOverrideCostumes = false;
 
 	struct CostumeOverrideList

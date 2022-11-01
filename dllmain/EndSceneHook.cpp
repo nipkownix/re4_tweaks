@@ -2,6 +2,7 @@
 #include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
+#include "AutoUpdater.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_impl_win32.h"
@@ -280,7 +281,7 @@ bool ImGuiShouldAcceptInput()
 	if (DebugWindows.size() < 1 && !bConsoleOpen)
 		bImGuiUIFocus = false;
 
-	return (bCfgMenuOpen || bImGuiUIFocus);
+	return (bCfgMenuOpen || bImGuiUIFocus || (updt.UpdateStatus != UpdateStatus::Finished));
 }
 
 void BuildFontAtlas()
@@ -426,6 +427,13 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 	// Draw trainer ESP
 	Trainer_ESP();
+
+	// Show update dialog if needed
+	if (updt.UpdateStatus != UpdateStatus::Finished)
+	{
+		if ((esHook._last_present_time - esHook._start_time) > std::chrono::seconds(3))
+			updt.RenderUI();
+	}
 
 	// Show cursor if needed
 	ImGui::GetIO().MouseDrawCursor = ImGuiShouldAcceptInput();

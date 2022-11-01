@@ -41,8 +41,8 @@ jobs:
       - name: Create default configuration file
         shell: bash
         run: |
-          head -n -1 settings/settings_string.h | tail -n +3 > dinput8.ini
-          head -n -1 settings/trainer_string.h | tail -n +3 > trainer.ini
+          cp settings/settings.ini dinput8.ini
+          cp settings/trainer_settings.ini trainer.ini
           
       - name: Copy game data files
         shell: bash

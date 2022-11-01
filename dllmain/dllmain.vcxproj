@@ -56,7 +56,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -83,7 +83,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -131,6 +131,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="AudioTweaks.cpp" />
+    <ClCompile Include="AutoUpdater.cpp" />
     <ClCompile Include="CameraTweaks.cpp" />
     <ClCompile Include="CommandLine.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
@@ -202,8 +203,12 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\includes\FAprolight.hpp" />
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp" />
     <ClInclude Include="..\includes\log.h" />
-    <ClInclude Include="..\settings\settings_string.h" />
-    <ClInclude Include="..\settings\trainer_string.h" />
+    <ClInclude Include="..\settings\settings.ini">
+      <FileType>Text</FileType>
+    </ClInclude>
+    <ClInclude Include="..\settings\trainer_settings.ini">
+      <FileType>Text</FileType>
+    </ClInclude>
     <ClInclude Include="..\Wrappers\bcrypt.h" />
     <ClInclude Include="..\Wrappers\cryptsp.h" />
     <ClInclude Include="..\Wrappers\d2d1.h" />
@@ -229,6 +234,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\Wrappers\wsock32.h" />
     <ClInclude Include="..\Wrappers\x3daudio1_7.h" />
     <ClInclude Include="..\Wrappers\xinput1_3.h" />
+    <ClInclude Include="AutoUpdater.h" />
     <ClInclude Include="D3D9hook.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Game.h" />

@@ -4,8 +4,6 @@
 #include <mutex>
 #include "dllmain.h"
 #include "Settings.h"
-#include "settings_string.h"
-#include "trainer_string.h"
 #include "Patches.h"
 #include "input.hpp"
 #include "Utils.h"
@@ -270,6 +268,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
+	pConfig->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates);
 	pConfig->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
 
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
@@ -510,14 +509,18 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 
 		std::filesystem::create_directory(std::filesystem::path(iniPath).parent_path()); // Create the dir if it doesn't exist
 
-		std::ofstream iniFile(iniPath.data());
+		const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
 
-		if(!trainerIni)
-			iniFile << defaultSettings + 1; // +1 to skip the first new line
+		if (!trainerIni)
+		{
+			if (std::filesystem::exists(rootPath + "re4_tweaks\\default_settings\\settings.ini"))
+				std::filesystem::copy(rootPath + "re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
+		}
 		else
-			iniFile << defaultSettingsTrainer + 1; // +1 to skip the first new line
-
-		iniFile.close();
+		{
+			if (std::filesystem::exists(rootPath + "re4_tweaks\\default_settings\\trainer_settings.ini"))
+				std::filesystem::copy(rootPath + "re4_tweaks\\default_settings\\trainer_settings.ini", iniPath, copyOptions);
+		}
 	}
 
 	// Try to remove read-only flag is it is set, for some reason.
@@ -744,6 +747,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
+	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates);
 	iniReader.WriteBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
 	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[iCostumeComboLeon]));
 	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[iCostumeComboAshley]));
@@ -907,6 +911,7 @@ void Config::LogSettings()
 	// MISC
 	spd::log()->info("+ MISC---------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", pConfig->sWrappedDllPath.data());
+	spd::log()->info("| {:<30} | {:>15} |", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", pConfig->bOverrideCostumes ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[iCostumeComboLeon]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[iCostumeComboAshley]);

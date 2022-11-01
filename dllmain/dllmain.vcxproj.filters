@@ -160,6 +160,9 @@
     <ClCompile Include="DebugDisplay.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="AutoUpdater.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
@@ -309,7 +312,7 @@
     <ClInclude Include="..\external\imgui\imstb_truetype.h">
       <Filter>external\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\settings\settings_string.h">
+    <ClInclude Include="..\settings\settings.ini">
       <Filter>settings</Filter>
     </ClInclude>
     <ClInclude Include="..\includes\exception.hpp">
@@ -441,7 +444,7 @@
     <ClInclude Include="SDK\title.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
-    <ClInclude Include="..\settings\trainer_string.h">
+    <ClInclude Include="..\settings\trainer_settings.ini">
       <Filter>settings</Filter>
     </ClInclude>
     <ClInclude Include="SDK\filter00.h">
@@ -488,6 +491,9 @@
     </ClInclude>
     <ClInclude Include="SDK\gc_math.h">
       <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoUpdater.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

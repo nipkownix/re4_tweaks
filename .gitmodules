@@ -19,3 +19,6 @@
 [submodule "external/DirectXMath"]
 	path = external/DirectXMath
 	url = https://github.com/microsoft/DirectXMath
+[submodule "external/json"]
+	path = external/json
+	url = https://github.com/nlohmann/json

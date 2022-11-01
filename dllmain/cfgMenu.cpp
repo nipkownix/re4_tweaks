@@ -299,7 +299,7 @@ void cfgMenuRender()
 
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(16.f, 16.f));
 
-			int columnCount = 1 + ((ImGui::GetWindowWidth() / (716.0f * esHook._cur_monitor_dpi)) * 1.5f);
+			int columnCount = 1 + (int)((ImGui::GetWindowWidth() / (716.0f * esHook._cur_monitor_dpi)) * 1.5f);
 
 			ImColor itmbgColor = ImColor(25, 20, 20, 166);
 
