@@ -454,15 +454,19 @@ BOOL joyKamae_Hook()
 		}
 	}
 
-	if (reloadKeyCheck)
-	{
-		// Check if the reload key has been pressed
-		bool hasPressedReload = ((Key_btn_on() & (uint64_t)reloadKey) == (uint64_t)reloadKey);
+	// The PRL isn't reloadable, but m_pWep_34->reloadable() still returns true for some reason.
+	if (GlobalPtr()->weapon_no_4FC0 == 0x2E) // PRL 412
+		reloadKeyCheck = false;
 
-		auto wepPtr = PlayerPtr()->Wep_7D8;
-		if (wepPtr->m_pWep_34)
+	auto wepPtr = PlayerPtr()->Wep_7D8;
+	if (wepPtr->m_pWep_34)
+	{
+		if (wepPtr->m_pWep_34->reloadable() && reloadKeyCheck)
 		{
-			if (wepPtr->m_pWep_34->reloadable() && hasPressedReload)
+			// Check if the reload key has been pressed
+			bool hasPressedReload = ((Key_btn_on() & (uint64_t)reloadKey) == (uint64_t)reloadKey);
+
+			if (hasPressedReload)
 			{
 				bShouldReload = true; // Tell cPlayer__keyReload_hook to reload
 				ret = TRUE; // Tell the game to initiate the aiming routine
