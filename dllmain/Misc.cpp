@@ -1136,6 +1136,14 @@ void Init_Misc()
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
 
+		// JP: skip CERO warning screen (takes 30+ seconds unless button pressed, ew)
+		pattern = hook::pattern("83 C4 14 FE 46 01 D9 5E 04");
+		if (pattern.size() == 1) // should only match JP
+		{
+			// Patch code inside tvModePC_Startup to "add byte ptr [esi+1], 3; nop; nop" to skip warn screen...
+			Patch(pattern.count(1).get(0).get<uint8_t>(0x3), { 0x80, 0x46, 0x01, 0x03, 0x90, 0x90 });
+		}
+
 		// Skip titleWarning fade-in
 		pattern = hook::pattern("DD D8 0F BE 46 01 83 E8 00 0F");
 		uint8_t* titleWarningCode = pattern.count(1).get(0).get<uint8_t>(2);
@@ -1235,7 +1243,6 @@ void Init_Misc()
 		Patch(addr + 1, uint32_t(0)); // remove FADE_BE_ALIVE flag
 		Patch(addr + 0xA, uint32_t(0)); // remove FADE_BE_ALIVE & FADE_BE_CONTINUE flags
 #endif
-		// TODO: skip JP warning screen
 
 		spd::log()->info("SkipIntroLogos enabled");
 	}
