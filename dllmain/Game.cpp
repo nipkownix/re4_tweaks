@@ -371,6 +371,12 @@ uint64_t  Key_btn_trg()
 	return *(uint64_t*)(ptrKey_btn_trg);
 }
 
+JOY* Joy_ptr = nullptr;
+JOY* JoyPtr()
+{
+	return Joy_ptr;
+}
+
 GLOBAL_WK** pG_ptr = nullptr;
 GLOBAL_WK* GlobalPtr()
 {
@@ -703,6 +709,10 @@ bool Init_Game()
 	// Pointer to Key_btn_trg
 	pattern = hook::pattern("A1 ? ? ? ? 25 ? ? ? ? 0B C1 74 ? 88 0D");
 	ptrKey_btn_trg = *pattern.count(1).get(0).get<uint32_t*>(1);
+
+	// Pointer to Joy[4] array
+	pattern = hook::pattern("83 E0 10 33 C9 0B C1 0F 84 ? ? ? ? 0F BE 05 ? ? ? ?");
+	Joy_ptr = (JOY*)(*pattern.count(1).get(0).get<uint8_t*>(0x10) - 9);
 
 	// Grab pointer to pG (pointer to games Global struct)
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");

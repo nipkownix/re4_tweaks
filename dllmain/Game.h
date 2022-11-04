@@ -46,6 +46,7 @@ MouseAimingModes GetMouseAimingMode();
 void SetMouseAimingMode(MouseAimingModes newMode);
 uint64_t Key_btn_on();
 uint64_t Key_btn_trg();
+JOY* JoyPtr();
 
 GLOBAL_WK* GlobalPtr();
 DAMAGE* DamagePtr();

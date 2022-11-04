@@ -130,6 +130,7 @@ public:
 	std::string sTrainerFreeCamKeyCombo = "";
 	std::string sTrainerSpeedOverrideKeyCombo = "";
 	std::string sTrainerMoveAshToPlayerKeyCombo = "";
+	std::string sTrainerDebugTrgKeyCombo = "SHIFT+ALT";
 
 	// ESP
 	bool bShowESP = false;
@@ -193,6 +194,7 @@ public:
 	bool bTrainerDisableEnemySpawn = false;
 	bool bTrainerDeadBodiesNeverDisappear = false;
 	bool bTrainerAllowEnterDoorsWithoutAsh = false;
+	bool bTrainerEnableDebugTrg = false;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;

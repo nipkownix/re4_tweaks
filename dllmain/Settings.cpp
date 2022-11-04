@@ -374,6 +374,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
 	pConfig->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
 	pConfig->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
+	pConfig->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
 
 	// ESP
 	pConfig->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", pConfig->bShowESP);
@@ -428,6 +429,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->sTrainerFreeCamKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FreeCamToggle", pConfig->sTrainerFreeCamKeyCombo);
 	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
 	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
+	pConfig->sTrainerDebugTrgKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "DebugTrg", pConfig->sTrainerDebugTrgKeyCombo);
 
 	// WEAPON HOTKEYS
 	pConfig->bWeaponHotkeysEnable = iniReader.ReadBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
@@ -562,6 +564,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
 		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
 		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
+		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
 
 		// ESP
 		iniReader.WriteBoolean("ESP", "ShowESP", pConfig->bShowESP);
@@ -629,6 +632,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteString("TRAINER_HOTKEYS", "FreeCamToggle", " " + pConfig->sTrainerFreeCamKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
 		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + pConfig->sTrainerMoveAshToPlayerKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "DebugTrg", " " + pConfig->sTrainerDebugTrgKeyCombo);
 
 		// WEAPON HOTKEYS
 		iniReader.WriteBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
@@ -957,6 +961,7 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "DebugTrg", pConfig->sTrainerDebugTrgKeyCombo.data());
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FPS WARNING

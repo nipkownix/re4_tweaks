@@ -101,6 +101,7 @@ std::vector<uint32_t> KeyComboNoclipToggle;
 std::vector<uint32_t> KeyComboFreeCamToggle;
 std::vector<uint32_t> KeyComboSpeedOverride;
 std::vector<uint32_t> KeyComboAshToPlayer;
+std::vector<uint32_t> KeyComboDebugTrg;
 
 std::vector<uint32_t> KeyComboWeaponHotkey[5];
 std::vector<uint32_t> KeyComboLastWeaponHotkey;
@@ -258,6 +259,12 @@ void Trainer_ParseKeyCombos()
 		}, &KeyComboAshToPlayer });
 	}
 
+	// DebugTrg
+	{
+		KeyComboDebugTrg.clear();
+		KeyComboDebugTrg = ParseKeyCombo(pConfig->sTrainerDebugTrgKeyCombo);
+	}
+
 	// WeaponHotkey
 	{
 		for (int i = 0; i < 5; i++)
@@ -292,6 +299,46 @@ bool __cdecl cameraHitCheck_hook(Vec *pCross, Vec *pNorm, Vec p0, Vec p1)
 		return cameraHitCheck_orig(pCross, pNorm, p0, p1);
 }
 
+// DebugTrg reimpl based on 2007 port, thank you SourceNext!
+// (no other publicly available builds appear to include this, even the debug builds...)
+// Gamepad combo is LB + B + X
+bool __cdecl DebugTrg_hook(uint32_t flag)
+{
+	if (!pConfig->bTrainerEnableDebugTrg)
+		return false;
+
+	if (FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_PUBLICITY_VER)))
+		return false; // disallowed if SYS_PUBLICITY_VER set, probably set on E3/TGS/trade show builds
+
+	// if flag is set, then caller func seems to allow checking for previously held buttons
+	// otherwise, buttons must have only been pressed this frame
+
+	if (flag && pInput->is_combo_down(&KeyComboDebugTrg))
+		return true;
+	if (!flag && pInput->is_combo_pressed(&KeyComboDebugTrg))
+		return true;
+
+	JOY* Joy = JoyPtr();
+
+	if ((Joy[0].on_14 & JOY_START) != 0)
+		return false; // if start pressed, always return false
+
+	if (flag)
+	{
+		if ((Joy[0].on_14 & JOY_LB) == 0 || (Joy[0].on_14 & JOY_B) == 0)
+			return false; // LB or B not pressed/held, return false
+		return ((Joy[0].on_14 & JOY_X) != 0); // return true if X also pressed/held
+	}
+
+	// If flag == 0, the same LB/B checks are used as above, but the X check is performed on Joy.trg instead of Joy.on
+	// Seems trg shows buttons that were newly pressed on this frame, then gets cleared on subsequent frame even if held down
+	// I guess to help ensure the function only runs once, on the frame when button was first pressed
+	// (and not on any subsequent frames where it might still be held down)
+
+	if ((Joy[0].on_14 & JOY_LB) == 0 || (Joy[0].on_14 & JOY_B) == 0)
+		return false; // LB or B not pressed/held, return false
+	return ((Joy[0].trg_18 & JOY_X) != 0); // return true if X was newly pressed
+}
 
 std::vector<FlagPatch> flagPatches;
 void Trainer_Init()
@@ -636,6 +683,12 @@ void Trainer_Init()
 
 		pattern = hook::pattern("D9 83 ? ? ? ? 52 DC 0D ? ? ? ? 51 8D 45 ? D9 9D");
 		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
+	// Hook DebugTrg stub to use our reimplemented version
+	{
+		auto pattern = hook::pattern("83 C4 18 6A 01 E8 ? ? ? ? 83 C4 04 3C 01");
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), DebugTrg_hook, PATCH_JUMP);
 	}
 }
 
@@ -1583,6 +1636,21 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::TextWrapped("Allows the player to go through doors even if Ashley is far away.");
 			}
 
+			// EnableDebugTrg
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Enable DebugTrg function", &pConfig->bTrainerEnableDebugTrg))
+					pConfig->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::TextWrapped("Reimplements the games DebugTrg function, usually allowing certain sections of rooms/events to be skipped.");
+				ImGui::TextWrapped("Can be trigged by pressing LB + X + B together on controller, a hotkey can also be bound in the hotkeys page.");
+			}
+
 			ImGui_ColumnFinish();
 			ImGui::EndTable();
 		}
@@ -1768,6 +1836,26 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::SameLine();
 
 				ImGui::TextWrapped("Move Ashley to Player");
+			}
+
+			// DebugTrg trigger
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("DebugTrg combination, requires EnableDebugTrg to be enabled.");
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::PushID(5);
+				if (ImGui::Button(pConfig->sTrainerDebugTrgKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
+				{
+					pConfig->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerDebugTrgKeyCombo, 0, NULL);
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				ImGui::TextWrapped("DebugTrg");
 			}
 
 			ImGui_ColumnFinish();
