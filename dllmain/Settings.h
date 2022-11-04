@@ -195,6 +195,7 @@ public:
 	bool bTrainerDeadBodiesNeverDisappear = false;
 	bool bTrainerAllowEnterDoorsWithoutAsh = false;
 	bool bTrainerEnableDebugTrg = false;
+	bool bTrainerShowDebugTrgHintText = true;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;

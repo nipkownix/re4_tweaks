@@ -7,6 +7,9 @@ enum AshleyState
 	NotPresent
 };
 
+extern bool ShowDebugTrgHint;
+
+void Trainer_DrawDebugTrgHint();
 void Trainer_ParseKeyCombos();
 void Trainer_Init();
 void Trainer_Update();

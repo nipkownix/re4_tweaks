@@ -375,6 +375,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
 	pConfig->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
 	pConfig->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
+	pConfig->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", pConfig->bTrainerShowDebugTrgHintText);
 
 	// ESP
 	pConfig->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", pConfig->bShowESP);
@@ -565,6 +566,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
 		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
 		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
+		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", pConfig->bTrainerShowDebugTrgHintText);
 
 		// ESP
 		iniReader.WriteBoolean("ESP", "ShowESP", pConfig->bShowESP);

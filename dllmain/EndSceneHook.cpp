@@ -386,6 +386,13 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	if (!pConfig->bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
 		ShowCfgMenuTip();
 
+	if (ShowDebugTrgHint)
+	{
+		if (pConfig->bTrainerShowDebugTrgHintText)
+			Trainer_DrawDebugTrgHint();
+		ShowDebugTrgHint = false; // always reset ShowDebugTrgHint regardless of ShowHintText value, otherwise it could appear next time user enables option...
+	}
+
 	#ifdef VERBOSE
 	// Show the console if in verbose
 	con.ShowConsoleOutput();

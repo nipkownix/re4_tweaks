@@ -299,6 +299,8 @@ bool __cdecl cameraHitCheck_hook(Vec *pCross, Vec *pNorm, Vec p0, Vec p1)
 		return cameraHitCheck_orig(pCross, pNorm, p0, p1);
 }
 
+bool ShowDebugTrgHint = false;
+
 // DebugTrg reimpl based on 2007 port, thank you SourceNext!
 // (no other publicly available builds appear to include this, even the debug builds...)
 // Gamepad combo is LB + B + X
@@ -309,6 +311,8 @@ bool __cdecl DebugTrg_hook(uint32_t flag)
 
 	if (FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_PUBLICITY_VER)))
 		return false; // disallowed if SYS_PUBLICITY_VER set, probably set on E3/TGS/trade show builds
+
+	ShowDebugTrgHint = true;
 
 	// if flag is set, then caller func seems to allow checking for previously held buttons
 	// otherwise, buttons must have only been pressed this frame
@@ -339,6 +343,27 @@ bool __cdecl DebugTrg_hook(uint32_t flag)
 		return false; // LB or B not pressed/held, return false
 	return ((Joy[0].trg_18 & JOY_X) != 0); // return true if X was newly pressed
 }
+
+void Trainer_DrawDebugTrgHint()
+{
+	if (!bCfgMenuOpen)
+	{
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(ImVec2(20, viewport->Pos.y + 20));
+		ImGui::SetNextWindowBgAlpha(0.5);
+
+		ImGui::Begin("debugTrgHint", nullptr, ImGuiWindowFlags_NoDecoration |
+			ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
+			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing);
+
+		std::string tooltip = std::string("DebugTrg available!");
+
+		ImGui::TextUnformatted(tooltip.data());
+
+		ImGui::End();
+	}
+}
+
 
 std::vector<FlagPatch> flagPatches;
 void Trainer_Init()
@@ -1649,6 +1674,12 @@ void Trainer_RenderUI(int columnCount)
 
 				ImGui::TextWrapped("Reimplements the games DebugTrg function, usually allowing certain sections of rooms/events to be skipped.");
 				ImGui::TextWrapped("Can be trigged by pressing LB + X + B together on controller, a hotkey can also be bound in the hotkeys page.");
+
+				ImGui::BeginDisabled(!pConfig->bTrainerEnableDebugTrg);
+				if (ImGui::Checkbox("Show DebugTrg hint on screen", &pConfig->bTrainerShowDebugTrgHintText))
+					pConfig->HasUnsavedChanges = true;
+				ImGui::TextWrapped("Will display \"DebugTrg available!\" text on top-left whenever DebugTrg is being actively checked by the game.");
+				ImGui::EndDisabled();
 			}
 
 			ImGui_ColumnFinish();
