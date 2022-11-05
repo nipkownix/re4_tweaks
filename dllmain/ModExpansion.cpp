@@ -93,7 +93,7 @@ BOOL __fastcall cEtcTbl__RegistData_Hook(void* thisptr, void* unused, ETS_DATA* 
 		// Unfortunately some vanilla ETS entries have bad scale values set for some reason, even though game doesn't actually use them
 		// Those values usually don't make sense, if our code applies them to the model then it usually won't have a good result
 		// So we'll check for flag 0x40 at offset 0x3 into the entry first before applying it
-		if ((pEts->expansion_Flag_3 & 0x40) == 0x40)
+		if ((pEts->expansion_Flag_3 & 0x40) == 0x40 || pConfig->bForceETSApplyScale)
 		{
 			// Check if "short mode" flag is set
 			// If it is, the 12 bytes for scale are treated as two 6-byte "short vectors"

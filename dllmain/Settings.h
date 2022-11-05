@@ -105,6 +105,7 @@ public:
 	bool bSkipMenuFades = false;
 	bool bEnableDebugMenu = false;
 	bool bEnableModExpansion = false;
+	bool bForceETSApplyScale = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;
