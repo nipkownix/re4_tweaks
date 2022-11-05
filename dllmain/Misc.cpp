@@ -1144,32 +1144,33 @@ void Init_Misc()
 			Patch(pattern.count(1).get(0).get<uint8_t>(0x3), { 0x80, 0x46, 0x01, 0x03, 0x90, 0x90 });
 		}
 
-		// Skip titleWarning fade-in
-		pattern = hook::pattern("DD D8 0F BE 46 01 83 E8 00 0F");
-		uint8_t* titleWarningCode = pattern.count(1).get(0).get<uint8_t>(2);
-		Patch(titleWarningCode + 0x7, uint16_t(0x9090));
-		Patch(titleWarningCode + 0x9, uint32_t(0x90909090));
-		Patch(titleWarningCode + 0xE, uint16_t(0x9090));
-		Patch(titleWarningCode + 0x11, uint16_t(0x9090));
-		Patch(titleWarningCode + 0x13, uint32_t(0x90909090));
-
-		// Skip logo fade-in
-		pattern = hook::pattern("3B 05 ? ? ? ? 7E ? 3B 05 ? ? ? ? 7D ? 68 00 20 00 00 68 00 10 00 C0");
-		uint8_t* titleLogoCode = pattern.count(1).get(0).get<uint8_t>(0);
-		Patch(titleLogoCode + 0x6, uint16_t(0x9090));
-		Patch(titleLogoCode + 0xE, uint16_t(0x9090));
-		Patch(titleLogoCode + 0x24, uint16_t(0x9090));
-
-		// Skip key checks on "PRESS ANY KEY" screen
-		if (pConfig->bSkipMenuLogo)
+		// Option to enable various menu speedups
+		if (pConfig->bSkipMenuFades)
 		{
+			// Skip titleWarning fade-in
+			pattern = hook::pattern("DD D8 0F BE 46 01 83 E8 00 0F");
+			uint8_t* titleWarningCode = pattern.count(1).get(0).get<uint8_t>(2);
+			Patch(titleWarningCode + 0x7, uint16_t(0x9090));
+			Patch(titleWarningCode + 0x9, uint32_t(0x90909090));
+			Patch(titleWarningCode + 0xE, uint16_t(0x9090));
+			Patch(titleWarningCode + 0x11, uint16_t(0x9090));
+			Patch(titleWarningCode + 0x13, uint32_t(0x90909090));
+
+			// Skip logo fade-in
+			pattern = hook::pattern("3B 05 ? ? ? ? 7E ? 3B 05 ? ? ? ? 7D ? 68 00 20 00 00 68 00 10 00 C0");
+			uint8_t* titleLogoCode = pattern.count(1).get(0).get<uint8_t>(0);
+			Patch(titleLogoCode + 0x6, uint16_t(0x9090));
+			Patch(titleLogoCode + 0xE, uint16_t(0x9090));
+			Patch(titleLogoCode + 0x24, uint16_t(0x9090));
+
+			// Skip key checks on "PRESS ANY KEY" screen
 			static uint8_t* anyKeyPressedBool = nullptr;
 
 			auto pattern = hook::pattern("E8 ? ? ? ? 80 3D ? ? ? ? 00 0F 84 ? ? ? ? 6A 00 68 00 00 00 40");
 			anyKeyPressedBool = *pattern.count(1).get(0).get<uint8_t*>(7);
 
 			static bool hasBeenSkipped = false;
-			struct SkipMenuLogo
+			struct SkipMenuFades
 			{
 				void operator()(injector::reg_pack& regs)
 				{
@@ -1187,62 +1188,61 @@ void Init_Misc()
 					else
 						regs.ef &= ~(1 << regs.zero_flag);
 				}
-			}; injector::MakeInline<SkipMenuLogo>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(12));
+			}; injector::MakeInline<SkipMenuFades>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(12));
+
+			// Remove delays from cCard::loadMain
+			pattern = hook::pattern("D9 E8 5E DE E1 DC 05 ? ? ? ? D9 9B FC 04 00 00");
+			uint8_t* addr1 = pattern.count(2).get(0).get<uint8_t>(0);
+			uint8_t* addr2 = pattern.count(2).get(1).get<uint8_t>(0);
+			// fld1 -> fldz
+			Patch(addr1 + 1, uint8_t(0xEE));
+			Patch(addr2 + 1, uint8_t(0xEE));
+			// nop out insn that adds 15 to count
+			injector::MakeNOP(addr1 + 5, 6, true);
+			injector::MakeNOP(addr2 + 5, 6, true);
+
+			// cCard: patch FadeSet time to speed up entering/exiting save menu
+			pattern = hook::pattern("F6 41 04 80 75 ? 6A 00 6A 00 6A 0A C7 45");
+			Patch(pattern.count(1).get(0).get<uint8_t>(0xB), uint8_t(0)); // cCard::exit
+			pattern = hook::pattern("F6 40 04 08 75 ? 53 53 6A 0A C7 45");
+			Patch(pattern.count(1).get(0).get<uint8_t>(0x9), uint8_t(0)); // cCard::initialize
+
+			// cCard::firstCheck10: skip timer check, speeds up initial "Loading, please wait..." text
+			pattern = hook::pattern("8D 8B FC 04 00 00 6A 00 E8 ? ? ? ? 84 C0 74");
+			injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0xF), 2, true);
+
+			/* the following lets us speed up cCard::saveMain a lot
+			but it might be confusing for users since "save successful!" message won't appear
+			if we could make it so just the "successful!" message shows for a small period then this might be more clear*/
+
+			// cCard::saveMain
+			pattern = hook::pattern("D9 E8 DE E1 DC 05 ? ? ? ? D9 9E FC 04 00 00");
+			uint8_t* addr3 = pattern.count(2).get(0).get<uint8_t>(0);
+			uint8_t* addr4 = pattern.count(2).get(1).get<uint8_t>(0);
+			Patch(addr3 + 1, uint8_t(0xEE));
+			Patch(addr4 + 1, uint8_t(0xEE));
+			injector::MakeNOP(addr3 + 4, 6, true);
+			injector::MakeNOP(addr4 + 4, 6, true);
+			// zero cCard::saveMain tick count check, related to the typewriter animation
+			pattern = hook::pattern("3D B8 0B 00 00");
+			Patch(pattern.count(3).get(0).get<uint8_t>(1), uint32_t(0));
+			Patch(pattern.count(3).get(1).get<uint8_t>(1), uint32_t(0));
+			Patch(pattern.count(3).get(2).get<uint8_t>(1), uint32_t(0));
+			// nop key check to let save screen exit by itself (no "successful message!")
+			pattern = hook::pattern("0F 84 ? ? ? ? 33 FF 8D A4 24 00 00 00 00 57");
+			injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
+
+#if 0
+			// Patch FadeSet to automatically skip all fading animations
+			// TODO: check if everything still works fine with this
+			// could be worth adding as a [DEBUG] option since it might be able to speed up a lot of places
+			pattern = hook::pattern("BA 01 00 00 00 85 C9 78 ? BA 03 00 00 00");
+			uint8_t* addr = pattern.count(1).get(0).get<uint8_t>(0);
+			Patch(addr + 1, uint32_t(0)); // remove FADE_BE_ALIVE flag
+			Patch(addr + 0xA, uint32_t(0)); // remove FADE_BE_ALIVE & FADE_BE_CONTINUE flags
+#endif
+			spd::log()->info("SkipMenuFades enabled");
 		}
-
-		// Remove delays from cCard::loadMain
-		pattern = hook::pattern("D9 E8 5E DE E1 DC 05 ? ? ? ? D9 9B FC 04 00 00");
-		uint8_t* addr1 = pattern.count(2).get(0).get<uint8_t>(0);
-		uint8_t* addr2 = pattern.count(2).get(1).get<uint8_t>(0);
-		// fld1 -> fldz
-		Patch(addr1 + 1, uint8_t(0xEE));
-		Patch(addr2 + 1, uint8_t(0xEE));
-		// nop out insn that adds 15 to count
-		injector::MakeNOP(addr1 + 5, 6, true);
-		injector::MakeNOP(addr2 + 5, 6, true);
-
-		// cCard: patch FadeSet time to speed up entering/exiting save menu
-		pattern = hook::pattern("F6 41 04 80 75 ? 6A 00 6A 00 6A 0A C7 45");
-		Patch(pattern.count(1).get(0).get<uint8_t>(0xB), uint8_t(0)); // cCard::exit
-		pattern = hook::pattern("F6 40 04 08 75 ? 53 53 6A 0A C7 45");
-		Patch(pattern.count(1).get(0).get<uint8_t>(0x9), uint8_t(0)); // cCard::initialize
-
-		// cCard::firstCheck10: skip timer check, speeds up initial "Loading, please wait..." text
-		pattern = hook::pattern("8D 8B FC 04 00 00 6A 00 E8 ? ? ? ? 84 C0 74");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0xF), 2, true);
-
-		/* the following lets us speed up cCard::saveMain a lot
-		but it might be confusing for users since "save successful!" message won't appear
-		if we could make it so just the "successful!" message shows for a small period then this might be useful
-		for now leaving it disabled here... */
-#if 0
-		// cCard::saveMain
-		pattern = hook::pattern("D9 E8 DE E1 DC 05 ? ? ? ? D9 9E FC 04 00 00");
-		uint8_t* addr3 = pattern.count(2).get(0).get<uint8_t>(0);
-		uint8_t* addr4 = pattern.count(2).get(1).get<uint8_t>(0);
-		Patch(addr3 + 1, uint8_t(0xEE));
-		Patch(addr4 + 1, uint8_t(0xEE));
-		injector::MakeNOP(addr3 + 4, 6, true);
-		injector::MakeNOP(addr4 + 4, 6, true);
-		// zero cCard::saveMain tick count check, related to the typewriter animation
-		pattern = hook::pattern("3D B8 0B 00 00");
-		Patch(pattern.count(3).get(0).get<uint8_t>(1), uint32_t(0));
-		Patch(pattern.count(3).get(1).get<uint8_t>(1), uint32_t(0));
-		Patch(pattern.count(3).get(2).get<uint8_t>(1), uint32_t(0));
-		// nop key check to let save screen exit by itself (no "successful message!")
-		pattern = hook::pattern("0F 84 ? ? ? ? 33 FF 8D A4 24 00 00 00 00 57");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
-#endif
-
-#if 0
-		// Patch FadeSet to automatically skip all fading animations
-		// TODO: check if everything still works fine with this
-		// could be worth adding as a [DEBUG] option since it might be able to speed up a lot of places
-		pattern = hook::pattern("BA 01 00 00 00 85 C9 78 ? BA 03 00 00 00");
-		uint8_t* addr = pattern.count(1).get(0).get<uint8_t>(0);
-		Patch(addr + 1, uint32_t(0)); // remove FADE_BE_ALIVE flag
-		Patch(addr + 0xA, uint32_t(0)); // remove FADE_BE_ALIVE & FADE_BE_CONTINUE flags
-#endif
 
 		spd::log()->info("SkipIntroLogos enabled");
 	}
