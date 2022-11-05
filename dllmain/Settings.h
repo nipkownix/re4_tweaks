@@ -102,7 +102,7 @@ public:
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
 	bool bSkipIntroLogos = false;
-	bool bSkipMenuFades = true;
+	bool bSkipMenuFades = false;
 	bool bEnableDebugMenu = false;
 	bool bEnableModExpansion = false;
 
