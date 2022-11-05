@@ -111,26 +111,32 @@ BOOL __fastcall cEtcTbl__RegistData_Hook(void* thisptr, void* unused, ETS_DATA* 
 				scale_collision.z = float(double(pEts->expansion_PercentScaleCollision_A.z) / 100.0f);
 			}
 
-			pPtr->scale_AC = scale_model;
+			// Only apply the scales if they aren't all 0, or the expansion flag is set (showing that the values are intended)
+			// (otherwise ForceETSApplyScale could end up applying scale of 0 to things, since some ETS entry scales are 0 already)
+			if ((scale_model.x != 0 || scale_model.y != 0 || scale_model.z != 0) || (pEts->expansion_Flag_3 & 0x40) == 0x40)
+				pPtr->scale_AC = scale_model;
 
-			pPtr->atari_2B4.m_height_14 *= scale_collision.z;
+			if ((scale_collision.x != 0 || scale_collision.y != 0 || scale_collision.z != 0) || (pEts->expansion_Flag_3 & 0x40) == 0x40)
+			{
+				pPtr->atari_2B4.m_height_14 *= scale_collision.z;
 
-			// Update "rs" values - radius [for] square?
-			pPtr->atari_2B4.m_radius_C *= scale_collision.x;
-			pPtr->atari_2B4.m_radius_n_1C *= scale_collision.x;
+				// Update "rs" values - radius [for] square?
+				pPtr->atari_2B4.m_radius_C *= scale_collision.x;
+				pPtr->atari_2B4.m_radius_n_1C *= scale_collision.x;
 
-			// Update "ro" values
-			pPtr->atari_2B4.m_radius2_10 *= scale_collision.x;
-			pPtr->atari_2B4.m_radius2_n_20 *= scale_collision.x;
+				// Update "ro" values
+				pPtr->atari_2B4.m_radius2_10 *= scale_collision.x;
+				pPtr->atari_2B4.m_radius2_n_20 *= scale_collision.x;
 
-			// Update "ra" values
-			pPtr->atari_2B4.m_radius3_2C *= scale_collision.x;
+				// Update "ra" values
+				pPtr->atari_2B4.m_radius3_2C *= scale_collision.x;
 
-			// Some models collision seems to use an offset for some reason
-			// Multiplying against our scale mostly seems to fix it though
-			pPtr->atari_2B4.m_offset_0.x *= scale_collision.x;
-			pPtr->atari_2B4.m_offset_0.y *= scale_collision.y;
-			pPtr->atari_2B4.m_offset_0.z *= scale_collision.z;
+				// Some models collision seems to use an offset for some reason
+				// Multiplying against our scale mostly seems to fix it though
+				pPtr->atari_2B4.m_offset_0.x *= scale_collision.x;
+				pPtr->atari_2B4.m_offset_0.y *= scale_collision.y;
+				pPtr->atari_2B4.m_offset_0.z *= scale_collision.z;
+			}
 
 			// Remove flag in case game reads EtcModelId somewhere else...
 			pEts->expansion_Flag_3 = 0;
