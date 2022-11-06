@@ -9,25 +9,65 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build Debug and Release
+  build-debug:
+    name: Build Debug
     runs-on: windows-2022
 
     steps:
       - name: Get current date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d_%H%M%S')"
+        run: echo "date=$(date +'%Y-%m-%d_%H%M%S')" >> $env:GITHUB_OUTPUT
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.1.3
 
       - name: Build Debug
         run: |
           msbuild re4_tweaks.sln /p:Configuration=Debug /p:PostBuildEventUseInBuild=false
+
+      - name: Create default configuration file
+        shell: bash
+        run: |
+          cp settings/settings.ini dinput8.ini
+          cp settings/trainer_settings.ini trainer.ini
+
+      - name: Copy game data files
+        shell: bash
+        run: |
+          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Debug/re4_tweaks/
+          cp -r dist/Bin32/re4_tweaks/ Debug/
+          cp dinput8.ini Debug/
+          cp trainer.ini Debug/re4_tweaks/
+
+      - name: Upload Debug
+        uses: actions/upload-artifact@v3
+        with:
+          path: |
+            Debug/re4_tweaks/
+            Debug/dinput8.dll
+            Debug/dinput8.ini
+            Debug/dinput8.pdb
+          name: re4_tweaks_debug_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
+
+  build-release:
+    name: Build Release
+    runs-on: windows-2022
+
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d_%H%M%S')" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1.3
 
       - name: Remove VERBOSE
         shell: bash
@@ -43,31 +83,17 @@ jobs:
         run: |
           cp settings/settings.ini dinput8.ini
           cp settings/trainer_settings.ini trainer.ini
-          
+
       - name: Copy game data files
         shell: bash
         run: |
-          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Debug/re4_tweaks/
           cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Release/re4_tweaks/
-          cp -r dist/Bin32/re4_tweaks/ Debug/
           cp -r dist/Bin32/re4_tweaks/ Release/
-          cp dinput8.ini Debug/
           cp dinput8.ini Release/
-          cp trainer.ini Debug/re4_tweaks/
           cp trainer.ini Release/re4_tweaks/
 
-      - name: Upload Debug
-        uses: actions/upload-artifact@v2
-        with:
-          path: |
-            Debug/re4_tweaks/
-            Debug/dinput8.dll
-            Debug/dinput8.ini
-            Debug/dinput8.pdb
-          name: re4_tweaks_debug_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
-
       - name: Upload Release
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           path: |
             Release/re4_tweaks/
