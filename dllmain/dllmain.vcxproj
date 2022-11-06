@@ -66,6 +66,7 @@
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>..\external\freetype\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
