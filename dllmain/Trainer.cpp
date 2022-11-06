@@ -1673,7 +1673,7 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Reimplements the games DebugTrg function, usually allowing certain sections of rooms/events to be skipped.");
-				ImGui::TextWrapped("Can be trigged by pressing LB + X + B together on controller, a hotkey can also be bound in the hotkeys page.");
+				ImGui::TextWrapped("Can be triggered by pressing LB + X + B together on controller, a hotkey can also be bound in the hotkeys page.");
 
 				ImGui::BeginDisabled(!pConfig->bTrainerEnableDebugTrg);
 				if (ImGui::Checkbox("Show DebugTrg hint on screen", &pConfig->bTrainerShowDebugTrgHintText))
