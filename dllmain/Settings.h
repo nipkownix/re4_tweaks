@@ -197,6 +197,8 @@ public:
 	bool bTrainerAllowEnterDoorsWithoutAsh = false;
 	bool bTrainerEnableDebugTrg = false;
 	bool bTrainerShowDebugTrgHintText = true;
+	bool bTrainerOverrideDynamicDifficulty = false;
+	int iTrainerDynamicDifficultyLevel = 5;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;

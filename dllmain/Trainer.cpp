@@ -290,6 +290,19 @@ void Trainer_ParseKeyCombos()
 	}
 }
 
+void(__cdecl* j_GameAddPoint_orig)(int type);
+void __cdecl j_GameAddPoint_Hook(int type)
+{
+	if (pConfig->bTrainerOverrideDynamicDifficulty)
+	{
+		GlobalPtr()->dynamicDifficultyPoints_4F94 = pConfig->iTrainerDynamicDifficultyLevel * 1000 + 500;
+		GlobalPtr()->dynamicDifficultyLevel_4F98 = pConfig->iTrainerDynamicDifficultyLevel;
+		return;
+	}
+
+	j_GameAddPoint_orig(type);
+}
+
 bool(__cdecl* cameraHitCheck_orig)(Vec *pCross, Vec *pNorm, Vec p0, Vec p1);
 bool __cdecl cameraHitCheck_hook(Vec *pCross, Vec *pNorm, Vec p0, Vec p1)
 {
@@ -714,6 +727,13 @@ void Trainer_Init()
 	{
 		auto pattern = hook::pattern("83 C4 18 6A 01 E8 ? ? ? ? 83 C4 04 3C 01");
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), DebugTrg_hook, PATCH_JUMP);
+	}
+
+	// Hook j_GameAddPoint to override the Dynamic Difficulty Level
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 0F B6 C8");
+		ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), j_GameAddPoint_orig);
+		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), j_GameAddPoint_Hook);
 	}
 }
 
@@ -1538,6 +1558,26 @@ void Trainer_RenderUI(int columnCount)
 					pConfig->fTrainerPlayerSpeedOverride = 1.0f;
 					pConfig->HasUnsavedChanges = true;
 				}
+				ImGui::EndDisabled();
+			}
+
+			// Dynamic Difficulty Slider
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::Checkbox("Enable Difficulty Level Override", &pConfig->bTrainerOverrideDynamicDifficulty);
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::TextWrapped("Allows overriding the dynamic difficulty level.");
+				ImGui::TextWrapped("(Effects enemy health, damage, speed, and aggression)");
+
+				ImGui::Spacing();
+				pConfig->iTrainerDynamicDifficultyLevel = GlobalPtr()->dynamicDifficultyLevel_4F98;
+				ImGui::BeginDisabled(!pConfig->bTrainerOverrideDynamicDifficulty);
+				ImGui::SliderInt("", &pConfig->iTrainerDynamicDifficultyLevel, 1, 10);
 				ImGui::EndDisabled();
 			}
 
