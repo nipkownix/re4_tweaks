@@ -1572,13 +1572,19 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Allows overriding the dynamic difficulty level.");
-				ImGui::TextWrapped("(Effects enemy health, damage, speed, and aggression)");
+				ImGui::TextWrapped("(Affects enemy health, damage, speed, and aggression)");
 
 				ImGui::Spacing();
 				pConfig->iTrainerDynamicDifficultyLevel = GlobalPtr()->dynamicDifficultyLevel_4F98;
 				ImGui::BeginDisabled(!pConfig->bTrainerOverrideDynamicDifficulty);
 				ImGui::SliderInt("", &pConfig->iTrainerDynamicDifficultyLevel, 1, 10);
 				ImGui::EndDisabled();
+
+				if (ImGui::IsItemEdited())
+				{
+					GlobalPtr()->dynamicDifficultyPoints_4F94 = pConfig->iTrainerDynamicDifficultyLevel * 1000 + 500;
+					GlobalPtr()->dynamicDifficultyLevel_4F98 = pConfig->iTrainerDynamicDifficultyLevel;
+				}
 			}
 
 			// Ashley presence
