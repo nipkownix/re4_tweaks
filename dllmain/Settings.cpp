@@ -219,6 +219,8 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
 	pConfig->iVolumeCutscene = min(max(pConfig->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
+	pConfig->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects);
+
 	// MOUSE
 	pConfig->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
 	pConfig->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning);
@@ -712,6 +714,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 	iniReader.WriteInteger("AUDIO", "VolumeBGM", pConfig->iVolumeBGM);
 	iniReader.WriteInteger("AUDIO", "VolumeSE", pConfig->iVolumeSE);
 	iniReader.WriteInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
+	iniReader.WriteBoolean("AUDIO", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects);
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
@@ -866,6 +869,7 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeBGM", pConfig->iVolumeBGM);
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeSE", pConfig->iVolumeSE);
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeCutscene", pConfig->iVolumeCutscene);
+	spd::log()->info("| {:<30} | {:>15} |", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MOUSE

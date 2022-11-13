@@ -42,6 +42,7 @@ public:
 	int iVolumeBGM = 100;
 	int iVolumeSE = 100;
 	int iVolumeCutscene = 100;
+	bool bRestoreGCSoundEffects = false;
 
 	// MOUSE
 	bool bCameraImprovements = true;

@@ -34,6 +34,8 @@ bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
 void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
 
 namespace bio4 {
+	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
+
 	bool(__cdecl* SubScreenOpen)(SS_OPEN_FLAG open_flag, SS_ATTR_FLAG attr_flag);
 	bool(__cdecl* CardCheckDone)();
 	bool(__cdecl* CardLoad)(uint8_t a1);
@@ -811,6 +813,10 @@ bool Init_Game()
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::CardSave);
 	pattern = hook::pattern("6A 00 E8 ? ? ? ? 83 C4 04 3C 01 75 ? 6A 17");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(2)).as_int(), bio4::CardLoad);
+
+	// SndCall funcptr
+	pattern = hook::pattern("05 94 00 00 00 50 6A 0C 6A 01 E8");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xA)).as_int(), bio4::SndCall);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");

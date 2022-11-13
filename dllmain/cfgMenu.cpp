@@ -675,6 +675,19 @@ void cfgMenuRender()
 						}
 					}
 
+					// GC sound effects
+					{
+						ImGui_ColumnSwitch();
+
+						pConfig->HasUnsavedChanges |= ImGui::Checkbox("RestoreGCSoundEffects", &pConfig->bRestoreGCSoundEffects);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Restores certain sound effects that were changed from the original GC release.");
+						ImGui::TextWrapped("(currently only changes sound of the knife)");
+					}
+
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
