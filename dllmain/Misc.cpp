@@ -1,4 +1,5 @@
 #include <iostream>
+#include <optional>
 #include "dllmain.h"
 #include "Patches.h"
 #include "Game.h"
@@ -8,8 +9,7 @@
 static uint32_t* ptrGameFrameRate;
 
 // Trainer.cpp externs
-extern uint32_t FlagsExtraValue;
-extern bool FlagsExtraValueUpdated;
+extern std::optional<uint32_t> FlagsExtraValue;
 
 void(__stdcall* setLanguage_Orig)();
 void __stdcall setLanguage_Hook()
@@ -43,10 +43,10 @@ void __fastcall cCard__firstCheck10_Hook(cCard* thisptr, void* unused)
 
 		// Rno1 == 2 overwrites SystemSave with data from the save file
 		// Restore the users updated EXTRA flags if they've set them
-		if (Rno1 == 2 && FlagsExtraValueUpdated)
+		if (Rno1 == 2 && FlagsExtraValue.has_value())
 		{
-			SystemSave->flags_EXTRA_4[0] = FlagsExtraValue;
-			FlagsExtraValueUpdated = false;
+			SystemSave->flags_EXTRA_4[0] = *FlagsExtraValue;
+			FlagsExtraValue.reset();
 		}
 	}
 }

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <optional>
 #include "dllmain.h"
 #include "Game.h"
 #include "Settings.h"
@@ -10,8 +11,7 @@
 #include "Trainer.h"
 #include <DirectXMath.h>
 
-uint32_t FlagsExtraValue = 0;
-bool FlagsExtraValueUpdated = false;
+std::optional<uint32_t> FlagsExtraValue;
 
 int AshleyStateOverride;
 int last_weaponId;
@@ -2031,7 +2031,7 @@ void Trainer_RenderUI(int columnCount)
 		{
 			if (!bio4::CardCheckDone())
 				ImGui::TextWrapped("EXTRA flags disabled: flags can only be modified after the intro/'PRESS ANY KEY' screens");
-			else if (FlagsExtraValueUpdated)
+			else if (FlagsExtraValue.has_value())
 				ImGui::TextWrapped("EXTRA flags changed: exit to main menu & back out to the game logo/'PRESS ANY KEY' screen for them to take effect!");
 			else
 				ImGui::NewLine(); // reserve space for the text above
@@ -2087,7 +2087,6 @@ void Trainer_RenderUI(int columnCount)
 							FlagSet(curFlagCategory->values, i, selected);
 							if (curFlagCategoryIsExtra)
 							{
-								FlagsExtraValueUpdated = true;
 								FlagsExtraValue = *curFlagCategory->values;
 							}
 						}
