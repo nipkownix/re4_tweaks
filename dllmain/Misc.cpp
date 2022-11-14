@@ -7,6 +7,10 @@
 
 static uint32_t* ptrGameFrameRate;
 
+// Trainer.cpp externs
+extern uint32_t FlagsExtraValue;
+extern bool FlagsExtraValueUpdated;
+
 void(__stdcall* setLanguage_Orig)();
 void __stdcall setLanguage_Hook()
 {
@@ -20,17 +24,30 @@ void __stdcall setLanguage_Hook()
 	}
 }
 
-typedef void(__fastcall* cCard__firstCheck10_Fn)(void* thisptr, void* unused);
+typedef void(__fastcall* cCard__firstCheck10_Fn)(cCard* thisptr, void* unused);
 cCard__firstCheck10_Fn cCard__firstCheck10_Orig;
-void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
+void __fastcall cCard__firstCheck10_Hook(cCard* thisptr, void* unused)
 {
+	uint8_t Rno1 = thisptr->m_Rno1_5;
+
 	// pSys gets overwritten with data from gamesave during first loading screen, so update violence level after reading it
 	cCard__firstCheck10_Orig(thisptr, unused);
-	if (pConfig->iViolenceLevelOverride >= 0)
+	auto* SystemSave = SystemSavePtr();
+
+	if (SystemSave)
 	{
-		auto* SystemSave = SystemSavePtr();
-		if (SystemSave)
+		if (pConfig->iViolenceLevelOverride >= 0)
+		{
 			SystemSave->eff_country_9 = uint8_t(pConfig->iViolenceLevelOverride);
+		}
+
+		// Rno1 == 2 overwrites SystemSave with data from the save file
+		// Restore the users updated EXTRA flags if they've set them
+		if (Rno1 == 2 && FlagsExtraValueUpdated)
+		{
+			SystemSave->flags_EXTRA_4[0] = FlagsExtraValue;
+			FlagsExtraValueUpdated = false;
+		}
 	}
 }
 

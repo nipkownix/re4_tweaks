@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <string>
 #include "GameFlags.h"
 
 const char* Flags_DEBUG_Names[] = {

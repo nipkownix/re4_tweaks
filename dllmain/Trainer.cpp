@@ -10,6 +10,9 @@
 #include "Trainer.h"
 #include <DirectXMath.h>
 
+uint32_t FlagsExtraValue = 0;
+bool FlagsExtraValueUpdated = false;
+
 int AshleyStateOverride;
 int last_weaponId;
 
@@ -1971,6 +1974,8 @@ void Trainer_RenderUI(int columnCount)
 		static int columns = 3;
 		static int flagCategory = 0;
 		CategoryInfo* curFlagCategory = nullptr;
+		bool curFlagCategoryIsExtra = false;
+
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
 		if (ImGui::BeginTable("##flagtoolheader", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 70 * esHook._cur_monitor_dpi)))
 		{
@@ -1990,6 +1995,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 			ImGui::PopItemWidth();
 			curFlagCategory = &flagCategoryInfo[flagCategory];
+			curFlagCategoryIsExtra = curFlagCategory->values == SystemSavePtr()->flags_EXTRA_4;
 
 			ImGui::SameLine();
 			ImGui::Checkbox("Functional only", &filter_descriptions_only);
@@ -2020,6 +2026,16 @@ void Trainer_RenderUI(int columnCount)
 
 		// make search uppercase to make case insensitive search easier...
 		std::string searchTextUpper = StrToUpper(searchText);
+
+		if (curFlagCategoryIsExtra)
+		{
+			if (!bio4::CardCheckDone())
+				ImGui::TextWrapped("EXTRA flags disabled: flags can only be modified after the intro/'PRESS ANY KEY' screens");
+			else if (FlagsExtraValueUpdated)
+				ImGui::TextWrapped("EXTRA flags changed: exit to main menu & back out to the game logo/'PRESS ANY KEY' screen for them to take effect!");
+			else
+				ImGui::NewLine(); // reserve space for the text above
+		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
 		if (ImGui::BeginTable("##flags", columns, ImGuiTableFlags_ScrollY))
@@ -2064,9 +2080,18 @@ void Trainer_RenderUI(int columnCount)
 						else if (strstr(description, "reimplementation"))
 							col = IM_COL32(243, 229, 171, 255); // vanilla gold
 
+						ImGui::BeginDisabled(curFlagCategoryIsExtra && !bio4::CardCheckDone());
 						ImGui::PushStyleColor(ImGuiCol_Text, col);
 						if (ImGui::Checkbox(curFlagCategory->valueNames[i], &selected))
+						{
 							FlagSet(curFlagCategory->values, i, selected);
+							if (curFlagCategoryIsExtra)
+							{
+								FlagsExtraValueUpdated = true;
+								FlagsExtraValue = *curFlagCategory->values;
+							}
+						}
+						ImGui::EndDisabled();
 						ImGui::PopStyleColor();
 
 						if (description)
