@@ -195,7 +195,7 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
 
 void Init_ExceptionHandler()
 {
-    std::string dumpPath = rootPath + "CrashDumps";
+    std::wstring dumpPath = rootPath + L"CrashDumps";
 
     if (std::filesystem::exists(dumpPath))
     {

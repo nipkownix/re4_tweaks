@@ -2,7 +2,6 @@
 #include "dllmain.h"
 #include "AutoUpdater.h"
 #include "Patches.h"
-#include "..\wrappers\wrapper.h"
 #include "Settings.h"
 #include "Game.h"
 #include "input.hpp"
@@ -10,11 +9,12 @@
 #include "resource.h"
 #include "Trainer.h"
 #include "UI_DebugWindows.h"
+#include "../wrappers/wrappers.h"
 
 std::string WrapperMode;
-std::string WrapperName;
-std::string rootPath;
-std::string logPath;
+std::wstring wrapperName;
+std::wstring rootPath;
+std::wstring logPath;
 
 HMODULE wrapper_dll = nullptr;
 HMODULE proxy_dll = nullptr;
@@ -47,7 +47,7 @@ void Init_Main()
 
 	spd::log()->info("Starting re4_tweaks v{0}-{1}-{2}", APP_VERSION, commit, GIT_BRANCH);
 	spd::LogProcessNameAndPID();
-	spd::log()->info("Running from: \"{}\"", rootPath);
+	spd::log()->info("Running from: \"{}\"", WstrToStr(rootPath));
 	spd::log()->info("Game version: {}", GameVersion());
 
 	// Populate keymap (needed before we ReadSettings(), otherwise, parsing hotkeys will fail)
@@ -107,53 +107,6 @@ void Init_Main()
 		Init_HDProject();
 }
 
-void StorePath(HMODULE hModule)
-{
-	// Store wrapper name
-	char configname[MAX_PATH];
-	GetModuleFileNameA(hModule, configname, MAX_PATH);
-	WrapperName.assign(strrchr(configname, '\\') + 1);
-	std::transform(WrapperName.begin(), WrapperName.end(), WrapperName.begin(), ::tolower);
-
-	// Store root path
-	std::string modulePath = configname;
-	rootPath = modulePath.substr(0, modulePath.rfind('\\') + 1);
-
-	// Store log path
-	logPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".log";
-}
-
-void LoadRealDLL(HMODULE hModule)
-{
-	// Get wrapper mode
-	const char* RealWrapperMode = Wrapper::GetWrapperName((WrapperMode.size()) ? WrapperMode.c_str() : WrapperName.c_str());
-
-	const char* wrappedDllPath = nullptr;
-
-	// Read WrappedDLLPath from .ini file
-	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
-
-	char userDllPath[MAX_PATH] = {};
-
-	GetPrivateProfileStringA("MISC", "WrappedDLLPath", "", userDllPath, 256, iniPath.c_str());
-
-	if (strlen(userDllPath) > 0)
-	{
-		char result[MAX_PATH] = {};
-
-		strcat(result, rootPath.c_str());
-		strcat(result, userDllPath);
-
-		wrappedDllPath = result;
-
-		// User has specified a DLL to wrap, make sure it exists first:
-		if (GetFileAttributesA(wrappedDllPath) == 0xFFFFFFFF)
-			wrappedDllPath = nullptr;
-	}
-	
-	proxy_dll = Wrapper::CreateWrapper(wrappedDllPath, (WrapperMode.size()) ? WrapperMode.c_str() : nullptr, WrapperName.c_str());
-}
-
 // Dll main function
 bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 {
@@ -165,9 +118,7 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 
 		g_module_handle = hModule;
 
-		StorePath(hModule);
-
-		LoadRealDLL(hModule);
+		Init_Wrappers();
 
 		Init_ExceptionHandler();
 

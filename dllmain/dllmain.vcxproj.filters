@@ -4,9 +4,6 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="..\Wrappers\wrapper.cpp">
-      <Filter>Wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="..\external\ModUtils\Patterns.cpp">
       <Filter>external\ModUtils</Filter>
     </ClCompile>
@@ -163,6 +160,9 @@
     <ClCompile Include="AutoUpdater.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="..\wrappers\wrappers.cpp">
+      <Filter>wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
@@ -188,75 +188,6 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>resources</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\bcrypt.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\cryptsp.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\d2d1.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\d3d8.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\d3d9.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\d3d10.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\d3d11.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\d3d12.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\dciman32.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\ddraw.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\dinput.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\dinput8.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\dplayx.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\dsound.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\dwmapi.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\msacm32.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\msvfw32.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\shared.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\version.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\wininet.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\winmm.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\wrapper.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\wsock32.h">
-      <Filter>Wrappers</Filter>
     </ClInclude>
     <ClInclude Include="..\external\ModUtils\DelimStringReader.h">
       <Filter>external\ModUtils</Filter>
@@ -317,12 +248,6 @@
     </ClInclude>
     <ClInclude Include="..\includes\exception.hpp">
       <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\xinput1_3.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Wrappers\x3daudio1_7.h">
-      <Filter>Wrappers</Filter>
     </ClInclude>
     <ClInclude Include="input.hpp">
       <Filter>dllmain</Filter>
@@ -494,6 +419,69 @@
     </ClInclude>
     <ClInclude Include="AutoUpdater.h">
       <Filter>dllmain</Filter>
+	</ClInclude>
+    <ClInclude Include="..\includes\ModuleList.hpp">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\wrappers.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\dinput8.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\dsound.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\wininet.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\version.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\d3d9.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\d3d10.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\d3d11.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\d3d12.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\winmm.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\bink2w64.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\dinput.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\d3d8.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\ddraw.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\msvfw32.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\msacm32.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\binkw32.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\xinput1_3.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\X3DAudio1_7.h">
+      <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wrappers\shared.h">
+      <Filter>wrappers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -505,9 +493,6 @@
     </Filter>
     <Filter Include="dllmain">
       <UniqueIdentifier>{1bcdb7af-782c-4c74-9568-0406602f0689}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Wrappers">
-      <UniqueIdentifier>{462d656f-4021-4695-b31c-152e450c072c}</UniqueIdentifier>
     </Filter>
     <Filter Include="settings">
       <UniqueIdentifier>{a5f93009-19d5-47c0-8537-020855d842b5}</UniqueIdentifier>
@@ -548,6 +533,9 @@
     <Filter Include="external\ImGui\misc\freetype">
       <UniqueIdentifier>{84419003-dc17-466d-b01e-6beed7f93767}</UniqueIdentifier>
     </Filter>
+    <Filter Include="wrappers">
+      <UniqueIdentifier>{462d656f-4021-4695-b31c-152e450c072c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dllmain.rc">
@@ -555,13 +543,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Wrappers\wrapper.def">
-      <Filter>Wrappers</Filter>
+    <None Include="..\wrappers\x86.def">
+      <Filter>wrappers</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\Wrappers\License.txt">
-      <Filter>Wrappers</Filter>
-    </Text>
   </ItemGroup>
 </Project>

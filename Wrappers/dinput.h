@@ -1,22 +1,26 @@
 #pragma once
+#include "wrappers.h"
+#include "shared.h"
 
-#define VISIT_PROCS_DINPUT(visit) \
-	visit(DirectInputCreateA, jmpaddr) \
-	visit(DirectInputCreateEx, jmpaddr) \
-	visit(DirectInputCreateW, jmpaddr)
+#if !X64
+struct dinput_dll
+{
+    HMODULE dll;
+    FARPROC DirectInputCreateA;
+    FARPROC DirectInputCreateEx;
+    FARPROC DirectInputCreateW;
 
-#define VISIT_PROCS_DINPUT_SHARED(visit) \
-	visit(DllCanUnloadNow, jmpaddr) \
-	visit(DllGetClassObject, jmpaddr) \
-	visit(DllRegisterServer, jmpaddr) \
-	visit(DllUnregisterServer, jmpaddr)
+    void LoadOriginalLibrary(HMODULE module)
+    {
+        dll = module;
+        shared.LoadOriginalLibrary(dll);
+        DirectInputCreateA = GetProcAddress(dll, "DirectInputCreateA");
+        DirectInputCreateEx = GetProcAddress(dll, "DirectInputCreateEx");
+        DirectInputCreateW = GetProcAddress(dll, "DirectInputCreateW");
+    }
+} dinput;
 
-#define VISIT_SHARED_DINPUT_PROCS(visit) \
-	visit(DllCanUnloadNow, DllCanUnloadNow_dinput, jmpaddr) \
-	visit(DllGetClassObject, DllGetClassObject_dinput, jmpaddr) \
-	visit(DllRegisterServer, DllRegisterServer_dinput, jmpaddr) \
-	visit(DllUnregisterServer, DllUnregisterServer_dinput, jmpaddr)
-
-#ifdef PROC_CLASS
-PROC_CLASS(dinput, dll, VISIT_PROCS_DINPUT, VISIT_SHARED_DINPUT_PROCS)
+__declspec(naked) void _DirectInputCreateA() { _asm { jmp[dinput.DirectInputCreateA] } }
+__declspec(naked) void _DirectInputCreateEx() { _asm { jmp[dinput.DirectInputCreateEx] } }
+__declspec(naked) void _DirectInputCreateW() { _asm { jmp[dinput.DirectInputCreateW] } }
 #endif

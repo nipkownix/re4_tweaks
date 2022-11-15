@@ -64,9 +64,9 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>..\external\freetype\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>..\external\freetype\lib\debug_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
@@ -91,13 +91,14 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>
+      </UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>..\external\freetype\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>..\external\freetype\lib\release_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
@@ -129,7 +130,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
     </ClCompile>
-    <ClCompile Include="..\Wrappers\wrapper.cpp" />
+    <ClCompile Include="..\wrappers\wrappers.cpp" />
     <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="AudioTweaks.cpp" />
     <ClCompile Include="AutoUpdater.cpp" />
@@ -204,38 +205,33 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\includes\FAprolight.hpp" />
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp" />
     <ClInclude Include="..\includes\log.h" />
+    <ClInclude Include="..\includes\ModuleList.hpp" />
     <ClInclude Include="..\settings\settings.ini">
       <FileType>Text</FileType>
     </ClInclude>
     <ClInclude Include="..\settings\trainer_settings.ini">
       <FileType>Text</FileType>
     </ClInclude>
-    <ClInclude Include="..\Wrappers\bcrypt.h" />
-    <ClInclude Include="..\Wrappers\cryptsp.h" />
-    <ClInclude Include="..\Wrappers\d2d1.h" />
-    <ClInclude Include="..\Wrappers\d3d10.h" />
-    <ClInclude Include="..\Wrappers\d3d11.h" />
-    <ClInclude Include="..\Wrappers\d3d12.h" />
-    <ClInclude Include="..\Wrappers\d3d8.h" />
-    <ClInclude Include="..\Wrappers\d3d9.h" />
-    <ClInclude Include="..\Wrappers\dciman32.h" />
-    <ClInclude Include="..\Wrappers\ddraw.h" />
-    <ClInclude Include="..\Wrappers\dinput.h" />
-    <ClInclude Include="..\Wrappers\dinput8.h" />
-    <ClInclude Include="..\Wrappers\dplayx.h" />
-    <ClInclude Include="..\Wrappers\dsound.h" />
-    <ClInclude Include="..\Wrappers\dwmapi.h" />
-    <ClInclude Include="..\Wrappers\msacm32.h" />
-    <ClInclude Include="..\Wrappers\msvfw32.h" />
-    <ClInclude Include="..\Wrappers\shared.h" />
-    <ClInclude Include="..\Wrappers\version.h" />
-    <ClInclude Include="..\Wrappers\wininet.h" />
-    <ClInclude Include="..\Wrappers\winmm.h" />
-    <ClInclude Include="..\Wrappers\wrapper.h" />
-    <ClInclude Include="..\Wrappers\wsock32.h" />
-    <ClInclude Include="..\Wrappers\x3daudio1_7.h" />
-    <ClInclude Include="..\Wrappers\xinput1_3.h" />
-    <ClInclude Include="AutoUpdater.h" />
+    <ClInclude Include="..\wrappers\bink2w64.h" />
+    <ClInclude Include="..\wrappers\binkw32.h" />
+    <ClInclude Include="..\wrappers\d3d10.h" />
+    <ClInclude Include="..\wrappers\d3d11.h" />
+    <ClInclude Include="..\wrappers\d3d12.h" />
+    <ClInclude Include="..\wrappers\d3d8.h" />
+    <ClInclude Include="..\wrappers\d3d9.h" />
+    <ClInclude Include="..\wrappers\ddraw.h" />
+    <ClInclude Include="..\wrappers\dinput.h" />
+    <ClInclude Include="..\wrappers\dinput8.h" />
+    <ClInclude Include="..\wrappers\dsound.h" />
+    <ClInclude Include="..\wrappers\msacm32.h" />
+    <ClInclude Include="..\wrappers\msvfw32.h" />
+    <ClInclude Include="..\wrappers\shared.h" />
+    <ClInclude Include="..\wrappers\version.h" />
+    <ClInclude Include="..\wrappers\wininet.h" />
+    <ClInclude Include="..\wrappers\winmm.h" />
+    <ClInclude Include="..\wrappers\wrappers.h" />
+    <ClInclude Include="..\wrappers\X3DAudio1_7.h" />
+    <ClInclude Include="..\wrappers\xinput1_3.h" />
     <ClInclude Include="D3D9hook.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Game.h" />
@@ -290,10 +286,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ResourceCompile Include="dllmain.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Wrappers\wrapper.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\Wrappers\License.txt" />
+    <None Include="..\wrappers\x86.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

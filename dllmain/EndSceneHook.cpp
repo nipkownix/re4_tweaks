@@ -333,7 +333,7 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	static const std::string path = rootPath + "re4_tweaks/imgui.ini";
+	static const std::string path = WstrToStr(rootPath) + "re4_tweaks/imgui.ini";
 	io.IniFilename = path.c_str();
 
 	BuildFontAtlas();

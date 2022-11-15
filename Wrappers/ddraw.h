@@ -1,92 +1,79 @@
 #pragma once
+#include "wrappers.h"
+#include "shared.h"
 
-#define VISIT_PROCS_DDRAW(visit) \
-	visit(AcquireDDThreadLock, jmpaddrvoid) \
-	visit(CompleteCreateSysmemSurface, jmpaddr) \
-	visit(D3DParseUnknownCommand, jmpaddr) \
-	visit(DDGetAttachedSurfaceLcl, jmpaddr) \
-	visit(DDInternalLock, jmpaddr) \
-	visit(DDInternalUnlock, jmpaddr) \
-	visit(DSoundHelp, jmpaddr) \
-	visit(DirectDrawCreate, jmpaddr) \
-	visit(DirectDrawCreateClipper, jmpaddr) \
-	visit(DirectDrawCreateEx, jmpaddr) \
-	visit(DirectDrawEnumerateA, jmpaddr) \
-	visit(DirectDrawEnumerateExA, jmpaddr) \
-	visit(DirectDrawEnumerateExW, jmpaddr) \
-	visit(DirectDrawEnumerateW, jmpaddr) \
-	visit(GetDDSurfaceLocal, jmpaddr) \
-	visit(GetOLEThunkData, jmpaddr) \
-	visit(GetSurfaceFromDC, jmpaddr) \
-	visit(RegisterSpecialCase, jmpaddr) \
-	visit(ReleaseDDThreadLock, jmpaddrvoid) \
-	visit(SetAppCompatData, jmpaddr)
+#if !X64
+struct ddraw_dll
+{
+    HMODULE dll;
+    FARPROC AcquireDDThreadLock;
+    FARPROC CompleteCreateSysmemSurface;
+    FARPROC D3DParseUnknownCommand;
+    FARPROC DDGetAttachedSurfaceLcl;
+    FARPROC DDInternalLock;
+    FARPROC DDInternalUnlock;
+    FARPROC DSoundHelp;
+    FARPROC DirectDrawCreate;
+    FARPROC DirectDrawCreateClipper;
+    FARPROC DirectDrawCreateEx;
+    FARPROC DirectDrawEnumerateA;
+    FARPROC DirectDrawEnumerateExA;
+    FARPROC DirectDrawEnumerateExW;
+    FARPROC DirectDrawEnumerateW;
+    FARPROC GetDDSurfaceLocal;
+    FARPROC GetOLEThunkData;
+    FARPROC GetSurfaceFromDC;
+    FARPROC RegisterSpecialCase;
+    FARPROC ReleaseDDThreadLock;
+    FARPROC SetAppCompatData;
 
-#undef VISIT_UNMODIFIED_DDRAW_PROCS
-#define VISIT_UNMODIFIED_DDRAW_PROCS(visit) \
-	visit(AcquireDDThreadLock) \
-	visit(CompleteCreateSysmemSurface) \
-	visit(D3DParseUnknownCommand) \
-	visit(DDGetAttachedSurfaceLcl) \
-	visit(DDInternalLock) \
-	visit(DDInternalUnlock) \
-	visit(DSoundHelp) \
-	visit(DirectDrawCreateClipper) \
-	visit(DirectDrawEnumerateA) \
-	visit(DirectDrawEnumerateExA) \
-	visit(DirectDrawEnumerateExW) \
-	visit(DirectDrawEnumerateW) \
-	visit(DllCanUnloadNow) \
-	visit(GetDDSurfaceLocal) \
-	visit(GetOLEThunkData) \
-	visit(GetSurfaceFromDC) \
-	visit(RegisterSpecialCase) \
-	visit(ReleaseDDThreadLock) \
-	visit(SetAppCompatData)
+    void LoadOriginalLibrary(HMODULE module)
+    {
+        dll = module;
+        shared.LoadOriginalLibrary(dll);
+        AcquireDDThreadLock = GetProcAddress(dll, "AcquireDDThreadLock");
+        CompleteCreateSysmemSurface = GetProcAddress(dll, "CompleteCreateSysmemSurface");
+        D3DParseUnknownCommand = GetProcAddress(dll, "D3DParseUnknownCommand");
+        DDGetAttachedSurfaceLcl = GetProcAddress(dll, "DDGetAttachedSurfaceLcl");
+        DDInternalLock = GetProcAddress(dll, "DDInternalLock");
+        DDInternalUnlock = GetProcAddress(dll, "DDInternalUnlock");
+        DSoundHelp = GetProcAddress(dll, "DSoundHelp");
+        DirectDrawCreate = GetProcAddress(dll, "DirectDrawCreate");
+        DirectDrawCreateClipper = GetProcAddress(dll, "DirectDrawCreateClipper");
+        DirectDrawCreateEx = GetProcAddress(dll, "DirectDrawCreateEx");
+        DirectDrawEnumerateA = GetProcAddress(dll, "DirectDrawEnumerateA");
+        DirectDrawEnumerateExA = GetProcAddress(dll, "DirectDrawEnumerateExA");
+        DirectDrawEnumerateExW = GetProcAddress(dll, "DirectDrawEnumerateExW");
+        DirectDrawEnumerateW = GetProcAddress(dll, "DirectDrawEnumerateW");
+        GetDDSurfaceLocal = GetProcAddress(dll, "GetDDSurfaceLocal");
+        GetOLEThunkData = GetProcAddress(dll, "GetOLEThunkData");
+        GetSurfaceFromDC = GetProcAddress(dll, "GetSurfaceFromDC");
+        RegisterSpecialCase = GetProcAddress(dll, "RegisterSpecialCase");
+        ReleaseDDThreadLock = GetProcAddress(dll, "ReleaseDDThreadLock");
+        SetAppCompatData = GetProcAddress(dll, "SetAppCompatData");
+    }
+} ddraw;
 
-#define VISIT_DOCUMENTED_DDRAW_PROCS(visit) \
-	visit(D3DParseUnknownCommand, unused) \
-	visit(DirectDrawCreate, unused) \
-	visit(DirectDrawCreateEx, unused) \
-	visit(DirectDrawCreateClipper, unused) \
-	visit(DirectDrawEnumerateA, unused) \
-	visit(DirectDrawEnumerateExA, unused) \
-	visit(DirectDrawEnumerateExW, unused) \
-	visit(DirectDrawEnumerateW, unused) \
-	visit(DllCanUnloadNow, unused) \
-	visit(DllGetClassObject, unused)
-
-#undef VISIT_MODIFIED_DDRAW_PROCS
-#define VISIT_MODIFIED_DDRAW_PROCS(visit) \
-	visit(DirectDrawCreate) \
-	visit(DirectDrawCreateEx) \
-	visit(DllGetClassObject)
-
-#define VISIT_PROCS_DDRAW_SHARED(visit) \
-	visit(DllCanUnloadNow, jmpaddr) \
-	visit(DllGetClassObject, jmpaddr)
-
-#define VISIT_SHARED_DDRAW_PROCS(visit) \
-	visit(DllCanUnloadNow, DllCanUnloadNow_ddraw, jmpaddr) \
-	visit(DllGetClassObject, DllGetClassObject_ddraw, jmpaddr)
-
-#undef VISIT_ALL_DDRAW_PROCS
-#define VISIT_ALL_DDRAW_PROCS(visit) \
-	VISIT_UNMODIFIED_DDRAW_PROCS(visit) \
-	VISIT_MODIFIED_DDRAW_PROCS(visit)
-
-#undef VISIT_UNMODIFIED_PROCS
-#define VISIT_UNMODIFIED_PROCS(visit) \
-	VISIT_UNMODIFIED_DDRAW_PROCS(visit)
-
-#undef VISIT_MODIFIED_PROCS
-#define VISIT_MODIFIED_PROCS(visit) \
-	VISIT_MODIFIED_DDRAW_PROCS(visit)
-
-#undef VISIT_ALL_PROCS
-#define VISIT_ALL_PROCS(visit) \
-	VISIT_ALL_DDRAW_PROCS(visit)
-
-#ifdef PROC_CLASS
-PROC_CLASS(ddraw, dll, VISIT_PROCS_DDRAW, VISIT_SHARED_DDRAW_PROCS)
+__declspec(naked) void _AcquireDDThreadLock() { _asm { jmp[ddraw.AcquireDDThreadLock] } }
+__declspec(naked) void _CompleteCreateSysmemSurface() { _asm { jmp[ddraw.CompleteCreateSysmemSurface] } }
+__declspec(naked) void _D3DParseUnknownCommand() { _asm { jmp[ddraw.D3DParseUnknownCommand] } }
+__declspec(naked) void _DDGetAttachedSurfaceLcl() { _asm { jmp[ddraw.DDGetAttachedSurfaceLcl] } }
+__declspec(naked) void _DDInternalLock() { _asm { jmp[ddraw.DDInternalLock] } }
+__declspec(naked) void _DDInternalUnlock() { _asm { jmp[ddraw.DDInternalUnlock] } }
+__declspec(naked) void _DSoundHelp() { _asm { jmp[ddraw.DSoundHelp] } }
+__declspec(naked) void _DirectDrawCreate() { _asm { jmp[ddraw.DirectDrawCreate] } }
+__declspec(naked) void _DirectDrawCreateClipper() { _asm { jmp[ddraw.DirectDrawCreateClipper] } }
+__declspec(naked) void _DirectDrawCreateEx() { _asm { jmp[ddraw.DirectDrawCreateEx] } }
+__declspec(naked) void _DirectDrawEnumerateA() { _asm { jmp[ddraw.DirectDrawEnumerateA] } }
+__declspec(naked) void _DirectDrawEnumerateExA() { _asm { jmp[ddraw.DirectDrawEnumerateExA] } }
+__declspec(naked) void _DirectDrawEnumerateExW() { _asm { jmp[ddraw.DirectDrawEnumerateExW] } }
+__declspec(naked) void _DirectDrawEnumerateW() { _asm { jmp[ddraw.DirectDrawEnumerateW] } }
+//__declspec(naked) void _DllCanUnloadNow() { _asm { jmp[ddraw.DllCanUnloadNow] } }
+//__declspec(naked) void _DllGetClassObject() { _asm { jmp[ddraw.DllGetClassObject] } }
+__declspec(naked) void _GetDDSurfaceLocal() { _asm { jmp[ddraw.GetDDSurfaceLocal] } }
+__declspec(naked) void _GetOLEThunkData() { _asm { jmp[ddraw.GetOLEThunkData] } }
+__declspec(naked) void _GetSurfaceFromDC() { _asm { jmp[ddraw.GetSurfaceFromDC] } }
+__declspec(naked) void _RegisterSpecialCase() { _asm { jmp[ddraw.RegisterSpecialCase] } }
+__declspec(naked) void _ReleaseDDThreadLock() { _asm { jmp[ddraw.ReleaseDDThreadLock] } }
+__declspec(naked) void _SetAppCompatData() { _asm { jmp[ddraw.SetAppCompatData] } }
 #endif

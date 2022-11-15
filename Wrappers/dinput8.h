@@ -1,21 +1,25 @@
 #pragma once
+#include "wrappers.h"
+#include "shared.h"
 
-#define VISIT_PROCS_DINPUT8(visit) \
-	visit(DirectInput8Create, jmpaddr) \
-	visit(GetdfDIJoystick, jmpaddr)
+struct dinput8_dll
+{
+    HMODULE dll;
+    FARPROC DirectInput8Create;
 
-#define VISIT_PROCS_DINPUT8_SHARED(visit) \
-	visit(DllCanUnloadNow, jmpaddr) \
-	visit(DllGetClassObject, jmpaddr) \
-	visit(DllRegisterServer, jmpaddr) \
-	visit(DllUnregisterServer, jmpaddr)
+    void LoadOriginalLibrary(HMODULE module)
+    {
+        dll = module;
+        shared.LoadOriginalLibrary(dll);
+        DirectInput8Create = GetProcAddress(dll, "DirectInput8Create");
+    }
+} dinput8;
 
-#define VISIT_SHARED_DINPUT8_PROCS(visit) \
-	visit(DllCanUnloadNow, DllCanUnloadNow_dinput8, jmpaddr) \
-	visit(DllGetClassObject, DllGetClassObject_dinput8, jmpaddr) \
-	visit(DllRegisterServer, DllRegisterServer_dinput8, jmpaddr) \
-	visit(DllUnregisterServer, DllUnregisterServer_dinput8, jmpaddr)
+#if !X64
+__declspec(naked) void _DirectInput8Create() { _asm { jmp[dinput8.DirectInput8Create] } }
+#endif
 
-#ifdef PROC_CLASS
-PROC_CLASS(dinput8, dll, VISIT_PROCS_DINPUT8, VISIT_SHARED_DINPUT8_PROCS)
+#if X64
+typedef HRESULT(*fn_DirectInput8Create)(HINSTANCE hinst, DWORD dwVersion, REFIID riidltf, LPVOID* ppvOut, LPUNKNOWN punkOuter);
+void _DirectInput8Create() { (fn_DirectInput8Create)dinput8.DirectInput8Create(); }
 #endif

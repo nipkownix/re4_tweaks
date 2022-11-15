@@ -19,7 +19,6 @@
 
 std::shared_ptr<class input> pInput;
 
-extern HMODULE g_module_handle;
 static std::shared_mutex s_windows_mutex;
 static std::unordered_map<HWND, unsigned int> s_raw_input_windows;
 static std::unordered_map<HWND, std::weak_ptr<input>> s_windows;

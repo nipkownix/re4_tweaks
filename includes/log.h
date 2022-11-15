@@ -45,6 +45,6 @@ private:
         return ret;
         */
 
-        return StrToWstr(logPath);
+        return logPath;
     }
 };

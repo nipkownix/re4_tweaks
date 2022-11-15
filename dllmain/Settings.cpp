@@ -11,8 +11,8 @@
 
 std::shared_ptr<class Config> pConfig = std::make_shared<Config>();
 
-const std::string sSettingOverridesPath = "re4_tweaks\\setting_overrides\\";
-const std::string sHDProjectOverrideName = "HDProject.ini";
+const std::wstring sSettingOverridesPath = L"re4_tweaks\\setting_overrides\\";
+const std::wstring sHDProjectOverrideName = L"HDProject.ini";
 
 const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
@@ -79,11 +79,11 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 void Config::ReadSettings()
 {
 	// Read default settings file first
-	std::string sDefaultIniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+	std::wstring sDefaultIniPath = rootPath + wrapperName + L".ini";
 	ReadSettings(sDefaultIniPath);
 
 	// Try reading in trainer.ini settings
-	std::string sTrainerIniPath = rootPath + "\\re4_tweaks\\trainer.ini";
+	std::wstring sTrainerIniPath = rootPath + L"re4_tweaks\\trainer.ini";
 	if (std::filesystem::exists(sTrainerIniPath))
 		ReadSettings(sTrainerIniPath);
 
@@ -113,7 +113,7 @@ void Config::ReadSettings()
 
 	// Process override INIs
 	for (const auto& path : override_inis)
-		ReadSettings(path.string());
+		ReadSettings(path.wstring());
 
 	// Special case for HDProject settings, make sure it overrides all other INIs
 	auto hdproject_path = override_path + sHDProjectOverrideName;
@@ -138,15 +138,15 @@ void Config::ParseHotkeys()
 	Trainer_ParseKeyCombos();
 }
 
-void Config::ReadSettings(std::string_view ini_path)
+void Config::ReadSettings(std::wstring ini_path)
 {
-	CmdIniReader iniReader(ini_path);
+	CIniReader iniReader(WstrToStr(ini_path));
 
 	#ifdef VERBOSE
-	con.AddLogChar("Reading settings from: %s", ini_path.data());
+	con.AddLogChar("Reading settings from: %s", WstrToStr(ini_path).data());
 	#endif
 
-	spd::log()->info("Reading settings from: \"{}\"", ini_path.data());
+	spd::log()->info("Reading settings from: \"{}\"", WstrToStr(ini_path).data());
 
 	pConfig->HasUnsavedChanges = false;
 
@@ -497,19 +497,18 @@ void Config::ReadSettings(std::string_view ini_path)
 
 std::mutex settingsThreadRunningMutex;
 
-void WriteSettings(std::string_view iniPath, bool trainerIni)
+void WriteSettings(std::wstring iniPath, bool trainerIni)
 {
 	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // only allow single thread writing to INI at one time
 
-	CIniReader iniReader("");
+	CIniReader iniReader(WstrToStr(iniPath));
 
 	#ifdef VERBOSE
-	con.AddConcatLog("Writing settings to: ", iniPath.data());
+	con.AddConcatLog("Writing settings to: ", WstrToStr(iniPath).data());
 	#endif
 
 	// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
-	const char* filename = iniPath.data();
-	if (!std::filesystem::exists(filename)) {
+	if (!std::filesystem::exists(iniPath)) {
 		#ifdef VERBOSE
 		con.AddLogChar("ini file doesn't exist in folder. Creating new one.");
 		#endif
@@ -520,18 +519,18 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 
 		if (!trainerIni)
 		{
-			if (std::filesystem::exists(rootPath + "re4_tweaks\\default_settings\\settings.ini"))
-				std::filesystem::copy(rootPath + "re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
+			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\settings.ini"))
+				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
 		}
 		else
 		{
-			if (std::filesystem::exists(rootPath + "re4_tweaks\\default_settings\\trainer_settings.ini"))
-				std::filesystem::copy(rootPath + "re4_tweaks\\default_settings\\trainer_settings.ini", iniPath, copyOptions);
+			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini"))
+				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini", iniPath, copyOptions);
 		}
 	}
 
 	// Try to remove read-only flag is it is set, for some reason.
-	DWORD iniFile = GetFileAttributesA(iniPath.data());
+	DWORD iniFile = GetFileAttributesW(iniPath.data());
 	if (iniFile != INVALID_FILE_ATTRIBUTES) {
 		bool isReadOnly = iniFile & FILE_ATTRIBUTE_READONLY;
 
@@ -543,14 +542,14 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 
 			spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
 
-			SetFileAttributesA(iniPath.data(), iniFile & ~FILE_ATTRIBUTE_READONLY);
+			SetFileAttributesW(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
 		}
 	}
 
 	if (trainerIni)
 	{
 		// trainer.ini-only settings
-		iniReader = CIniReader(iniPath);
+		iniReader = CIniReader(WstrToStr(iniPath));
 
 		// TRAINER
 		iniReader.WriteBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
@@ -806,8 +805,8 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 
 DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 {
-	std::string iniPathMain = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
-	std::string iniPathTrainer = rootPath + "\\re4_tweaks\\trainer.ini";
+	std::wstring iniPathMain = rootPath + wrapperName + L".ini";
+	std::wstring iniPathTrainer = rootPath + L"\\re4_tweaks\\trainer.ini";
 	WriteSettings(iniPathMain, false);
 	WriteSettings(iniPathTrainer, true);
 

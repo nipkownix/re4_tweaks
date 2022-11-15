@@ -2,9 +2,10 @@
 #include <d3d9.h>
 #include <imgui.h>
 
-extern std::string WrapperName;
-extern std::string rootPath;
-extern std::string logPath;
+extern HMODULE g_module_handle;
+extern std::wstring wrapperName;
+extern std::wstring rootPath;
+extern std::wstring logPath;
 extern HWND hWindow;
 
 // Init functions

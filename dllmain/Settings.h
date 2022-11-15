@@ -231,7 +231,7 @@ public:
 
 	void ReadSettings();
 	void ParseHotkeys();
-	void ReadSettings(std::string_view ini_path);
+	void ReadSettings(std::wstring ini_path);
 	void WriteSettings();
 
 	void LogSettings();

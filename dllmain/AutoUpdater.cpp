@@ -20,7 +20,7 @@ std::string fail_msg;
 void updateCheck()
 {
 	// Delete old dll file if it is present
-	if (std::filesystem::remove(rootPath + "dinput8.dll.deleteonnextlaunch"))
+	if (std::filesystem::remove(rootPath + L"dinput8.dll.deleteonnextlaunch"))
 	{
 		spd::log()->info("{} -> Old .dll found and deleted", __FUNCTION__);
 	}
@@ -152,16 +152,16 @@ void updateDownloadApply()
 	mz_zip_archive zip;
 	ZeroMemory(&zip, sizeof(zip));
 
-	std::string zip_path = rootPath + "re4_tweaks\\tmp_updt\\updt.zip";
+	std::wstring zip_path = rootPath + L"re4_tweaks\\tmp_updt\\updt.zip";
 
 	// Clear tmp dir
-	std::filesystem::remove_all(rootPath + "re4_tweaks\\tmp_updt");
+	std::filesystem::remove_all(rootPath + L"re4_tweaks\\tmp_updt");
 
 	// Create directory if it doesn't exist
-	std::filesystem::create_directories(rootPath + "re4_tweaks\\tmp_updt");
+	std::filesystem::create_directories(rootPath + L"re4_tweaks\\tmp_updt");
 
 	// Download update
-	HRESULT result = URLDownloadToFileA(NULL, updt.url.c_str(), zip_path.c_str(), 0, &callback);
+	HRESULT result = URLDownloadToFileW(NULL, StrToWstr(updt.url).c_str(), zip_path.c_str(), 0, &callback);
 
 	if (!SUCCEEDED(result)) {
 		spd::log()->info("{} -> Update download failed!", __FUNCTION__);
@@ -188,9 +188,9 @@ void updateDownloadApply()
 		}
 		else
 		{
-			mz_zip_reader_init_file(&zip, zip_path.c_str(), 0);
+			mz_zip_reader_init_file(&zip, WstrToStr(zip_path).c_str(), 0);
 
-			std::string target = rootPath + "re4_tweaks\\tmp_updt\\extracted\\";
+			std::wstring target = rootPath + L"re4_tweaks\\tmp_updt\\extracted\\";
 
 			mz_uint numfiles = mz_zip_reader_get_num_files(&zip);
 			bool successful = false;
@@ -201,14 +201,14 @@ void updateDownloadApply()
 				mz_zip_archive_file_stat zstat;
 				mz_zip_reader_file_stat(&zip, i, &zstat);
 
-				auto file_path = std::filesystem::path(target + zstat.m_filename);
+				auto file_path = std::filesystem::path(target + StrToWstr(zstat.m_filename));
 
 				// Create directory if it doesn't exist
 				std::filesystem::create_directories(file_path.parent_path());
 
 				// Extract
 				FILE* target_file = NULL;
-				fopen_s(&target_file, file_path.string().c_str(), "wb");
+				_wfopen_s(&target_file, file_path.wstring().c_str(), L"wb");
 				if (target_file)
 				{
 					mz_zip_reader_extract_to_cfile(&zip, i, target_file, 0);
@@ -217,10 +217,10 @@ void updateDownloadApply()
 			}
 
 			// Rename the dll to something that will be deleted on the next launch
-			std::string module_path = rootPath + "dinput8.dll";
-			std::string module_path_del = rootPath + "dinput8.dll.deleteonnextlaunch";
+			std::wstring module_path = rootPath + L"dinput8.dll";
+			std::wstring module_path_del = rootPath + L"dinput8.dll.deleteonnextlaunch";
 
-			BOOL result_moveFile = MoveFileExA(module_path.c_str(), module_path_del.c_str(), MOVEFILE_REPLACE_EXISTING);
+			BOOL result_moveFile = MoveFileExW(module_path.c_str(), module_path_del.c_str(), MOVEFILE_REPLACE_EXISTING);
 
 			// Apply the updated files
 			if (result_moveFile)
@@ -249,7 +249,7 @@ void updateDownloadApply()
 					updt.UpdateStatus = UpdateStatus::Failed;
 
 					// Try to restore the dll
-					MoveFileExA(module_path_del.c_str(), module_path.c_str(), MOVEFILE_REPLACE_EXISTING);
+					MoveFileExW(module_path_del.c_str(), module_path.c_str(), MOVEFILE_REPLACE_EXISTING);
 				}
 			}
 			else
@@ -264,7 +264,7 @@ void updateDownloadApply()
 	}
 
 	// Clear tmp dir
-	std::filesystem::remove_all(rootPath + "re4_tweaks\\tmp_updt");
+	std::filesystem::remove_all(rootPath + L"re4_tweaks\\tmp_updt");
 }
 
 void AutoUpdate::RenderUI()
@@ -377,8 +377,8 @@ void AutoUpdate::RenderUI()
 				updt.UpdateStatus = UpdateStatus::Finished;
 
 				// Relaunch the game
-				std::string bio4path = rootPath + "bio4.exe";
-				if ((int)ShellExecuteA(nullptr, "open", bio4path.c_str(), nullptr, nullptr, SW_SHOWDEFAULT) > 32)
+				std::wstring bio4path = rootPath + L"bio4.exe";
+				if ((int)ShellExecuteW(nullptr, L"open", bio4path.c_str(), nullptr, nullptr, SW_SHOWDEFAULT) > 32)
 				{
 					exit(0);
 					return;
