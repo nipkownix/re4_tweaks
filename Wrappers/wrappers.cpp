@@ -25,6 +25,9 @@
 
 //#define EnableKernel32Hook
 
+std::wstring wrapperName;
+std::wstring rootPath;
+std::wstring logPath;
 std::wstring customDllPath = L"";
 
 // Prefer Nvidia and AMD high performance graphics

@@ -193,7 +193,7 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void Init_ExceptionHandler()
+void re4t::init::ExceptionHandler()
 {
     std::wstring dumpPath = rootPath + L"CrashDumps";
 

@@ -74,7 +74,7 @@ void GetSofdecPointers()
 	ptrMemPoolMovie = injector::ReadMemory<uint32_t*>(pattern.count(1).get(0).get<uint32_t*>(2), true);
 }
 
-void Init_sofdec()
+void re4t::init::Sofdec()
 {
 	GetSofdecPointers();
 

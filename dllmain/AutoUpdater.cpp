@@ -25,7 +25,7 @@ void updateCheck()
 		spd::log()->info("{} -> Old .dll found and deleted", __FUNCTION__);
 	}
 
-	if (pConfig->bNeverCheckForUpdates)
+	if (re4t::cfg->bNeverCheckForUpdates)
 	{
 		updt.UpdateStatus = UpdateStatus::Finished;
 		return;
@@ -232,7 +232,7 @@ void updateDownloadApply()
 					std::filesystem::copy(target, rootPath, copyOptions);
 
 					// Save current settings on new .ini files
-					pConfig->WriteSettings();
+					re4t::cfg->WriteSettings();
 
 					// Done
 					updt.UpdateStatus = UpdateStatus::Success;
@@ -272,8 +272,8 @@ void AutoUpdate::RenderUI()
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Min/Max window sizes
-	const float max_x = 415.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
-	const float max_y = 360.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
+	const float max_x = 415.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+	const float max_y = 360.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
 
 	if (updt.UpdateStatus == UpdateStatus::Available)
 	{
@@ -288,22 +288,22 @@ void AutoUpdate::RenderUI()
 			ImGui::Bullet(); ImGui::Text("Version available: %s", updt.version.c_str());
 			ImGui::Bullet(); ImGui::Text("Version installed: %s", std::string(APP_VERSION).c_str());
 
-			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale));
+			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 
 			ImGui::Text("Changelog:");
 
 			ImGui::Separator();
-			ImGui::BeginChild("chnglog", ImVec2(0, 130 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale));
+			ImGui::BeginChild("chnglog", ImVec2(0, 130 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 			ImGui::TextWrapped(updt.description.c_str());
 			ImGui::EndChild();
 			ImGui::Separator();
 			
-			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale));
+			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 
 			ImGui::Text("Do you want to update now?");
 			ImGui::Spacing();
 
-			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale, 35 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale);
+			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale, 35 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale);
 
 			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - btn_size.y - 10);
 
@@ -326,8 +326,8 @@ void AutoUpdate::RenderUI()
 
 			if (ImGui::Button("Never ask again", btn_size))
 			{
-				pConfig->bNeverCheckForUpdates = true;
-				pConfig->WriteSettings();
+				re4t::cfg->bNeverCheckForUpdates = true;
+				re4t::cfg->WriteSettings();
 				updt.UpdateStatus = UpdateStatus::Finished;
 			}
 
@@ -344,7 +344,7 @@ void AutoUpdate::RenderUI()
 			const ImU32 col = ImColor(255, 25, 40, 255);
 			const ImU32 bg = ImColor(143, 143, 143, 255);
 
-			ImVec2 bar_size = ImVec2(400 * pConfig->fdbg2, 25 * pConfig->fdbg2);
+			ImVec2 bar_size = ImVec2(400 * re4t::cfg->fdbg2, 25 * re4t::cfg->fdbg2);
 			
 			ImGui_BufferingBar("##buffer_bar", (float)(download_progress / 100.0f), bar_size, bg, col);
 
@@ -355,8 +355,8 @@ void AutoUpdate::RenderUI()
 	if (updt.UpdateStatus == UpdateStatus::Success)
 	{
 		// Min/Max window sizes
-		const float max_x = 400.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
-		const float max_y = 160.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
+		const float max_x = 400.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+		const float max_y = 160.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
 
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2(max_x, max_y), ImGuiCond_Always);
@@ -366,7 +366,7 @@ void AutoUpdate::RenderUI()
 		{
 			ImGui::TextWrapped("re4_tweaks has successfully been updated to version %s.\n\nPress OK to relaunch the game for the update to take effect!", updt.version.c_str());
 
-			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale, 35 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale);
+			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale, 35 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale);
 			
 			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - btn_size.y - 10);
 
@@ -392,8 +392,8 @@ void AutoUpdate::RenderUI()
 	if (updt.UpdateStatus == UpdateStatus::Failed)
 	{
 		// Min/Max window sizes
-		const float max_x = 400.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
-		const float max_y = 200.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
+		const float max_x = 400.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+		const float max_y = 200.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
 
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2(max_x, max_y), ImGuiCond_Always);
@@ -405,7 +405,7 @@ void AutoUpdate::RenderUI()
 
 			ImGui::TextWrapped(fail_msg.c_str());
 
-			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale, 35 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale);
+			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale, 35 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale);
 
 			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - btn_size.y - 10);
 

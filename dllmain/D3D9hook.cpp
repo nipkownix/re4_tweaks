@@ -14,7 +14,7 @@ static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 	return new hook_Direct3D9(d3dInterface);
 }
 
-void Init_D3D9Hook()
+void re4t::init::D3D9Hook()
 {
 	auto pattern = hook::pattern("E8 ? ? ? ? A3 ? ? ? ? 85 C0 75 17");
 
@@ -122,7 +122,7 @@ HMONITOR hook_Direct3D9::GetAdapterMonitor(UINT Adapter)
 HRESULT hook_Direct3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
 {
 	// Force v-sync off
-	if (pConfig->bDisableVsync)
+	if (re4t::cfg->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	IDirect3DDevice9* device = nullptr;
@@ -239,7 +239,7 @@ UINT hook_Direct3DDevice9::GetNumberOfSwapChains(void)
 HRESULT hook_Direct3DDevice9::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
 	// Force v-sync off
-	if (pConfig->bDisableVsync)
+	if (re4t::cfg->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	ImGui_ImplDX9_InvalidateDeviceObjects(); // Reset ImGui objects to prevent freezing
@@ -257,10 +257,10 @@ HRESULT hook_Direct3DDevice9::Present(const RECT* pSourceRect, const RECT* pDest
 	HRESULT res = m_direct3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 	if (res == D3DERR_DEVICELOST)
 	{
-		if (pConfig->bRestorePickupTransparency)
+		if (re4t::cfg->bRestorePickupTransparency)
 		{
 			// Avoid alt-tab crash when on item-pickup screen with bRestorePickupTransparency active
-			pConfig->bRestorePickupTransparency = false;
+			re4t::cfg->bRestorePickupTransparency = false;
 			restorePickupTransparency = true;
 		}
 	}
@@ -269,7 +269,7 @@ HRESULT hook_Direct3DDevice9::Present(const RECT* pSourceRect, const RECT* pDest
 		// Restore bRestorePickupTransparency if needed
 		if (restorePickupTransparency)
 		{
-			pConfig->bRestorePickupTransparency = true;
+			re4t::cfg->bRestorePickupTransparency = true;
 			restorePickupTransparency = false;
 		}
 	}

@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d9.h>
 #include <imgui.h>
+#include "Settings.h"
 
 extern HMODULE g_module_handle;
 extern std::wstring wrapperName;
@@ -8,31 +9,38 @@ extern std::wstring rootPath;
 extern std::wstring logPath;
 extern HWND hWindow;
 
-// Init functions
-void Init_60fpsFixes();
-void Init_AspectRatioTweaks();
-void Init_AudioTweaks();
-void Init_CameraTweaks();
-void Init_ControllerTweaks();
-void Init_CommandLine();
-void Init_DebugDisplay();
-void Init_D3D9Hook();
-void Init_DisplayTweaks();
-void Init_ExceptionHandler();
-void Init_FilterXXFixes();
-bool Init_Game();
-void Init_HandleLimits();
-void Init_HDProject();
-void Init_KeyboardMouseTweaks();
-void Init_MouseTurning();
-void Init_MathReimpl();
-void Init_Misc();
-void Init_ModExpansion();
-void Init_QTEfixes();
-void Init_sofdec();
-void Init_ToolMenu();
-void Init_ToolMenuDebug();
-void Init_WndProcHook();
+namespace re4t
+{
+	namespace init
+	{
+		// Init functions
+		void AspectRatioTweaks();
+		void AudioTweaks();
+		void CameraTweaks();
+		void CommandLine();
+		void ControllerTweaks();
+		void D3D9Hook();
+		void DebugDisplay();
+		void DisplayTweaks();
+		void ExceptionHandler();
+		void FrameRateFixes();
+		void FilterXXFixes();
+		bool Game();
+		void HandleLimits();
+		void HDProject();
+		void KeyboardMouseTweaks();
+		void MathReimpl();
+		void Misc();
+		void MouseTurning();
+		void ModExpansion();
+		void MultithreadFix();
+		void QTEfixes();
+		void Sofdec();
+		void ToolMenu();
+		void ToolMenuDebug();
+		void WndProcHook();
+	}
+}
 
 // Hotkey bindings and parsing
 bool ParseConsoleKeyCombo(std::string_view in_combo);

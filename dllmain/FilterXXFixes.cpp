@@ -175,7 +175,7 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 
 		bio4::GXShaderCall(0xE);
 
-		if ((pConfig->bUseEnhancedGCBlur) && (params->AlphaLevel > 1))
+		if ((re4t::cfg->bUseEnhancedGCBlur) && (params->AlphaLevel > 1))
 		{
 			// 2nd blur step - Not present on the original code. We do this to blur the image a bit more, which makes the effect
 			// look better on modern high-definition displays.
@@ -290,7 +290,7 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 	};
 
 	// Replace some values to reduce ghosting a bit
-	if (pConfig->bUseEnhancedGCBlur)
+	if (re4t::cfg->bUseEnhancedGCBlur)
 	{
 		AlphaLvlTable = {
 			0.0f,
@@ -385,7 +385,7 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 
 		bio4::GXShaderCall(0xE);
 
-		if (pConfig->bUseEnhancedGCBlur)
+		if (re4t::cfg->bUseEnhancedGCBlur)
 		{
 			// 2nd blur step - Not present on the original code. We do this to blur the image a bit more, which makes the effect
 			// look better on modern high-definition displays.
@@ -483,11 +483,11 @@ void GetFilterPointers()
 	ptr_filter0a_shader_num = (int32_t*)*varPtr;
 }
 
-void Init_FilterXXFixes()
+void re4t::init::FilterXXFixes()
 {
 	GetFilterPointers();
 
-	if (pConfig->bEnableGCBlur)
+	if (re4t::cfg->bEnableGCBlur)
 	{
 		// Hook Filter01Render, first block (loop that's ran 4 times + 0.25 pass)
 		auto pattern = hook::pattern("3C 01 0F 85 ? ? ? ? D9 85");
@@ -510,7 +510,7 @@ void Init_FilterXXFixes()
 		spd::log()->info("{} -> EnableGCBlur applied", __FUNCTION__);
 	}
 
-	if (pConfig->bEnableGCScopeBlur)
+	if (re4t::cfg->bEnableGCScopeBlur)
 	{
 		// Short-circuit Filter0aGXDraw to skip over the GXPosition etc things that we reimplement ourselves
 		auto pattern = hook::pattern("D9 45 A4 DC 15 ? ? ? ? DF E0 F6 C4 41 75 ? DC 1D ? ? ? ? DF E0 F6 C4 05 0F 8B ? ? ? ? EB");

@@ -304,7 +304,7 @@ void SubScreenCall_Hook()
 	SubScreenCall();
 }
 
-void Init_DebugDisplay()
+void re4t::init::DebugDisplay()
 {
 	// blkPolySphereCkCore: reimplement call to cSat::disp when polygon is collided with
 	auto pattern = hook::pattern("C7 45 F8 01 00 00 00 85 C9");

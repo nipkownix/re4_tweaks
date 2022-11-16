@@ -9,7 +9,10 @@
 #include "Utils.h"
 #include "Trainer.h"
 
-std::shared_ptr<class Config> pConfig = std::make_shared<Config>();
+namespace re4t
+{
+	re4t_cfg* cfg = new re4t_cfg;
+}
 
 const std::wstring sSettingOverridesPath = L"re4_tweaks\\setting_overrides\\";
 const std::wstring sHDProjectOverrideName = L"HDProject.ini";
@@ -18,9 +21,7 @@ const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
 const char* sAdaCostumeNames[] = {"RE2", "Spy", "Normal"};
 
-bool bIsUsingHDProject = false;
-
-std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
+std::vector<uint32_t> re4t_cfg::ParseKeyCombo(std::string_view in_combo)
 {
 	// Convert combo to uppercase to match Settings::key_map
 	std::string combo(in_combo);
@@ -76,7 +77,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	return new_combo;
 }
 
-void Config::ReadSettings()
+void re4t_cfg::ReadSettings()
 {
 	// Read default settings file first
 	std::wstring sDefaultIniPath = rootPath + wrapperName + L".ini";
@@ -119,26 +120,26 @@ void Config::ReadSettings()
 	auto hdproject_path = override_path + sHDProjectOverrideName;
 	if (std::filesystem::exists(hdproject_path))
 	{
-		bIsUsingHDProject = true;
+		re4t::cfg->bIsUsingHDProject = true;
 		ReadSettings(hdproject_path);
 	}
 }
 
-void Config::ParseHotkeys()
+void re4t_cfg::ParseHotkeys()
 {
 	pInput->ClearHotkeys();
 
-	ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
-	ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
-	ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
-	ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
-	ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
-	ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
+	ParseConfigMenuKeyCombo(re4t::cfg->sConfigMenuKeyCombo);
+	ParseConsoleKeyCombo(re4t::cfg->sConsoleKeyCombo);
+	ParseToolMenuKeyCombo(re4t::cfg->sDebugMenuKeyCombo);
+	ParseMouseTurnModifierCombo(re4t::cfg->sMouseTurnModifierKeyCombo);
+	ParseJetSkiTrickCombo(re4t::cfg->sJetSkiTrickCombo);
+	ParseImGuiUIFocusCombo(re4t::cfg->sTrainerFocusUIKeyCombo);
 
 	Trainer_ParseKeyCombos();
 }
 
-void Config::ReadSettings(std::wstring ini_path)
+void re4t_cfg::ReadSettings(std::wstring ini_path)
 {
 	CIniReader iniReader(WstrToStr(ini_path));
 
@@ -148,307 +149,307 @@ void Config::ReadSettings(std::wstring ini_path)
 
 	spd::log()->info("Reading settings from: \"{}\"", WstrToStr(ini_path).data());
 
-	pConfig->HasUnsavedChanges = false;
-
+	re4t::cfg->HasUnsavedChanges = false;
+	
 	// DISPLAY
-	pConfig->fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", pConfig->fFOVAdditional);
-	if (pConfig->fFOVAdditional > 0.0f)
-		pConfig->bEnableFOV = true;
+	re4t::cfg->fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
+	if (re4t::cfg->fFOVAdditional > 0.0f)
+		re4t::cfg->bEnableFOV = true;
 	else
-		pConfig->bEnableFOV = false;
+		re4t::cfg->bEnableFOV = false;
 
-	pConfig->bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
+	re4t::cfg->bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
 
-	pConfig->bUltraWideAspectSupport = iniReader.ReadBoolean("DISPLAY", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport);
-	pConfig->bSideAlignHUD = iniReader.ReadBoolean("DISPLAY", "SideAlignHUD", pConfig->bSideAlignHUD);
-	pConfig->bStretchFullscreenImages = iniReader.ReadBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
-	pConfig->bStretchVideos = iniReader.ReadBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
-	pConfig->bRemove16by10BlackBars = iniReader.ReadBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
+	re4t::cfg->bUltraWideAspectSupport = iniReader.ReadBoolean("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
+	re4t::cfg->bSideAlignHUD = iniReader.ReadBoolean("DISPLAY", "SideAlignHUD", re4t::cfg->bSideAlignHUD);
+	re4t::cfg->bStretchFullscreenImages = iniReader.ReadBoolean("DISPLAY", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages);
+	re4t::cfg->bStretchVideos = iniReader.ReadBoolean("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
+	re4t::cfg->bRemove16by10BlackBars = iniReader.ReadBoolean("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
 
-	pConfig->bReplaceFramelimiter = iniReader.ReadBoolean("DISPLAY", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter);
-	pConfig->bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
-	pConfig->bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
-	pConfig->iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", pConfig->iCustomRefreshRate);
-	pConfig->bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", pConfig->bOverrideLaserColor);
-	pConfig->bRainbowLaser = iniReader.ReadBoolean("DISPLAY", "RainbowLaser", pConfig->bRainbowLaser);
+	re4t::cfg->bReplaceFramelimiter = iniReader.ReadBoolean("DISPLAY", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
+	re4t::cfg->bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
+	re4t::cfg->bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
+	re4t::cfg->iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+	re4t::cfg->bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
+	re4t::cfg->bRainbowLaser = iniReader.ReadBoolean("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
-	pConfig->iLaserR = iniReader.ReadInteger("DISPLAY", "LaserR", pConfig->iLaserR);
-	pConfig->iLaserG = iniReader.ReadInteger("DISPLAY", "LaserG", pConfig->iLaserG);
-	pConfig->iLaserB = iniReader.ReadInteger("DISPLAY", "LaserB", pConfig->iLaserB);
-	fLaserColorPicker[0] = pConfig->iLaserR / 255.0f;
-	fLaserColorPicker[1] = pConfig->iLaserG / 255.0f;
-	fLaserColorPicker[2] = pConfig->iLaserB / 255.0f;
+	re4t::cfg->iLaserR = iniReader.ReadInteger("DISPLAY", "LaserR", re4t::cfg->iLaserR);
+	re4t::cfg->iLaserG = iniReader.ReadInteger("DISPLAY", "LaserG", re4t::cfg->iLaserG);
+	re4t::cfg->iLaserB = iniReader.ReadInteger("DISPLAY", "LaserB", re4t::cfg->iLaserB);
+	fLaserColorPicker[0] = re4t::cfg->iLaserR / 255.0f;
+	fLaserColorPicker[1] = re4t::cfg->iLaserG / 255.0f;
+	fLaserColorPicker[2] = re4t::cfg->iLaserB / 255.0f;
 
-	pConfig->bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", pConfig->bRestorePickupTransparency);
-	pConfig->bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03);
-	pConfig->bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
-	pConfig->bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
-	pConfig->bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
+	re4t::cfg->bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", re4t::cfg->bRestorePickupTransparency);
+	re4t::cfg->bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
+	re4t::cfg->bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
+	re4t::cfg->bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
+	re4t::cfg->bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
 
 	std::string GCBlurTypeStr = iniReader.ReadString("DISPLAY", "GCBlurType", "");
 	if (!GCBlurTypeStr.empty())
 	{
 		if (GCBlurTypeStr == std::string("Enhanced"))
 		{
-			pConfig->bUseEnhancedGCBlur = true;
+			re4t::cfg->bUseEnhancedGCBlur = true;
 			iGCBlurMode = 0;
 		}
 		else if (GCBlurTypeStr == std::string("Classic"))
 		{
-			pConfig->bUseEnhancedGCBlur = false;
+			re4t::cfg->bUseEnhancedGCBlur = false;
 			iGCBlurMode = 1;
 		}
 	}
 
-	pConfig->bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
-	pConfig->bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
-	pConfig->iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
-	pConfig->iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", pConfig->iWindowPositionY);
-	pConfig->bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", pConfig->bRememberWindowPos);
+	re4t::cfg->bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
+	re4t::cfg->bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+	re4t::cfg->iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
+	re4t::cfg->iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
+	re4t::cfg->bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
 
 	// AUDIO
-	pConfig->iVolumeMaster = iniReader.ReadInteger("AUDIO", "VolumeMaster", pConfig->iVolumeMaster);
-	pConfig->iVolumeMaster = min(max(pConfig->iVolumeMaster, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeMaster = iniReader.ReadInteger("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
+	re4t::cfg->iVolumeMaster = min(max(re4t::cfg->iVolumeMaster, 0), 100); // limit between 0 - 100
 
-	pConfig->iVolumeBGM = iniReader.ReadInteger("AUDIO", "VolumeBGM", pConfig->iVolumeBGM);
-	pConfig->iVolumeBGM = min(max(pConfig->iVolumeBGM, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeBGM = iniReader.ReadInteger("AUDIO", "VolumeBGM", re4t::cfg->iVolumeBGM);
+	re4t::cfg->iVolumeBGM = min(max(re4t::cfg->iVolumeBGM, 0), 100); // limit between 0 - 100
 
-	pConfig->iVolumeSE = iniReader.ReadInteger("AUDIO", "VolumeSE", pConfig->iVolumeSE);
-	pConfig->iVolumeSE = min(max(pConfig->iVolumeSE, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeSE = iniReader.ReadInteger("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
+	re4t::cfg->iVolumeSE = min(max(re4t::cfg->iVolumeSE, 0), 100); // limit between 0 - 100
 
-	pConfig->iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
-	pConfig->iVolumeCutscene = min(max(pConfig->iVolumeCutscene, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
+	re4t::cfg->iVolumeCutscene = min(max(re4t::cfg->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
-	pConfig->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects);
+	re4t::cfg->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
 
 	// MOUSE
-	pConfig->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
-	pConfig->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning);
-	pConfig->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", pConfig->fCameraSensitivity);
-	pConfig->fCameraSensitivity = fmin(fmax(pConfig->fCameraSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
-	pConfig->bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
+	re4t::cfg->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	re4t::cfg->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
+	re4t::cfg->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
+	re4t::cfg->fCameraSensitivity = fmin(fmax(re4t::cfg->fCameraSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
+	re4t::cfg->bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
 	
 	std::string MouseTurnTypeStr = iniReader.ReadString("MOUSE", "MouseTurnType", "");
 	if (!MouseTurnTypeStr.empty())
 	{
 		if (MouseTurnTypeStr == std::string("TypeA"))
-			pConfig->iMouseTurnType = MouseTurnTypes::TypeA;
+			re4t::cfg->iMouseTurnType = MouseTurnTypes::TypeA;
 		else if (MouseTurnTypeStr == std::string("TypeB"))
-			pConfig->iMouseTurnType = MouseTurnTypes::TypeB;
+			re4t::cfg->iMouseTurnType = MouseTurnTypes::TypeB;
 	}
 
-	pConfig->fTurnTypeBSensitivity = iniReader.ReadFloat("MOUSE", "TurnTypeBSensitivity", pConfig->fTurnTypeBSensitivity);
-	pConfig->fTurnTypeBSensitivity = fmin(fmax(pConfig->fTurnTypeBSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
-	pConfig->bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", pConfig->bUseRawMouseInput);
-	pConfig->bDetachCameraFromAim = iniReader.ReadBoolean("MOUSE", "DetachCameraFromAim", pConfig->bDetachCameraFromAim);
-	pConfig->bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", pConfig->bFixSniperZoom);
-	pConfig->bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", pConfig->bFixSniperFocus);
-	pConfig->bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", pConfig->bFixRetryLoadMouseSelector);
+	re4t::cfg->fTurnTypeBSensitivity = iniReader.ReadFloat("MOUSE", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
+	re4t::cfg->fTurnTypeBSensitivity = fmin(fmax(re4t::cfg->fTurnTypeBSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
+	re4t::cfg->bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput);
+	re4t::cfg->bDetachCameraFromAim = iniReader.ReadBoolean("MOUSE", "DetachCameraFromAim", re4t::cfg->bDetachCameraFromAim);
+	re4t::cfg->bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", re4t::cfg->bFixSniperZoom);
+	re4t::cfg->bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", re4t::cfg->bFixSniperFocus);
+	re4t::cfg->bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", re4t::cfg->bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
-	pConfig->bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons);
-	pConfig->bAllowReloadWithoutAiming_kbm = iniReader.ReadBoolean("KEYBOARD", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_kbm);
-	pConfig->bReloadWithoutZoom_kbm = iniReader.ReadBoolean("KEYBOARD", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_kbm);
+	re4t::cfg->bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", re4t::cfg->bFallbackToEnglishKeyIcons);
+	re4t::cfg->bAllowReloadWithoutAiming_kbm = iniReader.ReadBoolean("KEYBOARD", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_kbm);
+	re4t::cfg->bReloadWithoutZoom_kbm = iniReader.ReadBoolean("KEYBOARD", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_kbm);
 
 	// CONTROLLER
-	pConfig->bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity);
-	pConfig->fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", pConfig->fControllerSensitivity);
-	pConfig->fControllerSensitivity = fmin(fmax(pConfig->fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
-	pConfig->bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone);
-	pConfig->bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone);
-	pConfig->fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", pConfig->fXinputDeadzone);
-	pConfig->fXinputDeadzone = fmin(fmax(pConfig->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
-	pConfig->bAllowReloadWithoutAiming_controller = iniReader.ReadBoolean("CONTROLLER", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_controller);
-	pConfig->bReloadWithoutZoom_controller = iniReader.ReadBoolean("CONTROLLER", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_controller);
+	re4t::cfg->bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", re4t::cfg->bOverrideControllerSensitivity);
+	re4t::cfg->fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", re4t::cfg->fControllerSensitivity);
+	re4t::cfg->fControllerSensitivity = fmin(fmax(re4t::cfg->fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
+	re4t::cfg->bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone);
+	re4t::cfg->bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
+	re4t::cfg->fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
+	re4t::cfg->fXinputDeadzone = fmin(fmax(re4t::cfg->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
+	re4t::cfg->bAllowReloadWithoutAiming_controller = iniReader.ReadBoolean("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
+	re4t::cfg->bReloadWithoutZoom_controller = iniReader.ReadBoolean("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
 
 	// FRAME RATE
-	pConfig->bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed);
-	pConfig->bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", pConfig->bFixTurningSpeed);
-	pConfig->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", pConfig->bFixQTE);
-	pConfig->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics);
-	pConfig->bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", pConfig->bEnableFastMath);
-	pConfig->bMultithreadFix = iniReader.ReadBoolean("FRAME RATE", "MultithreadFix", pConfig->bMultithreadFix);
-	pConfig->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
+	re4t::cfg->bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
+	re4t::cfg->bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
+	re4t::cfg->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
+	re4t::cfg->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
+	re4t::cfg->bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
+	re4t::cfg->bMultithreadFix = iniReader.ReadBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
+	re4t::cfg->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
 
 	// MISC
-	pConfig->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates);
-	pConfig->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
+	re4t::cfg->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
+	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
 
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "Jacket") pConfig->CostumeOverride.Leon = LeonCostume::Jacket;
-		if (buf == "Normal") pConfig->CostumeOverride.Leon = LeonCostume::Normal;
-		if (buf == "Vest") pConfig->CostumeOverride.Leon = LeonCostume::Vest;
-		if (buf == "RPD") pConfig->CostumeOverride.Leon = LeonCostume::RPD;
-		if (buf == "Mafia") pConfig->CostumeOverride.Leon = LeonCostume::Mafia;
+		if (buf == "Jacket") re4t::cfg->CostumeOverride.Leon = LeonCostume::Jacket;
+		if (buf == "Normal") re4t::cfg->CostumeOverride.Leon = LeonCostume::Normal;
+		if (buf == "Vest") re4t::cfg->CostumeOverride.Leon = LeonCostume::Vest;
+		if (buf == "RPD") re4t::cfg->CostumeOverride.Leon = LeonCostume::RPD;
+		if (buf == "Mafia") re4t::cfg->CostumeOverride.Leon = LeonCostume::Mafia;
 
-		iCostumeComboLeon = (int)pConfig->CostumeOverride.Leon;
+		iCostumeComboLeon = (int)re4t::cfg->CostumeOverride.Leon;
 	}
 
 	buf = iniReader.ReadString("MISC", "AshleyCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "Normal") pConfig->CostumeOverride.Ashley = AshleyCostume::Normal;
-		if (buf == "Popstar") pConfig->CostumeOverride.Ashley = AshleyCostume::Popstar;
-		if (buf == "Armor") pConfig->CostumeOverride.Ashley = AshleyCostume::Armor;
+		if (buf == "Normal") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Normal;
+		if (buf == "Popstar") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Popstar;
+		if (buf == "Armor") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Armor;
 
-		iCostumeComboAshley = (int)pConfig->CostumeOverride.Ashley;
+		iCostumeComboAshley = (int)re4t::cfg->CostumeOverride.Ashley;
 	}
 
 	buf = iniReader.ReadString("MISC", "AdaCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "RE2") pConfig->CostumeOverride.Ada = AdaCostume::RE2;
-		if (buf == "Spy") pConfig->CostumeOverride.Ada = AdaCostume::Spy;
-		if (buf == "Normal") pConfig->CostumeOverride.Ada = AdaCostume::Normal;
+		if (buf == "RE2") re4t::cfg->CostumeOverride.Ada = AdaCostume::RE2;
+		if (buf == "Spy") re4t::cfg->CostumeOverride.Ada = AdaCostume::Spy;
+		if (buf == "Normal") re4t::cfg->CostumeOverride.Ada = AdaCostume::Normal;
 
-		iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
+		iCostumeComboAda = (int)re4t::cfg->CostumeOverride.Ada;
 
 		// Normal is id 3, but we're lying to ImGui by pretending Normal is id 2 instead.
-		if (pConfig->CostumeOverride.Ada == AdaCostume::Normal)
+		if (re4t::cfg->CostumeOverride.Ada == AdaCostume::Normal)
 			iCostumeComboAda--;
 	}
 
-	pConfig->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles);
-	pConfig->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
-	pConfig->iViolenceLevelOverride = min(max(pConfig->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
-	pConfig->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer);
-	pConfig->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes);
-	pConfig->bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley);
-	pConfig->bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", pConfig->bAllowAshleySuplex);
-	pConfig->bAllowMatildaQuickturn = iniReader.ReadBoolean("MISC", "AllowMatildaQuickturn", pConfig->bAllowMatildaQuickturn);
-	pConfig->bFixDitmanGlitch = iniReader.ReadBoolean("MISC", "FixDitmanGlitch", pConfig->bFixDitmanGlitch);
-	pConfig->bUseSprintToggle = iniReader.ReadBoolean("MISC", "UseSprintToggle", pConfig->bUseSprintToggle);
-	pConfig->bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", pConfig->bDisableQTE);
-	pConfig->bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
-	pConfig->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
-	pConfig->bSkipMenuFades = iniReader.ReadBoolean("MISC", "SkipMenuFades", pConfig->bSkipMenuFades);
-	pConfig->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
-	pConfig->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", pConfig->bEnableModExpansion);
-	pConfig->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", pConfig->bForceETSApplyScale);
+	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
+	re4t::cfg->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
+	re4t::cfg->iViolenceLevelOverride = min(max(re4t::cfg->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
+	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+	re4t::cfg->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
+	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
+	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
+	re4t::cfg->bAllowMatildaQuickturn = iniReader.ReadBoolean("MISC", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
+	re4t::cfg->bFixDitmanGlitch = iniReader.ReadBoolean("MISC", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
+	re4t::cfg->bUseSprintToggle = iniReader.ReadBoolean("MISC", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+	re4t::cfg->bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", re4t::cfg->bDisableQTE);
+	re4t::cfg->bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+	re4t::cfg->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
+	re4t::cfg->bSkipMenuFades = iniReader.ReadBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+	re4t::cfg->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
+	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
+	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 
 	// MEMORY
-	pConfig->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
-	pConfig->bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", pConfig->bRaiseVertexAlloc);
-	pConfig->bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc);
+	re4t::cfg->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
+	re4t::cfg->bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", re4t::cfg->bRaiseVertexAlloc);
+	re4t::cfg->bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", re4t::cfg->bRaiseInventoryAlloc);
 
 	// HOTKEYS
-	pConfig->sConfigMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "ConfigMenu", pConfig->sConfigMenuKeyCombo));
-	pConfig->sConsoleKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "Console", pConfig->sConsoleKeyCombo));
-	pConfig->sFlipItemUp = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemUp", pConfig->sFlipItemUp));
-	pConfig->sFlipItemDown = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemDown", pConfig->sFlipItemDown));
-	pConfig->sFlipItemLeft = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemLeft", pConfig->sFlipItemLeft));
-	pConfig->sFlipItemRight = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemRight", pConfig->sFlipItemRight));
+	re4t::cfg->sConfigMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo));
+	re4t::cfg->sConsoleKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "Console", re4t::cfg->sConsoleKeyCombo));
+	re4t::cfg->sFlipItemUp = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemUp", re4t::cfg->sFlipItemUp));
+	re4t::cfg->sFlipItemDown = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemDown", re4t::cfg->sFlipItemDown));
+	re4t::cfg->sFlipItemLeft = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemLeft", re4t::cfg->sFlipItemLeft));
+	re4t::cfg->sFlipItemRight = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemRight", re4t::cfg->sFlipItemRight));
 
-	pConfig->sQTE_key_1 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_1", pConfig->sQTE_key_1));
-	pConfig->sQTE_key_2 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_2", pConfig->sQTE_key_2));
+	re4t::cfg->sQTE_key_1 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_1", re4t::cfg->sQTE_key_1));
+	re4t::cfg->sQTE_key_2 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_2", re4t::cfg->sQTE_key_2));
 	
 	// Check if the QTE bindings are valid for the current keyboard layout.
 	// Try to reset them using VK Hex Codes if they aren't.
-	if (pInput->KeyMap_getVK(pConfig->sQTE_key_1) == 0)
-		pConfig->sQTE_key_1 = pInput->KeyMap_getSTR(0x44); // Latin D
+	if (pInput->KeyMap_getVK(re4t::cfg->sQTE_key_1) == 0)
+		re4t::cfg->sQTE_key_1 = pInput->KeyMap_getSTR(0x44); // Latin D
 
-	if (pInput->KeyMap_getVK(pConfig->sQTE_key_2) == 0)
-		pConfig->sQTE_key_2 = pInput->KeyMap_getSTR(0x41); // Latin A
+	if (pInput->KeyMap_getVK(re4t::cfg->sQTE_key_2) == 0)
+		re4t::cfg->sQTE_key_2 = pInput->KeyMap_getSTR(0x41); // Latin A
 
-	pConfig->sDebugMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "DebugMenu", pConfig->sDebugMenuKeyCombo));
-	pConfig->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo));
-	pConfig->sJetSkiTrickCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "JetSkiTricks", pConfig->sJetSkiTrickCombo));
+	re4t::cfg->sDebugMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "DebugMenu", re4t::cfg->sDebugMenuKeyCombo));
+	re4t::cfg->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", re4t::cfg->sMouseTurnModifierKeyCombo));
+	re4t::cfg->sJetSkiTrickCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "JetSkiTricks", re4t::cfg->sJetSkiTrickCombo));
 
 	// TRAINER
-	pConfig->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
-	pConfig->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("TRAINER", "EnablePlayerSpeedOverride", pConfig->bTrainerPlayerSpeedOverride);
-	pConfig->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
-	pConfig->bTrainerUseNumpadMovement = iniReader.ReadBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
-	pConfig->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
-	pConfig->fTrainerNumMoveSpeed = iniReader.ReadFloat("TRAINER", "NumpadMovementSpeed", pConfig->fTrainerNumMoveSpeed);
-	pConfig->fTrainerNumMoveSpeed = fmin(fmax(pConfig->fTrainerNumMoveSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
-	pConfig->bTrainerEnableFreeCam = iniReader.ReadBoolean("TRAINER", "EnableFreeCamera", pConfig->bTrainerEnableFreeCam);
-	pConfig->fTrainerFreeCamSpeed = iniReader.ReadFloat("TRAINER", "FreeCamSpeed", pConfig->fTrainerFreeCamSpeed);
-	pConfig->fTrainerFreeCamSpeed = fmin(fmax(pConfig->fTrainerFreeCamSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
-	pConfig->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
-	pConfig->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
-	pConfig->fTrainerEnemyHPMultiplier = fmin(fmax(pConfig->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
-	pConfig->bTrainerRandomHPMultiplier = iniReader.ReadBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
-	pConfig->fTrainerRandomHPMultiMin = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMin", pConfig->fTrainerRandomHPMultiMin);
-	pConfig->fTrainerRandomHPMultiMin = fmin(fmax(pConfig->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
-	pConfig->fTrainerRandomHPMultiMax = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
-	pConfig->fTrainerRandomHPMultiMax = fmin(fmax(pConfig->fTrainerRandomHPMultiMax, fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
-	pConfig->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
-	pConfig->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
-	pConfig->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
-	pConfig->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
-	pConfig->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", pConfig->bTrainerShowDebugTrgHintText);
+	re4t::cfg->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
+	re4t::cfg->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("TRAINER", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
+	re4t::cfg->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("TRAINER", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
+	re4t::cfg->bTrainerUseNumpadMovement = iniReader.ReadBoolean("TRAINER", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
+	re4t::cfg->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("TRAINER", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
+	re4t::cfg->fTrainerNumMoveSpeed = iniReader.ReadFloat("TRAINER", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
+	re4t::cfg->fTrainerNumMoveSpeed = fmin(fmax(re4t::cfg->fTrainerNumMoveSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
+	re4t::cfg->bTrainerEnableFreeCam = iniReader.ReadBoolean("TRAINER", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
+	re4t::cfg->fTrainerFreeCamSpeed = iniReader.ReadFloat("TRAINER", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
+	re4t::cfg->fTrainerFreeCamSpeed = fmin(fmax(re4t::cfg->fTrainerFreeCamSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
+	re4t::cfg->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("TRAINER", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
+	re4t::cfg->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("TRAINER", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
+	re4t::cfg->fTrainerEnemyHPMultiplier = fmin(fmax(re4t::cfg->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
+	re4t::cfg->bTrainerRandomHPMultiplier = iniReader.ReadBoolean("TRAINER", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
+	re4t::cfg->fTrainerRandomHPMultiMin = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
+	re4t::cfg->fTrainerRandomHPMultiMin = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
+	re4t::cfg->fTrainerRandomHPMultiMax = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
+	re4t::cfg->fTrainerRandomHPMultiMax = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMax, fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
+	re4t::cfg->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("TRAINER", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
+	re4t::cfg->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
+	re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
+	re4t::cfg->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
+	re4t::cfg->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
 
 	// ESP
-	pConfig->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", pConfig->bShowESP);
-	pConfig->bEspShowInfoOnTop = iniReader.ReadBoolean("ESP", "ShowInfoOnTop", pConfig->bEspShowInfoOnTop);
-	pConfig->bEspOnlyShowEnemies = iniReader.ReadBoolean("ESP", "OnlyShowEnemies", pConfig->bEspOnlyShowEnemies);
-	pConfig->bEspOnlyShowValidEms = iniReader.ReadBoolean("ESP", "OnlyShowValidEms", pConfig->bEspOnlyShowValidEms);
-	pConfig->bEspOnlyShowESLSpawned = iniReader.ReadBoolean("ESP", "OnlyShowESLSpawned", pConfig->bEspOnlyShowESLSpawned);
-	pConfig->bEspOnlyShowAlive = iniReader.ReadBoolean("ESP", "OnlyShowAlive", pConfig->bEspOnlyShowAlive);
-	pConfig->fEspMaxEmDistance = iniReader.ReadFloat("ESP", "MaxEmDistance", pConfig->fEspMaxEmDistance);
-	pConfig->bEspOnlyShowClosestEms = iniReader.ReadBoolean("ESP", "OnlyShowClosestEms", pConfig->bEspOnlyShowClosestEms);
-	pConfig->iEspClosestEmsAmount = iniReader.ReadInteger("ESP", "ClosestEmsAmount", pConfig->iEspClosestEmsAmount);
-	pConfig->bEspDrawLines = iniReader.ReadBoolean("ESP", "DrawLines", pConfig->bEspDrawLines);
+	re4t::cfg->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
+	re4t::cfg->bEspShowInfoOnTop = iniReader.ReadBoolean("ESP", "ShowInfoOnTop", re4t::cfg->bEspShowInfoOnTop);
+	re4t::cfg->bEspOnlyShowEnemies = iniReader.ReadBoolean("ESP", "OnlyShowEnemies", re4t::cfg->bEspOnlyShowEnemies);
+	re4t::cfg->bEspOnlyShowValidEms = iniReader.ReadBoolean("ESP", "OnlyShowValidEms", re4t::cfg->bEspOnlyShowValidEms);
+	re4t::cfg->bEspOnlyShowESLSpawned = iniReader.ReadBoolean("ESP", "OnlyShowESLSpawned", re4t::cfg->bEspOnlyShowESLSpawned);
+	re4t::cfg->bEspOnlyShowAlive = iniReader.ReadBoolean("ESP", "OnlyShowAlive", re4t::cfg->bEspOnlyShowAlive);
+	re4t::cfg->fEspMaxEmDistance = iniReader.ReadFloat("ESP", "MaxEmDistance", re4t::cfg->fEspMaxEmDistance);
+	re4t::cfg->bEspOnlyShowClosestEms = iniReader.ReadBoolean("ESP", "OnlyShowClosestEms", re4t::cfg->bEspOnlyShowClosestEms);
+	re4t::cfg->iEspClosestEmsAmount = iniReader.ReadInteger("ESP", "ClosestEmsAmount", re4t::cfg->iEspClosestEmsAmount);
+	re4t::cfg->bEspDrawLines = iniReader.ReadBoolean("ESP", "DrawLines", re4t::cfg->bEspDrawLines);
 
 	buf = iniReader.ReadString("ESP", "EmNameMode", "");
 	if (!buf.empty())
 	{
-		if (buf == "DontShow") pConfig->iEspEmNameMode = 0;
-		if (buf == "Normal") pConfig->iEspEmNameMode = 1;
-		if (buf == "Simplified") pConfig->iEspEmNameMode = 2;
+		if (buf == "DontShow") re4t::cfg->iEspEmNameMode = 0;
+		if (buf == "Normal") re4t::cfg->iEspEmNameMode = 1;
+		if (buf == "Simplified") re4t::cfg->iEspEmNameMode = 2;
 	}
 
 	buf = iniReader.ReadString("ESP", "EmHPMode", "");
 	if (!buf.empty())
 	{
-		if (buf == "DontShow") pConfig->iEspEmHPMode = 0;
-		if (buf == "Bar") pConfig->iEspEmHPMode = 1;
-		if (buf == "Text") pConfig->iEspEmHPMode = 2;
+		if (buf == "DontShow") re4t::cfg->iEspEmHPMode = 0;
+		if (buf == "Bar") re4t::cfg->iEspEmHPMode = 1;
+		if (buf == "Text") re4t::cfg->iEspEmHPMode = 2;
 	}
 
-	pConfig->bEspDrawDebugInfo = iniReader.ReadBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
+	re4t::cfg->bEspDrawDebugInfo = iniReader.ReadBoolean("ESP", "DrawDebugInfo", re4t::cfg->bEspDrawDebugInfo);
 
 	// SIDEINFO
-	pConfig->bShowSideInfo = iniReader.ReadBoolean("SIDEINFO", "ShowSideInfo", pConfig->bShowSideInfo);
-	pConfig->bSideShowEmCount = iniReader.ReadBoolean("SIDEINFO", "ShowEmCount", pConfig->bSideShowEmCount);
-	pConfig->bSideShowEmList = iniReader.ReadBoolean("SIDEINFO", "ShowEmList", pConfig->bSideShowEmList);
-	pConfig->bSideOnlyShowESLSpawned = iniReader.ReadBoolean("SIDEINFO", "OnlyShowESLSpawned", pConfig->bSideOnlyShowESLSpawned);
-	pConfig->bSideShowSimpleNames = iniReader.ReadBoolean("SIDEINFO", "ShowSimpleNames", pConfig->bSideShowSimpleNames);
-	pConfig->iSideClosestEmsAmount = iniReader.ReadInteger("SIDEINFO", "ClosestEmsAmount", pConfig->iSideClosestEmsAmount);
-	pConfig->fSideMaxEmDistance = iniReader.ReadFloat("SIDEINFO", "MaxEmDistance", pConfig->fSideMaxEmDistance);
+	re4t::cfg->bShowSideInfo = iniReader.ReadBoolean("SIDEINFO", "ShowSideInfo", re4t::cfg->bShowSideInfo);
+	re4t::cfg->bSideShowEmCount = iniReader.ReadBoolean("SIDEINFO", "ShowEmCount", re4t::cfg->bSideShowEmCount);
+	re4t::cfg->bSideShowEmList = iniReader.ReadBoolean("SIDEINFO", "ShowEmList", re4t::cfg->bSideShowEmList);
+	re4t::cfg->bSideOnlyShowESLSpawned = iniReader.ReadBoolean("SIDEINFO", "OnlyShowESLSpawned", re4t::cfg->bSideOnlyShowESLSpawned);
+	re4t::cfg->bSideShowSimpleNames = iniReader.ReadBoolean("SIDEINFO", "ShowSimpleNames", re4t::cfg->bSideShowSimpleNames);
+	re4t::cfg->iSideClosestEmsAmount = iniReader.ReadInteger("SIDEINFO", "ClosestEmsAmount", re4t::cfg->iSideClosestEmsAmount);
+	re4t::cfg->fSideMaxEmDistance = iniReader.ReadFloat("SIDEINFO", "MaxEmDistance", re4t::cfg->fSideMaxEmDistance);
 
 	buf = iniReader.ReadString("SIDEINFO", "EmHPMode", "");
 	if (!buf.empty())
 	{
-		if (buf == "DontShow") pConfig->iSideEmHPMode = 0;
-		if (buf == "Bar") pConfig->iSideEmHPMode = 1;
-		if (buf == "Text") pConfig->iSideEmHPMode = 2;
+		if (buf == "DontShow") re4t::cfg->iSideEmHPMode = 0;
+		if (buf == "Bar") re4t::cfg->iSideEmHPMode = 1;
+		if (buf == "Text") re4t::cfg->iSideEmHPMode = 2;
 	}
 
 	// TRAINER HOTKEYS
-	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
-	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo);
-	pConfig->sTrainerFreeCamKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FreeCamToggle", pConfig->sTrainerFreeCamKeyCombo);
-	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
-	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
-	pConfig->sTrainerDebugTrgKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "DebugTrg", pConfig->sTrainerDebugTrgKeyCombo);
+	re4t::cfg->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", re4t::cfg->sTrainerFocusUIKeyCombo);
+	re4t::cfg->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", re4t::cfg->sTrainerNoclipKeyCombo);
+	re4t::cfg->sTrainerFreeCamKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FreeCamToggle", re4t::cfg->sTrainerFreeCamKeyCombo);
+	re4t::cfg->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", re4t::cfg->sTrainerSpeedOverrideKeyCombo);
+	re4t::cfg->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
+	re4t::cfg->sTrainerDebugTrgKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "DebugTrg", re4t::cfg->sTrainerDebugTrgKeyCombo);
 
 	// WEAPON HOTKEYS
-	pConfig->bWeaponHotkeysEnable = iniReader.ReadBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
-	pConfig->sWeaponHotkeys[0] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", pConfig->sWeaponHotkeys[0]);
-	pConfig->sWeaponHotkeys[1] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", pConfig->sWeaponHotkeys[1]);
-	pConfig->sWeaponHotkeys[2] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);
-	pConfig->sWeaponHotkeys[3] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", pConfig->sWeaponHotkeys[3]);
-	pConfig->sWeaponHotkeys[4] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", pConfig->sWeaponHotkeys[4]);
-	pConfig->sLastWeaponHotkey = iniReader.ReadString("WEAPON_HOTKEYS", "LastWeaponHotkey", pConfig->sLastWeaponHotkey);
-	pConfig->iWeaponHotkeyWepIds[0] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
-	pConfig->iWeaponHotkeyWepIds[1] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
-	pConfig->iWeaponHotkeyWepIds[2] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
-	pConfig->iWeaponHotkeyWepIds[3] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", pConfig->iWeaponHotkeyWepIds[3]);
-	pConfig->iWeaponHotkeyWepIds[4] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", pConfig->iWeaponHotkeyWepIds[4]);
+	re4t::cfg->bWeaponHotkeysEnable = iniReader.ReadBoolean("WEAPON_HOTKEYS", "Enable", re4t::cfg->bWeaponHotkeysEnable);
+	re4t::cfg->sWeaponHotkeys[0] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", re4t::cfg->sWeaponHotkeys[0]);
+	re4t::cfg->sWeaponHotkeys[1] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", re4t::cfg->sWeaponHotkeys[1]);
+	re4t::cfg->sWeaponHotkeys[2] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", re4t::cfg->sWeaponHotkeys[2]);
+	re4t::cfg->sWeaponHotkeys[3] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", re4t::cfg->sWeaponHotkeys[3]);
+	re4t::cfg->sWeaponHotkeys[4] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", re4t::cfg->sWeaponHotkeys[4]);
+	re4t::cfg->sLastWeaponHotkey = iniReader.ReadString("WEAPON_HOTKEYS", "LastWeaponHotkey", re4t::cfg->sLastWeaponHotkey);
+	re4t::cfg->iWeaponHotkeyWepIds[0] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", re4t::cfg->iWeaponHotkeyWepIds[0]);
+	re4t::cfg->iWeaponHotkeyWepIds[1] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", re4t::cfg->iWeaponHotkeyWepIds[1]);
+	re4t::cfg->iWeaponHotkeyWepIds[2] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", re4t::cfg->iWeaponHotkeyWepIds[2]);
+	re4t::cfg->iWeaponHotkeyWepIds[3] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", re4t::cfg->iWeaponHotkeyWepIds[3]);
+	re4t::cfg->iWeaponHotkeyWepIds[4] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", re4t::cfg->iWeaponHotkeyWepIds[4]);
 	auto readIntVect = [&iniReader](std::string section, std::string key, std::string& default_value)
 	{
 		std::vector<int> ret;
@@ -466,30 +467,30 @@ void Config::ReadSettings(std::wstring ini_path)
 
 		return ret;
 	};
-	pConfig->iWeaponHotkeyCycle[0] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", pConfig->iWeaponHotkeyCycleString[0]);
-	pConfig->iWeaponHotkeyCycle[1] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", pConfig->iWeaponHotkeyCycleString[1]);
-	pConfig->iWeaponHotkeyCycle[2] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", pConfig->iWeaponHotkeyCycleString[2]);
-	pConfig->iWeaponHotkeyCycle[3] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", pConfig->iWeaponHotkeyCycleString[3]);
-	pConfig->iWeaponHotkeyCycle[4] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", pConfig->iWeaponHotkeyCycleString[4]);
+	re4t::cfg->iWeaponHotkeyCycle[0] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", re4t::cfg->iWeaponHotkeyCycleString[0]);
+	re4t::cfg->iWeaponHotkeyCycle[1] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", re4t::cfg->iWeaponHotkeyCycleString[1]);
+	re4t::cfg->iWeaponHotkeyCycle[2] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", re4t::cfg->iWeaponHotkeyCycleString[2]);
+	re4t::cfg->iWeaponHotkeyCycle[3] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", re4t::cfg->iWeaponHotkeyCycleString[3]);
+	re4t::cfg->iWeaponHotkeyCycle[4] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", re4t::cfg->iWeaponHotkeyCycleString[4]);
 
 	// Parse all hotkeys
 	ParseHotkeys();
 
 	// FPS WARNING
-	pConfig->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning);
+	re4t::cfg->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", re4t::cfg->bIgnoreFPSWarning);
 	
 	// IMGUI
-	pConfig->fFontSizeScale = iniReader.ReadFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
-	pConfig->fFontSizeScale = fmin(fmax(pConfig->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
+	re4t::cfg->fFontSizeScale = iniReader.ReadFloat("IMGUI", "FontSizeScale", re4t::cfg->fFontSizeScale);
+	re4t::cfg->fFontSizeScale = fmin(fmax(re4t::cfg->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
-	pConfig->bEnableDPIScale = iniReader.ReadBoolean("IMGUI", "EnableDPIScale", pConfig->bEnableDPIScale);
-	pConfig->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", pConfig->bDisableMenuTip);
+	re4t::cfg->bEnableDPIScale = iniReader.ReadBoolean("IMGUI", "EnableDPIScale", re4t::cfg->bEnableDPIScale);
+	re4t::cfg->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", re4t::cfg->bDisableMenuTip);
 
 	// DEBUG
-	pConfig->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", pConfig->bVerboseLog);
-	pConfig->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", pConfig->bNeverHideCursor);
-	pConfig->bUseDynamicFrametime = iniReader.ReadBoolean("DEBUG", "UseDynamicFrametime", pConfig->bUseDynamicFrametime);
-	pConfig->bDisableFramelimiting = iniReader.ReadBoolean("DEBUG", "DisableFramelimiting", pConfig->bDisableFramelimiting);
+	re4t::cfg->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", re4t::cfg->bVerboseLog);
+	re4t::cfg->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", re4t::cfg->bNeverHideCursor);
+	re4t::cfg->bUseDynamicFrametime = iniReader.ReadBoolean("DEBUG", "UseDynamicFrametime", re4t::cfg->bUseDynamicFrametime);
+	re4t::cfg->bDisableFramelimiting = iniReader.ReadBoolean("DEBUG", "DisableFramelimiting", re4t::cfg->bDisableFramelimiting);
 
 	if (iniReader.ReadBoolean("DEBUG", "TweaksDevMode", TweaksDevMode))
 		TweaksDevMode = true; // let the INI enable it if it's disabled, but not disable it
@@ -552,39 +553,39 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		iniReader = CIniReader(WstrToStr(iniPath));
 
 		// TRAINER
-		iniReader.WriteBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
-		iniReader.WriteBoolean("TRAINER", "EnablePlayerSpeedOverride", pConfig->bTrainerPlayerSpeedOverride);
-		iniReader.WriteFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
-		iniReader.WriteBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
-		iniReader.WriteBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
-		iniReader.WriteFloat("TRAINER", "NumpadMovementSpeed", pConfig->fTrainerNumMoveSpeed);
-		iniReader.WriteBoolean("TRAINER", "EnableFreeCamera", pConfig->bTrainerEnableFreeCam);
-		iniReader.WriteFloat("TRAINER", "FreeCamSpeed", pConfig->fTrainerFreeCamSpeed);
-		iniReader.WriteBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
-		iniReader.WriteFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
-		iniReader.WriteBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
-		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMin", pConfig->fTrainerRandomHPMultiMin);
-		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
-		iniReader.WriteBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
-		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
-		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
-		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
-		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", pConfig->bTrainerShowDebugTrgHintText);
+		iniReader.WriteBoolean("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
+		iniReader.WriteBoolean("TRAINER", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
+		iniReader.WriteFloat("TRAINER", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
+		iniReader.WriteBoolean("TRAINER", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
+		iniReader.WriteBoolean("TRAINER", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
+		iniReader.WriteFloat("TRAINER", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
+		iniReader.WriteBoolean("TRAINER", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
+		iniReader.WriteFloat("TRAINER", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
+		iniReader.WriteBoolean("TRAINER", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
+		iniReader.WriteFloat("TRAINER", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
+		iniReader.WriteBoolean("TRAINER", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
+		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
+		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
+		iniReader.WriteBoolean("TRAINER", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
+		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
+		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
+		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
+		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
 
 		// ESP
-		iniReader.WriteBoolean("ESP", "ShowESP", pConfig->bShowESP);
-		iniReader.WriteBoolean("ESP", "ShowInfoOnTop", pConfig->bEspShowInfoOnTop);
-		iniReader.WriteBoolean("ESP", "OnlyShowEnemies", pConfig->bEspOnlyShowEnemies);
-		iniReader.WriteBoolean("ESP", "OnlyShowValidEms", pConfig->bEspOnlyShowValidEms);
-		iniReader.WriteBoolean("ESP", "OnlyShowESLSpawned", pConfig->bEspOnlyShowESLSpawned);
-		iniReader.WriteBoolean("ESP", "OnlyShowAlive", pConfig->bEspOnlyShowAlive);
-		iniReader.WriteFloat("ESP", "MaxEmDistance", pConfig->fEspMaxEmDistance);
-		iniReader.WriteBoolean("ESP", "OnlyShowClosestEms", pConfig->bEspOnlyShowClosestEms);
-		iniReader.WriteInteger("ESP", "ClosestEmsAmount", pConfig->iEspClosestEmsAmount);
-		iniReader.WriteBoolean("ESP", "DrawLines", pConfig->bEspDrawLines);
+		iniReader.WriteBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
+		iniReader.WriteBoolean("ESP", "ShowInfoOnTop", re4t::cfg->bEspShowInfoOnTop);
+		iniReader.WriteBoolean("ESP", "OnlyShowEnemies", re4t::cfg->bEspOnlyShowEnemies);
+		iniReader.WriteBoolean("ESP", "OnlyShowValidEms", re4t::cfg->bEspOnlyShowValidEms);
+		iniReader.WriteBoolean("ESP", "OnlyShowESLSpawned", re4t::cfg->bEspOnlyShowESLSpawned);
+		iniReader.WriteBoolean("ESP", "OnlyShowAlive", re4t::cfg->bEspOnlyShowAlive);
+		iniReader.WriteFloat("ESP", "MaxEmDistance", re4t::cfg->fEspMaxEmDistance);
+		iniReader.WriteBoolean("ESP", "OnlyShowClosestEms", re4t::cfg->bEspOnlyShowClosestEms);
+		iniReader.WriteInteger("ESP", "ClosestEmsAmount", re4t::cfg->iEspClosestEmsAmount);
+		iniReader.WriteBoolean("ESP", "DrawLines", re4t::cfg->bEspDrawLines);
 
 		std::string buf;
-		switch (pConfig->iEspEmNameMode) {
+		switch (re4t::cfg->iEspEmNameMode) {
 		case 0:
 			buf = "DontShow";
 			break;
@@ -596,7 +597,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 			break;
 		} iniReader.WriteString("ESP", "EmNameMode", " " + buf);
 
-		switch (pConfig->iEspEmHPMode) {
+		switch (re4t::cfg->iEspEmHPMode) {
 		case 0:
 			buf = "DontShow";
 			break;
@@ -608,18 +609,18 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 			break;
 		} iniReader.WriteString("ESP", "EmHPMode", " " + buf);
 
-		iniReader.WriteBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
+		iniReader.WriteBoolean("ESP", "DrawDebugInfo", re4t::cfg->bEspDrawDebugInfo);
 
 		// SIDEINFO
-		iniReader.WriteBoolean("SIDEINFO", "ShowSideInfo", pConfig->bShowSideInfo);
-		iniReader.WriteBoolean("SIDEINFO", "ShowEmCount", pConfig->bSideShowEmCount);
-		iniReader.WriteBoolean("SIDEINFO", "ShowEmList", pConfig->bSideShowEmList);
-		iniReader.WriteBoolean("SIDEINFO", "OnlyShowESLSpawned", pConfig->bSideOnlyShowESLSpawned);
-		iniReader.WriteBoolean("SIDEINFO", "ShowSimpleNames", pConfig->bSideShowSimpleNames);
-		iniReader.WriteInteger("SIDEINFO", "ClosestEmsAmount", pConfig->iSideClosestEmsAmount);
-		iniReader.WriteFloat("SIDEINFO", "MaxEmDistance", pConfig->fSideMaxEmDistance);
+		iniReader.WriteBoolean("SIDEINFO", "ShowSideInfo", re4t::cfg->bShowSideInfo);
+		iniReader.WriteBoolean("SIDEINFO", "ShowEmCount", re4t::cfg->bSideShowEmCount);
+		iniReader.WriteBoolean("SIDEINFO", "ShowEmList", re4t::cfg->bSideShowEmList);
+		iniReader.WriteBoolean("SIDEINFO", "OnlyShowESLSpawned", re4t::cfg->bSideOnlyShowESLSpawned);
+		iniReader.WriteBoolean("SIDEINFO", "ShowSimpleNames", re4t::cfg->bSideShowSimpleNames);
+		iniReader.WriteInteger("SIDEINFO", "ClosestEmsAmount", re4t::cfg->iSideClosestEmsAmount);
+		iniReader.WriteFloat("SIDEINFO", "MaxEmDistance", re4t::cfg->fSideMaxEmDistance);
 
-		switch (pConfig->iSideEmHPMode) {
+		switch (re4t::cfg->iSideEmHPMode) {
 		case 0:
 			buf = "DontShow";
 			break;
@@ -632,25 +633,25 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		} iniReader.WriteString("SIDEINFO", "EmHPMode", " " + buf);
 
 		// TRAINER_HOTKEYS
-		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "FreeCamToggle", " " + pConfig->sTrainerFreeCamKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + pConfig->sTrainerMoveAshToPlayerKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "DebugTrg", " " + pConfig->sTrainerDebugTrgKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + re4t::cfg->sTrainerFocusUIKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + re4t::cfg->sTrainerNoclipKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "FreeCamToggle", " " + re4t::cfg->sTrainerFreeCamKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + re4t::cfg->sTrainerSpeedOverrideKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "DebugTrg", " " + re4t::cfg->sTrainerDebugTrgKeyCombo);
 
 		// WEAPON HOTKEYS
-		iniReader.WriteBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", " " + pConfig->sWeaponHotkeys[0]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", " " + pConfig->sWeaponHotkeys[1]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", " " + pConfig->sWeaponHotkeys[2]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", " " + pConfig->sWeaponHotkeys[3]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", " " + pConfig->sWeaponHotkeys[4]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", pConfig->iWeaponHotkeyWepIds[3]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", pConfig->iWeaponHotkeyWepIds[4]);
+		iniReader.WriteBoolean("WEAPON_HOTKEYS", "Enable", re4t::cfg->bWeaponHotkeysEnable);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", " " + re4t::cfg->sWeaponHotkeys[0]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", " " + re4t::cfg->sWeaponHotkeys[1]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", " " + re4t::cfg->sWeaponHotkeys[2]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", " " + re4t::cfg->sWeaponHotkeys[3]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", " " + re4t::cfg->sWeaponHotkeys[4]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", re4t::cfg->iWeaponHotkeyWepIds[0]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", re4t::cfg->iWeaponHotkeyWepIds[1]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", re4t::cfg->iWeaponHotkeyWepIds[2]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", re4t::cfg->iWeaponHotkeyWepIds[3]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", re4t::cfg->iWeaponHotkeyWepIds[4]);
 
 		auto writeIntVect = [&iniReader](std::string section, std::string key, std::vector<int>& vect) {
 			std::string val = "";
@@ -661,146 +662,145 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 			iniReader.WriteString(section, key, " " + val);
 		};
 
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", pConfig->iWeaponHotkeyCycle[0]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", pConfig->iWeaponHotkeyCycle[1]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", pConfig->iWeaponHotkeyCycle[2]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", pConfig->iWeaponHotkeyCycle[3]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", pConfig->iWeaponHotkeyCycle[4]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", re4t::cfg->iWeaponHotkeyCycle[0]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", re4t::cfg->iWeaponHotkeyCycle[1]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", re4t::cfg->iWeaponHotkeyCycle[2]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", re4t::cfg->iWeaponHotkeyCycle[3]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", re4t::cfg->iWeaponHotkeyCycle[4]);
 
-		iniReader.WriteString("WEAPON_HOTKEYS", "LastWeaponHotkey", " " + pConfig->sLastWeaponHotkey);
+		iniReader.WriteString("WEAPON_HOTKEYS", "LastWeaponHotkey", " " + re4t::cfg->sLastWeaponHotkey);
 
 		return;
 	}
 
 	// DISPLAY
-	iniReader.WriteFloat("DISPLAY", "FOVAdditional", pConfig->fFOVAdditional);
-	iniReader.WriteBoolean("DISPLAY", "DisableVsync", pConfig->bDisableVsync);
+	iniReader.WriteFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
+	iniReader.WriteBoolean("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
 
-	iniReader.WriteBoolean("DISPLAY", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport);
-	iniReader.WriteBoolean("DISPLAY", "SideAlignHUD", pConfig->bSideAlignHUD);
-	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
-	iniReader.WriteBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
-	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
+	iniReader.WriteBoolean("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
+	iniReader.WriteBoolean("DISPLAY", "SideAlignHUD", re4t::cfg->bSideAlignHUD);
+	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages);
+	iniReader.WriteBoolean("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
+	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
+	iniReader.WriteBoolean("DISPLAY", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
+	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
+	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
+	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
+	iniReader.WriteBoolean("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
-	iniReader.WriteBoolean("DISPLAY", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter);
-	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
-	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
-	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", pConfig->iCustomRefreshRate);
-	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", pConfig->bOverrideLaserColor);
-	iniReader.WriteBoolean("DISPLAY", "RainbowLaser", pConfig->bRainbowLaser);
+	iniReader.WriteInteger("DISPLAY", "LaserR", re4t::cfg->iLaserR);
+	iniReader.WriteInteger("DISPLAY", "LaserG", re4t::cfg->iLaserG);
+	iniReader.WriteInteger("DISPLAY", "LaserB", re4t::cfg->iLaserB);
 
-	iniReader.WriteInteger("DISPLAY", "LaserR", pConfig->iLaserR);
-	iniReader.WriteInteger("DISPLAY", "LaserG", pConfig->iLaserG);
-	iniReader.WriteInteger("DISPLAY", "LaserB", pConfig->iLaserB);
+	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", re4t::cfg->bRestorePickupTransparency);
+	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
+	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
+	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
+	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
 
-	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", pConfig->bRestorePickupTransparency);
-	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03);
-	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", pConfig->bFixBlurryImage);
-	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", pConfig->bDisableFilmGrain);
-	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", pConfig->bEnableGCBlur);
-
-	if (pConfig->bUseEnhancedGCBlur)
+	if (re4t::cfg->bUseEnhancedGCBlur)
 		iniReader.WriteString("DISPLAY", "GCBlurType", "Enhanced");
 	else
 		iniReader.WriteString("DISPLAY", "GCBlurType", "Classic");
 
-	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur);
-	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", pConfig->bWindowBorderless);
-	iniReader.WriteInteger("DISPLAY", "WindowPositionX", pConfig->iWindowPositionX);
-	iniReader.WriteInteger("DISPLAY", "WindowPositionY", pConfig->iWindowPositionY);
-	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", pConfig->bRememberWindowPos);
+	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
+	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+	iniReader.WriteInteger("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
+	iniReader.WriteInteger("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
+	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
 
 	// AUDIO
-	iniReader.WriteInteger("AUDIO", "VolumeMaster", pConfig->iVolumeMaster);
-	iniReader.WriteInteger("AUDIO", "VolumeBGM", pConfig->iVolumeBGM);
-	iniReader.WriteInteger("AUDIO", "VolumeSE", pConfig->iVolumeSE);
-	iniReader.WriteInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
-	iniReader.WriteBoolean("AUDIO", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects);
+	iniReader.WriteInteger("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
+	iniReader.WriteInteger("AUDIO", "VolumeBGM", re4t::cfg->iVolumeBGM);
+	iniReader.WriteInteger("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
+	iniReader.WriteInteger("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
+	iniReader.WriteBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
 
 	// MOUSE
-	iniReader.WriteBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
-	iniReader.WriteBoolean("MOUSE", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning);
-	iniReader.WriteFloat("MOUSE", "CameraSensitivity", pConfig->fCameraSensitivity);
-	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", pConfig->bUseMouseTurning);
+	iniReader.WriteBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	iniReader.WriteBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
+	iniReader.WriteFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
+	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
 
-	if (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)
+	if (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)
 		iniReader.WriteString("MOUSE", "MouseTurnType", "TypeA");
 	else
 		iniReader.WriteString("MOUSE", "MouseTurnType", "TypeB");
 
-	iniReader.WriteFloat("MOUSE", "TurnTypeBSensitivity", pConfig->fTurnTypeBSensitivity);
-	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", pConfig->bUseRawMouseInput);
-	iniReader.WriteBoolean("MOUSE", "DetachCameraFromAim", pConfig->bDetachCameraFromAim);
-	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", pConfig->bFixSniperZoom);
-	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", pConfig->bFixSniperFocus);
-	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", pConfig->bFixRetryLoadMouseSelector);
+	iniReader.WriteFloat("MOUSE", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
+	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput);
+	iniReader.WriteBoolean("MOUSE", "DetachCameraFromAim", re4t::cfg->bDetachCameraFromAim);
+	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", re4t::cfg->bFixSniperZoom);
+	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", re4t::cfg->bFixSniperFocus);
+	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", re4t::cfg->bFixRetryLoadMouseSelector);
 
 	// KEYBOARD
-	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons);
-	iniReader.WriteBoolean("KEYBOARD", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_kbm);
-	iniReader.WriteBoolean("KEYBOARD", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_kbm);
+	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", re4t::cfg->bFallbackToEnglishKeyIcons);
+	iniReader.WriteBoolean("KEYBOARD", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_kbm);
+	iniReader.WriteBoolean("KEYBOARD", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_kbm);
 
 	// CONTROLLER
-	iniReader.WriteBoolean("CONTROLLER", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity);
-	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", pConfig->fControllerSensitivity);
-	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone);
-	iniReader.WriteBoolean("CONTROLLER", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone);
-	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", pConfig->fXinputDeadzone);
-	iniReader.WriteBoolean("CONTROLLER", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_controller);
-	iniReader.WriteBoolean("CONTROLLER", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_controller);
+	iniReader.WriteBoolean("CONTROLLER", "OverrideControllerSensitivity", re4t::cfg->bOverrideControllerSensitivity);
+	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", re4t::cfg->fControllerSensitivity);
+	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone);
+	iniReader.WriteBoolean("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
+	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
+	iniReader.WriteBoolean("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
+	iniReader.WriteBoolean("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
 
 	// FRAME RATE
-	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", pConfig->bFixTurningSpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixQTE", pConfig->bFixQTE);
-	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics);
-	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", pConfig->bEnableFastMath);
-	iniReader.WriteBoolean("FRAME RATE", "MultithreadFix", pConfig->bMultithreadFix);
-	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
+	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
+	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
+	iniReader.WriteBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
+	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
+	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
+	iniReader.WriteBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
+	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
 
 	// MISC
-	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates);
-	iniReader.WriteBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
+	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
+	iniReader.WriteBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
 	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[iCostumeComboLeon]));
 	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[iCostumeComboAshley]));
 	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[iCostumeComboAda]));
-	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles);
-	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
-	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer);
-	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes);
-	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley);
-	iniReader.WriteBoolean("MISC", "AllowAshleySuplex", pConfig->bAllowAshleySuplex);
-	iniReader.WriteBoolean("MISC", "AllowMatildaQuickturn", pConfig->bAllowMatildaQuickturn);
-	iniReader.WriteBoolean("MISC", "FixDitmanGlitch", pConfig->bFixDitmanGlitch);
-	iniReader.WriteBoolean("MISC", "UseSprintToggle", pConfig->bUseSprintToggle);
-	iniReader.WriteBoolean("MISC", "DisableQTE", pConfig->bDisableQTE);
-	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
-	iniReader.WriteBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
-	iniReader.WriteBoolean("MISC", "SkipMenuFades", pConfig->bSkipMenuFades);
-	iniReader.WriteBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
+	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
+	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
+	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
+	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
+	iniReader.WriteBoolean("MISC", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
+	iniReader.WriteBoolean("MISC", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
+	iniReader.WriteBoolean("MISC", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
+	iniReader.WriteBoolean("MISC", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+	iniReader.WriteBoolean("MISC", "DisableQTE", re4t::cfg->bDisableQTE);
+	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+	iniReader.WriteBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
+	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
 	// We don't have any UI options for those anyway, so pointless for us to write it back
 
 	// MEMORY
-	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
-	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", pConfig->bRaiseVertexAlloc);
-	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc);
+	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
+	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", re4t::cfg->bRaiseVertexAlloc);
+	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", re4t::cfg->bRaiseInventoryAlloc);
 
 	// HOTKEYS
-	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + pConfig->sConfigMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "Console", " " + pConfig->sConsoleKeyCombo);
-	iniReader.WriteString("HOTKEYS", "FlipItemUp", " " + pConfig->sFlipItemUp);
-	iniReader.WriteString("HOTKEYS", "FlipItemDown", " " + pConfig->sFlipItemDown);
-	iniReader.WriteString("HOTKEYS", "FlipItemLeft", " " + pConfig->sFlipItemLeft);
-	iniReader.WriteString("HOTKEYS", "FlipItemRight", " " + pConfig->sFlipItemRight);
-	iniReader.WriteString("HOTKEYS", "QTE_key_1", " " + pConfig->sQTE_key_1);
-	iniReader.WriteString("HOTKEYS", "QTE_key_2", " " + pConfig->sQTE_key_2);
-	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + pConfig->sDebugMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + pConfig->sMouseTurnModifierKeyCombo);
-	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + pConfig->sJetSkiTrickCombo);
+	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + re4t::cfg->sConfigMenuKeyCombo);
+	iniReader.WriteString("HOTKEYS", "Console", " " + re4t::cfg->sConsoleKeyCombo);
+	iniReader.WriteString("HOTKEYS", "FlipItemUp", " " + re4t::cfg->sFlipItemUp);
+	iniReader.WriteString("HOTKEYS", "FlipItemDown", " " + re4t::cfg->sFlipItemDown);
+	iniReader.WriteString("HOTKEYS", "FlipItemLeft", " " + re4t::cfg->sFlipItemLeft);
+	iniReader.WriteString("HOTKEYS", "FlipItemRight", " " + re4t::cfg->sFlipItemRight);
+	iniReader.WriteString("HOTKEYS", "QTE_key_1", " " + re4t::cfg->sQTE_key_1);
+	iniReader.WriteString("HOTKEYS", "QTE_key_2", " " + re4t::cfg->sQTE_key_2);
+	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + re4t::cfg->sDebugMenuKeyCombo);
+	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + re4t::cfg->sMouseTurnModifierKeyCombo);
+	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + re4t::cfg->sJetSkiTrickCombo);
 
 	// IMGUI
-	iniReader.WriteFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
+	iniReader.WriteFloat("IMGUI", "FontSizeScale", re4t::cfg->fFontSizeScale);
 }
 
 DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
@@ -810,12 +810,12 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	WriteSettings(iniPathMain, false);
 	WriteSettings(iniPathTrainer, true);
 
-	pConfig->HasUnsavedChanges = false;
+	re4t::cfg->HasUnsavedChanges = false;
 
 	return 0;
 }
 
-void Config::WriteSettings()
+void re4t_cfg::WriteSettings()
 {
 	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // if thread is already running, wait for it to finish
 
@@ -823,7 +823,7 @@ void Config::WriteSettings()
 	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, NULL, 0, NULL);
 }
 
-void Config::LogSettings()
+void re4t_cfg::LogSettings()
 {
 	spd::log()->info("+--------------------------------+-----------------+");
 	spd::log()->info("| Setting                        | Value           |");
@@ -831,168 +831,168 @@ void Config::LogSettings()
 
 	// DISPLAY
 	spd::log()->info("+ DISPLAY------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "FOVAdditional", pConfig->fFOVAdditional);
-	spd::log()->info("| {:<30} | {:>15} |", "DisableVsync", pConfig->bDisableVsync ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "UltraWideAspectSupport", pConfig->bUltraWideAspectSupport ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SideAlignHUD", pConfig->bSideAlignHUD ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "StretchFullscreenImages", pConfig->bStretchFullscreenImages ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "StretchVideos", pConfig->bStretchVideos ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", pConfig->bFixDPIScale ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", pConfig->bFixDisplayMode ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", pConfig->iCustomRefreshRate);
-	spd::log()->info("| {:<30} | {:>15} |", "OverrideLaserColor", pConfig->bOverrideLaserColor ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "RainbowLaser", pConfig->bRainbowLaser ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "LaserR", pConfig->iLaserR);
-	spd::log()->info("| {:<30} | {:>15} |", "LaserG", pConfig->iLaserG);
-	spd::log()->info("| {:<30} | {:>15} |", "LaserB", pConfig->iLaserB);
-	spd::log()->info("| {:<30} | {:>15} |", "RestorePickupTransparency", pConfig->bRestorePickupTransparency ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "DisableBrokenFilter03", pConfig->bDisableBrokenFilter03 ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixBlurryImage", pConfig->bFixBlurryImage ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "DisableFilmGrain", pConfig->bDisableFilmGrain ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "EnableGCBlur", pConfig->bEnableGCBlur ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FOVAdditional", re4t::cfg->fFOVAdditional);
+	spd::log()->info("| {:<30} | {:>15} |", "DisableVsync", re4t::cfg->bDisableVsync ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SideAlignHUD", re4t::cfg->bSideAlignHUD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "StretchVideos", re4t::cfg->bStretchVideos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", re4t::cfg->bFixDPIScale ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", re4t::cfg->bFixDisplayMode ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RainbowLaser", re4t::cfg->bRainbowLaser ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "LaserR", re4t::cfg->iLaserR);
+	spd::log()->info("| {:<30} | {:>15} |", "LaserG", re4t::cfg->iLaserG);
+	spd::log()->info("| {:<30} | {:>15} |", "LaserB", re4t::cfg->iLaserB);
+	spd::log()->info("| {:<30} | {:>15} |", "RestorePickupTransparency", re4t::cfg->bRestorePickupTransparency ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03 ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixBlurryImage", re4t::cfg->bFixBlurryImage ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableGCBlur", re4t::cfg->bEnableGCBlur ? "true" : "false");
 	
-	if (pConfig->bUseEnhancedGCBlur)
+	if (re4t::cfg->bUseEnhancedGCBlur)
 		spd::log()->info("| {:<30} | {:>15} |", "GCBlurType", "Enhanced");
 	else
 		spd::log()->info("| {:<30} | {:>15} |", "GCBlurType", "Classic");
 
-	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", pConfig->bEnableGCScopeBlur ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", pConfig->bWindowBorderless ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", pConfig->iWindowPositionX);
-	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", pConfig->iWindowPositionY);
-	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", pConfig->bRememberWindowPos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", re4t::cfg->bWindowBorderless ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", re4t::cfg->iWindowPositionX);
+	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", re4t::cfg->iWindowPositionY);
+	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", re4t::cfg->bRememberWindowPos ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// AUDIO
 	spd::log()->info("+ AUDIO--------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "VolumeMaster", pConfig->iVolumeMaster);
-	spd::log()->info("| {:<30} | {:>15} |", "VolumeBGM", pConfig->iVolumeBGM);
-	spd::log()->info("| {:<30} | {:>15} |", "VolumeSE", pConfig->iVolumeSE);
-	spd::log()->info("| {:<30} | {:>15} |", "VolumeCutscene", pConfig->iVolumeCutscene);
-	spd::log()->info("| {:<30} | {:>15} |", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeMaster", re4t::cfg->iVolumeMaster);
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeBGM", re4t::cfg->iVolumeBGM);
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeSE", re4t::cfg->iVolumeSE);
+	spd::log()->info("| {:<30} | {:>15} |", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
+	spd::log()->info("| {:<30} | {:>15} |", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MOUSE
 	spd::log()->info("+ MOUSE--------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "CameraImprovements", pConfig->bCameraImprovements ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "CameraSensitivity", pConfig->fCameraSensitivity);
-	spd::log()->info("| {:<30} | {:>15} |", "UseMouseTurning", pConfig->bUseMouseTurning ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "CameraImprovements", re4t::cfg->bCameraImprovements ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
+	spd::log()->info("| {:<30} | {:>15} |", "UseMouseTurning", re4t::cfg->bUseMouseTurning ? "true" : "false");
 
-	if (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)
+	if (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)
 		spd::log()->info("| {:<30} | {:>15} |", "MouseTurnType", "TypeA");
 	else
 		spd::log()->info("| {:<30} | {:>15} |", "MouseTurnType", "TypeB");
 
-	spd::log()->info("| {:<30} | {:>15} |", "TurnTypeBSensitivity", pConfig->fTurnTypeBSensitivity);
-	spd::log()->info("| {:<30} | {:>15} |", "UseRawMouseInput", pConfig->bUseRawMouseInput ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "DetachCameraFromAim", pConfig->bDetachCameraFromAim ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixSniperZoom", pConfig->bFixSniperZoom ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixSniperFocus", pConfig->bFixSniperFocus ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixRetryLoadMouseSelector", pConfig->bFixRetryLoadMouseSelector ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
+	spd::log()->info("| {:<30} | {:>15} |", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DetachCameraFromAim", re4t::cfg->bDetachCameraFromAim ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixSniperZoom", re4t::cfg->bFixSniperZoom ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixSniperFocus", re4t::cfg->bFixSniperFocus ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixRetryLoadMouseSelector", re4t::cfg->bFixRetryLoadMouseSelector ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// KEYBOARD
 	spd::log()->info("+ KEYBOARD-----------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "FallbackToEnglishKeyIcons", pConfig->bFallbackToEnglishKeyIcons ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_kbm ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_kbm ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FallbackToEnglishKeyIcons", re4t::cfg->bFallbackToEnglishKeyIcons ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_kbm ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_kbm ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// CONTROLLER
 	spd::log()->info("+ CONTROLLER---------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "OverrideControllerSensitivity", pConfig->bOverrideControllerSensitivity ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ControllerSensitivity", pConfig->fControllerSensitivity);
-	spd::log()->info("| {:<30} | {:>15} |", "RemoveExtraXinputDeadzone", pConfig->bRemoveExtraXinputDeadzone ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "OverrideXinputDeadzone", pConfig->bOverrideXinputDeadzone ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "XinputDeadzone", pConfig->fXinputDeadzone);
-	spd::log()->info("| {:<30} | {:>15} |", "AllowReloadWithoutAiming", pConfig->bAllowReloadWithoutAiming_controller ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ReloadWithoutZoom", pConfig->bReloadWithoutZoom_controller ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideControllerSensitivity", re4t::cfg->bOverrideControllerSensitivity ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ControllerSensitivity", re4t::cfg->fControllerSensitivity);
+	spd::log()->info("| {:<30} | {:>15} |", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
+	spd::log()->info("| {:<30} | {:>15} |", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FRAME RATE
 	spd::log()->info("+ FRAME RATE---------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "FixFallingItemsSpeed", pConfig->bFixFallingItemsSpeed ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixTurningSpeed", pConfig->bFixTurningSpeed ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixQTE", pConfig->bFixQTE ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "EnableFastMath", pConfig->bEnableFastMath ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "MultithreadFix", pConfig->bMultithreadFix ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "PrecacheModels", pConfig->bPrecacheModels ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixQTE", re4t::cfg->bFixQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableFastMath", re4t::cfg->bEnableFastMath ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "MultithreadFix", re4t::cfg->bMultithreadFix ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "PrecacheModels", re4t::cfg->bPrecacheModels ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MISC
 	spd::log()->info("+ MISC---------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", pConfig->sWrappedDllPath.data());
-	spd::log()->info("| {:<30} | {:>15} |", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", pConfig->bOverrideCostumes ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", re4t::cfg->sWrappedDllPath.data());
+	spd::log()->info("| {:<30} | {:>15} |", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", re4t::cfg->bOverrideCostumes ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[iCostumeComboLeon]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[iCostumeComboAshley]);
 	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[iCostumeComboAda]);
-	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", pConfig->bAshleyJPCameraAngles ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ViolenceLevelOverride", pConfig->iViolenceLevelOverride);
-	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", pConfig->bAllowSellingHandgunSilencer ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowMafiaLeonCutscenes", pConfig->bAllowMafiaLeonCutscenes ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", pConfig->bSilenceArmoredAshley ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", pConfig->bAllowAshleySuplex ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", pConfig->bAllowMatildaQuickturn ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", pConfig->bFixDitmanGlitch ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", pConfig->bUseSprintToggle ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", pConfig->bDisableQTE ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", pConfig->bSkipIntroLogos ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SkipMenuFades", pConfig->bSkipMenuFades ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", pConfig->bEnableDebugMenu ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", pConfig->bEnableModExpansion ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", pConfig->bForceETSApplyScale ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
+	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SkipMenuFades", re4t::cfg->bSkipMenuFades ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY
 	spd::log()->info("+ MEMORY-------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "RaiseVertexAlloc", pConfig->bRaiseVertexAlloc ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "RaiseInventoryAlloc", pConfig->bRaiseInventoryAlloc ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RaiseVertexAlloc", re4t::cfg->bRaiseVertexAlloc ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RaiseInventoryAlloc", re4t::cfg->bRaiseInventoryAlloc ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// HOTKEYS
 	spd::log()->info("+ HOTKEYS------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "ConfigMenu", pConfig->sConfigMenuKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "Console", pConfig->sConsoleKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "FlipItemUp", pConfig->sFlipItemUp.data());
-	spd::log()->info("| {:<30} | {:>15} |", "FlipItemDown", pConfig->sFlipItemDown.data());
-	spd::log()->info("| {:<30} | {:>15} |", "FlipItemLeft", pConfig->sFlipItemLeft.data());
-	spd::log()->info("| {:<30} | {:>15} |", "FlipItemRight", pConfig->sFlipItemRight.data());
-	spd::log()->info("| {:<30} | {:>15} |", "QTE_key_1", pConfig->sQTE_key_1.data());
-	spd::log()->info("| {:<30} | {:>15} |", "QTE_key_2", pConfig->sQTE_key_2.data());
-	spd::log()->info("| {:<30} | {:>15} |", "DebugMenu", pConfig->sDebugMenuKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "JetSkiTricks", pConfig->sJetSkiTrickCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "FocusUI", pConfig->sTrainerFocusUIKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo.data());
-	spd::log()->info("| {:<30} | {:>15} |", "DebugTrg", pConfig->sTrainerDebugTrgKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "Console", re4t::cfg->sConsoleKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemUp", re4t::cfg->sFlipItemUp.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemDown", re4t::cfg->sFlipItemDown.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemLeft", re4t::cfg->sFlipItemLeft.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FlipItemRight", re4t::cfg->sFlipItemRight.data());
+	spd::log()->info("| {:<30} | {:>15} |", "QTE_key_1", re4t::cfg->sQTE_key_1.data());
+	spd::log()->info("| {:<30} | {:>15} |", "QTE_key_2", re4t::cfg->sQTE_key_2.data());
+	spd::log()->info("| {:<30} | {:>15} |", "DebugMenu", re4t::cfg->sDebugMenuKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "MouseTurningModifier", re4t::cfg->sMouseTurnModifierKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "JetSkiTricks", re4t::cfg->sJetSkiTrickCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FocusUI", re4t::cfg->sTrainerFocusUIKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "NoclipToggle", re4t::cfg->sTrainerNoclipKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "SpeedOverrideToggle", re4t::cfg->sTrainerSpeedOverrideKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "MoveAshleyToPlayer", re4t::cfg->sTrainerMoveAshToPlayerKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "DebugTrg", re4t::cfg->sTrainerDebugTrgKeyCombo.data());
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FPS WARNING
 	spd::log()->info("+ WARNING------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "IgnoreFPSWarning", re4t::cfg->bIgnoreFPSWarning ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// IMGUI
 	spd::log()->info("+ IMGUI--------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "FontSizeScale", pConfig->fFontSizeScale);
-	spd::log()->info("| {:<30} | {:>15} |", "DisableMenuTip", pConfig->bDisableMenuTip ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FontSizeScale", re4t::cfg->fFontSizeScale);
+	spd::log()->info("| {:<30} | {:>15} |", "DisableMenuTip", re4t::cfg->bDisableMenuTip ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// DEBUG
 	spd::log()->info("+ DEBUG--------------------------+-----------------+");
-	spd::log()->info("| {:<30} | {:>15} |", "VerboseLog", pConfig->bVerboseLog ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "NeverHideCursor", pConfig->bNeverHideCursor ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "UseDynamicFrametime", pConfig->bUseDynamicFrametime ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "DisableFramelimiting", pConfig->bDisableFramelimiting ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "VerboseLog", re4t::cfg->bVerboseLog ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "NeverHideCursor", re4t::cfg->bNeverHideCursor ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UseDynamicFrametime", re4t::cfg->bUseDynamicFrametime ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableFramelimiting", re4t::cfg->bDisableFramelimiting ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// HDPROJECT

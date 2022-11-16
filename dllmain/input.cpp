@@ -683,7 +683,7 @@ BOOL WINAPI HookGetMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 FARPROC p_GetMessageA = nullptr;
 void InstallGetMessageA_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking GetMessageA...");
 		
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -724,7 +724,7 @@ BOOL WINAPI HookGetMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 FARPROC p_GetMessageW = nullptr;
 void InstallGetMessageW_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking GetMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -756,7 +756,7 @@ BOOL WINAPI HookPeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 FARPROC p_PeekMessageA = nullptr;
 void InstallPeekMessageA_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking PeekMessageA...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -788,7 +788,7 @@ BOOL WINAPI HookPeekMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 FARPROC p_PeekMessageW = nullptr;
 void InstallPeekMessageW_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking PeekMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -810,7 +810,7 @@ BOOL WINAPI HookPostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 FARPROC p_PostMessageA = nullptr;
 void InstallPostMessageA_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking PostMessageA...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -831,7 +831,7 @@ BOOL WINAPI HookPostMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 FARPROC p_PostMessageW = nullptr;
 void InstallPostMessageW_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking PostMessageW...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -843,14 +843,14 @@ void InstallPostMessageW_Hook()
 BOOL(WINAPI* RegisterRawInputDevices_orig)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
 BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("{0} -> Redirecting RegisterRawInputDevices (pRawInputDevices = {1}, uiNumDevices = {2}, cbSize = {3})", __FUNCTION__, IntToHexStr(pRawInputDevices), uiNumDevices, cbSize);
 
 	for (UINT i = 0; i < uiNumDevices; ++i)
 	{
 		const auto &device = pRawInputDevices[i];
 
-		if (pConfig->bVerboseLog)
+		if (re4t::cfg->bVerboseLog)
 		{
 			spd::log()->info("{0} -> Dumping device registration at index {1}:", __FUNCTION__, i);
 			spd::log()->info("+-----------------------------------------+-----------------------------------------+");
@@ -881,7 +881,7 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 FARPROC p_RegisterRawInputDevices = nullptr;
 void InstallRegisterRawInputDevices_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking RegisterRawInputDevices...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -903,7 +903,7 @@ BOOL WINAPI HookClipCursor(const RECT *lpRect)
 FARPROC p_ClipCursor = nullptr;
 void InstallClipCursor_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking ClipCursor...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -929,7 +929,7 @@ BOOL WINAPI HookSetCursorPos(int X, int Y)
 FARPROC p_SetCursorPos = nullptr;
 void InstallSetCursorPos_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking SetCursorPos...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -956,7 +956,7 @@ BOOL WINAPI HookGetCursorPos(LPPOINT lpPoint)
 FARPROC p_GetCursorPos = nullptr;
 void InstallGetCursorPos_Hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking GetCursorPos...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");

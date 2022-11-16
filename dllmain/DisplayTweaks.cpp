@@ -36,7 +36,7 @@ const uint8_t rgbcycle[360] = {
 
 void __declspec(naked) ItemExamineHook()
 {
-	if (!pConfig->bRestorePickupTransparency)
+	if (!re4t::cfg->bRestorePickupTransparency)
 		_asm
 		{
 			call ptrGXCopyTex
@@ -48,7 +48,7 @@ void __declspec(naked) ItemExamineHook()
 
 void __declspec(naked) Esp04TransHook()
 {
-	if (!pConfig->bDisableFilmGrain)
+	if (!re4t::cfg->bDisableFilmGrain)
 		_asm
 		{
 			push ebp
@@ -62,19 +62,19 @@ void __declspec(naked) Esp04TransHook()
 
 BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
 {
-	int windowX = pConfig->iWindowPositionX < 0 ? 0 : pConfig->iWindowPositionX;
-	int windowY = pConfig->iWindowPositionY < 0 ? 0 : pConfig->iWindowPositionY;
+	int windowX = re4t::cfg->iWindowPositionX < 0 ? 0 : re4t::cfg->iWindowPositionX;
+	int windowY = re4t::cfg->iWindowPositionY < 0 ? 0 : re4t::cfg->iWindowPositionY;
 	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
 }
 
 BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
 {
 	// Early return if bWindowBorderless is set to true, as this call changes the window size to include borders.
-	if (pConfig->bWindowBorderless)
+	if (re4t::cfg->bWindowBorderless)
 		return true;
 
-	int windowX = pConfig->iWindowPositionX < 0 ? 0 : pConfig->iWindowPositionX;
-	int windowY = pConfig->iWindowPositionY < 0 ? 0 : pConfig->iWindowPositionY;
+	int windowX = re4t::cfg->iWindowPositionX < 0 ? 0 : re4t::cfg->iWindowPositionX;
+	int windowY = re4t::cfg->iWindowPositionY < 0 ? 0 : re4t::cfg->iWindowPositionY;
 	return MoveWindow(hWnd, windowX, windowY, nWidth, nHeight, bRepaint);
 }
 
@@ -124,7 +124,7 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 		timeCurrent = (double)counter.QuadPart / FramelimiterFrequency;
 		timeElapsed = timeCurrent - FramelimiterPrevTicks;
 
-		if (TargetFrametime <= timeElapsed || pConfig->bDisableFramelimiting)
+		if (TargetFrametime <= timeElapsed || re4t::cfg->bDisableFramelimiting)
 			break;
 		else if (TargetFrametime - timeElapsed > 2.0) // > 2ms
 			Sleep(1); // Sleep for ~1ms
@@ -149,7 +149,7 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 		// (similar to https://github.com/nipkownix/re4_tweaks/pull/25)
 		// but it's not known how well the game works with values that aren't 0.5 (60fps) or 1 (30fps)
 		// so for now we'll just work pretty much the same as the game itself, unless UseDynamicFrametime is set
-		if (!pConfig->bUseDynamicFrametime)
+		if (!re4t::cfg->bUseDynamicFrametime)
 			timeElapsed = TargetFrametime;
 	}
 
@@ -209,7 +209,7 @@ int __stdcall D3DXCreateTextureFromFileInMemoryEx_Hook(
 	return ret;
 }
 
-void Init_MultithreadFix()
+void re4t::init::MultithreadFix()
 {
 	// Clear D3DCREATE_MULTITHREADED flag from D3D CreateDevice call for slight FPS improvement
 	auto pattern = hook::pattern("68 ? ? ? ? 68 ? ? ? ? 6A 44 56 8B 35");
@@ -255,10 +255,10 @@ void Init_MultithreadFix()
 	spd::log()->info("MultithreadFix applied");
 }
 
-void Init_DisplayTweaks()
+void re4t::init::DisplayTweaks()
 {
 	// Implements new reduced-CPU-usage limiter
-	if (pConfig->bReplaceFramelimiter)
+	if (re4t::cfg->bReplaceFramelimiter)
 	{
 		// nop beginning of framelimiter code (sets up thread affinity to core 0)
 		auto pattern = hook::pattern("A3 ? ? ? ? 6A 00 FF 15 ? ? ? ? 50 FF");
@@ -282,13 +282,13 @@ void Init_DisplayTweaks()
 	}
 
 	// Fix broken effects
-	Init_FilterXXFixes();
+	re4t::init::FilterXXFixes();
 
 	// Install a D3D9 hook
-	Init_D3D9Hook();
+	re4t::init::D3D9Hook();
 
 	// Aspect ratio-related tweaks
-	Init_AspectRatioTweaks();
+	re4t::init::AspectRatioTweaks();
 
 	// Hook function that loads the FOV
 	{
@@ -299,8 +299,8 @@ void Init_DisplayTweaks()
 			{
 				float FOV = *(float*)(regs.ebp - 0x34);
 
-				if (pConfig->fFOVAdditional > 0.0f)
-					FOV += pConfig->fFOVAdditional;
+				if (re4t::cfg->fFOVAdditional > 0.0f)
+					FOV += re4t::cfg->fFOVAdditional;
 
 				_asm {fld FOV}
 
@@ -308,12 +308,12 @@ void Init_DisplayTweaks()
 			}
 		}; injector::MakeInline<ScaleFOV>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-		if (pConfig->fFOVAdditional > 0.0f)
+		if (re4t::cfg->fFOVAdditional > 0.0f)
 			spd::log()->info("FOV increased");
 	}
 
 	// Force v-sync off
-	if (pConfig->bDisableVsync)
+	if (re4t::cfg->bDisableVsync)
 	{
 		// See D3D9Hook.cpp -> hook_Direct3D9::CreateDevice and hook_Direct3D9::Reset
 
@@ -333,11 +333,11 @@ void Init_DisplayTweaks()
 
 	// Game is hardcoded to only allow 60Hz display modes for some reason...
 	// Hook func that runs EnumAdapterModes & checks for 60Hz modes, make it use the refresh rate from Windows instead
-	if (pConfig->bFixDisplayMode)
+	if (re4t::cfg->bFixDisplayMode)
 	{
-		if (pConfig->iCustomRefreshRate > -1)
+		if (re4t::cfg->iCustomRefreshRate > -1)
 		{
-			g_UserRefreshRate = pConfig->iCustomRefreshRate;
+			g_UserRefreshRate = re4t::cfg->iCustomRefreshRate;
 		}
 		else
 		{
@@ -363,7 +363,7 @@ void Init_DisplayTweaks()
 				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
 
 				// Log display modes for troubleshooting
-				if (pConfig->bVerboseLog)
+				if (re4t::cfg->bVerboseLog)
 				{
 					DEVMODE dm = { 0 };
 					dm.dmSize = sizeof(dm);
@@ -429,7 +429,7 @@ void Init_DisplayTweaks()
 	}
 
 	// Apply window changes
-	if (pConfig->bWindowBorderless || pConfig->iWindowPositionX > -1 || pConfig->iWindowPositionY > -1)
+	if (re4t::cfg->bWindowBorderless || re4t::cfg->iWindowPositionX > -1 || re4t::cfg->iWindowPositionY > -1)
 	{
 		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
 		auto pattern = hook::pattern("FF 15 ? ? ? ? 56 53 57 8D 45 EC 50 FF 15 ? ? ? ? 8B");
@@ -441,7 +441,7 @@ void Init_DisplayTweaks()
 		injector::MakeNOP(pattern.get_first(0), 6);
 		InjectHook(pattern.get_first(0), MoveWindow_Hook, PATCH_CALL);
 
-		if (pConfig->bWindowBorderless)
+		if (re4t::cfg->bWindowBorderless)
 		{
 			// if borderless, update the style set by SetWindowLongA
 			pattern = hook::pattern("25 00 00 38 7F 05 00 00 C8 00");
@@ -459,7 +459,7 @@ void Init_DisplayTweaks()
 		injector::MakeNOP(pattern.get_first(0), 5);
 		injector::MakeJMP(pattern.get_first(0), ItemExamineHook, true);
 
-		if (pConfig->bRestorePickupTransparency)
+		if (re4t::cfg->bRestorePickupTransparency)
 			spd::log()->info("RestorePickupTransparency enabled");
 	}
 
@@ -477,9 +477,9 @@ void Init_DisplayTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (pConfig->bOverrideLaserColor)
+				if (re4t::cfg->bOverrideLaserColor)
 				{
-					if (pConfig->bRainbowLaser)
+					if (re4t::cfg->bRainbowLaser)
 					{
 						*(float*)(ptrLaserR) = rgbcycle[(rgbindex + 120) % 360];
 						*(float*)(ptrLaserG) = rgbcycle[rgbindex];
@@ -491,9 +491,9 @@ void Init_DisplayTweaks()
 					}
 					else
 					{
-						*(float*)(ptrLaserR) = (float)pConfig->iLaserR;
-						*(float*)(ptrLaserG) = (float)pConfig->iLaserG;
-						*(float*)(ptrLaserB) = (float)pConfig->iLaserB;
+						*(float*)(ptrLaserR) = (float)re4t::cfg->iLaserR;
+						*(float*)(ptrLaserG) = (float)re4t::cfg->iLaserG;
+						*(float*)(ptrLaserB) = (float)re4t::cfg->iLaserB;
 
 					}
 
@@ -529,7 +529,7 @@ void Init_DisplayTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bDisableBrokenFilter03)
+				if (!re4t::cfg->bDisableBrokenFilter03)
 					_asm {call ptrFilter03}
 			}
 		}; injector::MakeInline<DisableBrokenFilter03>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -547,7 +547,7 @@ void Init_DisplayTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bFixBlurryImage)
+				if (!re4t::cfg->bFixBlurryImage)
 					regs.edx = *(int32_t*)ptrBlurryVertex;
 				else
 					regs.edx = *(int32_t*)ptrNonBlurryVertex;
@@ -563,7 +563,7 @@ void Init_DisplayTweaks()
 		pattern = hook::pattern("D9 5D ? FF D0 D9 E8 A1 ? ? ? ? 8B 08 8B 91 ? ? ? ? 6A ? 51 D9 1C ? 68");
 		injector::MakeInline<BlurryBuffer>(pattern.count(1).get(0).get<uint32_t>(40), pattern.count(1).get(0).get<uint32_t>(46));
 
-		if (pConfig->bFixBlurryImage)
+		if (re4t::cfg->bFixBlurryImage)
 			spd::log()->info("FixBlurryImage enabled");
 	}
 
@@ -574,19 +574,19 @@ void Init_DisplayTweaks()
 		injector::MakeNOP(pattern.get_first(0), 6);
 		injector::MakeJMP(pattern.get_first(0), Esp04TransHook, true);
 
-		if (pConfig->bDisableFilmGrain)
+		if (re4t::cfg->bDisableFilmGrain)
 			spd::log()->info("DisableFilmGrain applied");
 	}
 
 	// Disable Windows DPI scaling
-	if (pConfig->bFixDPIScale)
+	if (re4t::cfg->bFixDPIScale)
 	{
 		SetProcessDPIAware();
 	}
 
 	// Multithread flag removal + deadlock fixes
-	if (pConfig->bMultithreadFix)
+	if (re4t::cfg->bMultithreadFix)
 	{
-		Init_MultithreadFix();
+		re4t::init::MultithreadFix();
 	}
 }

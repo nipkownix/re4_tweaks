@@ -25,11 +25,11 @@ void NowLoadingOff_Hook()
 	// By forcing this processing for all models, it seems something is cached
 	// which stops lag from occurring when the models are viewed later on
 	// (by enabling this hack after load screen, the player will also view any perf drop from it as part of loading too :)
-	if (pConfig->bPrecacheModels)
+	if (re4t::cfg->bPrecacheModels)
 		ModelForceRenderAll_EndTick = GlobalPtr()->frameCounter_530C + 1;
 }
 
-void Init_60fpsFixes()
+void re4t::init::FrameRateFixes()
 {
 	// Fix the speed of falling items
 	{
@@ -43,7 +43,7 @@ void Init_60fpsFixes()
 					float vanillaMulti = 10.0f;
 					float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
 
-					if (pConfig->bFixFallingItemsSpeed)
+					if (re4t::cfg->bFixFallingItemsSpeed)
 						_asm {fsub newMulti}
 					else
 						_asm {fsub vanillaMulti}
@@ -61,7 +61,7 @@ void Init_60fpsFixes()
 					float vanillaMulti = 10.0f;
 					float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
 
-					if (pConfig->bFixFallingItemsSpeed)
+					if (re4t::cfg->bFixFallingItemsSpeed)
 						_asm {fmul newMulti}
 					else
 						_asm {fmul vanillaMulti}
@@ -79,7 +79,7 @@ void Init_60fpsFixes()
 				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
 				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 
-				if (pConfig->bFixTurningSpeed)
+				if (re4t::cfg->bFixTurningSpeed)
 					_asm {fsub newTurnSpeed}
 				else
 					_asm {fsub cPlayer__SPEED_WALK_TURN}
@@ -104,7 +104,7 @@ void Init_60fpsFixes()
 				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
 				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 
-				if (pConfig->bFixTurningSpeed)
+				if (re4t::cfg->bFixTurningSpeed)
 					_asm {fadd newTurnSpeed}
 				else
 					_asm {fadd cPlayer__SPEED_WALK_TURN}
@@ -128,7 +128,7 @@ void Init_60fpsFixes()
 				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
 				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 
-				if (pConfig->bFixTurningSpeed)
+				if (re4t::cfg->bFixTurningSpeed)
 					_asm {fld newTurnSpeed}
 				else
 					_asm {fld cPlayer__SPEED_WALK_TURN}
@@ -151,7 +151,7 @@ void Init_60fpsFixes()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (pConfig->bFixAshleyBustPhysics)
+				if (re4t::cfg->bFixAshleyBustPhysics)
 				{
 					// Update ebx to make use of delta-time from pG+0x70
 					float ebx = float(regs.ebx);

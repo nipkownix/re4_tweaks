@@ -4,9 +4,20 @@
 #include "Game.h"
 #include "Patches.h"
 
-class Config
+class re4t_cfg
 {
 public:
+	// Funcs
+	void ReadSettings();
+	void ReadSettings(std::wstring ini_path);
+	void WriteSettings();
+	void LogSettings();
+
+	void ParseHotkeys();
+	std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo); // Parses an key combination string into a vector of VKs
+
+	// Vars
+	//=//=//
 	// DISPLAY
 	float fFOVAdditional = 0.0f;
 	bool bEnableFOV = false;
@@ -49,7 +60,7 @@ public:
 	bool bResetCameraWhenRunning = true;
 	float fCameraSensitivity = 1.0f;
 	bool bUseMouseTurning = true;
-	int iMouseTurnType = MouseTurnTypes::TypeA;
+	int iMouseTurnType = 1; // MouseTurnTypes::TypeA;
 	float fTurnTypeBSensitivity = 1.0f;
 	bool bUseRawMouseInput = true;
 	bool bDetachCameraFromAim = false;
@@ -229,21 +240,15 @@ public:
 	bool bdbg3;
 	bool bdbg4;
 
-	void ReadSettings();
-	void ParseHotkeys();
-	void ReadSettings(std::wstring ini_path);
-	void WriteSettings();
-
-	void LogSettings();
+	// HD Project
+	bool bIsUsingHDProject = false;
 };
 
-extern std::shared_ptr<class Config> pConfig;
+namespace re4t
+{
+	extern re4t_cfg* cfg;
+}
 
 extern const char* sLeonCostumeNames[5];
 extern const char* sAshleyCostumeNames[3];
 extern const char* sAdaCostumeNames[3];
-
-extern bool bIsUsingHDProject;
-
-// Parses an key combination string into a vector of VKs
-std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo);

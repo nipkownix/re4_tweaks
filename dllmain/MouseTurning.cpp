@@ -17,7 +17,7 @@ bool ParseMouseTurnModifierCombo(std::string_view in_combo)
 		return false;
 
 	mouseTurnModifierCombo.clear();
-	mouseTurnModifierCombo = ParseKeyCombo(in_combo);
+	mouseTurnModifierCombo = re4t::cfg->ParseKeyCombo(in_combo);
 
 	return mouseTurnModifierCombo.size() > 0;
 }
@@ -29,7 +29,7 @@ bool isMouseTurnEnabled()
 {
 	bool modifierPressed = pInput->is_combo_down(&mouseTurnModifierCombo);
 
-	bool state = pConfig->bUseMouseTurning;
+	bool state = re4t::cfg->bUseMouseTurning;
 
 	// Invert mouse turning setting if modifier pressed
 	// If mouse turning enabled: modifier disables turning, allows camera movement
@@ -60,11 +60,11 @@ void MouseTurn(float TurnDelayFactor = 20.0f)
 	if (!isMouseTurnEnabled())
 		return;
 
-	if ((pConfig->iMouseTurnType == MouseTurnTypes::TypeA))
+	if ((re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA))
 	{
 		// This has to be changed based on C_RANGE_1097
 		float fRangeMulti;
-		if (pConfig->bCameraImprovements)
+		if (re4t::cfg->bCameraImprovements)
 			fRangeMulti = 3.0f;
 		else
 			fRangeMulti = 2.0f;
@@ -84,7 +84,7 @@ void MouseTurn(float TurnDelayFactor = 20.0f)
 		if (GetMouseAimingMode() == MouseAimingModes::Classic)
 			SpeedMulti = 1300.0f;
 
-		PlayerPtr()->ang_A0.y += (-*MouseDeltaX / SpeedMulti) * pConfig->fTurnTypeBSensitivity;
+		PlayerPtr()->ang_A0.y += (-*MouseDeltaX / SpeedMulti) * re4t::cfg->fTurnTypeBSensitivity;
 	}
 }
 
@@ -93,7 +93,7 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 	// Enable the turning animation/action if the mouse is moving
 
 	// Type A doesn't need this
-	if (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)
+	if (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)
 		return game_KeyOnCheck_0(a1);
 
 	bool ret = false;
@@ -121,7 +121,7 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 	return ret;
 }
 
-void Init_MouseTurning()
+void re4t::init::MouseTurning()
 {
 	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
 	MouseDeltaX = (int32_t*)*pattern.count(1).get(0).get<uint32_t>(2);
@@ -142,7 +142,7 @@ void Init_MouseTurning()
 				break;
 			case InputDevices::Keyboard:
 			case InputDevices::Mouse:
-				if (isMouseTurnEnabled() && (pConfig->iMouseTurnType == MouseTurnTypes::TypeB)) // Camera should be free for Type A
+				if (isMouseTurnEnabled() && (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeB)) // Camera should be free for Type A
 					CameraXpos = 0.0f;
 				else
 					CameraXpos = *fMousePosX;
@@ -301,6 +301,6 @@ void Init_MouseTurning()
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-	if (pConfig->bUseMouseTurning)
+	if (re4t::cfg->bUseMouseTurning)
 		spd::log()->info("{} -> MouseTurning enabled", __FUNCTION__);
 }

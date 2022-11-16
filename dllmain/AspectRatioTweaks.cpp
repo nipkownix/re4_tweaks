@@ -54,7 +54,7 @@ void __cdecl C_MTXOrtho_DrawTexture_hook(Mtx44 mtx, float PosY, float NegY, floa
 	if (bIsUltrawide || bIs16by10)
 	{
 		// Game's default behavior is stretching, so we simply return
-		if (pConfig->bStretchFullscreenImages)
+		if (re4t::cfg->bStretchFullscreenImages)
 			return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 
 		float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
@@ -73,7 +73,7 @@ void __cdecl C_MTXOrtho_cSofdec_hook(Mtx44 mtx, float PosY, float NegY, float Ne
 	if (bIsUltrawide || bIs16by10)
 	{
 		// Game's default behavior is stretching, so we simply return
-		if (pConfig->bStretchVideos)
+		if (re4t::cfg->bStretchVideos)
 			return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 
 		float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
@@ -87,7 +87,7 @@ void __cdecl C_MTXOrtho_cSofdec_hook(Mtx44 mtx, float PosY, float NegY, float Ne
 	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
-void Init_AspectRatioTweaks()
+void re4t::init::AspectRatioTweaks()
 {
 	// Get original C_MTXOrtho
 	auto pattern = hook::pattern("E8 ? ? ? ? 8D 4D BC 6A 01 51 E8 ? ? ? ? 8D 55 98 52 8D 45 B0 50 8D 4D A4 51 56 E8 ? ? ? ? 8B 4D FC 83 C4 34");
@@ -132,7 +132,7 @@ void Init_AspectRatioTweaks()
 				fDefaultHudPosX = *fCurHudPosX;
 
 			// Calculate new X pos if needed
-			if ((pConfig->bSideAlignHUD && bIsUltrawide) || (pConfig->bRemove16by10BlackBars && bIs16by10))
+			if ((re4t::cfg->bSideAlignHUD && bIsUltrawide) || (re4t::cfg->bRemove16by10BlackBars && bIs16by10))
 			{
 				float fHudPosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) / 2.0f;
 			
@@ -203,8 +203,8 @@ void Init_AspectRatioTweaks()
 			double fNewEsp18Height = 0.50068 / fNewAspectRatio;
 
 			// if ultrawide/super ultrawide or 16:10
-			if (((fGameDisplayAspectRatio > 2.2f) && pConfig->bUltraWideAspectSupport) ||
-				((fGameDisplayAspectRatio == 1.6f) && pConfig->bRemove16by10BlackBars))
+			if (((fGameDisplayAspectRatio > 2.2f) && re4t::cfg->bUltraWideAspectSupport) ||
+				((fGameDisplayAspectRatio == 1.6f) && re4t::cfg->bRemove16by10BlackBars))
 			{
 				bIsUltrawide = fGameDisplayAspectRatio > 2.2f;
 				bIs16by10 = fGameDisplayAspectRatio == 1.6f;

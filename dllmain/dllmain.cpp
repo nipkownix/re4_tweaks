@@ -11,13 +11,6 @@
 #include "UI_DebugWindows.h"
 #include "../wrappers/wrappers.h"
 
-std::string WrapperMode;
-std::wstring wrapperName;
-std::wstring rootPath;
-std::wstring logPath;
-
-HMODULE wrapper_dll = nullptr;
-HMODULE proxy_dll = nullptr;
 HMODULE g_module_handle = nullptr;
 
 void HandleAppID()
@@ -35,9 +28,9 @@ void Init_Main()
 	con.AddLogChar("Big ironic thanks to QLOC S.A.");
 
 	// Get game pointers and version info
-	if (!Init_Game())
+	if (!re4t::init::Game())
 		return;
-
+	
 	// Make sure steam_appid.txt exists
 	HandleAppID();
 
@@ -54,57 +47,57 @@ void Init_Main()
 	pInput->PopulateKeymap();
 
 	// Read re4_tweaks settings
-	pConfig->ReadSettings();
+	re4t::cfg->ReadSettings();
 
 	// Log re4_tweaks settings
-	pConfig->LogSettings();
+	re4t::cfg->LogSettings();
 	
 	// Install input-related hooks
 	pInput->InstallHooks();
 
 	// Parse any special command-line options
-	Init_CommandLine();
+	re4t::init::CommandLine();
 
 	// Check for re4_tweaks updates
 	CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&updateCheck, NULL, 0, NULL);
 
 	// Various display-related tweaks
-	Init_DisplayTweaks();
+	re4t::init::DisplayTweaks();
 
-	Init_AudioTweaks();
+	re4t::init::AudioTweaks();
 
-	Init_CameraTweaks();
+	re4t::init::CameraTweaks();
 
-	Init_KeyboardMouseTweaks();
+	re4t::init::KeyboardMouseTweaks();
 
-	Init_ControllerTweaks();
+	re4t::init::ControllerTweaks();
 
 	// Install a WndProc hook and register the resulting hWnd for input
-	Init_WndProcHook();
+	re4t::init::WndProcHook();
 
 	// Increase some game limits
-	Init_HandleLimits();
+	re4t::init::HandleLimits();
 
 	// QTE-related changes
-	Init_QTEfixes();
+	re4t::init::QTEfixes();
 
 	// Fixes FPS-related issues
-	Init_60fpsFixes();
+	re4t::init::FrameRateFixes();
 
-	Init_Misc();
+	re4t::init::Misc();
 
-	if (pConfig->bEnableModExpansion)
-		Init_ModExpansion();
+	if (re4t::cfg->bEnableModExpansion)
+		re4t::init::ModExpansion();
 
-	Init_MathReimpl();
+	re4t::init::MathReimpl();
 
-	Init_DebugDisplay();
+	re4t::init::DebugDisplay();
 
 	Trainer_Init();
 
 	// Apply changes needed by the HD Project
-	if (bIsUsingHDProject)
-		Init_HDProject();
+	if (re4t::cfg->bIsUsingHDProject)
+		re4t::init::HDProject();
 }
 
 // Dll main function
@@ -120,7 +113,7 @@ bool APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 
 		Init_Wrappers();
 
-		Init_ExceptionHandler();
+		re4t::init::ExceptionHandler();
 
 		Init_Main();
 

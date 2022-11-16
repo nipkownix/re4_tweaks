@@ -21,8 +21,8 @@ void __cdecl mwPlySetOutVol_Hook(void* mwply, int vol)
 	// volume of 0 would cause divide by zero (which doesn't crash, but does make volume extremely loud)
 	// -960 seems to be minimum volume allowed by Criware, so we'll set to that (not completely sure if it's muted or not though)
 	int new_vol = -960;
-	if (pConfig->iVolumeCutscene > 0)
-		new_vol = int(float(vol) / ((pConfig->iVolumeCutscene / 100.0f) * (pConfig->iVolumeMaster / 100.0f)));
+	if (re4t::cfg->iVolumeCutscene > 0)
+		new_vol = int(float(vol) / ((re4t::cfg->iVolumeCutscene / 100.0f) * (re4t::cfg->iVolumeMaster / 100.0f)));
 
 	mwPlySetOutVol(mwply, new_vol);
 }
@@ -43,9 +43,9 @@ void AudioTweaks_UpdateVolume()
 
 	const float vol_max = 127;
 
-	Snd_ctrl_work->vol_str_bgm_48 = Snd_ctrl_work->vol_iss_bgm_44 = (int16_t(vol_max * (pConfig->iVolumeBGM / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
-	Snd_ctrl_work->vol_iss_se_46 = (int16_t(vol_max * (pConfig->iVolumeSE / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8);
-	Snd_ctrl_work->vol_str_se_4A = (int16_t(vol_max * (pConfig->iVolumeCutscene / 100.0f) * (pConfig->iVolumeMaster / 100.0f)) << 8); // str_se seems to mostly get used by cutscenes / merchant dialogue
+	Snd_ctrl_work->vol_str_bgm_48 = Snd_ctrl_work->vol_iss_bgm_44 = (int16_t(vol_max * (re4t::cfg->iVolumeBGM / 100.0f) * (re4t::cfg->iVolumeMaster / 100.0f)) << 8);
+	Snd_ctrl_work->vol_iss_se_46 = (int16_t(vol_max * (re4t::cfg->iVolumeSE / 100.0f) * (re4t::cfg->iVolumeMaster / 100.0f)) << 8);
+	Snd_ctrl_work->vol_str_se_4A = (int16_t(vol_max * (re4t::cfg->iVolumeCutscene / 100.0f) * (re4t::cfg->iVolumeMaster / 100.0f)) << 8); // str_se seems to mostly get used by cutscenes / merchant dialogue
 
 	if (g_mwply && (
 		FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_MOVIE_ON)) ||
@@ -85,13 +85,13 @@ void AudioTweaks_UpdateVolume()
 
 uint32_t __cdecl knife_r3_fire10_SndCall_Hook(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod)
 {
-	if (pConfig->bRestoreGCSoundEffects)
+	if (re4t::cfg->bRestoreGCSoundEffects)
 		call_no = 85; // use original GC sound effect
 
 	return bio4::SndCall(blk, call_no, pos, id, flag, pMod);
 }
 
-void Init_AudioTweaks()
+void re4t::init::AudioTweaks()
 {
 	// Hook Snd_set_system_vol so we can override volume values with our own after game updates them
 	auto pattern = hook::pattern("B8 10 00 00 00 0F B6 55 ? 52 50 E8 ? ? ? ? 83 C4");

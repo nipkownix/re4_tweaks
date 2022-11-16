@@ -16,11 +16,11 @@ void __stdcall setLanguage_Hook()
 {
 	// Update violence level on game launch / new game
 	setLanguage_Orig();
-	if (pConfig->iViolenceLevelOverride >= 0)
+	if (re4t::cfg->iViolenceLevelOverride >= 0)
 	{
 		auto* SystemSave = SystemSavePtr();
 		if (SystemSave)
-			SystemSave->eff_country_9 = uint8_t(pConfig->iViolenceLevelOverride);
+			SystemSave->eff_country_9 = uint8_t(re4t::cfg->iViolenceLevelOverride);
 	}
 }
 
@@ -36,9 +36,9 @@ void __fastcall cCard__firstCheck10_Hook(cCard* thisptr, void* unused)
 
 	if (SystemSave)
 	{
-		if (pConfig->iViolenceLevelOverride >= 0)
+		if (re4t::cfg->iViolenceLevelOverride >= 0)
 		{
-			SystemSave->eff_country_9 = uint8_t(pConfig->iViolenceLevelOverride);
+			SystemSave->eff_country_9 = uint8_t(re4t::cfg->iViolenceLevelOverride);
 		}
 
 		// Rno1 == 2 overwrites SystemSave with data from the save file
@@ -305,7 +305,7 @@ BYTE __stdcall j_PlSetCostume_Hook()
 {
 	BYTE val = j_PlSetCostume_Orig();
 
-	if (!pConfig->bOverrideCostumes)
+	if (!re4t::cfg->bOverrideCostumes)
 		return val;
 
 	PlayerCharacter curPlType = GlobalPtr()->pl_type_4FC8;
@@ -313,15 +313,15 @@ BYTE __stdcall j_PlSetCostume_Hook()
 	switch (curPlType)
 	{
 	case PlayerCharacter::Leon:
-		GlobalPtr()->plCostume_4FC9.Leon = (LeonCostume)(uint8_t)pConfig->CostumeOverride.Leon;
-		GlobalPtr()->subCostume_4FCB = (AshleyCostume)(uint8_t)pConfig->CostumeOverride.Ashley;
+		GlobalPtr()->plCostume_4FC9.Leon = (LeonCostume)(uint8_t)re4t::cfg->CostumeOverride.Leon;
+		GlobalPtr()->subCostume_4FCB = (AshleyCostume)(uint8_t)re4t::cfg->CostumeOverride.Ashley;
 		break;
 	case PlayerCharacter::Ashley: // When playing as Ashley in the castle section
-		// GlobalPtr()->plCostume_4FC9 = (uint8_t)pConfig->CostumeOverride.Ashley; <- Disabled for being very unreliable. Crashed on me many times, and when it didn't Ashley had parts of her body invisible. TODO: Fix this oe day.
+		// GlobalPtr()->plCostume_4FC9 = (uint8_t)re4t::cfg->CostumeOverride.Ashley; <- Disabled for being very unreliable. Crashed on me many times, and when it didn't Ashley had parts of her body invisible. TODO: Fix this oe day.
 		break;
 	case PlayerCharacter::Ada:
 	{
-		GlobalPtr()->plCostume_4FC9.Ada = (AdaCostume)(uint8_t)pConfig->CostumeOverride.Ada;
+		GlobalPtr()->plCostume_4FC9.Ada = (AdaCostume)(uint8_t)re4t::cfg->CostumeOverride.Ada;
 		break;
 	}
 	default:
@@ -346,7 +346,7 @@ float(__cdecl* CameraControl__getCameraDirection)();
 void __cdecl wep17_r3_ready00_Hook(cPlayer* a1)
 {
 	// Update weapon direction to match camera if allowing quickturn
-	if(pConfig->bAllowMatildaQuickturn)
+	if(re4t::cfg->bAllowMatildaQuickturn)
 		a1->Wep_7D8->m_CamAdjY_30 = CameraControl__getCameraDirection();
 
 	wep17_r3_ready00(a1);
@@ -355,7 +355,7 @@ void __cdecl wep17_r3_ready00_Hook(cPlayer* a1)
 void __cdecl wep17_r3_ready10_Hook(cPlayer* a1)
 {
 	// Jump to wep02_r3_ready10 to allow Mathilda to quickturn character
-	if (pConfig->bAllowMatildaQuickturn)
+	if (re4t::cfg->bAllowMatildaQuickturn)
 		wep02_r3_ready10(a1);
 	else
 		wep17_r3_ready10(a1);
@@ -371,7 +371,7 @@ void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 	// Normally this would then be nearly-instantly reverted back to 1.0 by the wep07_r3_ready10 state, but changing weapons can interrupt that
 	// We fix that here by resetting speed to 1 whenever weapon change is occurring, pretty simple fix
 
-	if (pConfig->bFixDitmanGlitch)
+	if (re4t::cfg->bFixDitmanGlitch)
 		thisptr->Motion_1D8.Seq_speed_C0 = 1.0f;
 
 	cPlayer__weaponInit(thisptr, unused);
@@ -450,12 +450,12 @@ BOOL joyKamae_Hook()
 
 	bool reloadKeyCheck = false;
 
-	if (pConfig->bAllowReloadWithoutAiming_kbm && isKeyboardMouse())
+	if (re4t::cfg->bAllowReloadWithoutAiming_kbm && isKeyboardMouse())
 	{
 		reloadKeyCheck = true;
 		reloadKey = KEY_BTN::KEY_RELOCKON; // Default key: R
 	}
-	else if (pConfig->bAllowReloadWithoutAiming_controller && isController())
+	else if (re4t::cfg->bAllowReloadWithoutAiming_controller && isController())
 	{
 		reloadKeyCheck = true;
 
@@ -502,8 +502,8 @@ bool cPlayer__keyReload_hook()
 {
 	bool ret = false;
 
-	if ((pConfig->bAllowReloadWithoutAiming_kbm && isKeyboardMouse()) || 
-		(pConfig->bAllowReloadWithoutAiming_controller && isController()))
+	if ((re4t::cfg->bAllowReloadWithoutAiming_kbm && isKeyboardMouse()) || 
+		(re4t::cfg->bAllowReloadWithoutAiming_controller && isController()))
 	{
 		bool isAiming = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
 		bool reloadWithoutZoom = false;
@@ -511,19 +511,19 @@ bool cPlayer__keyReload_hook()
 		switch (LastUsedDevice()) {
 		case InputDevices::DinputController:
 		case InputDevices::XinputController:
-			if (pConfig->bAllowReloadWithoutAiming_controller)
+			if (re4t::cfg->bAllowReloadWithoutAiming_controller)
 				ret = bShouldReload;
 
-			if (pConfig->bReloadWithoutZoom_controller)
-				reloadWithoutZoom = (pConfig->bReloadWithoutZoom_controller && !isAiming);
+			if (re4t::cfg->bReloadWithoutZoom_controller)
+				reloadWithoutZoom = (re4t::cfg->bReloadWithoutZoom_controller && !isAiming);
 			break;
 		case InputDevices::Keyboard:
 		case InputDevices::Mouse:
-			if (pConfig->bAllowReloadWithoutAiming_kbm)
+			if (re4t::cfg->bAllowReloadWithoutAiming_kbm)
 				ret = bShouldReload;
 
-			if (pConfig->bReloadWithoutZoom_kbm)
-				reloadWithoutZoom = (pConfig->bReloadWithoutZoom_kbm && !isAiming);
+			if (re4t::cfg->bReloadWithoutZoom_kbm)
+				reloadWithoutZoom = (re4t::cfg->bReloadWithoutZoom_kbm && !isAiming);
 			break;
 		}
 
@@ -565,7 +565,7 @@ uint16_t* GetEtcFlgPtr_Hook(uint32_t etc_no, uint16_t room_no)
 	return ret;
 }
 
-void Init_Misc()
+void re4t::init::Misc()
 {
 	// Hooks to allow reloading without aiming
 	{
@@ -779,11 +779,11 @@ void Init_Misc()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bOverrideCostumes)
+				if (!re4t::cfg->bOverrideCostumes)
 					GlobalPtr()->plCostume_4FC9.Ada = AdaCostume::Normal;
 				else
 				{
-					GlobalPtr()->plCostume_4FC9.Ada = pConfig->CostumeOverride.Ada;
+					GlobalPtr()->plCostume_4FC9.Ada = re4t::cfg->CostumeOverride.Ada;
 
 					#ifdef VERBOSE
 					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
@@ -799,11 +799,11 @@ void Init_Misc()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bOverrideCostumes)
+				if (!re4t::cfg->bOverrideCostumes)
 					GlobalPtr()->plCostume_4FC9.Ada = AdaCostume::Spy;
 				else
 				{
-					GlobalPtr()->plCostume_4FC9.Ada = pConfig->CostumeOverride.Ada;
+					GlobalPtr()->plCostume_4FC9.Ada = re4t::cfg->CostumeOverride.Ada;
 
 					#ifdef VERBOSE
 					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
@@ -823,19 +823,19 @@ void Init_Misc()
 				*(uint8_t*)(regs.esi + 0x01) = 0x0A;
 				*(uint8_t*)(regs.esi + 0x6E) = (uint8_t)regs.ecx & 0xFF;
 
-				if (pConfig->bOverrideCostumes)
+				if (re4t::cfg->bOverrideCostumes)
 				{
 					PlayerCharacter curPlType = GlobalPtr()->pl_type_4FC8;
 
 					switch (curPlType)
 					{
 					case PlayerCharacter::Leon:
-						GlobalPtr()->plCostume_4FC9.Leon = pConfig->CostumeOverride.Leon;
+						GlobalPtr()->plCostume_4FC9.Leon = re4t::cfg->CostumeOverride.Leon;
 						break;
 					case PlayerCharacter::Ada:
 					{
 						// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-						uint8_t costumeID = (uint8_t)pConfig->CostumeOverride.Ada;
+						uint8_t costumeID = (uint8_t)re4t::cfg->CostumeOverride.Ada;
 						if (costumeID == 2)
 							costumeID++;
 
@@ -991,7 +991,7 @@ void Init_Misc()
 	}
 
 	// Mafia Leon on cutscenes
-	if (pConfig->bAllowMafiaLeonCutscenes)
+	if (re4t::cfg->bAllowMafiaLeonCutscenes)
 	{
 		auto pattern = hook::pattern("80 B9 ? ? ? ? 04 6A ? 6A ? 6A ? 6A ? 0F 85");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), (uint8_t)-1, true); // Allow the correct models to be used
@@ -1031,7 +1031,7 @@ void Init_Misc()
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
 
-				if (pConfig->bSilenceArmoredAshley)
+				if (re4t::cfg->bSilenceArmoredAshley)
 				{
 					// Make the game think Ashley isn't using the clanky costume
 					regs.ef &= ~(1 << regs.zero_flag);
@@ -1044,7 +1044,7 @@ void Init_Misc()
 	}
 
 	// Check if the game is running at a valid frame rate
-	if (!pConfig->bIgnoreFPSWarning)
+	if (!re4t::cfg->bIgnoreFPSWarning)
 	{
 		// Hook function to read the FPS value from config.ini
 		auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
@@ -1097,7 +1097,7 @@ void Init_Misc()
 			void operator()(injector::reg_pack& regs)
 			{
 				bool unlock = *(uint32_t*)(pSys + 8) == 0 // pSys->language_8
-					|| pConfig->bAshleyJPCameraAngles;
+					|| re4t::cfg->bAshleyJPCameraAngles;
 
 				// set zero-flag if we're unlocking the camera, for the jz game uses after this hook
 				if (unlock)
@@ -1112,7 +1112,7 @@ void Init_Misc()
 
 		injector::MakeInline<UnlockAshleyJPCameraAngles>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
-		if (pConfig->bAshleyJPCameraAngles)
+		if (re4t::cfg->bAshleyJPCameraAngles)
 			spd::log()->info("AshleyJPCameraAngles enabled");
 	}
 
@@ -1150,7 +1150,7 @@ void Init_Misc()
 	}
 
 	// Option to skip the intro logos when starting up the game
-	if (pConfig->bSkipIntroLogos)
+	if (re4t::cfg->bSkipIntroLogos)
 	{
 		auto pattern = hook::pattern("81 7E 24 E6 00 00 00");
 		// Overwrite some kind of timer check to check for 0 seconds instead
@@ -1167,7 +1167,7 @@ void Init_Misc()
 		}
 
 		// Option to enable various menu speedups
-		if (pConfig->bSkipMenuFades)
+		if (re4t::cfg->bSkipMenuFades)
 		{
 			// Skip titleWarning fade-in
 			pattern = hook::pattern("DD D8 0F BE 46 01 83 E8 00 0F");
@@ -1270,16 +1270,16 @@ void Init_Misc()
 	}
 
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
-	Init_ToolMenu();
-	if (pConfig->bEnableDebugMenu)
+	re4t::init::ToolMenu();
+	if (re4t::cfg->bEnableDebugMenu)
 	{
-		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
+		re4t::init::ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
 
 		spd::log()->info("EnableDebugMenu applied");
 	}
 
 	// Add Handgun silencer to merchant sell list
-	if (pConfig->bAllowSellingHandgunSilencer)
+	if (re4t::cfg->bAllowSellingHandgunSilencer)
 	{
 		auto pattern = hook::pattern("DB 00 AC 0D 01 00 FF FF 00 00 00 00 00 00 00 00 00 00 0B 01");
 
@@ -1373,7 +1373,7 @@ void Init_Misc()
 
 				// Add Ashley player-type check, make it use Ada/Hunk/Wesker case which calls SetKick
 				// TODO: some reason SetKick doesn't work for Ashley? might be player-type checks inside it, so right now this just disables Suplex if bAllowAshleySuplex isn't set
-				if (!pConfig->bAllowAshleySuplex && playerType == 1)
+				if (!re4t::cfg->bAllowAshleySuplex && playerType == 1)
 				{
 					regs.eax = 0;
 				}

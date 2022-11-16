@@ -128,7 +128,7 @@ void tp_scr_Hook()
 
     *ToolOption_Buttons = curButtons;
 }
-void Init_ToolMenuDebug()
+void re4t::init::ToolMenuDebug()
 {
     // Move
     auto pattern = hook::pattern("E8 ? ? ? ? 6A 01 E8 ? ? ? ? 83 C4 08 EB EA");
