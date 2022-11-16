@@ -991,4 +991,9 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "UseDynamicFrametime", pConfig->bUseDynamicFrametime ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableFramelimiting", pConfig->bDisableFramelimiting ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
+
+	// HDPROJECT
+	spd::log()->info("+ HDPROJECT--------------------------+-------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "IsUsingHDProject", bIsUsingHDProject ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
 }
