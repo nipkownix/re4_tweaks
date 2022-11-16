@@ -121,12 +121,6 @@ extern float* fMousePosY;
 extern int32_t* MouseDeltaX;
 extern int32_t* MouseDeltaY;
 
-enum MouseTurnTypes
-{
-	TypeA,
-	TypeB
-};
-
 // Camera vars
 extern float* fCameraPosX;
 extern float* fCameraPosY;

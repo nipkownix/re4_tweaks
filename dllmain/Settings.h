@@ -4,6 +4,12 @@
 #include "Game.h"
 #include "Patches.h"
 
+enum MouseTurnTypes
+{
+	TypeA,
+	TypeB
+};
+
 class re4t_cfg
 {
 public:
@@ -60,7 +66,8 @@ public:
 	bool bResetCameraWhenRunning = true;
 	float fCameraSensitivity = 1.0f;
 	bool bUseMouseTurning = true;
-	int iMouseTurnType = 1; // MouseTurnTypes::TypeA;
+
+	int iMouseTurnType = MouseTurnTypes::TypeA;
 	float fTurnTypeBSensitivity = 1.0f;
 	bool bUseRawMouseInput = true;
 	bool bDetachCameraFromAim = false;
