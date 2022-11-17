@@ -3,12 +3,13 @@
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
+#include "AudioTweaks.h"
 
 void(__cdecl* Snd_set_system_vol)(char flg, int16_t vol);
 void __cdecl Snd_set_system_vol_Hook(char flg, int16_t vol)
 {
 	Snd_set_system_vol(flg, vol);
-	AudioTweaks_UpdateVolume();
+	re4t::AudioTweaks::UpdateVolume();
 }
 
 void* g_mwply = nullptr;
@@ -34,7 +35,7 @@ void(__cdecl* SYNSetMasterVolume)(uint32_t a1, uint16_t a2, float a3); // 0x97AB
 SND_SEQ* (__cdecl* Snd_search_seq_work_seq_no)(int seq_no); // 0x978070 in 1.1.0, guessed name
 void(__cdecl* Snd_seq_work_calc_ax_vol)(SND_SEQ* a1); // 0x978150 in 1.1.0
 
-void AudioTweaks_UpdateVolume()
+void re4t::AudioTweaks::UpdateVolume()
 {
 	if (!Snd_ctrl_work)
 		return;

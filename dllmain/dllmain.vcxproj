@@ -131,7 +131,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
     </ClCompile>
     <ClCompile Include="..\wrappers\wrappers.cpp" />
-    <ClCompile Include="60fpsFixes.cpp" />
+    <ClCompile Include="FrameRateFixes.cpp" />
     <ClCompile Include="AudioTweaks.cpp" />
     <ClCompile Include="AutoUpdater.cpp" />
     <ClCompile Include="CameraTweaks.cpp" />
@@ -232,6 +232,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\wrappers\wrappers.h" />
     <ClInclude Include="..\wrappers\X3DAudio1_7.h" />
     <ClInclude Include="..\wrappers\xinput1_3.h" />
+    <ClInclude Include="AudioTweaks.h" />
     <ClInclude Include="D3D9hook.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Game.h" />

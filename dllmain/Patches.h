@@ -25,6 +25,7 @@ namespace re4t
 		void ExceptionHandler();
 		void FrameRateFixes();
 		void FilterXXFixes();
+		void FrameRateFixes();
 		bool Game();
 		void HandleLimits();
 		void HDProject();
@@ -48,9 +49,6 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo);
 bool ParseMouseTurnModifierCombo(std::string_view in_combo);
 bool ParseToolMenuKeyCombo(std::string_view in_combo);
 bool ParseJetSkiTrickCombo(std::string_view in_combo);
-
-// Audio Tweaks
-void AudioTweaks_UpdateVolume();
 
 // EndSceneHook
 struct EndSceneHook

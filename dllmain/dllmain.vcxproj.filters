@@ -67,7 +67,7 @@
     <ClCompile Include="QTEFixes.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
-    <ClCompile Include="60fpsFixes.cpp">
+    <ClCompile Include="FrameRateFixes.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
     <ClCompile Include="KeyboardMouseTweaks.cpp">
@@ -482,6 +482,9 @@
     </ClInclude>
     <ClInclude Include="..\wrappers\shared.h">
       <Filter>wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioTweaks.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

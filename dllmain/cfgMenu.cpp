@@ -12,6 +12,7 @@
 #include "UI_DebugWindows.h"
 #include "UI_Utility.h"
 #include "Trainer.h"
+#include "AudioTweaks.h"
 
 bool bCfgMenuOpen;
 bool NeedsToRestart;
@@ -671,7 +672,7 @@ void cfgMenuRender()
 						if (changed)
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							AudioTweaks_UpdateVolume();
+							re4t::AudioTweaks::UpdateVolume();
 						}
 					}
 
