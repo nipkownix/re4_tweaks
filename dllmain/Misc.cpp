@@ -1223,4 +1223,21 @@ void Init_Misc()
 			}
 		}; injector::MakeInline<SuplexCheckPlayerAshley>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 	}
+
+	// Fix melee range firing bug with type III controls
+	// When using type III config, knocking an enemy into a vulnerable state while in melee range with them interrupts your gunfire until you release the trigger
+	// Type II config doesn't have this bug, despite having the same dual trigger setup, because joyFireOn() explicitly checks for it--they just forgot to check for type III as well
+	{
+		auto pattern = hook::pattern("8B ? ? ? ? ? 38 41 ? 74");
+		struct FixType3FireOn
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (SystemSavePtr()->pad_type_B == keyConfigTypes::TypeII || SystemSavePtr()->pad_type_B == keyConfigTypes::TypeIII)
+					regs.ef |= (1 << regs.zero_flag);
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<FixType3FireOn>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
+	}
 }
