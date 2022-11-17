@@ -13,6 +13,8 @@ void Init_AspectRatioTweaks();
 void Init_AudioTweaks();
 void Init_CameraTweaks();
 void Init_ControllerTweaks();
+void Init_CommandLine();
+void Init_DebugDisplay();
 void Init_D3D9Hook();
 void Init_DisplayTweaks();
 void Init_ExceptionHandler();
@@ -32,8 +34,6 @@ void Init_ToolMenuDebug();
 void Init_WndProcHook();
 
 // Hotkey bindings and parsing
-void ConsoleBinding();
-void cfgMenuBinding();
 bool ParseConsoleKeyCombo(std::string_view in_combo);
 bool ParseConfigMenuKeyCombo(std::string_view in_combo);
 bool ParseMouseTurnModifierCombo(std::string_view in_combo);
@@ -52,11 +52,16 @@ struct EndSceneHook
 	std::chrono::high_resolution_clock::time_point _start_time;
 	std::chrono::high_resolution_clock::time_point _last_present_time;
 
+	float _cur_monitor_dpi = 1.0f;
+
+	ImFont* ESP_font;
+
 	ImGuiContext* _imgui_context = nullptr;
 };
 
 extern EndSceneHook esHook;
 extern bool bRebuildFont;
+bool ParseImGuiUIFocusCombo(std::string_view in_combo);
 
 // cfgMenu
 void cfgMenuRender();
@@ -104,6 +109,8 @@ extern int8_t* AnalogRY_9;
 // Mouse vars
 extern float* fMousePosX;
 extern float* fMousePosY;
+extern int32_t* MouseDeltaX;
+extern int32_t* MouseDeltaY;
 
 enum MouseTurnTypes
 {

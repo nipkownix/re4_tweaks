@@ -56,7 +56,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -66,6 +66,7 @@
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>..\external\freetype\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
@@ -83,7 +84,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -95,6 +96,8 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>..\external\freetype\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
@@ -129,14 +132,18 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="..\Wrappers\wrapper.cpp" />
     <ClCompile Include="60fpsFixes.cpp" />
     <ClCompile Include="AudioTweaks.cpp" />
+    <ClCompile Include="AutoUpdater.cpp" />
     <ClCompile Include="CameraTweaks.cpp" />
+    <ClCompile Include="CommandLine.cpp" />
     <ClCompile Include="ConsoleWnd.cpp" />
     <ClCompile Include="ControllerTweaks.cpp" />
     <ClCompile Include="D3D9hook.cpp" />
+    <ClCompile Include="DebugDisplay.cpp" />
     <ClCompile Include="DisplayTweaks.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EndSceneHook.cpp" />
     <ClCompile Include="ExceptionHandler.cpp" />
+    <ClCompile Include="GameFlags.cpp" />
     <ClCompile Include="HDProject.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -154,6 +161,9 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="Sofdec.cpp" />
     <ClCompile Include="FilterXXFixes.cpp" />
     <ClCompile Include="AspectRatioTweaks.cpp" />
+    <ClCompile Include="Trainer.cpp" />
+    <ClCompile Include="UI_DebugWindows.cpp" />
+    <ClCompile Include="UI_Utility.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="WndProcHook.cpp" />
     <ClCompile Include="ToolMenu.cpp" />
@@ -194,7 +204,12 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\includes\FAprolight.hpp" />
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp" />
     <ClInclude Include="..\includes\log.h" />
-    <ClInclude Include="..\settings\settings_string.h" />
+    <ClInclude Include="..\settings\settings.ini">
+      <FileType>Text</FileType>
+    </ClInclude>
+    <ClInclude Include="..\settings\trainer_settings.ini">
+      <FileType>Text</FileType>
+    </ClInclude>
     <ClInclude Include="..\Wrappers\bcrypt.h" />
     <ClInclude Include="..\Wrappers\cryptsp.h" />
     <ClInclude Include="..\Wrappers\d2d1.h" />
@@ -220,6 +235,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\Wrappers\wsock32.h" />
     <ClInclude Include="..\Wrappers\x3daudio1_7.h" />
     <ClInclude Include="..\Wrappers\xinput1_3.h" />
+    <ClInclude Include="AutoUpdater.h" />
     <ClInclude Include="D3D9hook.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Game.h" />
@@ -227,28 +243,47 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="gitparams.h" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="Patches.h" />
+    <ClInclude Include="SDK\atari.h" />
     <ClInclude Include="SDK\atariInfo.h" />
     <ClInclude Include="SDK\basic_types.h" />
     <ClInclude Include="SDK\camera.h" />
+    <ClInclude Include="SDK\cam_ctrl.h" />
+    <ClInclude Include="SDK\card.h" />
     <ClInclude Include="SDK\cCoord.h" />
+    <ClInclude Include="SDK\cDataSwap.h" />
+    <ClInclude Include="SDK\cloth.h" />
     <ClInclude Include="SDK\cManager.h" />
     <ClInclude Include="SDK\cMotBase.h" />
     <ClInclude Include="SDK\cUnit.h" />
     <ClInclude Include="SDK\em.h" />
+    <ClInclude Include="SDK\em10.h" />
     <ClInclude Include="SDK\em_set.h" />
     <ClInclude Include="SDK\EtcModel.h" />
     <ClInclude Include="SDK\event.h" />
+    <ClInclude Include="SDK\filter00.h" />
+    <ClInclude Include="SDK\gc_math.h" />
     <ClInclude Include="SDK\global.h" />
+    <ClInclude Include="SDK\GX.h" />
+    <ClInclude Include="SDK\GXEnums.h" />
     <ClInclude Include="SDK\GXStruct.h" />
+    <ClInclude Include="SDK\item.h" />
+    <ClInclude Include="SDK\light.h" />
     <ClInclude Include="SDK\model.h" />
     <ClInclude Include="SDK\obj.h" />
     <ClInclude Include="SDK\objWep.h" />
     <ClInclude Include="SDK\pad.h" />
     <ClInclude Include="SDK\player.h" />
     <ClInclude Include="SDK\pl_wep.h" />
+    <ClInclude Include="SDK\puzzle.h" />
+    <ClInclude Include="SDK\room_jmp.h" />
     <ClInclude Include="SDK\snd.h" />
+    <ClInclude Include="SDK\sscrn.h" />
+    <ClInclude Include="SDK\title.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Trainer.h" />
+    <ClInclude Include="UI_DebugWindows.h" />
+    <ClInclude Include="UI_Utility.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

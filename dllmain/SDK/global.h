@@ -131,6 +131,17 @@ assert_size(OperatorSaveWk, 0x44);
 // Pointed to by pG
 struct __declspec(align(4)) GLOBAL_WK
 {
+	enum class Routine0 : uint8_t
+	{
+		Init,
+		StageInit,
+		RoomInit,
+		MainLoop,
+		Doordemo, // set by tool menu areajump, maybe showed door animation at earlier point
+		Ending,
+		Option
+	};
+
 	bool IsDevConsole_0;
 	char shooting_mode_1;
 	char CardLastSelNo_2;
@@ -268,6 +279,14 @@ struct __declspec(align(4)) GLOBAL_WK
 	int8_t PrintNo_8688;
 	int8_t PrintNo_bak_8689;
 	uint32_t glunk_field_868C_maybePadding;
+
+	inline void SetRoutine(Routine0 Rno0, uint8_t Rno1, uint8_t Rno2, uint8_t Rno3)
+	{
+		Rno0_20 = uint8_t(Rno0);
+		Rno1_21 = Rno1;
+		Rno2_22 = Rno2;
+		Rno3_23 = Rno3;
+	}
 };
 assert_size(GLOBAL_WK, 0x8690);
 

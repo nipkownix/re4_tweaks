@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include "dllmain.h"
+#include "AutoUpdater.h"
 #include "Patches.h"
 #include "..\wrappers\wrapper.h"
 #include "Settings.h"
@@ -7,6 +8,8 @@
 #include "input.hpp"
 #include "gitparams.h"
 #include "resource.h"
+#include "Trainer.h"
+#include "UI_DebugWindows.h"
 
 std::string WrapperMode;
 std::string WrapperName;
@@ -59,6 +62,12 @@ void Init_Main()
 	// Install input-related hooks
 	pInput->InstallHooks();
 
+	// Parse any special command-line options
+	Init_CommandLine();
+
+	// Check for re4_tweaks updates
+	CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&updateCheck, NULL, 0, NULL);
+
 	// Various display-related tweaks
 	Init_DisplayTweaks();
 
@@ -88,6 +97,10 @@ void Init_Main()
 		Init_ModExpansion();
 
 	Init_MathReimpl();
+
+	Init_DebugDisplay();
+
+	Trainer_Init();
 
 	// Apply changes needed by the HD Project
 	if (bIsUsingHDProject)

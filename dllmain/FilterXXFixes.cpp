@@ -15,17 +15,7 @@ float* ptr_InternalWidth;
 float* ptr_InternalHeight;
 float* ptr_InternalHeightScale;
 int* ptr_RenderHeight;
-uint32_t* ptr_filter01_buff;
-
-void(__cdecl* GXBegin)(int a1, int a2, short a3);
-void(__cdecl* GXPosition3f32)(float a1, float a2, float a3);
-void(__cdecl* GXColor4u8)(uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4);
-void(__cdecl* GXTexCoord2f32)(float a1, float a2);
-void(__cdecl* GXShaderCall_Maybe)(int a1);
-
-void(__cdecl* GXSetTexCopySrc)(short a1, short a2, short a3, short a4);
-void(__cdecl* GXSetTexCopyDst)(short a1, short a2, int a3, char a4);
-void(__cdecl* GXCopyTex)(uint32_t a1, char a2, int a3);
+void** ptr_filter01_buff;
 
 void(__cdecl* Filter0aGXDraw_Orig)(
 	float PositionX, float PositionY, float PositionZ,
@@ -100,26 +90,26 @@ void __cdecl Filter0aGXDraw_Hook(
 		pos_right += 4.0f;
 	}
 
-	GXBegin(0x80, 0, 4);
+	bio4::GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
-	GXPosition3f32(pos_left, pos_top, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
-	GXTexCoord2f32(0.0f + TexOffsetX, 0.0f + TexOffsetY);
+	bio4::GXPosition3f32(pos_left, pos_top, PositionZ);
+	bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	bio4::GXTexCoord2f32(0.0f + TexOffsetX, 0.0f + TexOffsetY);
 
-	GXPosition3f32(pos_right, pos_top, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
-	GXTexCoord2f32(1.0f + TexOffsetX, 0.0f + TexOffsetY);
+	bio4::GXPosition3f32(pos_right, pos_top, PositionZ);
+	bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	bio4::GXTexCoord2f32(1.0f + TexOffsetX, 0.0f + TexOffsetY);
 
-	GXPosition3f32(pos_right, pos_bottom, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
-	GXTexCoord2f32(1.0f + TexOffsetX, 1.0f + TexOffsetY);
+	bio4::GXPosition3f32(pos_right, pos_bottom, PositionZ);
+	bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	bio4::GXTexCoord2f32(1.0f + TexOffsetX, 1.0f + TexOffsetY);
 
-	GXPosition3f32(pos_left, pos_bottom, PositionZ);
-	GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
-	GXTexCoord2f32(0.0f + TexOffsetX, 1.0f + TexOffsetY);
+	bio4::GXPosition3f32(pos_left, pos_bottom, PositionZ);
+	bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)ColorA);
+	bio4::GXTexCoord2f32(0.0f + TexOffsetX, 1.0f + TexOffsetY);
 
 	int filter0a_shader_num = *ptr_filter0a_shader_num;
-	GXShaderCall_Maybe(filter0a_shader_num);
+	bio4::GXShaderCall(filter0a_shader_num);
 }
 
 void __cdecl Filter01Render_Hook1(Filter01Params* params)
@@ -165,25 +155,25 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 		if (posZ > 65536)
 			posZ = 65536;
 
-		GXBegin(0x80, 0, 4);
+		bio4::GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
-		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(0.0f, 0.0f);
+		bio4::GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(0.0f, 0.0f);
 
-		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(1.0f, 0.0f);
+		bio4::GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(1.0f, 0.0f);
 
-		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(1.0f, 1.0f);
+		bio4::GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(1.0f, 1.0f);
 
-		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(0.0f, 1.0f);
+		bio4::GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(0.0f, 1.0f);
 
-		GXShaderCall_Maybe(0xE);
+		bio4::GXShaderCall(0xE);
 
 		if ((pConfig->bUseEnhancedGCBlur) && (params->AlphaLevel > 1))
 		{
@@ -191,56 +181,56 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 			// look better on modern high-definition displays.
 			float blurAlpha = 225.0f;
 
-			GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
-			GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, 6, 1);
-			GXCopyTex(*ptr_filter01_buff, 0, 0);
+			bio4::GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
+			bio4::GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, GX_TF_RGBA8, 1);
+			bio4::GXCopyTex(*ptr_filter01_buff, 0, 0);
 
-			GXBegin(0x80, 0, 4);
+			bio4::GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
 			float Xnew = -0.6472f;
 			float Ynew = -0.6472f;
 
-			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 1.0f);
 
-			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 1.0f);
 
-			GXShaderCall_Maybe(0xE);
+			bio4::GXShaderCall(0xE);
 
 			// 3rd blur step - Also not present on the original code.
-			GXBegin(0x80, 0, 4);
+			bio4::GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
 			Xnew = -0.1f;
 			Ynew = -0.1f;
 
-			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 1.0f);
 
-			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 1.0f);
 
-			GXShaderCall_Maybe(0xE);
+			bio4::GXShaderCall(0xE);
 		}
 
 	}
@@ -253,29 +243,29 @@ void __cdecl Filter01Render_Hook1(Filter01Params* params)
 
 		if (blurAlpha > 0.0f)
 		{
-			GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
-			GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, 6, 1);
-			GXCopyTex(*ptr_filter01_buff, 0, 0);
+			bio4::GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
+			bio4::GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, GX_TF_RGBA8, 1);
+			bio4::GXCopyTex(*ptr_filter01_buff, 0, 0);
 
-			GXBegin(0x80, 0, 4);
+			bio4::GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
-			GXPosition3f32(0.25f + deltaX, 0.25f + deltaY + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 0.0f);
+			bio4::GXPosition3f32(0.25f + deltaX, 0.25f + deltaY + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 0.0f);
 
-			GXPosition3f32(0.25f + deltaX + GameWidth, 0.25f + deltaY + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 0.0f);
+			bio4::GXPosition3f32(0.25f + deltaX + GameWidth, 0.25f + deltaY + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 0.0f);
 
-			GXPosition3f32(0.25f + deltaX + GameWidth, 0.25f + deltaY + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 1.0f);
+			bio4::GXPosition3f32(0.25f + deltaX + GameWidth, 0.25f + deltaY + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 1.0f);
 
-			GXPosition3f32(0.25f + deltaX, 0.25f + deltaY + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 1.0f);
+			bio4::GXPosition3f32(0.25f + deltaX, 0.25f + deltaY + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 1.0f);
 
-			GXShaderCall_Maybe(0xE);
+			bio4::GXShaderCall(0xE);
 		}
 	}
 }
@@ -375,25 +365,25 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 		if (posZ > 65536.0f)
 			posZ = 65536.0f;
 
-		GXBegin(0xA0, 0, 4); // TODO: 0xA0 (GX_TRIANGLEFAN) in PC, 0x80 (GX_QUADS) in GC - should this be changed?
+		bio4::GXBegin(GX_TRIANGLEFAN, GX_VTXFMT0, 4); // TODO: 0xA0 (GX_TRIANGLEFAN) in PC, 0x80 (GX_QUADS) in GC - should this be changed?
 
-		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(0.0f, 0.0f);
+		bio4::GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(0.0f, 0.0f);
 
-		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(1.0f, 0.0f);
+		bio4::GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(1.0f, 0.0f);
 
-		GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(1.0f, 1.0f);
+		bio4::GXPosition3f32(0.0f + deltaX + GameWidth, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(1.0f, 1.0f);
 
-		GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + GameHeight - offsetY, posZ);
-		GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
-		GXTexCoord2f32(0.0f, 1.0f);
+		bio4::GXPosition3f32(0.0f + deltaX, 0.0f + deltaY + GameHeight - offsetY, posZ);
+		bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)0x80);
+		bio4::GXTexCoord2f32(0.0f, 1.0f);
 
-		GXShaderCall_Maybe(0xE);
+		bio4::GXShaderCall(0xE);
 
 		if (pConfig->bUseEnhancedGCBlur)
 		{
@@ -401,56 +391,56 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 			// look better on modern high-definition displays.
 			float blurAlpha = 225.0f;
 
-			GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
-			GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, 6, 1);
-			GXCopyTex(*ptr_filter01_buff, 0, 0);
+			bio4::GXSetTexCopySrc(0, 0, (short)GameWidth, (short)GameHeight);
+			bio4::GXSetTexCopyDst(((short)GameWidth) >> 1, ((short)GameHeight) >> 1, GX_TF_RGBA8, 1);
+			bio4::GXCopyTex(*ptr_filter01_buff, 0, 0);
 
-			GXBegin(0x80, 0, 4);
+			bio4::GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
 			float Xnew = -0.6472f;
 			float Ynew = -0.6472f;
 
-			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 1.0f);
 
-			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 1.0f);
 
-			GXShaderCall_Maybe(0xE);
+			bio4::GXShaderCall(0xE);
 
 			// 3rd blur step - Also not present on the original code.
-			GXBegin(0x80, 0, 4);
+			bio4::GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
 			Xnew = -0.1f;
 			Ynew = -0.1f;
 
-			GXPosition3f32(Xnew, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 0.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 0.0f);
 
-			GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(1.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew + GameWidth, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(1.0f, 1.0f);
 
-			GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
-			GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
-			GXTexCoord2f32(0.0f, 1.0f);
+			bio4::GXPosition3f32(Xnew, Ynew + GameHeight - offsetY, posZ);
+			bio4::GXColor4u8(0xFF, 0xFF, 0xFF, (uint8_t)blurAlpha);
+			bio4::GXTexCoord2f32(0.0f, 1.0f);
 
-			GXShaderCall_Maybe(0xE);
+			bio4::GXShaderCall(0xE);
 		}
 	}
 }
@@ -458,25 +448,7 @@ void __cdecl Filter01Render_Hook2(Filter01Params* params)
 void GetFilterPointers()
 {
 	// GC blur fix
-	auto pattern = hook::pattern("E8 ? ? ? ? 03 5D ? 6A ? 53 57 E8 ? ? ? ? 0F B6 56");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXBegin);
-
-	pattern = hook::pattern("E8 ? ? ? ? D9 45 ? 8B 75 ? 8B 7D ? D9 7D");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXPosition3f32);
-
-	pattern = hook::pattern("E8 ? ? ? ? 8B 5D ? 8B 55 ? 83 C4 ? 6A ? 53");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXColor4u8);
-
-	pattern = hook::pattern("E8 ? ? ? ? 8B 4D ? 51 E8 ? ? ? ? 8B 4D ? 83 C4 ? 33 CD");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXTexCoord2f32);
-
-	pattern = hook::pattern("E8 ? ? ? ? 47 83 C4 ? 83 C6 ? 3B 3D ? ? ? ? 0F 82");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXShaderCall_Maybe);
-
-	pattern = hook::pattern("E8 ? ? ? ? 0F B7 4E ? 0F B7 56 ? 6A ? 6A ? 51");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXSetTexCopySrc);
-
-	pattern = hook::pattern("E8 ? ? ? ? 6A 01 6A 06 D9");
+	auto pattern = hook::pattern("E8 ? ? ? ? 6A 01 6A 06 D9");
 	uint32_t* varPtr = pattern.count(1).get(0).get<uint32_t>(11);
 	ptr_InternalHeight = (float*)*varPtr;
 
@@ -484,15 +456,8 @@ void GetFilterPointers()
 	varPtr = pattern.count(1).get(0).get<uint32_t>(11);
 	ptr_InternalWidth = (float*)*varPtr;
 
-	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 6A 04 6A 00 50 E8");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXSetTexCopyDst);
-
 	pattern = hook::pattern("D1 E9 51 D9 AD ? ? ? ? E8 ? ? ? ? 8B 15");
-	varPtr = pattern.count(1).get(0).get<uint32_t>(16);
-	ptr_filter01_buff = (uint32_t*)*varPtr;
-
-	pattern = hook::pattern("E8 ? ? ? ? D9 05 ? ? ? ? D9 7D ? 6A ? 0F B7 45");
-	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GXCopyTex);
+	ptr_filter01_buff = *pattern.count(1).get(0).get<void**>(16);
 
 	pattern = hook::pattern("83 C4 ? D9 ? ? ? ? ? D9 05 ? ? ? ? 8B ? ? ? ? ? DD");
 	varPtr = pattern.count(1).get(0).get<uint32_t>(11);

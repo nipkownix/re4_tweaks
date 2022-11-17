@@ -22,4 +22,6 @@ using namespace Memory::VP;
 
 #pragma comment(lib, "freetype.lib")
 
+extern bool TweaksDevMode; // CommandLine.cpp, enabled in DEBUG build & with -dev command-line param
+
 #define VERBOSE

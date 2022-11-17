@@ -87,3 +87,82 @@ enum class keyConfigTypes : uint8_t
 	TypeII,
 	TypeIII
 };
+
+struct PAD_MOTOR
+{
+	uint16_t flag_0;
+	uint16_t delay_2;
+	uint16_t time_4;
+	uint16_t dummy_6;
+	int level_8;
+	int fade_C;
+};
+assert_size(PAD_MOTOR, 0x10);
+
+enum JOY_BTN : uint32_t
+{
+	JOY_DPAD_LEFT = 0x1,
+	JOY_DPAD_RIGHT = 0x2,
+	JOY_DPAD_DOWN = 0x4,
+	JOY_DPAD_UP = 0x8,
+	JOY_RT = 0x10,
+	JOY_RB = 0x20,
+	JOY_LB = 0x40,
+	JOY_LT = 0x80,
+	JOY_A = 0x100,
+	JOY_B = 0x200,
+	JOY_X = 0x400,
+	JOY_Y = 0x800,
+	JOY_START = 0x1000,
+	JOY_BACK = 0x2000,
+	JOY_RS = 0x4000,
+	JOY_LS = 0x8000,
+	JOY_LS_LEFT = 0x10000,
+	JOY_LS_RIGHT = 0x20000,
+	JOY_LS_DOWN = 0x40000,
+	JOY_LS_UP = 0x80000,
+	JOY_RS_LEFT = 0x100000,
+	JOY_RS_RIGHT = 0x200000,
+	JOY_RS_DOWN = 0x400000,
+	JOY_RS_UP = 0x800000,
+};
+
+struct JOY
+{
+	int leftStick_X_0;
+	int leftStick_Y_4;
+	int8_t rightStick_X_8;
+	int8_t rightStick_Y_9;
+	uint8_t triggerLeft_A;
+	uint8_t triggerRight_B;
+	uint8_t analogA_C;
+	uint8_t analogB_D;
+	int8_t err_E;
+	JOY_BTN old_10;
+	JOY_BTN on_14;
+	JOY_BTN trg_18;
+	JOY_BTN rel_1C;
+	JOY_BTN rep_20;
+	JOY_BTN rep2_24;
+	int8_t rep_timer_28[32];
+	int8_t rep2_timer_48[32];
+	uint8_t motor_state_68;
+	uint8_t pad_6A[3];
+	PAD_MOTOR motor_6C[10];
+
+	// extra fields added in Wii/UHD ver, not fully mapped out yet:
+	uint8_t unk_10C[12];
+	int pc_leftStick_X_118;
+	int pc_leftStick_Y_11C;
+	int8_t pc_rightStick_X_120;
+	int8_t pc_rightStick_Y_121;
+	__int16 pc_unk_A_122;
+	uint8_t unk_124[4];
+	int pc_buttonStates0_128;
+	int pc_buttonsOn_12C;
+	int pc_buttonStates2_130;
+	uint8_t unk_134[312];
+	int8_t wpad_rightStick_X_26C;
+	int8_t wpad_rightStick_Y_26D;
+};
+assert_size(JOY, 0x270);

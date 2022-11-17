@@ -2,12 +2,24 @@
 #include <cstdint>
 #include "GameFlags.h"
 
+#include "SDK/atari.h"
 #include "SDK/event.h"
 #include "SDK/EtcModel.h"
+#include "SDK/em10.h"
 #include "SDK/player.h"
 #include "SDK/pad.h"
 #include "SDK/global.h"
 #include "SDK/snd.h"
+#include "SDK/title.h"
+#include "SDK/light.h"
+#include "SDK/item.h"
+#include "SDK/puzzle.h"
+#include "SDK/sscrn.h"
+#include "SDK/card.h"
+#include "SDK/cam_ctrl.h"
+#include "SDK/event.h"
+#include "SDK/GX.h"
+#include "SDK/gc_math.h"
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];
@@ -23,6 +35,7 @@ static_assert(sizeof(DAMAGE) == 0x54, "sizeof(ATTACK_VALUE)");
 extern SND_CTRL* Snd_ctrl_work;
 
 std::string GameVersion();
+extern int iCurPlayTime[3];
 bool GameVersionIsDebug();
 int GameVariableFrameRate();
 InputDevices LastUsedDevice();
@@ -33,6 +46,7 @@ MouseAimingModes GetMouseAimingMode();
 void SetMouseAimingMode(MouseAimingModes newMode);
 uint64_t Key_btn_on();
 uint64_t Key_btn_trg();
+JOY* JoyPtr();
 
 GLOBAL_WK* GlobalPtr();
 DAMAGE* DamagePtr();
@@ -40,7 +54,20 @@ SYSTEM_SAVE_WORK* SystemSavePtr();
 cPlayer* PlayerPtr();
 cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
+cEmMgr* EmMgrPtr();
+TITLE_WORK* TitleWorkPtr();
+extern double* fGPUUsagePtr;
+extern double* fCPUUsagePtr;
+
+void RequestWeaponChange();
+void RequestSaveGame();
+void RequestMerchant();
+bool AreaJump(uint16_t roomNo, Vec& position, float rotation);
+
 bool IsGanado(int id);
+bool IsEnemy(int id);
+const char* GetEmListName(int emListNumber);
+const char* GetEmListEnumName(int emListNumber);
 
 // Length seems to always be 0xFFAA0 across all builds
 #define GAMESAVE_LENGTH 0xFFAA0

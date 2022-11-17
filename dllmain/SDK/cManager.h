@@ -12,7 +12,6 @@ public:
 	uint8_t pad_11[3];
 	T* m_pAlive_14;
 	T* m_pAliveBack_18;
-	uint32_t m_nMaxActiveWork_1C; // TODO: unsure if this is part of cManager or maybe the cxxxMgr (cEmMgr etc) classes that inherit it
 
 	T* get(uint32_t i)
 	{
@@ -22,6 +21,17 @@ public:
 	T* operator[](uint32_t i)
 	{
 		return get(i);
+	}
+
+	int indexOf(T* entry)
+	{
+		// m_Array_4 is a big block of all the entries, check that it's part of block & figure out index of it
+		if (m_Array_4 > entry)
+			return -1;
+		if (get(m_nArray_8) <= entry)
+			return -1;
+		uintptr_t offset = (uintptr_t)entry - (uintptr_t)m_Array_4;
+		return (int)(offset / m_blockSize_C);
 	}
 
 	// iterator is kinda unnecessary.. was going to use it to only iterate through valid items, but found a better way for that instead
@@ -46,7 +56,6 @@ public:
 	private:
 		void increment() { m_ptr = (pointer)(((uint8_t*)m_ptr) + m_ptr_size); }
 		pointer m_ptr;
-		pointer m_end_ptr;
 		int m_ptr_size = sizeof(value_type);
 	};
 
@@ -62,4 +71,4 @@ public:
 	virtual void destroy(T* pT) = 0;
 	virtual int construct(T* result, uint32_t id) = 0;
 };
-assert_size(cManager<int>, 0x20);
+assert_size(cManager<int>, 0x1C);

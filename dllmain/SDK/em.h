@@ -103,6 +103,11 @@ public:
 	{
 		return IsValid() && emListIndex_3A0 != 255;
 	}
+
+	inline bool IsTransSet()
+	{
+		return (be_flag_4 & (1 << 1)) != 0;
+	}
 };
 assert_size(cEm, 0x408);
 
@@ -110,9 +115,13 @@ assert_size(cEm, 0x408);
 // use cEm::IsValid() to check for validity and skip over invalid cEms if needed
 class cEmMgr : public cManager<cEm>
 {
+	uint32_t m_nMaxActiveWork_1C; // TODO: unsure if this is part of cManager or maybe the cxxxMgr (cEmMgr etc) classes that inherit it
+
 public:
 	int count_valid() { int i = 0; for (auto& em : *this) if (em.IsValid()) i++; return i; }
 
-	static std::string EmIdToName(int id);
+	static std::string EmIdToName(int id, bool simplified = false);
+	static cEm* cEmMgr::GetClosestEm(bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans);
+	static std::vector<cEm*> GetVecClosestEms(int DesiredNumEms, float maxDistance, bool onlyValidEms, bool onlyEnemies, bool onlyESLSpawned, bool onlyTrans);
 };
 assert_size(cEmMgr, 0x20);

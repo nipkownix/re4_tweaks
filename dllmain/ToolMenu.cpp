@@ -19,8 +19,6 @@ void(__cdecl* GX_ScreenDisp)(void* a1, float a2, float a3, float a4, float a5, f
 uint32_t(__cdecl* DvdReadN)(const char* a1, int a2, int a3, int a4, int a5, __int16 a6);
 int(__fastcall* cDvd__ReadCheck)(void* thisptr, void* unused, uint32_t a2, void* a3, void* a4, void* a5);
 int(__fastcall* cDvd__FileExistCheck)(void* thisptr, void* unused, const char* path, void* a2);
-void(__cdecl* CardSave)(uint8_t a1, char a2);
-void(__cdecl* SubScreenOpen)(int a1, int a2);
 void(*FlagEdit_die)();
 
 uintptr_t* ptrtitleInitMovAddr;
@@ -38,8 +36,12 @@ std::vector<uint32_t> toolMenuKeyCombo;
 
 bool ParseToolMenuKeyCombo(std::string_view in_combo)
 {
+	if (in_combo.empty())
+		return false;
+
 	toolMenuKeyCombo.clear();
 	toolMenuKeyCombo = ParseKeyCombo(in_combo);
+
 	return toolMenuKeyCombo.size() > 0;
 }
 
@@ -227,7 +229,7 @@ void systemRestartInit_Hook()
 	systemRestartInit_Orig();
 
 	// If roomInfo_new.dat exists we'll read from that instead (so users can still customize it if wanted)
-	// But instead of using broken debug\roomInfo.data included with Steam UHD, we'll use our custom fixed one instead
+	// But instead of using broken debug\roomInfo.dat included with Steam UHD, we'll use our custom fixed one instead
 
 	// not entirely sure how FileExistCheck works, game checks for 0xFFFFFFFF meaning doesn't exist, but it never returns that for us?
 	// a2 seems to get set to 0xffffff if non-existing though, so we'll also check that too
@@ -271,12 +273,6 @@ void ToolMenu_SecretOpen()
 	uint32_t* flags_EXTRA = SystemSavePtr()->flags_EXTRA_4;
 
 	// debug exe ORs these seperately, probably part of an enum or something
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_AIM_REVERSE));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_WIDE_MODE));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_LOCK_ON));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_BONUS_GET));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_VIBRATION));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_KNIFE_MODE));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_COSTUME));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_HARD_MODE));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_SW500));
@@ -287,6 +283,12 @@ void ToolMenu_SecretOpen()
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_WESKER));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_OMAKE_ADA_GAME));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_OMAKE_ETC_GAME));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_ASHLEY_ARMOR));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_PS2_ADA_GAME));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_COSTUME_MAFIA));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_LASER));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_ADA_TOMPSON));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_ADAS_REPORT));
 
 	ToolMenu_Exit();
 }
@@ -297,10 +299,10 @@ void ToolMenu_MercenariesAllOpen()
 
 	// TODO: confirm whether these are what this option actually unlocks in the debug build
 	// (as these unlocks seem kinda strange)
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_AIM_REVERSE));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_VIBRATION));
-	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::CFG_KNIFE_MODE));
 	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_COSTUME));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_ADA));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_HUNK));
+	*flags_EXTRA |= GetFlagValue(uint32_t(Flags_EXTRA::EXT_GET_KLAUSER));
 
 	ToolMenu_Exit();
 }
@@ -325,7 +327,7 @@ void ToolMenu_ToggleHUD()
 const char* ToolMenu_SaveGameName = "SAVE GAME";
 void ToolMenu_SaveGame()
 {
-	CardSave(0, 1);
+	bio4::CardSave(0, 1);
 
 	ToolMenu_Exit();
 }
@@ -335,7 +337,7 @@ void OpenMerchant()
 	while (IsInDebugMenu())
 		Sleep(50);
 
-	SubScreenOpen(16, 0);
+	bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
 }
 
 const char* ToolMenu_OpenMerchantName = "OPEN MERCHANT";
@@ -368,12 +370,6 @@ void GetToolMenuPointers()
 
 	pattern = hook::pattern("E8 ? ? ? ? 8B 85 ? ? ? ? 8B 0D ? ? ? ? 8B 15 ? ? ? ? 8D 44 08 0C");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cDvd__FileExistCheck);
-
-	pattern = hook::pattern("E8 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 8B 15 ? ? ? ? A1");
-	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CardSave);
-
-	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
-	SubScreenOpen = (decltype(SubScreenOpen))pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");
 	FlagEdit_die = (decltype(FlagEdit_die))pattern.count(1).get(0).get<uint8_t>(0);
@@ -411,6 +407,9 @@ void Init_ToolMenu()
 	ReadCall(func, systemRestartInit_Orig);
 	InjectHook(func, systemRestartInit_Hook);
 
+	if (!pConfig->bEnableDebugMenu)
+		return;
+
 	// Hook FlagEdit so we can slow it down by only exposing buttons to it when button state has changed at all
 	pattern = hook::pattern("8B 14 8D ? ? ? ? 68 ? ? ? ? FF D2 A1 ? ? ? ? 8B 88");
 	uint32_t* FlagEdit_funcs = *pattern.count(1).get(0).get<uint32_t*>(3);
@@ -443,10 +442,6 @@ void Init_ToolMenu()
 		// hook GameTask_callee call to run our gameDebug recreation
 		pattern = hook::pattern("53 E8 ? ? ? ? 8D 4D FC 51 8D 55 F8");
 		InjectHook(pattern.count(1).get(0).get<uint32_t>(1), gameDebug_recreation);
-
-		// Remove bzero call that clears flags every frame for some reason
-		pattern = hook::pattern("83 C0 60 6A 10 50 E8");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(6), 5, true);
 
 		// Hook eprintf to add screen-drawing to it, like the GC debug has
 		// (required for debug-menu to be able to draw itself)

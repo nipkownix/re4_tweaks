@@ -136,11 +136,32 @@
     <ClCompile Include="CameraTweaks.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="UI_DebugWindows.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
     <ClCompile Include="..\external\imgui\misc\freetype\imgui_freetype.cpp">
       <Filter>external\ImGui\misc\freetype</Filter>
     </ClCompile>
     <ClCompile Include="..\external\imgui\misc\cpp\imgui_stdlib.cpp">
       <Filter>external\ImGui\misc\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="Trainer.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandLine.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="GameFlags.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="UI_Utility.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugDisplay.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
+    <ClCompile Include="AutoUpdater.cpp">
+      <Filter>dllmain</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -291,7 +312,7 @@
     <ClInclude Include="..\external\imgui\imstb_truetype.h">
       <Filter>external\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\settings\settings_string.h">
+    <ClInclude Include="..\settings\settings.ini">
       <Filter>settings</Filter>
     </ClInclude>
     <ClInclude Include="..\includes\exception.hpp">
@@ -396,6 +417,9 @@
     <ClInclude Include="SDK\snd.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="UI_DebugWindows.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
     <ClInclude Include="..\external\imgui\misc\freetype\imgui_freetype.h">
       <Filter>external\ImGui\misc\freetype</Filter>
     </ClInclude>
@@ -410,6 +434,66 @@
     </ClInclude>
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp">
       <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="Trainer.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\room_jmp.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\title.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\settings\trainer_settings.ini">
+      <Filter>settings</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\filter00.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\light.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\item.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\puzzle.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\sscrn.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\em10.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cloth.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\card.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cDataSwap.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="UI_Utility.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cam_ctrl.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\GX.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\GXEnums.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\atari.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\gc_math.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoUpdater.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

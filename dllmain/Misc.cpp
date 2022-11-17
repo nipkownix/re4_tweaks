@@ -1,4 +1,5 @@
 #include <iostream>
+#include <optional>
 #include "dllmain.h"
 #include "Patches.h"
 #include "Game.h"
@@ -6,6 +7,9 @@
 #include "input.hpp"
 
 static uint32_t* ptrGameFrameRate;
+
+// Trainer.cpp externs
+extern std::optional<uint32_t> FlagsExtraValue;
 
 void(__stdcall* setLanguage_Orig)();
 void __stdcall setLanguage_Hook()
@@ -20,17 +24,30 @@ void __stdcall setLanguage_Hook()
 	}
 }
 
-typedef void(__fastcall* cCard__firstCheck10_Fn)(void* thisptr, void* unused);
+typedef void(__fastcall* cCard__firstCheck10_Fn)(cCard* thisptr, void* unused);
 cCard__firstCheck10_Fn cCard__firstCheck10_Orig;
-void __fastcall cCard__firstCheck10_Hook(void* thisptr, void* unused)
+void __fastcall cCard__firstCheck10_Hook(cCard* thisptr, void* unused)
 {
+	uint8_t Rno1 = thisptr->m_Rno1_5;
+
 	// pSys gets overwritten with data from gamesave during first loading screen, so update violence level after reading it
 	cCard__firstCheck10_Orig(thisptr, unused);
-	if (pConfig->iViolenceLevelOverride >= 0)
+	auto* SystemSave = SystemSavePtr();
+
+	if (SystemSave)
 	{
-		auto* SystemSave = SystemSavePtr();
-		if (SystemSave)
+		if (pConfig->iViolenceLevelOverride >= 0)
+		{
 			SystemSave->eff_country_9 = uint8_t(pConfig->iViolenceLevelOverride);
+		}
+
+		// Rno1 == 2 overwrites SystemSave with data from the save file
+		// Restore the users updated EXTRA flags if they've set them
+		if (Rno1 == 2 && FlagsExtraValue.has_value())
+		{
+			SystemSave->flags_EXTRA_4[0] = *FlagsExtraValue;
+			FlagsExtraValue.reset();
+		}
 	}
 }
 
@@ -96,7 +113,6 @@ std::string looseFilePath(const char* filePath)
 	if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 	{
 		path = rootPath + "re4_tweaks\\sideload\\" + origPath;
-		con.AddLogChar(path.c_str());
 		if (GetFileAttributesA(path.c_str()) == 0xFFFFFFFF)
 		{
 			nonExistentFiles[origPath] = true;
@@ -516,6 +532,34 @@ bool cPlayer__keyReload_hook()
 	{
 		ret = cPlayer__keyReload_orig();
 	}
+
+	return ret;
+}
+
+// Small fixup for GetEtcFlgPtr - R6xx / R7xx rooms call into this, but those rooms don't have StX_data_tbl[n].save_flg set
+// making GetEtcFlgPtr return NULL for those, causing a crash since the caller doesn't seem to handle NULL returns
+// We could just patch the save_flg, but that might affect savegames in some way, so this way is probably safest
+// (RE4 PS2 actually works very similarly to this, but only seems to use this for R0XX rooms, not sure if R6XX/R7XX would even run on there...)
+uint16_t dmy_flg;
+uint16_t* (__cdecl* GetEtcFlgPtr)(uint32_t etc_no, uint16_t room_no);
+uint16_t* GetEtcFlgPtr_Hook(uint32_t etc_no, uint16_t room_no)
+{
+	uint16_t* ret = GetEtcFlgPtr(etc_no, room_no);
+	if (ret)
+		return ret;
+
+	int stageNum = (GlobalPtr()->curRoomId_4FAC & 0xFF00) >> 8;
+
+	// Reimplement PS2s stage == 0 check, which provides pointer to a dummy flag to prevent crashing
+	if (!stageNum)
+		return &dmy_flg;
+
+	// Add our own stage number checks that also provide dummy pointer if necessary
+	// Originally this was only meant to affect stage 6/7, as those are the only levels in vanilla game that had this crash issue
+	// However some modders have found ways to store maps under later stage numbers, which can run into the same issue of crashing due to missing save_flg
+	// (eg. has been noticed to happen when renaming r102 to ra02 & trying to jump there - should be able to load fine now with this)
+	if (stageNum >= 6)
+		return &dmy_flg;
 
 	return ret;
 }
@@ -1113,13 +1157,121 @@ void Init_Misc()
 		// After that timer, move to stage 0x1E instead of 0x2, making the logos end early
 		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(17), uint8_t(0x1E), true);
 
+		// JP: skip CERO warning screen (takes 30+ seconds unless button pressed, ew)
+		pattern = hook::pattern("83 C4 14 FE 46 01 D9 5E 04");
+		if (pattern.size() == 1) // should only match JP
+		{
+			// Patch code inside tvModePC_Startup to "add byte ptr [esi+1], 3; nop; nop" to skip warn screen...
+			Patch(pattern.count(1).get(0).get<uint8_t>(0x3), { 0x80, 0x46, 0x01, 0x03, 0x90, 0x90 });
+		}
+
+		// Option to enable various menu speedups
+		if (pConfig->bSkipMenuFades)
+		{
+			// Skip titleWarning fade-in
+			pattern = hook::pattern("DD D8 0F BE 46 01 83 E8 00 0F");
+			uint8_t* titleWarningCode = pattern.count(1).get(0).get<uint8_t>(2);
+			Patch(titleWarningCode + 0x7, uint16_t(0x9090));
+			Patch(titleWarningCode + 0x9, uint32_t(0x90909090));
+			Patch(titleWarningCode + 0xE, uint16_t(0x9090));
+			Patch(titleWarningCode + 0x11, uint16_t(0x9090));
+			Patch(titleWarningCode + 0x13, uint32_t(0x90909090));
+
+			// Skip logo fade-in
+			pattern = hook::pattern("3B 05 ? ? ? ? 7E ? 3B 05 ? ? ? ? 7D ? 68 00 20 00 00 68 00 10 00 C0");
+			uint8_t* titleLogoCode = pattern.count(1).get(0).get<uint8_t>(0);
+			Patch(titleLogoCode + 0x6, uint16_t(0x9090));
+			Patch(titleLogoCode + 0xE, uint16_t(0x9090));
+			Patch(titleLogoCode + 0x24, uint16_t(0x9090));
+
+			// Skip key checks on "PRESS ANY KEY" screen
+			static uint8_t* anyKeyPressedBool = nullptr;
+
+			auto pattern = hook::pattern("E8 ? ? ? ? 80 3D ? ? ? ? 00 0F 84 ? ? ? ? 6A 00 68 00 00 00 40");
+			anyKeyPressedBool = *pattern.count(1).get(0).get<uint8_t*>(7);
+
+			static bool hasBeenSkipped = false;
+			struct SkipMenuFades
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					bool noKeyPressed = *anyKeyPressedBool == 0;
+
+					// Only skip the initial logo screen, after that user might back out to logo screen again, which we don't want to skip
+					if (!hasBeenSkipped)
+					{
+						noKeyPressed = false;
+						hasBeenSkipped = true;
+					}
+
+					if (noKeyPressed)
+						regs.ef |= (1 << regs.zero_flag);
+					else
+						regs.ef &= ~(1 << regs.zero_flag);
+				}
+			}; injector::MakeInline<SkipMenuFades>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(12));
+
+			// Remove delays from cCard::loadMain
+			pattern = hook::pattern("D9 E8 5E DE E1 DC 05 ? ? ? ? D9 9B FC 04 00 00");
+			uint8_t* addr1 = pattern.count(2).get(0).get<uint8_t>(0);
+			uint8_t* addr2 = pattern.count(2).get(1).get<uint8_t>(0);
+			// fld1 -> fldz
+			Patch(addr1 + 1, uint8_t(0xEE));
+			Patch(addr2 + 1, uint8_t(0xEE));
+			// nop out insn that adds 15 to count
+			injector::MakeNOP(addr1 + 5, 6, true);
+			injector::MakeNOP(addr2 + 5, 6, true);
+
+			// cCard: patch FadeSet time to speed up entering/exiting save menu
+			pattern = hook::pattern("F6 41 04 80 75 ? 6A 00 6A 00 6A 0A C7 45");
+			Patch(pattern.count(1).get(0).get<uint8_t>(0xB), uint8_t(0)); // cCard::exit
+			pattern = hook::pattern("F6 40 04 08 75 ? 53 53 6A 0A C7 45");
+			Patch(pattern.count(1).get(0).get<uint8_t>(0x9), uint8_t(0)); // cCard::initialize
+
+			// cCard::firstCheck10: skip timer check, speeds up initial "Loading, please wait..." text
+			pattern = hook::pattern("8D 8B FC 04 00 00 6A 00 E8 ? ? ? ? 84 C0 74");
+			injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0xF), 2, true);
+
+			/* the following lets us speed up cCard::saveMain a lot
+			but it might be confusing for users since "save successful!" message won't appear
+			if we could make it so just the "successful!" message shows for a small period then this might be more clear*/
+
+			// cCard::saveMain
+			pattern = hook::pattern("D9 E8 DE E1 DC 05 ? ? ? ? D9 9E FC 04 00 00");
+			uint8_t* addr3 = pattern.count(2).get(0).get<uint8_t>(0);
+			uint8_t* addr4 = pattern.count(2).get(1).get<uint8_t>(0);
+			Patch(addr3 + 1, uint8_t(0xEE));
+			Patch(addr4 + 1, uint8_t(0xEE));
+			injector::MakeNOP(addr3 + 4, 6, true);
+			injector::MakeNOP(addr4 + 4, 6, true);
+			// zero cCard::saveMain tick count check, related to the typewriter animation
+			pattern = hook::pattern("3D B8 0B 00 00");
+			Patch(pattern.count(3).get(0).get<uint8_t>(1), uint32_t(0));
+			Patch(pattern.count(3).get(1).get<uint8_t>(1), uint32_t(0));
+			Patch(pattern.count(3).get(2).get<uint8_t>(1), uint32_t(0));
+			// nop key check to let save screen exit by itself (no "successful message!")
+			pattern = hook::pattern("0F 84 ? ? ? ? 33 FF 8D A4 24 00 00 00 00 57");
+			injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
+
+#if 0
+			// Patch FadeSet to automatically skip all fading animations
+			// TODO: check if everything still works fine with this
+			// could be worth adding as a [DEBUG] option since it might be able to speed up a lot of places
+			pattern = hook::pattern("BA 01 00 00 00 85 C9 78 ? BA 03 00 00 00");
+			uint8_t* addr = pattern.count(1).get(0).get<uint8_t>(0);
+			Patch(addr + 1, uint32_t(0)); // remove FADE_BE_ALIVE flag
+			Patch(addr + 0xA, uint32_t(0)); // remove FADE_BE_ALIVE & FADE_BE_CONTINUE flags
+#endif
+			spd::log()->info("SkipMenuFades enabled");
+		}
+
 		spd::log()->info("SkipIntroLogos enabled");
 	}
 
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
+	Init_ToolMenu();
 	if (pConfig->bEnableDebugMenu)
 	{
-		Init_ToolMenu();
 		Init_ToolMenuDebug(); // mostly hooks for debug-build tool menu, but also includes hooks to slow down selection cursor
 
 		spd::log()->info("EnableDebugMenu applied");
@@ -1226,5 +1378,93 @@ void Init_Misc()
 				}
 			}
 		}; injector::MakeInline<SuplexCheckPlayerAshley>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
+	}
+
+	// Fix GetEtcFlgPtr crashes for R6XX/R7XX rooms (see comment above GetEtcFlgPtr_Hook)
+	{
+		auto pattern = hook::pattern("0F B6 8E 56 06 00 00 83 C4 ? 50 51 E8");
+
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr_Hook, PATCH_JUMP);
+
+		spd::log()->info("GetEtcFlgPtr hook applied");
+	}
+
+	// Patch reference to non-existent st7_0.rel to point to st6_0.rel instead, allows loading into R7XX rooms
+	{
+		auto pattern = hook::pattern("73 74 37 5F 30 2E 72 65");
+		Patch(pattern.count(1).get(0).get<uint8_t>(2), uint8_t('6'));
+
+		spd::log()->info("st7_0 -> st6_0 patch applied");
+	}
+
+	// Allow merchant item list to skip to top/bottom when going past bounds of the list
+	{
+		// listRangeCheck handles preventing item selector from going below 0 / above max item count, and positioning of the selector
+		// We'll change the selected idx before listRangeCheck is ran on it, which allows position to be updated for us correctly
+		auto pattern = hook::pattern("8B 80 10 03 00 00");
+		struct listRangeCheck_AllowSkipToBottomFix_SellMenu
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				SUB_SCREEN* sscrn = (SUB_SCREEN*)regs.eax;
+				SSCRN_SHOP* shop = sscrn->shop_310;
+
+				regs.eax = (uint32_t)shop; // orig code we patched
+
+				if (shop->_list_num_0)
+				{
+					if (shop->_list_no_8 < 0)
+						shop->_list_no_8 = shop->_list_num_0 - 1;
+					else if (shop->_list_no_8 >= shop->_list_num_0)
+							shop->_list_no_8 = 0;
+				}
+			}
+		}; injector::MakeInline<listRangeCheck_AllowSkipToBottomFix_SellMenu>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(0x6));
+
+		// Buy menu & upgrade menu had listRangeCheck inlined into it, grr...
+		// We'll replace the logic that overwrites _list_no_8 with our own
+		// (since there's not really a good way to hook it, and our change makes it obsolete anyway)
+		pattern = hook::pattern("8B 46 08 85 C0 79");
+		struct listRangeCheck_AllowSkipToBottomFix_BuyMenu
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				SSCRN_SHOP* shop = (SSCRN_SHOP*)regs.esi;
+
+				if (shop->_list_num_0)
+				{
+					if (shop->_list_no_8 < 0)
+						shop->_list_no_8 = shop->_list_num_0 - 1;
+					else if (shop->_list_no_8 >= shop->_list_num_0)
+						shop->_list_no_8 = 0;
+				}
+				else
+					shop->_list_no_8 = 0;
+
+				regs.eax = shop->_list_no_8;
+			}
+		}; injector::MakeInline<listRangeCheck_AllowSkipToBottomFix_BuyMenu>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(0x14));
+
+		pattern = hook::pattern("8B 47 08 85 C0 79");
+		struct listRangeCheck_AllowSkipToBottomFix_LvUpMenu
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				SSCRN_SHOP* shop = (SSCRN_SHOP*)regs.edi;
+
+				if (shop->_list_num_0)
+				{
+					if (shop->_list_no_8 < 0)
+						shop->_list_no_8 = shop->_list_num_0 - 1;
+					else if (shop->_list_no_8 >= shop->_list_num_0)
+						shop->_list_no_8 = 0;
+				}
+				else
+					shop->_list_no_8 = 0;
+
+				regs.eax = shop->_list_no_8;
+			}
+		}; injector::MakeInline<listRangeCheck_AllowSkipToBottomFix_LvUpMenu>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(0x14));
 	}
 }

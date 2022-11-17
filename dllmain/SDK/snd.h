@@ -116,3 +116,8 @@ struct SND_SEQ
 	uint8_t unk_68[0x24];
 };
 static_assert(sizeof(SND_SEQ) == 0x8C, "sizeof(SND_SEQ)");
+
+namespace bio4
+{
+	extern uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
+};

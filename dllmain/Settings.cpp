@@ -1,13 +1,13 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <mutex>
 #include "dllmain.h"
 #include "Settings.h"
-#include "settings_string.h"
 #include "Patches.h"
 #include "input.hpp"
 #include "Utils.h"
+#include "Trainer.h"
 
 std::shared_ptr<class Config> pConfig = std::make_shared<Config>();
 
@@ -41,7 +41,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 
 			if (cur_token.length())
 			{
-				uint32_t token_num = input::KeyMap_getVK(cur_token);
+				uint32_t token_num = pInput->KeyMap_getVK(cur_token);
 				if (!token_num)
 				{
 					// parse failed...
@@ -63,7 +63,7 @@ std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo)
 	if (cur_token.length())
 	{
 		// Get VK for the current token and push it into the vector
-		uint32_t token_num = input::KeyMap_getVK(cur_token);
+		uint32_t token_num = pInput->KeyMap_getVK(cur_token);
 		if (!token_num)
 		{
 			// parse failed...
@@ -81,6 +81,11 @@ void Config::ReadSettings()
 	// Read default settings file first
 	std::string sDefaultIniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
 	ReadSettings(sDefaultIniPath);
+
+	// Try reading in trainer.ini settings
+	std::string sTrainerIniPath = rootPath + "\\re4_tweaks\\trainer.ini";
+	if (std::filesystem::exists(sTrainerIniPath))
+		ReadSettings(sTrainerIniPath);
 
 	// Try reading any setting override files
 	auto override_path = rootPath + sSettingOverridesPath;
@@ -119,9 +124,23 @@ void Config::ReadSettings()
 	}
 }
 
+void Config::ParseHotkeys()
+{
+	pInput->ClearHotkeys();
+
+	ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
+	ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
+	ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
+	ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
+	ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
+	ParseImGuiUIFocusCombo(pConfig->sTrainerFocusUIKeyCombo);
+
+	Trainer_ParseKeyCombos();
+}
+
 void Config::ReadSettings(std::string_view ini_path)
 {
-	CIniReader iniReader(ini_path);
+	CmdIniReader iniReader(ini_path);
 
 	#ifdef VERBOSE
 	con.AddLogChar("Reading settings from: %s", ini_path.data());
@@ -200,6 +219,8 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
 	pConfig->iVolumeCutscene = min(max(pConfig->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
+	pConfig->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects);
+
 	// MOUSE
 	pConfig->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
 	pConfig->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", pConfig->bResetCameraWhenRunning);
@@ -249,6 +270,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
+	pConfig->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates);
 	pConfig->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
 
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
@@ -280,7 +302,7 @@ void Config::ReadSettings(std::string_view ini_path)
 		if (buf == "Spy") pConfig->CostumeOverride.Ada = AdaCostume::Spy;
 		if (buf == "Normal") pConfig->CostumeOverride.Ada = AdaCostume::Normal;
 
-	iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
+		iCostumeComboAda = (int)pConfig->CostumeOverride.Ada;
 
 		// Normal is id 3, but we're lying to ImGui by pretending Normal is id 2 instead.
 		if (pConfig->CostumeOverride.Ada == AdaCostume::Normal)
@@ -300,8 +322,10 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", pConfig->bDisableQTE);
 	pConfig->bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
 	pConfig->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
+	pConfig->bSkipMenuFades = iniReader.ReadBoolean("MISC", "SkipMenuFades", pConfig->bSkipMenuFades);
 	pConfig->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
 	pConfig->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", pConfig->bEnableModExpansion);
+	pConfig->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", pConfig->bForceETSApplyScale);
 
 	// MEMORY
 	pConfig->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
@@ -310,18 +334,7 @@ void Config::ReadSettings(std::string_view ini_path)
 
 	// HOTKEYS
 	pConfig->sConfigMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "ConfigMenu", pConfig->sConfigMenuKeyCombo));
-	if (pConfig->sConfigMenuKeyCombo.length())
-		ParseConfigMenuKeyCombo(pConfig->sConfigMenuKeyCombo);
-
 	pConfig->sConsoleKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "Console", pConfig->sConsoleKeyCombo));
-	if (pConfig->sConsoleKeyCombo.length())
-	{
-		ParseConsoleKeyCombo(pConfig->sConsoleKeyCombo);
-
-		// Update console title
-		con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
-	}
-
 	pConfig->sFlipItemUp = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemUp", pConfig->sFlipItemUp));
 	pConfig->sFlipItemDown = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemDown", pConfig->sFlipItemDown));
 	pConfig->sFlipItemLeft = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemLeft", pConfig->sFlipItemLeft));
@@ -339,16 +352,127 @@ void Config::ReadSettings(std::string_view ini_path)
 		pConfig->sQTE_key_2 = pInput->KeyMap_getSTR(0x41); // Latin A
 
 	pConfig->sDebugMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "DebugMenu", pConfig->sDebugMenuKeyCombo));
-	if (pConfig->sDebugMenuKeyCombo.length())
-		ParseToolMenuKeyCombo(pConfig->sDebugMenuKeyCombo);
-
 	pConfig->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo));
-	if (pConfig->sMouseTurnModifierKeyCombo.length())
-		ParseMouseTurnModifierCombo(pConfig->sMouseTurnModifierKeyCombo);
-
 	pConfig->sJetSkiTrickCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "JetSkiTricks", pConfig->sJetSkiTrickCombo));
-	if (pConfig->sJetSkiTrickCombo.length())
-		ParseJetSkiTrickCombo(pConfig->sJetSkiTrickCombo);
+
+	// TRAINER
+	pConfig->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
+	pConfig->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("TRAINER", "EnablePlayerSpeedOverride", pConfig->bTrainerPlayerSpeedOverride);
+	pConfig->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
+	pConfig->bTrainerUseNumpadMovement = iniReader.ReadBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
+	pConfig->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+	pConfig->fTrainerNumMoveSpeed = iniReader.ReadFloat("TRAINER", "NumpadMovementSpeed", pConfig->fTrainerNumMoveSpeed);
+	pConfig->fTrainerNumMoveSpeed = fmin(fmax(pConfig->fTrainerNumMoveSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
+	pConfig->bTrainerEnableFreeCam = iniReader.ReadBoolean("TRAINER", "EnableFreeCamera", pConfig->bTrainerEnableFreeCam);
+	pConfig->fTrainerFreeCamSpeed = iniReader.ReadFloat("TRAINER", "FreeCamSpeed", pConfig->fTrainerFreeCamSpeed);
+	pConfig->fTrainerFreeCamSpeed = fmin(fmax(pConfig->fTrainerFreeCamSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
+	pConfig->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
+	pConfig->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
+	pConfig->fTrainerEnemyHPMultiplier = fmin(fmax(pConfig->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
+	pConfig->bTrainerRandomHPMultiplier = iniReader.ReadBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
+	pConfig->fTrainerRandomHPMultiMin = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMin", pConfig->fTrainerRandomHPMultiMin);
+	pConfig->fTrainerRandomHPMultiMin = fmin(fmax(pConfig->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
+	pConfig->fTrainerRandomHPMultiMax = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
+	pConfig->fTrainerRandomHPMultiMax = fmin(fmax(pConfig->fTrainerRandomHPMultiMax, fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
+	pConfig->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
+	pConfig->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
+	pConfig->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
+	pConfig->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
+	pConfig->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", pConfig->bTrainerShowDebugTrgHintText);
+
+	// ESP
+	pConfig->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", pConfig->bShowESP);
+	pConfig->bEspShowInfoOnTop = iniReader.ReadBoolean("ESP", "ShowInfoOnTop", pConfig->bEspShowInfoOnTop);
+	pConfig->bEspOnlyShowEnemies = iniReader.ReadBoolean("ESP", "OnlyShowEnemies", pConfig->bEspOnlyShowEnemies);
+	pConfig->bEspOnlyShowValidEms = iniReader.ReadBoolean("ESP", "OnlyShowValidEms", pConfig->bEspOnlyShowValidEms);
+	pConfig->bEspOnlyShowESLSpawned = iniReader.ReadBoolean("ESP", "OnlyShowESLSpawned", pConfig->bEspOnlyShowESLSpawned);
+	pConfig->bEspOnlyShowAlive = iniReader.ReadBoolean("ESP", "OnlyShowAlive", pConfig->bEspOnlyShowAlive);
+	pConfig->fEspMaxEmDistance = iniReader.ReadFloat("ESP", "MaxEmDistance", pConfig->fEspMaxEmDistance);
+	pConfig->bEspOnlyShowClosestEms = iniReader.ReadBoolean("ESP", "OnlyShowClosestEms", pConfig->bEspOnlyShowClosestEms);
+	pConfig->iEspClosestEmsAmount = iniReader.ReadInteger("ESP", "ClosestEmsAmount", pConfig->iEspClosestEmsAmount);
+	pConfig->bEspDrawLines = iniReader.ReadBoolean("ESP", "DrawLines", pConfig->bEspDrawLines);
+
+	buf = iniReader.ReadString("ESP", "EmNameMode", "");
+	if (!buf.empty())
+	{
+		if (buf == "DontShow") pConfig->iEspEmNameMode = 0;
+		if (buf == "Normal") pConfig->iEspEmNameMode = 1;
+		if (buf == "Simplified") pConfig->iEspEmNameMode = 2;
+	}
+
+	buf = iniReader.ReadString("ESP", "EmHPMode", "");
+	if (!buf.empty())
+	{
+		if (buf == "DontShow") pConfig->iEspEmHPMode = 0;
+		if (buf == "Bar") pConfig->iEspEmHPMode = 1;
+		if (buf == "Text") pConfig->iEspEmHPMode = 2;
+	}
+
+	pConfig->bEspDrawDebugInfo = iniReader.ReadBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
+
+	// SIDEINFO
+	pConfig->bShowSideInfo = iniReader.ReadBoolean("SIDEINFO", "ShowSideInfo", pConfig->bShowSideInfo);
+	pConfig->bSideShowEmCount = iniReader.ReadBoolean("SIDEINFO", "ShowEmCount", pConfig->bSideShowEmCount);
+	pConfig->bSideShowEmList = iniReader.ReadBoolean("SIDEINFO", "ShowEmList", pConfig->bSideShowEmList);
+	pConfig->bSideOnlyShowESLSpawned = iniReader.ReadBoolean("SIDEINFO", "OnlyShowESLSpawned", pConfig->bSideOnlyShowESLSpawned);
+	pConfig->bSideShowSimpleNames = iniReader.ReadBoolean("SIDEINFO", "ShowSimpleNames", pConfig->bSideShowSimpleNames);
+	pConfig->iSideClosestEmsAmount = iniReader.ReadInteger("SIDEINFO", "ClosestEmsAmount", pConfig->iSideClosestEmsAmount);
+	pConfig->fSideMaxEmDistance = iniReader.ReadFloat("SIDEINFO", "MaxEmDistance", pConfig->fSideMaxEmDistance);
+
+	buf = iniReader.ReadString("SIDEINFO", "EmHPMode", "");
+	if (!buf.empty())
+	{
+		if (buf == "DontShow") pConfig->iSideEmHPMode = 0;
+		if (buf == "Bar") pConfig->iSideEmHPMode = 1;
+		if (buf == "Text") pConfig->iSideEmHPMode = 2;
+	}
+
+	// TRAINER HOTKEYS
+	pConfig->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", pConfig->sTrainerFocusUIKeyCombo);
+	pConfig->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo);
+	pConfig->sTrainerFreeCamKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FreeCamToggle", pConfig->sTrainerFreeCamKeyCombo);
+	pConfig->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo);
+	pConfig->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo);
+	pConfig->sTrainerDebugTrgKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "DebugTrg", pConfig->sTrainerDebugTrgKeyCombo);
+
+	// WEAPON HOTKEYS
+	pConfig->bWeaponHotkeysEnable = iniReader.ReadBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
+	pConfig->sWeaponHotkeys[0] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", pConfig->sWeaponHotkeys[0]);
+	pConfig->sWeaponHotkeys[1] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", pConfig->sWeaponHotkeys[1]);
+	pConfig->sWeaponHotkeys[2] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", pConfig->sWeaponHotkeys[2]);
+	pConfig->sWeaponHotkeys[3] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", pConfig->sWeaponHotkeys[3]);
+	pConfig->sWeaponHotkeys[4] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", pConfig->sWeaponHotkeys[4]);
+	pConfig->sLastWeaponHotkey = iniReader.ReadString("WEAPON_HOTKEYS", "LastWeaponHotkey", pConfig->sLastWeaponHotkey);
+	pConfig->iWeaponHotkeyWepIds[0] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
+	pConfig->iWeaponHotkeyWepIds[1] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
+	pConfig->iWeaponHotkeyWepIds[2] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
+	pConfig->iWeaponHotkeyWepIds[3] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", pConfig->iWeaponHotkeyWepIds[3]);
+	pConfig->iWeaponHotkeyWepIds[4] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", pConfig->iWeaponHotkeyWepIds[4]);
+	auto readIntVect = [&iniReader](std::string section, std::string key, std::string& default_value)
+	{
+		std::vector<int> ret;
+
+		default_value = iniReader.ReadString(section, key, default_value);
+
+		std::stringstream ss(default_value);
+
+		for (int i; ss >> i;) {
+			ret.push_back(i);
+			int peeked = ss.peek();
+			if (peeked == ',' || peeked == ' ')
+				ss.ignore();
+		}
+
+		return ret;
+	};
+	pConfig->iWeaponHotkeyCycle[0] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", pConfig->iWeaponHotkeyCycleString[0]);
+	pConfig->iWeaponHotkeyCycle[1] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", pConfig->iWeaponHotkeyCycleString[1]);
+	pConfig->iWeaponHotkeyCycle[2] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", pConfig->iWeaponHotkeyCycleString[2]);
+	pConfig->iWeaponHotkeyCycle[3] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", pConfig->iWeaponHotkeyCycleString[3]);
+	pConfig->iWeaponHotkeyCycle[4] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", pConfig->iWeaponHotkeyCycleString[4]);
+
+	// Parse all hotkeys
+	ParseHotkeys();
 
 	// FPS WARNING
 	pConfig->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", pConfig->bIgnoreFPSWarning);
@@ -357,6 +481,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->fFontSizeScale = iniReader.ReadFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
 	pConfig->fFontSizeScale = fmin(fmax(pConfig->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
 
+	pConfig->bEnableDPIScale = iniReader.ReadBoolean("IMGUI", "EnableDPIScale", pConfig->bEnableDPIScale);
 	pConfig->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", pConfig->bDisableMenuTip);
 
 	// DEBUG
@@ -364,35 +489,48 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", pConfig->bNeverHideCursor);
 	pConfig->bUseDynamicFrametime = iniReader.ReadBoolean("DEBUG", "UseDynamicFrametime", pConfig->bUseDynamicFrametime);
 	pConfig->bDisableFramelimiting = iniReader.ReadBoolean("DEBUG", "DisableFramelimiting", pConfig->bDisableFramelimiting);
+
+	if (iniReader.ReadBoolean("DEBUG", "TweaksDevMode", TweaksDevMode))
+		TweaksDevMode = true; // let the INI enable it if it's disabled, but not disable it
 }
 
 std::mutex settingsThreadRunningMutex;
 
-DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
+void WriteSettings(std::string_view iniPath, bool trainerIni)
 {
 	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // only allow single thread writing to INI at one time
 
 	CIniReader iniReader("");
-
-	std::string iniPath = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
 
 	#ifdef VERBOSE
 	con.AddConcatLog("Writing settings to: ", iniPath.data());
 	#endif
 
 	// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
-	const char* filename = iniPath.c_str();
+	const char* filename = iniPath.data();
 	if (!std::filesystem::exists(filename)) {
 		#ifdef VERBOSE
 		con.AddLogChar("ini file doesn't exist in folder. Creating new one.");
 		#endif
-		std::ofstream iniFile(iniPath);
-		iniFile << defaultSettings + 1; // +1 to skip the first new line
-		iniFile.close();
+
+		std::filesystem::create_directory(std::filesystem::path(iniPath).parent_path()); // Create the dir if it doesn't exist
+
+		const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
+
+		if (!trainerIni)
+		{
+			if (std::filesystem::exists(rootPath + "re4_tweaks\\default_settings\\settings.ini"))
+				std::filesystem::copy(rootPath + "re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
+		}
+		else
+		{
+			if (std::filesystem::exists(rootPath + "re4_tweaks\\default_settings\\trainer_settings.ini"))
+				std::filesystem::copy(rootPath + "re4_tweaks\\default_settings\\trainer_settings.ini", iniPath, copyOptions);
+		}
 	}
 
 	// Try to remove read-only flag is it is set, for some reason.
-	DWORD iniFile = GetFileAttributesA(iniPath.c_str());
+	DWORD iniFile = GetFileAttributesA(iniPath.data());
 	if (iniFile != INVALID_FILE_ATTRIBUTES) {
 		bool isReadOnly = iniFile & FILE_ATTRIBUTE_READONLY;
 
@@ -404,8 +542,134 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 			spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
 
-			SetFileAttributesA(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
+			SetFileAttributesA(iniPath.data(), iniFile & ~FILE_ATTRIBUTE_READONLY);
 		}
+	}
+
+	if (trainerIni)
+	{
+		// trainer.ini-only settings
+		iniReader = CIniReader(iniPath);
+
+		// TRAINER
+		iniReader.WriteBoolean("TRAINER", "Enable", pConfig->bTrainerEnable);
+		iniReader.WriteBoolean("TRAINER", "EnablePlayerSpeedOverride", pConfig->bTrainerPlayerSpeedOverride);
+		iniReader.WriteFloat("TRAINER", "PlayerSpeedOverride", pConfig->fTrainerPlayerSpeedOverride);
+		iniReader.WriteBoolean("TRAINER", "UseNumpadMovement", pConfig->bTrainerUseNumpadMovement);
+		iniReader.WriteBoolean("TRAINER", "UseMouseWheelUpDown", pConfig->bTrainerUseMouseWheelUpDown);
+		iniReader.WriteFloat("TRAINER", "NumpadMovementSpeed", pConfig->fTrainerNumMoveSpeed);
+		iniReader.WriteBoolean("TRAINER", "EnableFreeCamera", pConfig->bTrainerEnableFreeCam);
+		iniReader.WriteFloat("TRAINER", "FreeCamSpeed", pConfig->fTrainerFreeCamSpeed);
+		iniReader.WriteBoolean("TRAINER", "EnableEnemyHPMultiplier", pConfig->bTrainerEnemyHPMultiplier);
+		iniReader.WriteFloat("TRAINER", "EnemyHPMultiplier", pConfig->fTrainerEnemyHPMultiplier);
+		iniReader.WriteBoolean("TRAINER", "UseRandomHPMultiplier", pConfig->bTrainerRandomHPMultiplier);
+		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMin", pConfig->fTrainerRandomHPMultiMin);
+		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMax", pConfig->fTrainerRandomHPMultiMax);
+		iniReader.WriteBoolean("TRAINER", "DisableEnemySpawn", pConfig->bTrainerDisableEnemySpawn);
+		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", pConfig->bTrainerDeadBodiesNeverDisappear);
+		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", pConfig->bTrainerAllowEnterDoorsWithoutAsh);
+		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", pConfig->bTrainerEnableDebugTrg);
+		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", pConfig->bTrainerShowDebugTrgHintText);
+
+		// ESP
+		iniReader.WriteBoolean("ESP", "ShowESP", pConfig->bShowESP);
+		iniReader.WriteBoolean("ESP", "ShowInfoOnTop", pConfig->bEspShowInfoOnTop);
+		iniReader.WriteBoolean("ESP", "OnlyShowEnemies", pConfig->bEspOnlyShowEnemies);
+		iniReader.WriteBoolean("ESP", "OnlyShowValidEms", pConfig->bEspOnlyShowValidEms);
+		iniReader.WriteBoolean("ESP", "OnlyShowESLSpawned", pConfig->bEspOnlyShowESLSpawned);
+		iniReader.WriteBoolean("ESP", "OnlyShowAlive", pConfig->bEspOnlyShowAlive);
+		iniReader.WriteFloat("ESP", "MaxEmDistance", pConfig->fEspMaxEmDistance);
+		iniReader.WriteBoolean("ESP", "OnlyShowClosestEms", pConfig->bEspOnlyShowClosestEms);
+		iniReader.WriteInteger("ESP", "ClosestEmsAmount", pConfig->iEspClosestEmsAmount);
+		iniReader.WriteBoolean("ESP", "DrawLines", pConfig->bEspDrawLines);
+
+		std::string buf;
+		switch (pConfig->iEspEmNameMode) {
+		case 0:
+			buf = "DontShow";
+			break;
+		case 1:
+			buf = "Normal";
+			break;
+		case 2:
+			buf = "Simplified";
+			break;
+		} iniReader.WriteString("ESP", "EmNameMode", " " + buf);
+
+		switch (pConfig->iEspEmHPMode) {
+		case 0:
+			buf = "DontShow";
+			break;
+		case 1:
+			buf = "Bar";
+			break;
+		case 2:
+			buf = "Text";
+			break;
+		} iniReader.WriteString("ESP", "EmHPMode", " " + buf);
+
+		iniReader.WriteBoolean("ESP", "DrawDebugInfo", pConfig->bEspDrawDebugInfo);
+
+		// SIDEINFO
+		iniReader.WriteBoolean("SIDEINFO", "ShowSideInfo", pConfig->bShowSideInfo);
+		iniReader.WriteBoolean("SIDEINFO", "ShowEmCount", pConfig->bSideShowEmCount);
+		iniReader.WriteBoolean("SIDEINFO", "ShowEmList", pConfig->bSideShowEmList);
+		iniReader.WriteBoolean("SIDEINFO", "OnlyShowESLSpawned", pConfig->bSideOnlyShowESLSpawned);
+		iniReader.WriteBoolean("SIDEINFO", "ShowSimpleNames", pConfig->bSideShowSimpleNames);
+		iniReader.WriteInteger("SIDEINFO", "ClosestEmsAmount", pConfig->iSideClosestEmsAmount);
+		iniReader.WriteFloat("SIDEINFO", "MaxEmDistance", pConfig->fSideMaxEmDistance);
+
+		switch (pConfig->iSideEmHPMode) {
+		case 0:
+			buf = "DontShow";
+			break;
+		case 1:
+			buf = "Bar";
+			break;
+		case 2:
+			buf = "Text";
+			break;
+		} iniReader.WriteString("SIDEINFO", "EmHPMode", " " + buf);
+
+		// TRAINER_HOTKEYS
+		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + pConfig->sTrainerFocusUIKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + pConfig->sTrainerNoclipKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "FreeCamToggle", " " + pConfig->sTrainerFreeCamKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + pConfig->sTrainerSpeedOverrideKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + pConfig->sTrainerMoveAshToPlayerKeyCombo);
+		iniReader.WriteString("TRAINER_HOTKEYS", "DebugTrg", " " + pConfig->sTrainerDebugTrgKeyCombo);
+
+		// WEAPON HOTKEYS
+		iniReader.WriteBoolean("WEAPON_HOTKEYS", "Enable", pConfig->bWeaponHotkeysEnable);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", " " + pConfig->sWeaponHotkeys[0]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", " " + pConfig->sWeaponHotkeys[1]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", " " + pConfig->sWeaponHotkeys[2]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", " " + pConfig->sWeaponHotkeys[3]);
+		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", " " + pConfig->sWeaponHotkeys[4]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", pConfig->iWeaponHotkeyWepIds[0]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", pConfig->iWeaponHotkeyWepIds[1]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", pConfig->iWeaponHotkeyWepIds[2]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", pConfig->iWeaponHotkeyWepIds[3]);
+		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", pConfig->iWeaponHotkeyWepIds[4]);
+
+		auto writeIntVect = [&iniReader](std::string section, std::string key, std::vector<int>& vect) {
+			std::string val = "";
+			for (int num : vect)
+				val += std::to_string(num) + ", ";
+			if (!val.empty())
+				val = val.substr(0, val.size() - 2);
+			iniReader.WriteString(section, key, " " + val);
+		};
+
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", pConfig->iWeaponHotkeyCycle[0]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", pConfig->iWeaponHotkeyCycle[1]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", pConfig->iWeaponHotkeyCycle[2]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", pConfig->iWeaponHotkeyCycle[3]);
+		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", pConfig->iWeaponHotkeyCycle[4]);
+
+		iniReader.WriteString("WEAPON_HOTKEYS", "LastWeaponHotkey", " " + pConfig->sLastWeaponHotkey);
+
+		return;
 	}
 
 	// DISPLAY
@@ -417,7 +681,6 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
 	iniReader.WriteBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
 	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
-	
 	iniReader.WriteBoolean("DISPLAY", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter);
 	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
@@ -451,6 +714,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteInteger("AUDIO", "VolumeBGM", pConfig->iVolumeBGM);
 	iniReader.WriteInteger("AUDIO", "VolumeSE", pConfig->iVolumeSE);
 	iniReader.WriteInteger("AUDIO", "VolumeCutscene", pConfig->iVolumeCutscene);
+	iniReader.WriteBoolean("AUDIO", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects);
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", pConfig->bCameraImprovements);
@@ -493,6 +757,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
+	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates);
 	iniReader.WriteBoolean("MISC", "OverrideCostumes", pConfig->bOverrideCostumes);
 	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[iCostumeComboLeon]));
 	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[iCostumeComboAshley]));
@@ -509,8 +774,10 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	iniReader.WriteBoolean("MISC", "DisableQTE", pConfig->bDisableQTE);
 	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", pConfig->bSkipIntroLogos);
+	iniReader.WriteBoolean("MISC", "SkipMenuFades", pConfig->bSkipMenuFades);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", pConfig->bEnableDebugMenu);
-	iniReader.WriteBoolean("MISC", "EnableModExpansion", pConfig->bEnableModExpansion);
+	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
+	// We don't have any UI options for those anyway, so pointless for us to write it back
 
 	// MEMORY
 	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", pConfig->bAllowHighResolutionSFD);
@@ -532,6 +799,14 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 
 	// IMGUI
 	iniReader.WriteFloat("IMGUI", "FontSizeScale", pConfig->fFontSizeScale);
+}
+
+DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
+{
+	std::string iniPathMain = rootPath + WrapperName.substr(0, WrapperName.find_last_of('.')) + ".ini";
+	std::string iniPathTrainer = rootPath + "\\re4_tweaks\\trainer.ini";
+	WriteSettings(iniPathMain, false);
+	WriteSettings(iniPathTrainer, true);
 
 	pConfig->HasUnsavedChanges = false;
 
@@ -594,6 +869,7 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeBGM", pConfig->iVolumeBGM);
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeSE", pConfig->iVolumeSE);
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeCutscene", pConfig->iVolumeCutscene);
+	spd::log()->info("| {:<30} | {:>15} |", "RestoreGCSoundEffects", pConfig->bRestoreGCSoundEffects ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MOUSE
@@ -647,6 +923,7 @@ void Config::LogSettings()
 	// MISC
 	spd::log()->info("+ MISC---------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", pConfig->sWrappedDllPath.data());
+	spd::log()->info("| {:<30} | {:>15} |", "NeverCheckForUpdates", pConfig->bNeverCheckForUpdates ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", pConfig->bOverrideCostumes ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[iCostumeComboLeon]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[iCostumeComboAshley]);
@@ -663,8 +940,10 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", pConfig->bDisableQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", pConfig->bAutomaticMashingQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", pConfig->bSkipIntroLogos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SkipMenuFades", pConfig->bSkipMenuFades ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", pConfig->bEnableDebugMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", pConfig->bEnableModExpansion ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", pConfig->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY
@@ -687,6 +966,11 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "DebugMenu", pConfig->sDebugMenuKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "MouseTurningModifier", pConfig->sMouseTurnModifierKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "JetSkiTricks", pConfig->sJetSkiTrickCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FocusUI", pConfig->sTrainerFocusUIKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "NoclipToggle", pConfig->sTrainerNoclipKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "SpeedOverrideToggle", pConfig->sTrainerSpeedOverrideKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "MoveAshleyToPlayer", pConfig->sTrainerMoveAshToPlayerKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "DebugTrg", pConfig->sTrainerDebugTrgKeyCombo.data());
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// FPS WARNING
@@ -706,5 +990,10 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "NeverHideCursor", pConfig->bNeverHideCursor ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UseDynamicFrametime", pConfig->bUseDynamicFrametime ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableFramelimiting", pConfig->bDisableFramelimiting ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// HDPROJECT
+	spd::log()->info("+ HDPROJECT--------------------------+-------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "IsUsingHDProject", bIsUsingHDProject ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 }

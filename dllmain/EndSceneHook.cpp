@@ -2,6 +2,7 @@
 #include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
+#include "AutoUpdater.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_impl_win32.h"
@@ -12,42 +13,104 @@
 #include <IBMPlexSansJP_M.hpp>
 #include "input.hpp"
 #include "resource.h"
+#include "UI_DebugWindows.h"
+#include "Trainer.h"
 
 EndSceneHook esHook;
 
+std::vector<UI_Window*> DebugWindows; // Always-on-top debug windows, input only provided when cfgMenu is active
+std::vector<UI_Window*> NewWindows; // Keep newly created windows in a seperate list, so they can be added after we've rendered current list
+
 bool didInit = false;
 bool bRebuildFont = false;
+bool bImGuiUIFocus = false;
+
+std::vector<uint32_t> KeyImGuiUIFocus;
+bool ParseImGuiUIFocusCombo(std::string_view in_combo)
+{
+	if (in_combo.empty())
+		return false;
+
+	KeyImGuiUIFocus.clear();
+	KeyImGuiUIFocus = ParseKeyCombo(in_combo);
+
+	pInput->RegisterHotkey({ []() {
+		bImGuiUIFocus = !bImGuiUIFocus;
+	}, &KeyImGuiUIFocus });
+
+	for (auto& window : DebugWindows)
+		window->UpdateWindowTitle();
+
+	return KeyImGuiUIFocus.size() > 0;
+}
 
 extern std::string cfgMenuTitle; // cfgMenu.cpp
+
+void UI_NewEmManager(int selectedEmIndex)
+{
+	static int id = 0;
+	std::string windowTitle = "Em Manager " + std::to_string(id++);
+	NewWindows.push_back(new UI_EmManager(windowTitle, selectedEmIndex));
+
+	bImGuiUIFocus = true;
+}
+
+void UI_NewGlobalsViewer()
+{
+	static int id = 0;
+	std::string windowTitle = "Globals " + std::to_string(id++);
+	NewWindows.push_back(new UI_Globals(windowTitle));
+
+	bImGuiUIFocus = true;
+}
+
+void UI_NewAreaJump()
+{
+	static int id = 0;
+	std::string windowTitle = "AreaJump " + std::to_string(id++);
+	NewWindows.push_back(new UI_AreaJump(windowTitle));
+
+	bImGuiUIFocus = true;
+}
+
+void UI_NewFilterTool()
+{
+	static int id = 0;
+	std::string windowTitle = "FilterTool " + std::to_string(id++);
+	NewWindows.push_back(new UI_FilterTool(windowTitle));
+
+	bImGuiUIFocus = true;
+}
 
 void ApplyImGuiTheme()
 {
 	ImGuiStyle* style = &ImGui::GetStyle();
 
-	style->WindowBorderSize = 0;
+	style->WindowBorderSize = 0.0f;
 	style->WindowTitleAlign = ImVec2(0.5, 0.5);
-	style->Alpha = 1.f;
-	style->WindowRounding = 1.f;
+	style->Alpha = 1.0f;
+	style->WindowRounding = 1.0f;
 	style->FramePadding = ImVec2(4, 3);
 	style->WindowPadding = ImVec2(8, 8);
 	style->ItemInnerSpacing = ImVec2(4, 4);
 	style->ItemSpacing = ImVec2(8, 4);
-	style->FrameRounding = 5.f;
-	style->ScrollbarSize = 2.f;
+	style->FrameRounding = 5.0f;
+	style->ScrollbarSize = 10.f;
 	style->ScrollbarRounding = 12.f;
 
 	ImVec4* colors = ImGui::GetStyle().Colors;
-	colors[ImGuiCol_Button] = ImColor(35, 35, 45, 0);
+	colors[ImGuiCol_Button] = ImVec4(0.51f, 0.00f, 0.14f, 1.00f);
 	colors[ImGuiCol_ButtonHovered] = ImVec4(0.44f, 0.13f, 0.23f, 1.00f);
 	colors[ImGuiCol_ButtonActive] = ImVec4(0.74f, 0.05f, 0.13f, 1.00f);
-	colors[ImGuiCol_ChildBg] = ImColor(24, 29, 59, 0);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.031f, 0.031f, 0.031f, 0.965f);
+	colors[ImGuiCol_ChildBg] = ImVec4(0.09f, 0.11f, 0.23f, 0.00f);
 	colors[ImGuiCol_Border] = ImVec4(0.07f, 0.07f, 0.11f, 0.50f);
 	colors[ImGuiCol_FrameBg] = ImColor(25, 25, 33, 255);
 	colors[ImGuiCol_FrameBgActive] = ImColor(25, 25, 33, 255);
 	colors[ImGuiCol_FrameBgHovered] = ImColor(25, 25, 33, 255);
-	colors[ImGuiCol_Header] = ImColor(25, 25, 33, 255);
-	colors[ImGuiCol_HeaderActive] = ImColor(28, 28, 36, 255);
-	colors[ImGuiCol_HeaderHovered] = ImColor(30, 30, 38, 255);
+	colors[ImGuiCol_Header] = ImVec4(0.10f, 0.10f, 0.13f, 1.00f);
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.11f, 0.11f, 0.14f, 1.00f);
 	colors[ImGuiCol_PopupBg] = ImVec4(0.05f, 0.03f, 0.04f, 0.94f);
 	colors[ImGuiCol_Border] = ImVec4(0.17f, 0.17f, 0.20f, 0.20f);
 	colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
@@ -213,21 +276,29 @@ void ImGuipInputUpdate()
 		io.AddInputCharacter(c);
 }
 
+bool ImGuiShouldAcceptInput()
+{
+	if (DebugWindows.size() < 1 && !bConsoleOpen)
+		bImGuiUIFocus = false;
+
+	return (bCfgMenuOpen || bImGuiUIFocus || (updt.UpdateStatus != UpdateStatus::Finished));
+}
+
 void BuildFontAtlas()
 {
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.Fonts->Clear();
 
-	float fFontSize = 18.1f * pConfig->fFontSizeScale;
+	float fFontSize = 18.1f; // Base size
+	fFontSize *= pConfig->fFontSizeScale;
+	fFontSize *= esHook._cur_monitor_dpi;
 
 	// Add IBM Plex Sans JP Medium for text
 	static const ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
 
 	ImFontConfig ImCustomFont;
 	ImCustomFont.FontDataOwnedByAtlas = false;
-
-	con.AddLogFloat(fFontSize);
 
 	io.Fonts->AddFontFromMemoryCompressedTTF(IBMPlexSansJP_M_compressed_data, IBMPlexSansJP_M_compressed_size, fFontSize, &ImCustomFont, ranges);
 
@@ -239,7 +310,10 @@ void BuildFontAtlas()
 	ImCustomIcons.PixelSnapH = true;
 	ImCustomIcons.FontDataOwnedByAtlas = false;
 
-	io.Fonts->AddFontFromMemoryTTF(&FAprolight, sizeof FAprolight, 18.0f * pConfig->fFontSizeScale, &ImCustomIcons, icon_ranges);
+	io.Fonts->AddFontFromMemoryTTF(&FAprolight, sizeof FAprolight, fFontSize, &ImCustomIcons, icon_ranges);
+
+	// Fixed-size copy for ESP
+	esHook.ESP_font = io.Fonts->AddFontFromMemoryCompressedTTF(IBMPlexSansJP_M_compressed_data, IBMPlexSansJP_M_compressed_size, 18.1f, &ImCustomFont, ranges);
 
 	// Build atlas
 	io.Fonts->Build();
@@ -248,15 +322,19 @@ void BuildFontAtlas()
 void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 {
 	didInit = true;
-
 	esHook._start_time = std::chrono::high_resolution_clock::now();
 	esHook._last_present_time = std::chrono::high_resolution_clock::now();
 	esHook._last_frame_duration = std::chrono::milliseconds(1);
 
 	esHook._imgui_context = ImGui::CreateContext();
+
+	if (pConfig->bEnableDPIScale)
+		esHook._cur_monitor_dpi = ImGui_ImplWin32_GetDpiScaleForHwnd(hWindow);
+
 	ImGuiIO& io = ImGui::GetIO();
 
-	io.IniFilename = nullptr;
+	static const std::string path = rootPath + "re4_tweaks/imgui.ini";
+	io.IniFilename = path.c_str();
 
 	BuildFontAtlas();
 
@@ -265,9 +343,15 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplWin32_Init(hWindow);
 	ImGui_ImplDX9_Init(pDevice);
 
+	// Update console window title
+	con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
+
 	// Update cfgMenu window title
 	cfgMenuTitle.append(" v");
 	cfgMenuTitle.append(APP_VERSION);
+
+	if (TweaksDevMode)
+		UI_NewGlobalsViewer();
 }
 
 // Add our new code right before the game calls EndScene
@@ -289,19 +373,25 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplWin32_NewFrame();
 
 	// Update ImGui input for this frame
-	ImGuipInputUpdate();
+	if (ImGuiShouldAcceptInput())
+		ImGuipInputUpdate();
+
+	ImGui::GetIO().SetAppAcceptingEvents(ImGuiShouldAcceptInput());
 
 	ImGui::NewFrame();
 
-	// Check if the configuration menu binding has been pressed
-	cfgMenuBinding();
-
-	// Check if the console binding has been pressed
-	ConsoleBinding();
+	Trainer_Update();
 
 	// Show cfgMenu tip
 	if (!pConfig->bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
 		ShowCfgMenuTip();
+
+	if (ShowDebugTrgHint)
+	{
+		if (pConfig->bTrainerShowDebugTrgHintText)
+			Trainer_DrawDebugTrgHint();
+		ShowDebugTrgHint = false; // always reset ShowDebugTrgHint regardless of ShowHintText value, otherwise it could appear next time user enables option...
+	}
 
 	#ifdef VERBOSE
 	// Show the console if in verbose
@@ -315,16 +405,53 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		cfgMenuRender();
 	}
 
+	// Render any active always-on-top debug windows
+	auto it = DebugWindows.begin();
+	while (it != DebugWindows.end())
+	{
+		auto* window = *it;
+		bool remainVisible = window->Render(true);
+		if (!remainVisible)
+		{
+			delete window;
+			it = DebugWindows.erase(it);
+		}
+		else
+			++it;
+	}
+
+	// Now we've finished rendering, add any newly created windows to our main list
+	if (NewWindows.size())
+	{
+		auto newWindows = NewWindows; // make copy of NewWindows vect before processing, in case any new windows modify NewWindows vector...
+		NewWindows.clear();
+		for (auto window : newWindows)
+		{
+			if(window->Init())
+				DebugWindows.push_back(window);
+		}
+	}
+
+	// Draw trainer ESP
+	Trainer_ESP();
+
+	// Show update dialog if needed
+	if (updt.UpdateStatus != UpdateStatus::Finished)
+	{
+		if ((esHook._last_present_time - esHook._start_time) > std::chrono::seconds(3))
+			updt.RenderUI();
+	}
+
 	// Show cursor if needed
-	ImGui::GetIO().MouseDrawCursor = bCfgMenuOpen;
+	ImGui::GetIO().MouseDrawCursor = ImGuiShouldAcceptInput();
 
 	ImGui::EndFrame();
 	ImGui::Render();
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	pInput->block_mouse_input(bCfgMenuOpen);
-	pInput->block_keyboard_input(bCfgMenuOpen);
+	pInput->block_mouse_input(ImGuiShouldAcceptInput());
+	pInput->block_keyboard_input(ImGuiShouldAcceptInput());
 
 	// Update _last_frame_duration and _last_present_time
 	const auto current_time = std::chrono::high_resolution_clock::now();

@@ -42,6 +42,7 @@ public:
 	int iVolumeBGM = 100;
 	int iVolumeSE = 100;
 	int iVolumeCutscene = 100;
+	bool bRestoreGCSoundEffects = false;
 
 	// MOUSE
 	bool bCameraImprovements = true;
@@ -80,6 +81,7 @@ public:
 
 	// MISC
 	std::string sWrappedDllPath = "";
+	bool bNeverCheckForUpdates = false;
 	bool bOverrideCostumes = false;
 
 	struct CostumeOverrideList
@@ -101,8 +103,10 @@ public:
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
 	bool bSkipIntroLogos = false;
+	bool bSkipMenuFades = false;
 	bool bEnableDebugMenu = false;
 	bool bEnableModExpansion = false;
+	bool bForceETSApplyScale = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;
@@ -122,11 +126,87 @@ public:
 	std::string sMouseTurnModifierKeyCombo = "ALT";
 	std::string sJetSkiTrickCombo = "LMOUSE+RMOUSE";
 
+	// TRAINER_HOTKEYS
+	std::string sTrainerFocusUIKeyCombo = "F5";
+	std::string sTrainerNoclipKeyCombo = "";
+	std::string sTrainerFreeCamKeyCombo = "";
+	std::string sTrainerSpeedOverrideKeyCombo = "";
+	std::string sTrainerMoveAshToPlayerKeyCombo = "";
+	std::string sTrainerDebugTrgKeyCombo = "SHIFT+ALT";
+
+	// ESP
+	bool bShowESP = false;
+	bool bEspShowInfoOnTop = false;
+	bool bEspOnlyShowEnemies = true;
+	bool bEspOnlyShowValidEms = true;
+	bool bEspOnlyShowESLSpawned = false;
+	bool bEspOnlyShowAlive = true;
+	float fEspMaxEmDistance = 30000.0f;
+	bool bEspOnlyShowClosestEms = false;
+	int iEspClosestEmsAmount = 3;
+	bool bEspDrawLines = false;
+	int iEspEmNameMode = 1;
+	int iEspEmHPMode = 1;
+	bool bEspDrawDebugInfo = false;
+
+	// SIDEINFO
+	bool bShowSideInfo = false;
+	bool bSideShowEmCount = true;
+	bool bSideShowEmList = true;
+	bool bSideOnlyShowESLSpawned = false;
+	bool bSideShowSimpleNames = false;
+	int iSideClosestEmsAmount = 5;
+	float fSideMaxEmDistance = 30000.0f;
+	int iSideEmHPMode = 1;
+
+	// WEAPON_HOTKEYS
+	bool bWeaponHotkeysEnable = false;
+	std::string sWeaponHotkeys[5] = { "1", "2", "3", "4", "5" };
+	int iWeaponHotkeyWepIds[5] = { 0,0,0,0,0 };
+	std::vector<int> iWeaponHotkeyCycle[5] = { 
+		{ 35,37,33,39,3,41,42,55 }, // pistols
+		{ 44,45,71,148 }, // shotguns
+		{ 16,46,47,48,52,83 }, // rifle/machine guns
+		{ 53,109,54 }, // rocket/mine launchers
+		{ 1,2,14,8,9,10 }, // throwables
+	};
+	std::string iWeaponHotkeyCycleString[5] = {
+		"35,37,33,39,3,41,42,55",
+		"44,45,71,148",
+		"16,46,47,48,52,83",
+		"53,109,54",
+		"1,2,14,8,9,10"
+	};
+	std::string sLastWeaponHotkey = "C";
+
+	// TRAINER
+	bool bTrainerEnable = false;
+	bool bTrainerPlayerSpeedOverride = false;
+	float fTrainerPlayerSpeedOverride = 1.0f;
+	bool bTrainerUseNumpadMovement = true;
+	float fTrainerNumMoveSpeed = 1.0f;
+	bool bTrainerUseMouseWheelUpDown = true;
+	bool bTrainerEnableFreeCam = false;
+	float fTrainerFreeCamSpeed = 1.0f;
+	bool bTrainerEnemyHPMultiplier = false;
+	float fTrainerEnemyHPMultiplier = 1.0f;
+	bool bTrainerRandomHPMultiplier = false;
+	float fTrainerRandomHPMultiMin = 0.3f;
+	float fTrainerRandomHPMultiMax = 7.0f;
+	bool bTrainerDisableEnemySpawn = false;
+	bool bTrainerDeadBodiesNeverDisappear = false;
+	bool bTrainerAllowEnterDoorsWithoutAsh = false;
+	bool bTrainerEnableDebugTrg = false;
+	bool bTrainerShowDebugTrgHintText = true;
+	bool bTrainerOverrideDynamicDifficulty = false;
+	int iTrainerDynamicDifficultyLevel = 5;
+
 	// WARNING
 	bool bIgnoreFPSWarning = false;
 
 	// IMGUI
 	float fFontSizeScale = 1.0f;
+	bool bEnableDPIScale = true;
 	bool bDisableMenuTip = false;
 	
 	// DEBUG
@@ -149,6 +229,7 @@ public:
 	bool bdbg4;
 
 	void ReadSettings();
+	void ParseHotkeys();
 	void ReadSettings(std::string_view ini_path);
 	void WriteSettings();
 

@@ -31,5 +31,7 @@ public:
 	virtual ~cUnit() = 0;
 	virtual void beginEvent(uint32_t flag) = 0;
 	virtual void endEvent(uint32_t flag) = 0;
+
+	static std::string GetBeFlagName(int flagIndex);
 };
 assert_size(cUnit, 0xC);

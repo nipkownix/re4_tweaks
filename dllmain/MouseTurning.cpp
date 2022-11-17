@@ -6,19 +6,19 @@
 
 uintptr_t* ptrKnife_r3_downMovAddr;
 
-static uint32_t* ptrMouseDeltaX;
-
-int intMouseDeltaX()
-{
-	return *(int32_t*)(ptrMouseDeltaX);
-}
+int32_t* MouseDeltaX;
+int32_t* MouseDeltaY;
 
 std::vector<uint32_t> mouseTurnModifierCombo;
 
 bool ParseMouseTurnModifierCombo(std::string_view in_combo)
 {
+	if (in_combo.empty())
+		return false;
+
 	mouseTurnModifierCombo.clear();
 	mouseTurnModifierCombo = ParseKeyCombo(in_combo);
+
 	return mouseTurnModifierCombo.size() > 0;
 }
 
@@ -84,7 +84,7 @@ void MouseTurn(float TurnDelayFactor = 20.0f)
 		if (GetMouseAimingMode() == MouseAimingModes::Classic)
 			SpeedMulti = 1300.0f;
 
-		PlayerPtr()->ang_A0.y += (-intMouseDeltaX() / SpeedMulti) * pConfig->fTurnTypeBSensitivity;
+		PlayerPtr()->ang_A0.y += (-*MouseDeltaX / SpeedMulti) * pConfig->fTurnTypeBSensitivity;
 	}
 }
 
@@ -100,9 +100,9 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 	bool isMovingMouse = false;
 
 	if (a1 == KEY_BTN::KEY_LEFT)
-		isMovingMouse = (intMouseDeltaX() < 0);
+		isMovingMouse = (*MouseDeltaX < 0);
 	else if (a1 == KEY_BTN::KEY_RIGHT)
-		isMovingMouse = (intMouseDeltaX() > 0);
+		isMovingMouse = (*MouseDeltaX > 0);
 
 	switch (LastUsedDevice()) {
 		case InputDevices::DinputController:
@@ -124,7 +124,8 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 void Init_MouseTurning()
 {
 	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
-	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
+	MouseDeltaX = (int32_t*)*pattern.count(1).get(0).get<uint32_t>(2);
+	MouseDeltaY = MouseDeltaX + 1;
 
 	// Keep CameraXpos at 0f while isMouseTurnEnabled
 	pattern = hook::pattern("D9 05 ? ? ? ? DE C2 D9 C9 D9 1D ? ? ? ? D9 85");
@@ -185,7 +186,7 @@ void Init_MouseTurning()
 				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
 				if (isPressingDefaultKey && (mi_ptr->Mot_attr_40 == 4))
 					regs.eax = 0;
-				else if (isMouseTurnEnabled() && (intMouseDeltaX() < -8) && !isPressingDefaultKey)
+				else if (isMouseTurnEnabled() && (*MouseDeltaX < -8) && !isPressingDefaultKey)
 				{
 					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
 					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
@@ -223,7 +224,7 @@ void Init_MouseTurning()
 				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
 				if (isPressingDefaultKey && (mi_ptr->Mot_attr_40 == 4))
 					regs.eax = 0;
-				else if (isMouseTurnEnabled() && (intMouseDeltaX() > 8) && !isPressingDefaultKey)
+				else if (isMouseTurnEnabled() && (*MouseDeltaX > 8) && !isPressingDefaultKey)
 				{
 					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
 					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
@@ -295,7 +296,7 @@ void Init_MouseTurning()
 		void operator()(injector::reg_pack& regs)
 		{
 			regs.eax = *(int32_t*)ptrKnife_r3_downMovAddr;
-			if (isMouseTurnEnabled() && (intMouseDeltaX() != 0) && isKeyboardMouse())
+			if (isMouseTurnEnabled() && (*MouseDeltaX != 0) && isKeyboardMouse())
 				regs.eax = 0x8;
 		}
 	}; injector::MakeInline<Knife_r3_downHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));

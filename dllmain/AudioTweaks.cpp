@@ -83,6 +83,14 @@ void AudioTweaks_UpdateVolume()
 	}
 }
 
+uint32_t __cdecl knife_r3_fire10_SndCall_Hook(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod)
+{
+	if (pConfig->bRestoreGCSoundEffects)
+		call_no = 85; // use original GC sound effect
+
+	return bio4::SndCall(blk, call_no, pos, id, flag, pMod);
+}
+
 void Init_AudioTweaks()
 {
 	// Hook Snd_set_system_vol so we can override volume values with our own after game updates them
@@ -114,4 +122,8 @@ void Init_AudioTweaks()
 	// Find Snd_seq_work_calc_ax_vol
 	pattern = hook::pattern("F6 46 56 01 74 ? 56 E8 ? ? ? ? DB 46 64");
 	ReadCall(pattern.count(1).get(0).get<uint32_t>(0x7), Snd_seq_work_calc_ax_vol);
+
+	// Hook SndCall call inside knife_r3_fire10 to allow restoring original GC knife sound effect
+	pattern = hook::pattern("83 C0 ? 50 6A 03 6A 01 E8");
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(8), knife_r3_fire10_SndCall_Hook, PATCH_CALL);
 }

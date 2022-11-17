@@ -26,6 +26,11 @@ void Init_HDProject()
 
 		pattern = hook::pattern("DC 0D ? ? ? ? D9 C0 DE CA D9 47 ? DE C2 D9 C9 E8 ? ? ? ? D9 C9 0F B7 ? E8");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), &dNewScale, true);
+
+		if (pConfig->bVerboseLog)
+		{
+			spd::log()->info("HDProject: \"option\\xxx_option.fix\": dNewScale = {}", dNewScale);
+		}
 	}
 
 	// BIO4\option\NewOption\howto\xxx_NewOption.fix
@@ -46,6 +51,14 @@ void Init_HDProject()
 				// To maintain their inteded display size, we just divide their actual size by how many times it was upscled (eg: 4x)
 				*(uint32_t*)(regs.esi + 0x4) = regs.ecx / iFixImagesScale;
 				*(uint32_t*)(regs.esi + 0x8) = regs.edx / iFixImagesScale;
+
+				if (pConfig->bVerboseLog)
+				{
+					spd::log()->info("+-------------------------+-------------------------+");
+					spd::log()->info("HDProject: ***.fix: originalX = {}, scaledX = {}", regs.ecx, regs.ecx / iFixImagesScale);
+					spd::log()->info("HDProject: ***.fix: originalY = {}, scaledY = {}", regs.edx, regs.edx / iFixImagesScale);
+					spd::log()->info("+-------------------------+-------------------------+");
+				}
 			}
 		}; injector::MakeInline<sub_9E6580_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
