@@ -4,14 +4,28 @@
 #include <imgui_impl_dx9.h>
 #include "Patches.h"
 #include "Settings.h"
+#include "../dxvk/src/d3d9/d3d9_main.h"
+#include "../dxvk/src/config.h"
 
 static IDirect3D9* (WINAPI* orgDirect3DCreate9)(UINT SDKVersion);
 static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 {
-	spd::log()->info("{} -> Creating IDirect3D9 object", __FUNCTION__);
+	spd::log()->info("{} -> Creating IDirect3D9 object...", __FUNCTION__);
 
-	IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
-	return new hook_Direct3D9(d3dInterface);
+	if (re4t::dxvk::cfg->bUseVulkanRenderer)
+	{
+		spd::log()->info("{} -> UseVulkanRenderer is enabled, using DX9 -> VK translation layer...", __FUNCTION__);
+
+		IDirect3D9Ex* pDirect3D = nullptr;
+		dxvk::CreateD3D9(false, &pDirect3D);
+
+		return new hook_Direct3D9(pDirect3D);
+	}
+	else
+	{
+		IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
+		return new hook_Direct3D9(d3dInterface);
+	}
 }
 
 void re4t::init::D3D9Hook()

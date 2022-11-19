@@ -253,7 +253,7 @@ public:
 
 namespace re4t
 {
-	extern re4t_cfg* cfg;
+	inline re4t_cfg* cfg = new re4t_cfg;
 }
 
 extern const char* sLeonCostumeNames[5];

@@ -1,5 +1,4 @@
-﻿#define NOMINMAX
-#include <iostream>
+﻿#include <iostream>
 #include "dllmain.h"
 #include "Patches.h"
 #include "Settings.h"
@@ -13,6 +12,7 @@
 #include "UI_Utility.h"
 #include "Trainer.h"
 #include "AudioTweaks.h"
+#include "../dxvk/src/config.h"
 
 bool bCfgMenuOpen;
 bool NeedsToRestart;
@@ -309,6 +309,66 @@ void cfgMenuRender()
 				if (ImGui::BeginTable("Display", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
+
+					// Vulkan
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("UseVulkanRenderer", &re4t::dxvk::cfg->bUseVulkanRenderer))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Enables the use of the DXVK-based vulkan renderer, which provides better performance on newer hardware.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::BeginDisabled(!re4t::dxvk::cfg->bUseVulkanRenderer);
+
+						if (ImGui::Checkbox("ShowFPS", &re4t::dxvk::cfg->bShowFPS))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui::TextWrapped("Shows a frame rate counter on the top left of the screen.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						if (ImGui::Checkbox("ShowGPULoad", &re4t::dxvk::cfg->bShowGPULoad))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui::TextWrapped("Shows a estimated GPU load. May be inaccurate.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						if (ImGui::Checkbox("ShowDeviceInfo", &re4t::dxvk::cfg->bShowDeviceInfo))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui::TextWrapped("Shows the name of the GPU and the driver version.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						if (ImGui::Checkbox("DisableAsync", &re4t::dxvk::cfg->bDisableAsync))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui::TextWrapped("Disables asynchronous shader compilation. Not recommended.");
+
+						ImGui::EndDisabled();
+					}
 
 					// FOVAdditional
 					{

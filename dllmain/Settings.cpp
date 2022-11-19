@@ -8,11 +8,7 @@
 #include "input.hpp"
 #include "Utils.h"
 #include "Trainer.h"
-
-namespace re4t
-{
-	re4t_cfg* cfg = new re4t_cfg;
-}
+#include "../dxvk/src/config.h"
 
 const std::wstring sSettingOverridesPath = L"re4_tweaks\\setting_overrides\\";
 const std::wstring sHDProjectOverrideName = L"HDProject.ini";
@@ -151,6 +147,16 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	re4t::cfg->HasUnsavedChanges = false;
 	
+	// VULKAN
+	re4t::dxvk::cfg->bUseVulkanRenderer = iniReader.ReadBoolean("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+	re4t::dxvk::cfg->bShowFPS = iniReader.ReadBoolean("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+	re4t::dxvk::cfg->bShowGPULoad = iniReader.ReadBoolean("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+	re4t::dxvk::cfg->bShowDeviceInfo = iniReader.ReadBoolean("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
+	re4t::dxvk::cfg->bDisableAsync = iniReader.ReadBoolean("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
+
+	re4t::dxvk::cfg->DXVK_HUD = iniReader.ReadString("VULKAN", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
+	re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = iniReader.ReadString("VULKAN", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
+
 	// DISPLAY
 	re4t::cfg->fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
 	if (re4t::cfg->fFOVAdditional > 0.0f)
@@ -209,16 +215,16 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// AUDIO
 	re4t::cfg->iVolumeMaster = iniReader.ReadInteger("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
-	re4t::cfg->iVolumeMaster = min(max(re4t::cfg->iVolumeMaster, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeMaster = std::min(std::max(re4t::cfg->iVolumeMaster, 0), 100); // limit between 0 - 100
 
 	re4t::cfg->iVolumeBGM = iniReader.ReadInteger("AUDIO", "VolumeBGM", re4t::cfg->iVolumeBGM);
-	re4t::cfg->iVolumeBGM = min(max(re4t::cfg->iVolumeBGM, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeBGM = std::min(std::max(re4t::cfg->iVolumeBGM, 0), 100); // limit between 0 - 100
 
 	re4t::cfg->iVolumeSE = iniReader.ReadInteger("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
-	re4t::cfg->iVolumeSE = min(max(re4t::cfg->iVolumeSE, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeSE = std::min(std::max(re4t::cfg->iVolumeSE, 0), 100); // limit between 0 - 100
 
 	re4t::cfg->iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
-	re4t::cfg->iVolumeCutscene = min(max(re4t::cfg->iVolumeCutscene, 0), 100); // limit between 0 - 100
+	re4t::cfg->iVolumeCutscene = std::min(std::max(re4t::cfg->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
 	re4t::cfg->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
 
@@ -313,7 +319,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	re4t::cfg->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
-	re4t::cfg->iViolenceLevelOverride = min(max(re4t::cfg->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
+	re4t::cfg->iViolenceLevelOverride = std::min(std::max(re4t::cfg->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
 	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	re4t::cfg->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
 	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
@@ -672,6 +678,13 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 
 		return;
 	}
+
+	// VULKAN
+	iniReader.WriteBoolean("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+	iniReader.WriteBoolean("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+	iniReader.WriteBoolean("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+	iniReader.WriteBoolean("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
+	iniReader.WriteBoolean("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
 
 	// DISPLAY
 	iniReader.WriteFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
