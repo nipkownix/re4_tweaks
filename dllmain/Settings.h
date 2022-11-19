@@ -77,6 +77,7 @@ public:
 	bool bFixQTE = true;
 	bool bFixAshleyBustPhysics = true;
 	bool bEnableFastMath = true;
+	bool bMultithreadFix = true;
 	bool bPrecacheModels = false;
 
 	// MISC

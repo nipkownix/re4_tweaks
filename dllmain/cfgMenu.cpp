@@ -1074,6 +1074,23 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Experimental, can hopefully improve framerate in some areas that had dips.");
 					}
 
+					// MultithreadFix
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("MultithreadFix", &pConfig->bMultithreadFix))
+						{
+							pConfig->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Enables fixes for multithreaded DirectX9, giving a slight performance boost");
+						ImGui::TextWrapped("Experimental, in case you have issues with the game crashing/freezing, please try disabling this setting and playing again.");
+					}
+
 					// PrecacheModels
 					{
 						ImGui_ColumnSwitch();

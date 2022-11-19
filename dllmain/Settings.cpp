@@ -267,6 +267,7 @@ void Config::ReadSettings(std::string_view ini_path)
 	pConfig->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", pConfig->bFixQTE);
 	pConfig->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics);
 	pConfig->bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", pConfig->bEnableFastMath);
+	pConfig->bMultithreadFix = iniReader.ReadBoolean("FRAME RATE", "MultithreadFix", pConfig->bMultithreadFix);
 	pConfig->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
@@ -681,6 +682,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", pConfig->bStretchFullscreenImages);
 	iniReader.WriteBoolean("DISPLAY", "StretchVideos", pConfig->bStretchVideos);
 	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", pConfig->bRemove16by10BlackBars);
+
 	iniReader.WriteBoolean("DISPLAY", "ReplaceFramelimiter", pConfig->bReplaceFramelimiter);
 	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", pConfig->bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", pConfig->bFixDisplayMode);
@@ -754,6 +756,7 @@ void WriteSettings(std::string_view iniPath, bool trainerIni)
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", pConfig->bFixQTE);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics);
 	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", pConfig->bEnableFastMath);
+	iniReader.WriteBoolean("FRAME RATE", "MultithreadFix", pConfig->bMultithreadFix);
 	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", pConfig->bPrecacheModels);
 
 	// MISC
@@ -917,6 +920,7 @@ void Config::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "FixQTE", pConfig->bFixQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixAshleyBustPhysics", pConfig->bFixAshleyBustPhysics ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableFastMath", pConfig->bEnableFastMath ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "MultithreadFix", pConfig->bMultithreadFix ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "PrecacheModels", pConfig->bPrecacheModels ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
