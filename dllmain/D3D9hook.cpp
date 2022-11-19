@@ -4,8 +4,11 @@
 #include <imgui_impl_dx9.h>
 #include "Patches.h"
 #include "Settings.h"
+
+#pragma warning(push, 0)
 #include "../dxvk/src/d3d9/d3d9_main.h"
 #include "../dxvk/src/config.h"
+#pragma warning(pop)
 
 static IDirect3D9* (WINAPI* orgDirect3DCreate9)(UINT SDKVersion);
 static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)

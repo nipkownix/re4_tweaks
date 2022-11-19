@@ -597,9 +597,6 @@
     <ClInclude Include="..\external\ModUtils\LateStaticInit.h">
       <Filter>external\ModUtils</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\ModUtils\MemoryMgr.GTA.h">
-      <Filter>external\ModUtils</Filter>
-    </ClInclude>
     <ClInclude Include="..\external\ModUtils\MemoryMgr.h">
       <Filter>external\ModUtils</Filter>
     </ClInclude>
