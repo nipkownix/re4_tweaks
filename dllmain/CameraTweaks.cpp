@@ -616,7 +616,7 @@ void re4t::init::CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!re4t::cfg->bCameraImprovements || isController())
+				if (!re4t::cfg->bCameraImprovements || re4t::cfg->bResetCameraAfterUsingKnife || isController())
 				{
 					*fMousePosY = 0.0f;
 				}

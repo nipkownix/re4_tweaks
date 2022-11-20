@@ -779,15 +779,18 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::BeginDisabled(!re4t::cfg->bCameraImprovements);
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ResetCameraAfterUsingKnife", &re4t::cfg->bResetCameraAfterUsingKnife);
+						ImGui::TextWrapped("Center the camera after using the knife.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
 						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ResetCameraWhenRunning", &re4t::cfg->bResetCameraWhenRunning);
-						ImGui::EndDisabled();
 						ImGui::TextWrapped("Center the camera when the run key is pressed.");
 						ImGui::TextWrapped("Only used if MouseTurning isn't enabled.");
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Camera sensitivity").x);
-						ImGui::BeginDisabled(!re4t::cfg->bCameraImprovements);
 						ImGui::SliderFloat("Camera sensitivity", &re4t::cfg->fCameraSensitivity, 0.50f, 2.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 						ImGui::EndDisabled();
 						ImGui::PopItemWidth();

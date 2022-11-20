@@ -230,6 +230,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// MOUSE
 	re4t::cfg->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	re4t::cfg->bResetCameraAfterUsingKnife = iniReader.ReadBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
 	re4t::cfg->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
 	re4t::cfg->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
 	re4t::cfg->fCameraSensitivity = fmin(fmax(re4t::cfg->fCameraSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
@@ -732,6 +733,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	iniReader.WriteBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
 	iniReader.WriteBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
 	iniReader.WriteFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
@@ -890,6 +892,7 @@ void re4t_cfg::LogSettings()
 	// MOUSE
 	spd::log()->info("+ MOUSE--------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraImprovements", re4t::cfg->bCameraImprovements ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
 	spd::log()->info("| {:<30} | {:>15} |", "UseMouseTurning", re4t::cfg->bUseMouseTurning ? "true" : "false");
