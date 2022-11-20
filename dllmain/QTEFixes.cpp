@@ -21,11 +21,11 @@ bool isQTEactive()
 }
 
 // Auto-QTE
-bool (__stdcall* cActionButton_checkButton_orig)(int a1); // Used for the quick reaction QTEs
-bool __stdcall cActionButton_checkButton_hook(int a1)
+bool (__fastcall* cActionButton_checkButton_orig)(class cActionButton* thisptr, void* unused, struct ACT_WORK* work); // Used for the quick reaction QTEs
+bool __fastcall cActionButton_checkButton_hook(class cActionButton* thisptr, void* unused, struct ACT_WORK* work)
 {
 	// We run the original function first since that's what sets QTEactive to 0 or 1
-	bool orig = cActionButton_checkButton_orig(a1);
+	bool orig = cActionButton_checkButton_orig(thisptr, unused, work);
 
 	if (re4t::cfg->bDisableQTE && isQTEactive())
 	{

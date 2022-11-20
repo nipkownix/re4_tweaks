@@ -11,8 +11,8 @@ static uint32_t* ptrGameFrameRate;
 // Trainer.cpp externs
 extern std::optional<uint32_t> FlagsExtraValue;
 
-void(__stdcall* setLanguage_Orig)();
-void __stdcall setLanguage_Hook()
+void(__cdecl* setLanguage_Orig)();
+void __cdecl setLanguage_Hook()
 {
 	// Update violence level on game launch / new game
 	setLanguage_Orig();
@@ -300,8 +300,8 @@ void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void*
 	SsTermMain_files.clear();
 }
 
-BYTE(__stdcall *j_PlSetCostume_Orig)();
-BYTE __stdcall j_PlSetCostume_Hook()
+BYTE(__cdecl *j_PlSetCostume_Orig)();
+BYTE __cdecl j_PlSetCostume_Hook()
 {
 	BYTE val = j_PlSetCostume_Orig();
 
