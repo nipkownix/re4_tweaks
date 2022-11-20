@@ -612,6 +612,19 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Disables the film grain overlay that is present in most sections of the game.");
 					}
 
+					// FixWaterScaling
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ImproveWater", &re4t::cfg->bImproveWater);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10));
+						ImGui::TextWrapped("Improves some of the water effects, fixing the \"jelly-like\" water that is present in some areas.");
+						ImGui::TextWrapped("(if you're using the HD Project, you should disable this option)");
+					}
+
 					// EnableGCBlur
 					{
 						ImGui_ColumnSwitch();

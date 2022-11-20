@@ -190,6 +190,13 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
 	re4t::cfg->bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
 	re4t::cfg->bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
+
+	re4t::cfg->bImproveWater = iniReader.ReadBoolean("DISPLAY", "ImproveWater", re4t::cfg->bImproveWater);
+	if (re4t::cfg->bIsUsingHDProject)
+	{
+		re4t::cfg->bImproveWater = false; // Should be inside HDProject.ini instead, but we'll keep it here untill a new version of the HD Project is released
+	}
+
 	re4t::cfg->bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
 
 	std::string GCBlurTypeStr = iniReader.ReadString("DISPLAY", "GCBlurType", "");
@@ -711,6 +718,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
 	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
 	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
+	iniReader.WriteBoolean("DISPLAY", "ImproveWater", re4t::cfg->bImproveWater);
 	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
 
 	if (re4t::cfg->bUseEnhancedGCBlur)
@@ -866,6 +874,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03 ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixBlurryImage", re4t::cfg->bFixBlurryImage ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ImproveWater", re4t::cfg->bImproveWater ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCBlur", re4t::cfg->bEnableGCBlur ? "true" : "false");
 	
 	if (re4t::cfg->bUseEnhancedGCBlur)

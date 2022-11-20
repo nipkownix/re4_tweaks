@@ -46,6 +46,7 @@ public:
 	bool bDisableBrokenFilter03 = true;
 	bool bFixBlurryImage = true;
 	bool bDisableFilmGrain = true;
+	bool bImproveWater = true;
 	bool bEnableGCBlur = true;
 	bool bUseEnhancedGCBlur = true;
 	bool bEnableGCScopeBlur = true;

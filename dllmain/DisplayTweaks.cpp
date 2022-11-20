@@ -578,6 +578,25 @@ void re4t::init::DisplayTweaks()
 			spd::log()->info("DisableFilmGrain applied");
 	}
 
+	// Improve Water
+	{
+		auto pattern = hook::pattern("DC 0D ? ? ? ? D9 59 ? 3C ? 72 ? C6 45 ? ? 8B 9D");
+		struct FixWaterScaling
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double multi = 0.25; // Original value
+
+				if (re4t::cfg->bImproveWater)
+					multi = 2.0;
+
+				__asm {fmul multi}
+			}
+		}; injector::MakeInline<FixWaterScaling>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		spd::log()->info("ImproveWater applied");
+	}
+
 	// Disable Windows DPI scaling
 	if (re4t::cfg->bFixDPIScale)
 	{
