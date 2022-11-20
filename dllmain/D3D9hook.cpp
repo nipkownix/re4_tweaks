@@ -32,6 +32,10 @@ static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 			if (pDirect3D->GetAdapterCount() < 1)
 			{
 				spd::log()->info("{} -> Failed to get Vulkan adapter! Falling back to D3D9", __FUNCTION__);
+
+				// Cleanup
+				pDirect3D->Release();
+				pDirect3D = nullptr;
 			}
 			else
 			{
