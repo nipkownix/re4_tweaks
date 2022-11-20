@@ -293,8 +293,8 @@ void Trainer_ParseKeyCombos()
 	}
 }
 
-void(__cdecl* j_GameAddPoint_orig)(int type);
-void __cdecl j_GameAddPoint_Hook(int type)
+void(__cdecl* j_GameAddPoint_orig)(LVADD type);
+void __cdecl j_GameAddPoint_Hook(LVADD type)
 {
 	if (re4t::cfg->bTrainerOverrideDynamicDifficulty)
 	{

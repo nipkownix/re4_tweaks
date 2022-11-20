@@ -4,6 +4,7 @@
 #include "Settings.h"
 
 uint32_t ModelForceRenderAll_EndTick = 0;
+float fMercsDeltaTimer = 0.0F;
 
 // Called by AddOtModelPosRadius to check if model is in view of camera
 bool(*collision_sphere_hexahedron)(void*, void*);
@@ -627,6 +628,25 @@ void re4t::init::FrameRateFixes()
 
 		// 0x9001C0 - pl_R1_KlauserAttack
 		injector::MakeInline<TurnSpeedLoad>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
+	// Mercenaries: fix doubling of the village stage's passive difficulty gain in 60fps NTSC mode
+	{
+		auto pattern = hook::pattern("A1 40 ? ? ? 80 ? ? 00 74 ? 6A 0E"); // R400Main());
+		struct MercsModeFPSFix
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				fMercsDeltaTimer += GlobalPtr()->deltaTime_70;
+				if (fMercsDeltaTimer >= 1.0F)
+				{
+					fMercsDeltaTimer -= 1.0F;
+					regs.ef |= (1 << regs.zero_flag); // proceed through the function
+				}
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<MercsModeFPSFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 	}
 
 	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust

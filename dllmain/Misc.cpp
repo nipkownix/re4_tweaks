@@ -1116,6 +1116,75 @@ void re4t::init::Misc()
 			spd::log()->info("AshleyJPCameraAngles enabled");
 	}
 
+	// NTSC mode
+	// Enables difficulty modifiers previously exclusive to the NTSC console versions of RE4.
+	// These were locked behind checks for pSys->language_8 == 1 (NTSC English). Since RE4 UHD uses PAL English (language_8 == 2), Steam players never saw these.
+	{
+		if (pConfig->bEnableNTSCMode)
+		{
+			// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
+			auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
+			Patch(pattern.count(1).get(0).get<uint32_t>(0), { 0xB2, 0x01, 0x90 }); // GamePointInit, { mov dl, 1 }
+
+			// Assignment Ada: increased difficulty (4500->6500)
+			pattern = hook::pattern("66 39 B1 ? ? 00 00 75 10");
+			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // GameAddPoint
+
+			// Shooting range: increased bottle cap score requirements (1000->3000)
+			pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
+			Patch(pattern.count(1).get(0).get<uint32_t>(2), { 0xB1, 0x01, 0x90 }); // cCap::check, { mov cl, 1 }
+
+			// Shooting range: only check for bottle cap reward once per results screen
+			pattern = hook::pattern("8B 15 ? ? ? ? 80 7A ? 01 74");
+			Patch(pattern.count(2).get(1).get<uint32_t>(10), { 0xEB }); // shootResult, jz -> jmp
+
+			// Mercenaries: unlock village stage difficulty, requires 60fps fix
+			Patch(pattern.count(2).get(0).get<uint32_t>(10), { 0xEB }); // GameAddPoint, jz -> jmp
+
+			// remove Easy mode from the difficulty menu
+			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 75");
+			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(9), 2); // titleLevelInit
+
+			// skip difficulty select on a New Game save
+			pattern = hook::pattern("B8 04 00 00 00 5B 8B E5");
+			struct SkipLevelSelect
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					bool newGame = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
+					regs.eax = newGame ? TTL_CMD_START : TTL_CMD_LEVEL;
+				}
+			}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+			// special handling for the JP.exe
+			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 74");
+			if (pattern.empty())
+			{
+				// ignore language_8 check when skipping the difficulty menu
+				pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
+				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
+
+				// make use of the hide Professional mode block to hide Amateur mode instead
+				pattern = hook::pattern("C7 46 30 01 00 00 00");
+				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // titleLevelInit
+				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(16), 2);
+				Patch(pattern.count(1).get(0).get<uint32_t>(21), { 0x09 });
+				Patch(pattern.count(1).get(0).get<uint32_t>(38), { 0x0A });
+				// erase the rest of the block
+				pattern = hook::pattern("C7 46 ? 03 00 00 00 85 DB");
+				injector::MakeNOP(pattern.get_first(0), 37);
+
+				// disable the JP difficulty select confirmation prompts
+				pattern = hook::pattern("A1 40 ? ? ? 38 58 08 75");
+				Patch(pattern.count(1).get(0).get<uint32_t>(8), { 0xEB }); // titleMain, jnz -> jmp
+
+				// remove JP only 20% damage mitigation armor from Assignment Ada
+				pattern = hook::pattern("F7 46 54 00 00 00 40");
+				Patch(pattern.count(1).get(0).get<uint32_t>(7), { 0xEB }); // LifeDownSet2, jz -> jmp
+			}
+		}
+	}
+
 	// Allow changing games level of violence to users choice
 	{
 		// find cCard functbl (tbl.1654)
