@@ -17,18 +17,35 @@ static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 
 	if (re4t::dxvk::cfg->bUseVulkanRenderer)
 	{
-		spd::log()->info("{} -> UseVulkanRenderer is enabled, using DX9 -> VK translation layer...", __FUNCTION__);
+		spd::log()->info("{} -> UseVulkanRenderer is enabled, using D3D9 -> VK translation layer...", __FUNCTION__);
 
-		IDirect3D9Ex* pDirect3D = nullptr;
-		dxvk::CreateD3D9(false, &pDirect3D);
+		// Check if vulkan-1.dll can be loaded, else fallback to d3d9
+		HMODULE vulkanDll = LoadLibraryA("vulkan-1.dll");
 
-		return new hook_Direct3D9(pDirect3D);
+		if (vulkanDll)
+		{
+			FreeLibrary(vulkanDll);
+
+			IDirect3D9Ex* pDirect3D = nullptr;
+			dxvk::CreateD3D9(false, &pDirect3D);
+
+			if (pDirect3D->GetAdapterCount() < 1)
+			{
+				spd::log()->info("{} -> Failed to get Vulkan adapter! Falling back to D3D9", __FUNCTION__);
+			}
+			else
+			{
+				return new hook_Direct3D9(pDirect3D);
+			}
+		}
+		else
+		{
+			spd::log()->info("{} -> Failed to load vulkan-1.dll! Falling back to D3D9", __FUNCTION__);
+		}
 	}
-	else
-	{
-		IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
-		return new hook_Direct3D9(d3dInterface);
-	}
+	
+	IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
+	return new hook_Direct3D9(d3dInterface);
 }
 
 void re4t::init::D3D9Hook()
