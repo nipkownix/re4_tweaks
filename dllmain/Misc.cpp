@@ -51,6 +51,15 @@ void __fastcall cCard__firstCheck10_Hook(cCard* thisptr, void* unused)
 	}
 }
 
+struct FILE_MSG_TBL_mb
+{
+	uint8_t top_0;
+	uint8_t color_1;
+	uint8_t attr_2;
+	uint8_t layout_3;
+};
+FILE_MSG_TBL_mb* file_msg_tbl_35 = nullptr;
+
 struct FileData
 {
 	std::string filePath;
@@ -1134,6 +1143,24 @@ void re4t::init::Misc()
 			pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
 			Patch(pattern.count(1).get(0).get<uint32_t>(2), { 0xB1, 0x01, 0x90 }); // cCap::check, { mov cl, 1 }
 
+			// Shooting range: use NTSC strings for the game rules note
+			// (only supports English for now, as only the eng/ss_file_01.MDT file contains the additional strings necessary for this)
+			pattern = hook::pattern("3F 00 01 00 46 00 01 00");
+			file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
+			// update the note's message index whenever we load into r22c
+			pattern = hook::pattern("89 41 78 83 C1 7C E8");
+			struct R22cInit_Hook
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					file_msg_tbl_35[0].top_0 = SystemSavePtr()->language_8 == 2 ? 0x9D : 0x3F;
+
+					// code we overwrote
+					*(uint32_t*)(regs.ecx + 0x78) = (uint32_t)regs.eax;
+					regs.ecx += 0x7C;
+				}
+			}; injector::MakeInline<R22cInit_Hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
 			// Shooting range: only check for bottle cap reward once per results screen
 			pattern = hook::pattern("8B 15 ? ? ? ? 80 7A ? 01 74");
 			Patch(pattern.count(2).get(1).get<uint32_t>(10), { 0xEB }); // shootResult, jz -> jmp
@@ -1164,7 +1191,7 @@ void re4t::init::Misc()
 				pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
 				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
 
-				// make use of the hide Professional mode block to hide Amateur mode instead
+				// repurpose the hide Professional mode block to hide Amateur mode instead
 				pattern = hook::pattern("C7 46 30 01 00 00 00");
 				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // titleLevelInit
 				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(16), 2);
@@ -1174,14 +1201,16 @@ void re4t::init::Misc()
 				pattern = hook::pattern("C7 46 ? 03 00 00 00 85 DB");
 				injector::MakeNOP(pattern.get_first(0), 37);
 
-				// disable the JP difficulty select confirmation prompts
+				// disable JP difficulty select confirmation prompts
 				pattern = hook::pattern("A1 40 ? ? ? 38 58 08 75");
 				Patch(pattern.count(1).get(0).get<uint32_t>(8), { 0xEB }); // titleMain, jnz -> jmp
 
-				// remove JP only 20% damage mitigation armor from Assignment Ada
+				// remove JP only 20% damage armor from Assignment Ada
 				pattern = hook::pattern("F7 46 54 00 00 00 40");
 				Patch(pattern.count(1).get(0).get<uint32_t>(7), { 0xEB }); // LifeDownSet2, jz -> jmp
 			}
+
+			spd::log()->info("NTSC mode enabled");
 		}
 	}
 
