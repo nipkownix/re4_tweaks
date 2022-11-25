@@ -71,3 +71,8 @@ public:
 	}
 };
 assert_size(pzlPlayer, 0x34);
+
+namespace bio4
+{
+	extern bool(__cdecl* PutInCase)(ITEM_ID item_id, uint16_t item_num, uint32_t size);
+};

@@ -2310,6 +2310,141 @@ void Trainer_RenderUI(int columnCount)
 				FilterTool->Render(false);
 			}
 
+			// Inventory Item Adder
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("Add item to inventory");
+
+				ImGui_ItemSeparator();
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				static char searchText[256] = { 0 };
+				static bool alwaysShowInventory = true;
+
+				ImGui::InputText("Search", searchText, 256);
+
+				std::string searchTextUpper = StrToUpper(searchText);
+
+				// Item IDs scraped from games "piece_info" array
+				// These are the only items that have valid puzzle pieces attached to them
+				// Adding an item that isn't in this list will cause crash since game won't find the puzzle piece for it
+				static std::vector<EItemId> validItemIds = {
+					EItemId::VP70,
+					EItemId::FN57,
+					EItemId::Punisher,
+					EItemId::Ruger,
+					EItemId::Mauser,
+					EItemId::XD9,
+					EItemId::Civilian,
+					EItemId::Gov,
+					EItemId::Shotgun,
+					EItemId::Striker,
+					EItemId::S_Field,
+					EItemId::HK_Sniper,
+					EItemId::Styer,
+					EItemId::Thompson,
+					EItemId::RPG7,
+					EItemId::Mine,
+					EItemId::SW500,
+					EItemId::Knife,
+					EItemId::Riot_Gun,
+					EItemId::Ada_RPG,
+					EItemId::Omake_RPG,
+					EItemId::Krauser_Machine_Gun,
+					EItemId::Krauser_Bow,
+					EItemId::Bullet_9mm_H,
+					EItemId::Bullet_9mm_M,
+					EItemId::Bullet_12gg,
+					EItemId::Bullet_223in,
+					EItemId::Bullet_45in_M,
+					EItemId::Bullet_5in,
+					EItemId::Bullet_45in_H,
+					EItemId::Bullet_Mine_A,
+					EItemId::Bullet_Arrow,
+					EItemId::Silencer_9mm,
+					EItemId::Stock_Mauser,
+					EItemId::Stock_Styer,
+					EItemId::Scope_Sniper,
+					EItemId::Scope_HK_Sniper,
+					EItemId::Scope_Mine,
+					EItemId::Scope_Thermo,
+					EItemId::Grenade,
+					EItemId::Flame_Grenade,
+					EItemId::Light_Grenade,
+					EItemId::Spray,
+					EItemId::Hen_Egg,
+					EItemId::Iodine_Egg,
+					EItemId::Golden_Egg,
+					EItemId::Black_Bass,
+					EItemId::Black_Bass_L,
+					EItemId::Herb_G,
+					EItemId::Herb_R,
+					EItemId::Herb_Y,
+					EItemId::Herb_G_R,
+					EItemId::Herb_G_Y,
+					EItemId::Herb_R_Y,
+					EItemId::Herb_G_G,
+					EItemId::Herb_G_G_G,
+					EItemId::Herb_G_R_Y,
+					EItemId::Parasite_Sample,
+					EItemId::PRL_412,
+					EItemId::Bow_Gun,
+					EItemId::Bullet_Bow_Gun,
+					EItemId::Ada_Shot_Gun,
+					EItemId::Ada_Machine_Gun,
+					EItemId::Scope_PRL_412
+				};
+
+				static EItemId itemId = EItemId::VP70;
+				if (ImGui::BeginListBox("ItemId"))
+				{
+					for (auto& item_id : validItemIds)
+					{
+						bool makeVisible = true;
+						if (!searchTextUpper.empty())
+						{
+							std::string itemNameUpper = StrToUpper(EItemId_Names[int(item_id)]);
+
+							makeVisible = itemNameUpper.find(searchTextUpper) != std::string::npos;
+						}
+
+						if (makeVisible)
+						{
+							bool selected = itemId == item_id;
+							if (ImGui::Selectable(EItemId_Names[int(item_id)], &selected))
+								if (selected)
+									itemId = item_id;
+						}
+					}
+					ImGui::EndListBox();
+				}
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
+				// TODO: pause menu, checks below don't seem to catch it...
+				bool disable = !PlayerPtr() || !PlayerPtr()->subScrCheck() || SubScreenWk->open_flag_2C != 0;
+
+				static int stackCount = 1;
+				ImGui::InputInt("Stack count", &stackCount);
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+					ImGui::SetTooltip("Number of items in the stack, only applies to stackable items such as ammo.");
+
+				ImGui::BeginDisabled(disable);
+				if (ImGui::Button("Add Item"))
+					RequestInventoryAdd(ITEM_ID(itemId), stackCount, alwaysShowInventory);
+
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
+					ImGui::SetTooltip("Items can only be added while outside of menus.");
+
+				ImGui::EndDisabled();
+
+				ImGui_ItemSeparator();
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+				ImGui::Checkbox("Open inventory after adding", &alwaysShowInventory);
+			}
+
 			ImGui_ColumnFinish();
 			ImGui::EndTable();
 		}

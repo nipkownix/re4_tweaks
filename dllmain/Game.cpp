@@ -40,6 +40,8 @@ cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
 
 // Original game funcs
 namespace bio4 {
+	bool(__cdecl* PutInCase)(ITEM_ID item_id, uint16_t item_num, uint32_t size);
+
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
 
 	bool(__cdecl* SubScreenOpen)(SS_OPEN_FLAG open_flag, SS_ATTR_FLAG attr_flag);
@@ -596,6 +598,38 @@ void __cdecl Mem_free_TITLE_WORK_hook(void* mem)
 	Mem_free(mem);
 }
 
+int InventoryAddRequested = -1;
+int InventoryAddCount = 1;
+bool InventoryAddShowInventory = false;
+void RequestInventoryAdd(ITEM_ID id, int count, bool showInventoryUI)
+{
+	InventoryAddRequested = id;
+	InventoryAddCount = count;
+	InventoryAddShowInventory = showInventoryUI;
+}
+
+void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
+{
+	// TODO: `piece_info` array inside game defines the puzzle piece for items that can be stored in inventory
+	// not every ITEM_ID is defined there, some ITEM_IDs are for treasures etc which aren't part of inventory puzzle
+	// for items that aren't defined, pzlPlayer::appendExtraPiece will fail to setup pzlPlayer->m_extra_14, causing crash when those items are added...
+	// need to either add code to search piece_info for ITEM_ID first, or copy the piece_info data into our DLL
+	// or we could create a new enum with just the item ids that have valid pieces, hmm...
+	// 
+	// PutInCase tries adding the item to inventory, even rotating item to fit if necessary
+	// If not enough space it'll return false
+	if (always_show_inv_ui || !bio4::PutInCase(id, count, SubScreenWk->board_size_2AA))
+	{
+		// PutInCase returned false, not enough space for item
+		// Setup subscreen fields with the item info, for it to show the item-adding UI
+		// (if puzzle screen is already open this will have no effect until screen is closed, seems to then open puzzle screen again to handle adding the item)
+		// (maybe that seems a bit janky though, might be better to add some checks to only allow this func to work when subscr is closed...)
+		SubScreenWk->get_item_id_2F6 = id;
+		SubScreenWk->get_item_num_2F8 = count;
+		bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_PZZL, SS_ATTR_NULL);
+	}
+}
+
 bool WeaponChangeRequested = false;
 void RequestWeaponChange()
 {
@@ -618,6 +652,13 @@ void(__cdecl* WeaponChange)();
 void(__fastcall* cSceSys__scheduler)(void* thisptr, void* unused);
 void __fastcall cSceSys__scheduler_Hook(void* thisptr, void* unused)
 {
+	if (InventoryAddRequested != -1)
+	{
+		ITEM_ID item = ITEM_ID(InventoryAddRequested);
+		InventoryAddRequested = -1;
+		InventoryItemAdd(item, InventoryAddCount, InventoryAddShowInventory);
+	}
+
 	if (WeaponChangeRequested)
 	{
 		WeaponChangeRequested = false;
@@ -877,6 +918,10 @@ bool re4t::init::Game()
 	// QuakeExec ptr
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 8B E5 5D");
 	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::QuakeExec);
+	
+	// PutInCase funcptr
+	pattern = hook::pattern("0F B7 4E 1C 52 50 51 E8");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::PutInCase);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
