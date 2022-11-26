@@ -2,7 +2,7 @@
 #include "basic_types.h"
 
 // enum names from RE4VR, unverified...
-// make sure to sync any changes here with GameFlags.cpp (EItemId_Names)
+// internal names are used for EItemId enum, see GameFlags.cpp EItemId_Names for friendly in-game names
 enum class EItemId
 {
 	Bullet_45in_H = 0,

@@ -1236,78 +1236,78 @@ const char* Flags_ROOM_r226_Names[] = {
 
 // make sure to sync any changes here with EItemId (item.h)
 const char* EItemId_Names[] = {
-	"Bullet_45in_H",
-	"Grenade",
-	"Flame_Grenade",
-	"VP70",
-	"Bullet_9mm_H",
-	"Spray",
-	"Herb_G",
-	"Bullet_223in",
-	"Hen_Egg",
-	"Iodine_Egg",
-	"Golden_Egg",
+	"Ammo: Magnum Ammo", // Bullet_45in_H
+	"Wep: Hand Grenade",
+	"Wep: Incendiary Grenade",
+	"Wep: Matilda", // VP70
+	"Ammo: Handgun Ammo", // Bullet_9mm_H
+	"Item: First Aid Spray",
+	"Item: Green Herb", // Herb_G
+	"Ammo: Rifle Ammo", // Bullet_223in
+	"Wep: Chicken Egg", // Hen_Egg
+	"Wep: Brown Chicken Egg", // Iodine_Egg
+	"Wep: Gold Chicken Egg", // Golden_Egg
 	"Luis_Drug",
-	"Parasite_Sample",
+	"Item: Plaga Sample", // Parasite_Sample
 	"Krauser_Knife",
-	"Light_Grenade",
+	"Wep: Flash Grenade", // Light_Grenade
 	"Salazar_Crest",
-	"Bow_Gun",
-	"Bullet_Bow_Gun",
-	"Herb_G_G",
-	"Herb_G_G_G",
-	"Herb_G_R",
-	"Herb_G_R_Y",
-	"Herb_G_Y",
-	"Ada_RPG",
-	"Bullet_12gg",
-	"Herb_R",
-	"Bullet_5in",
+	"Wep: Bowgun",
+	"Ammo: Bowgun Bolts",
+	"Item: Green Herb (X2)", // Herb_G_G
+	"Item: Green Herb (X3)", // Herb_G_G_G
+	"Item: Mixed Herbs (G+R)", // Herb_G_R
+	"Item: Mixed Herbs (G+R+Y)", // Herb_G_R_Y
+	"Item: Mixed Herbs (G+Y)", // Herb_G_Y
+	"Wep: Rocket Launcher (Special)", // Ada_RPG
+	"Ammo: Shotgun Shells", // Bullet_12gg
+	"Item: Red Herb", // Herb_R
+	"Ammo: Handcannon Ammo", // Bullet_5in
 	"Key_Sand_Clock",
-	"Herb_Y",
+	"Item: Yellow Herb", // Herb_Y
 	"Piece_Of_Slate",
 	"Golden_Gem",
 	"Silver_Gem",
-	"Bullet_9mm_M",
-	"FN57",
-	"Scope_PRL_412", // "Scope_New_Weapon" in re4vr
-	"Ruger",
+	"Ammo: TMP Ammo", // Bullet_9mm_M
+	"Wep: Punisher (FN57)", // FN57
+	"Mod: Scope (P.R.L. 412)", // Scope_New_Weapon (shows as Punisher w/ Silencer ingame??)
+	"Wep: Handgun", // Ruger
 	"Ruger_SA",
-	"Mauser",
+	"Wep: Red9", // Mauser
 	"Mauser_ST",
-	"XD9",
+	"Wep: Blacktail", // XD9
 	"New_Weapon_SC",
-	"Civilian",
-	"Gov",
+	"Wep: Broken Butterfly", // Civilian
+	"Wep: Killer7", // Gov
 	"Ada_New_Weapon",
-	"Shotgun",
-	"Striker",
-	"S_Field",
-	"HK_Sniper",
-	"Styer",
+	"Wep: Shotgun",
+	"Wep: Striker",
+	"Wep: Rifle", // S_Field
+	"Wep: Rifle (semi-auto)", // HK_Sniper
+	"Wep: TMP", // Styer
 	"R513_Key_0a",
 	"Styer_St",
 	"R513_Key_0b",
-	"Thompson",
-	"RPG7",
-	"Mine",
-	"SW500",
-	"Knife",
+	"Wep: Chicago Typewriter", // Thompson
+	"Wep: Rocket Launcher", // RPG7
+	"Wep: Mine Thrower", // Mine
+	"Wep: Hand Cannon", // SW500
+	"Wep: Knife",
 	"Cupric_Gem",
 	"Moon_Spall_1",
 	"Cult_Key",
 	"Cult_Crest",
 	"False_Eye",
-	"Krauser_Machine_Gun",
-	"Silencer_9mm",
-	"Punisher", // "Item_40" in re4vr
-	"PRL_412", // "New_Weapon" in re4vr
-	"Stock_Mauser",
-	"Stock_Styer",
-	"Scope_Sniper",
-	"Scope_HK_Sniper",
-	"Bullet_Mine_A",
-	"Ada_Shot_Gun",
+	"Wep: Custom TMP", // Krauser_Machine_Gun
+	"Mod: Silencer (Handgun)", // Silencer_9mm
+	"Wep: Punisher (Item_40)", // "Item_40" in re4vr
+	"Wep: P.R.L. 412", // "New_Weapon" in re4vr
+	"Mod: Stock (Red9)", // Stock_Mauser
+	"Mod: Stock (TMP)", // Stock_Styer
+	"Mod: Scope (Rifle)", // Scope_Sniper
+	"Mod: Scope (semi-auto rifle)", // Scope_HK_Sniper
+	"Ammo: Mine-Darts", // Bullet_Mine_A
+	"Wep: Shotgun (Ada)",
 	"File_13",
 	"File_14",
 	"File_15",
@@ -1318,8 +1318,8 @@ const char* EItemId_Names[] = {
 	"File_20",
 	"File_21",
 	"HK_Sniper_Thermo",
-	"Krauser_Bow",
-	"Ada_Machine_Gun",
+	"Wep: Krauser's Bow",
+	"Wep: Chicago Typewriter (Ada)", // Ada_Machine_Gun
 	"Treasure_Map_2",
 	"Treasure_Map_3",
 	"Ore_White",
@@ -1342,15 +1342,15 @@ const char* EItemId_Names[] = {
 	"Beer_Stein_R_Y",
 	"Beer_Stein_G_R_Y",
 	"Moon_Spall_2",
-	"Bullet_45in_M",
+	"Ammo: Chicago Typewriter Ammo", // Bullet_45in_M
 	"S_Field_Sc",
 	"HK_Sniper_Sc",
-	"Omake_RPG",
+	"Wep: Infinite Launcher", // Omake_RPG
 	"Pagan_Grail_1",
 	"Pagan_Grail_2",
 	"Pagan_Rod",
 	"Ingot_Bar",
-	"Bullet_Arrow",
+	"Ammo: Arrows", // Bullet_Arrow
 	"Time_Bonus",
 	"R327_Card_Key",
 	"Point_Bonus",
@@ -1384,10 +1384,10 @@ const char* EItemId_Names[] = {
 	"Pearl_Ruby_Mirror",
 	"Key_To_R30b",
 	"Plush_Chessboard",
-	"Riot_Gun",
-	"Black_Bass",
+	"Wep: Riot Gun",
+	"Item: Black Bass",
 	"Sand_Clock",
-	"Black_Bass_L",
+	"Item: Black Bass (L)",
 	"Evil_Gem",
 	"S_Field_Thermo",
 	"Pot_Holed_Crown",
@@ -1404,9 +1404,9 @@ const char* EItemId_Names[] = {
 	"Crest_Left",
 	"Crest_Full",
 	"Key_To_201",
-	"Herb_R_Y",
+	"Item: Mixed Herbs (R+Y)", // Herb_R_Y
 	"Treasure_Map",
-	"Scope_Mine",
+	"Mod: Scope (Mine Thrower)", // Scope_Mine
 	"Mine_SC",
 	"File_01",
 	"File_02",
@@ -1433,7 +1433,7 @@ const char* EItemId_Names[] = {
 	"Lantern_G_R_Y",
 	"Dungeon_Key",
 	"Silver_Sword",
-	"Scope_Thermo",
+	"Mod: Infrared Scope", // Scope_Thermo
 	"Mask",
 	"Mask_Stone_G",
 	"Mask_Stone_R",
