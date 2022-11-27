@@ -25,6 +25,10 @@ cItemMgr* ItemMgr = nullptr;
 cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 
+// event.h externs
+EventMgr* EvtMgr = nullptr;
+EventMgr__IsAliveEvt_Fn EventMgr__IsAliveEvt = nullptr;
+
 // atari.h externs
 cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
@@ -791,6 +795,11 @@ bool Init_Game()
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(9), cItemMgr__search);
 	pattern = hook::pattern("8B 0D ? ? ? ? 51 B9 ? ? ? ? E8 ? ? ? ? 5F 5E 5B 8B E5");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(12), cItemMgr__arm);
+
+	// EvtMgr
+	pattern = hook::pattern("75 ? 6A 00 6A 00 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 84 C0");
+	EvtMgr = *pattern.count(1).get(0).get<EventMgr*>(0xC);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x10), EventMgr__IsAliveEvt);
 
 	// g_p_Item_piece ptr (not actual name)
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 8B 35 ? ? ? ? 85 F6 0F 84");

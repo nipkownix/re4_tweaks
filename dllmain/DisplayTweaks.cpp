@@ -135,6 +135,21 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 
 	FramelimiterPrevTicks = timeCurrent;
 
+	// HACK: workaround for chandelier flicker/shake bug in r117s10 cutscene
+	// during gameplay a chandelier object has a motion animation enabled, afterward object gets left with a neutral animation running
+	// when cutscene happens the (isAliveEvt_result && gameFramerate != 30) block below would be ran instead, resulting in deltaTimes like 0.500000122, varying a small amount each frame
+	// anim code that handles the neutral animation doesn't like the varying frametimes, resulting in the chandelier flickering/shaking around during cutscene
+	// (this doesn't happen in movie browser though since the chandelier won't have any motion animation applied to it there, anim gets applied during gameplay, and ends up carrying over to the cutscene)
+	// this bug happens with the vanilla framelimiter code, and ended up being copied in this reimpl, fortunately we can get around it here though
+	// more info at https://github.com/nipkownix/re4_tweaks/issues/333#issuecomment-1257052215
+	// TODO: find an actual fix for the broken motion code instead, would likely fix other motion issues at non 60/30 framerates too...
+	// TODO2: alternately, find a way to disable the neutral animation properly after the anim has played out?
+	if (isAliveEvt_result)
+	{
+		// Only let isAliveEvt_result remain as true if r117s10 isn't playing:
+		isAliveEvt_result = EvtMgr->IsAliveEvt("event/evd/r117s10.evd", 0, AliveEvtType::AliveEvtTypeNormal) == false;
+	}
+
 	// Not really sure what the second part of IsAliveEvt check is doing
 	// Seems to skip setting timeElapsed to the fixed FramelimiterTargetFrametime at least
 	// Guess that means the true timeElapsed gets passed to the game? (after being limited to 60 like above)
