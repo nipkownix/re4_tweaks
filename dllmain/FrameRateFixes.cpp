@@ -33,40 +33,102 @@ void re4t::init::FrameRateFixes()
 {
 	// Fix the speed of falling items
 	{
-		// Treasure
+		// Treasure (emItem_R1_Drop) (Items from bird nests are handled by another function that already has deltaTime_70 applied to it)
 		{
 			auto pattern = hook::pattern("DC 25 ? ? ? ? 6A ? 83 EC ? 8D BE ? ? ? ? D9 9E ? ? ? ? B9");
-			struct TreasureSpeed
+			struct emItem_R1_Drop_hook
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					float vanillaMulti = 10.0f;
-					float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
-
+					float vanillaSub = 10.0f;
+					
 					if (re4t::cfg->bFixFallingItemsSpeed)
-						_asm {fsub newMulti}
+					{
+						float newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+
+						// How many frames to wait until newSub is subtracted from pEm->Spd_62C.y.
+						// On 30 fps, subtract every frame. On 60 fps, subtract every two frames, etc.
+						int interval = GameVariableFrameRate() / 30;
+
+						// Interval must be at least 1
+						if (interval < 1)
+							interval = 1;
+
+						// Only apply the speed changes if the frame interval has passed
+						if (GlobalPtr()->frameCounter_530C % interval == 0)
+						{
+							_asm {fsub newSub}
+						}
+					}
 					else
-						_asm {fsub vanillaMulti}
+						_asm {fsub vanillaSub}
 				}
-			}; injector::MakeInline<TreasureSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+			}; injector::MakeInline<emItem_R1_Drop_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 		}
 
-		// Ammo boxes
+		// Falling door locks (cObj12::fallMove, might affect a few other falling things too)
 		{
-			auto pattern = hook::pattern("DC 0D ? ? ? ? D8 83 ? ? ? ? D9 9B ? ? ? ? D9 83");
-			struct AmmoBoxSpeed
+			// Ajust the speed of the Y axis
+			auto pattern = hook::pattern("DC 25 ? ? ? ? 50 8D 56 ? 52 50 D9 1E E8 ? ? ? ? C7 46");
+			struct cObj12__fallMove_hook
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					float vanillaSub = 20.0f;
+
+					if (re4t::cfg->bFixFallingItemsSpeed)
+					{
+						float newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+
+						int interval = GameVariableFrameRate() / 30;
+
+						// Interval must be at least 1
+						if (interval < 1)
+							interval = 1;
+
+						// Only apply the speed changes if the frame interval has passed
+						if (GlobalPtr()->frameCounter_530C % interval == 0)
+						{
+							_asm {fsub newSub}
+						}
+					}
+					else
+						_asm {fsub vanillaSub}
+				}
+			}; injector::MakeInline<cObj12__fallMove_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+			// Ajust the speed of all axis. Seems to be indepent from the calculation above.
+			struct cObj12__setFall_hook
 			{
 				void operator()(injector::reg_pack& regs)
 				{
 					float vanillaMulti = 10.0f;
-					float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
 
 					if (re4t::cfg->bFixFallingItemsSpeed)
+					{
+						float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
 						_asm {fmul newMulti}
+					}
 					else
 						_asm {fmul vanillaMulti}
 				}
-			}; injector::MakeInline<AmmoBoxSpeed>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(6));
+			}; 
+			
+			// First 3
+			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 66 89 87").count(3);
+			pattern.for_each_result([&](hook::pattern_match match) {
+				injector::MakeInline<cObj12__setFall_hook>(match.get<uint32_t>(0), match.get<uint32_t>(6));
+			});
+
+			// 4, 5
+			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 8B ? ? 66 89 ? ? E8 ? ? ? ? D8").count(2);
+			pattern.for_each_result([&](hook::pattern_match match) {
+				injector::MakeInline<cObj12__setFall_hook>(match.get<uint32_t>(0), match.get<uint32_t>(6));
+			});
+
+			// Last
+			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 8D 54 76");
+			injector::MakeInline<cObj12__setFall_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 		}
 	}
 
