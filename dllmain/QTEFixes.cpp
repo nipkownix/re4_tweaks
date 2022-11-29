@@ -21,13 +21,13 @@ bool isQTEactive()
 }
 
 // Auto-QTE
-bool (__stdcall* cActionButton_checkButton_orig)(int a1); // Used for the quick reaction QTEs
-bool __stdcall cActionButton_checkButton_hook(int a1)
+bool (__fastcall* cActionButton_checkButton_orig)(class cActionButton* thisptr, void* unused, struct ACT_WORK* work); // Used for the quick reaction QTEs
+bool __fastcall cActionButton_checkButton_hook(class cActionButton* thisptr, void* unused, struct ACT_WORK* work)
 {
 	// We run the original function first since that's what sets QTEactive to 0 or 1
-	bool orig = cActionButton_checkButton_orig(a1);
+	bool orig = cActionButton_checkButton_orig(thisptr, unused, work);
 
-	if (pConfig->bDisableQTE && isQTEactive())
+	if (re4t::cfg->bDisableQTE && isQTEactive())
 	{
 		isAutoQTE = true;
 		return true;
@@ -42,7 +42,7 @@ bool __stdcall cActionButton_checkButton_hook(int a1)
 unsigned int(__cdecl* KeyTrgCheck_orig)(KEY_BTN a1); // Used for the mashing QTEs
 unsigned int __cdecl KeyTrgCheck_hook(KEY_BTN a1)
 {
-	if (pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
+	if (re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 	{
 		isAutoQTE = true;
 		return 1;
@@ -57,7 +57,7 @@ unsigned int __cdecl KeyTrgCheck_hook(KEY_BTN a1)
 int (*sub_859810_orig)(); // Check for both QTE keys when running from Salazar's statue
 int sub_859810_hook()
 {
-	if (pConfig->bDisableQTE)
+	if (re4t::cfg->bDisableQTE)
 		return 1;
 	else
 		return sub_859810_orig();
@@ -66,7 +66,7 @@ int sub_859810_hook()
 int (*sub_8064B0_orig)(); // Last QTE from the laser room after Krauser
 int sub_8064B0_hook()
 {
-	if (pConfig->bDisableQTE)
+	if (re4t::cfg->bDisableQTE)
 		return 1;
 	else
 		return sub_8064B0_orig();
@@ -78,7 +78,7 @@ int* __cdecl KEY1prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = pInput->KeyMap_getDIK(pConfig->sQTE_key_1);
+	int newKey = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_1);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -87,12 +87,12 @@ int* __cdecl KEY2prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = pInput->KeyMap_getDIK(pConfig->sQTE_key_2);
+	int newKey = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_2);
 
 	return sub_41E600_orig(a1, newKey);
 }
 
-void Init_QTEfixes()
+void re4t::init::QTEfixes()
 {
 	// Automatic QTEs
 	{
@@ -111,7 +111,7 @@ void Init_QTEfixes()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (pConfig->bDisableQTE && (!pConfig->bAutomaticMashingQTE || pConfig->bAutomaticMashingQTE))
+				if (re4t::cfg->bDisableQTE && (!re4t::cfg->bAutomaticMashingQTE || re4t::cfg->bAutomaticMashingQTE))
 				{
 					if (isAutoQTE || isQTEactive())
 						regs.ef &= ~(1 << regs.zero_flag);
@@ -179,7 +179,7 @@ void Init_QTEfixes()
 					{
 						int leftTrigger_A = *(int8_t*)(ptrleftTrigger_A);
 
-						if (!pConfig->bDisableQTE)
+						if (!re4t::cfg->bDisableQTE)
 						{
 							// Mimic what CMP does, since we're overwriting it.
 							if (leftTrigger_A > 0)
@@ -220,7 +220,7 @@ void Init_QTEfixes()
 					{
 						int rightTrigger_B = *(int8_t*)(ptrrightTrigger_B);
 
-						if (!pConfig->bDisableQTE)
+						if (!re4t::cfg->bDisableQTE)
 						{
 							// Mimic what CMP does, since we're overwriting it.
 							if (rightTrigger_B > 0)
@@ -285,7 +285,7 @@ void Init_QTEfixes()
 				{
 					int leftTrigger_A = *(int8_t*)(ptrleftTrigger_A);
 
-					if (!pConfig->bDisableQTE)
+					if (!re4t::cfg->bDisableQTE)
 					{
 						// Mimic what CMP does, since we're overwriting it.
 						if (leftTrigger_A > 0)
@@ -328,7 +328,7 @@ void Init_QTEfixes()
 				{
 					int rightTrigger_B = *(int8_t*)(ptrrightTrigger_B);
 
-					if (!pConfig->bDisableQTE)
+					if (!re4t::cfg->bDisableQTE)
 					{
 						// Mimic what CMP does, since we're overwriting it.
 						if (rightTrigger_B > 0)
@@ -387,7 +387,7 @@ void Init_QTEfixes()
 					float* timer = (float*)(regs.esi + regs.eax * 0x8 + 0xA0);
 
 					// Write 0 if needed, otherwise write what the game calcualted
-					if (pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
+					if (re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 						*timer = 0.0f;
 					else
 						*timer = new_timer;
@@ -408,7 +408,7 @@ void Init_QTEfixes()
 				{
 					float mashSpeed = *(float*)(regs.edi + 0x418);
 
-					if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
+					if (re4t::cfg->bFixQTE && !(re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE))
 						mashSpeed /= GlobalPtr()->deltaTime_70;
 
 					_asm {fld mashSpeed}
@@ -424,7 +424,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
+					if (re4t::cfg->bFixQTE && !(re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE))
 						*(int32_t*)(regs.esi + 0x414) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 					else
 						*(int32_t*)(regs.esi + 0x414) += 1;
@@ -438,7 +438,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
+					if (re4t::cfg->bFixQTE && !(re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE))
 						*(int32_t*)(regs.esi + 0x428) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 					else
 						*(int32_t*)(regs.esi + 0x428) += 1;
@@ -456,7 +456,7 @@ void Init_QTEfixes()
 				{
 					float mashSpeed = *(float*)(regs.esi + 0x40C);
 
-					if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
+					if (re4t::cfg->bFixQTE || re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 						mashSpeed *= GlobalPtr()->deltaTime_70;
 
 					_asm {fld mashSpeed}
@@ -475,7 +475,7 @@ void Init_QTEfixes()
 
 					float mashSpeed = *(float*)(regs.edi);
 
-					if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
+					if (re4t::cfg->bFixQTE || re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 						mashSpeed /= GlobalPtr()->deltaTime_70;
 
 					regs.eax = (int32_t)mashSpeed;
@@ -490,7 +490,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
+					if (re4t::cfg->bFixQTE || re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 						*(int32_t*)(regs.eax + 0x168) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 					else
 						*(int32_t*)(regs.eax + 0x168) += 1;
@@ -515,7 +515,7 @@ void Init_QTEfixes()
 					if (pressed)
 					{
 						con.AddLogInt(*(int32_t*)(regs.eax));
-						if (pConfig->bFixQTE || pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE)
+						if (re4t::cfg->bFixQTE || re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 							*(int32_t*)(regs.eax) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 						else
 							*(int32_t*)(regs.eax) += 1;
@@ -528,7 +528,7 @@ void Init_QTEfixes()
 			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true);
 		}
 
-		if (pConfig->bFixQTE && !(pConfig->bDisableQTE || pConfig->bAutomaticMashingQTE))
+		if (re4t::cfg->bFixQTE && !(re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE))
 			spd::log()->info("{} -> QTE speed fixes applied", __FUNCTION__);
 	}
 
@@ -541,7 +541,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.ebx = pInput->KeyMap_getDIK(pConfig->sQTE_key_1);
+					regs.ebx = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_1);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -554,7 +554,7 @@ void Init_QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.edx = pInput->KeyMap_getDIK(pConfig->sQTE_key_2);
+					regs.edx = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_2);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));

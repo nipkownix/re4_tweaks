@@ -20,12 +20,12 @@ std::string fail_msg;
 void updateCheck()
 {
 	// Delete old dll file if it is present
-	if (std::filesystem::remove(rootPath + "dinput8.dll.deleteonnextlaunch"))
+	if (std::filesystem::remove(rootPath + L"dinput8.dll.deleteonnextlaunch"))
 	{
 		spd::log()->info("{} -> Old .dll found and deleted", __FUNCTION__);
 	}
 
-	if (pConfig->bNeverCheckForUpdates)
+	if (re4t::cfg->bNeverCheckForUpdates)
 	{
 		updt.UpdateStatus = UpdateStatus::Finished;
 		return;
@@ -152,16 +152,16 @@ void updateDownloadApply()
 	mz_zip_archive zip;
 	ZeroMemory(&zip, sizeof(zip));
 
-	std::string zip_path = rootPath + "re4_tweaks\\tmp_updt\\updt.zip";
+	std::wstring zip_path = rootPath + L"re4_tweaks\\tmp_updt\\updt.zip";
 
 	// Clear tmp dir
-	std::filesystem::remove_all(rootPath + "re4_tweaks\\tmp_updt");
+	std::filesystem::remove_all(rootPath + L"re4_tweaks\\tmp_updt");
 
 	// Create directory if it doesn't exist
-	std::filesystem::create_directories(rootPath + "re4_tweaks\\tmp_updt");
+	std::filesystem::create_directories(rootPath + L"re4_tweaks\\tmp_updt");
 
 	// Download update
-	HRESULT result = URLDownloadToFileA(NULL, updt.url.c_str(), zip_path.c_str(), 0, &callback);
+	HRESULT result = URLDownloadToFileW(NULL, StrToWstr(updt.url).c_str(), zip_path.c_str(), 0, &callback);
 
 	if (!SUCCEEDED(result)) {
 		spd::log()->info("{} -> Update download failed!", __FUNCTION__);
@@ -188,9 +188,9 @@ void updateDownloadApply()
 		}
 		else
 		{
-			mz_zip_reader_init_file(&zip, zip_path.c_str(), 0);
+			mz_zip_reader_init_file(&zip, WstrToStr(zip_path).c_str(), 0);
 
-			std::string target = rootPath + "re4_tweaks\\tmp_updt\\extracted\\";
+			std::wstring target = rootPath + L"re4_tweaks\\tmp_updt\\extracted\\";
 
 			mz_uint numfiles = mz_zip_reader_get_num_files(&zip);
 			bool successful = false;
@@ -201,14 +201,14 @@ void updateDownloadApply()
 				mz_zip_archive_file_stat zstat;
 				mz_zip_reader_file_stat(&zip, i, &zstat);
 
-				auto file_path = std::filesystem::path(target + zstat.m_filename);
+				auto file_path = std::filesystem::path(target + StrToWstr(zstat.m_filename));
 
 				// Create directory if it doesn't exist
 				std::filesystem::create_directories(file_path.parent_path());
 
 				// Extract
 				FILE* target_file = NULL;
-				fopen_s(&target_file, file_path.string().c_str(), "wb");
+				_wfopen_s(&target_file, file_path.wstring().c_str(), L"wb");
 				if (target_file)
 				{
 					mz_zip_reader_extract_to_cfile(&zip, i, target_file, 0);
@@ -217,10 +217,10 @@ void updateDownloadApply()
 			}
 
 			// Rename the dll to something that will be deleted on the next launch
-			std::string module_path = rootPath + "dinput8.dll";
-			std::string module_path_del = rootPath + "dinput8.dll.deleteonnextlaunch";
+			std::wstring module_path = rootPath + L"dinput8.dll";
+			std::wstring module_path_del = rootPath + L"dinput8.dll.deleteonnextlaunch";
 
-			BOOL result_moveFile = MoveFileExA(module_path.c_str(), module_path_del.c_str(), MOVEFILE_REPLACE_EXISTING);
+			BOOL result_moveFile = MoveFileExW(module_path.c_str(), module_path_del.c_str(), MOVEFILE_REPLACE_EXISTING);
 
 			// Apply the updated files
 			if (result_moveFile)
@@ -232,7 +232,7 @@ void updateDownloadApply()
 					std::filesystem::copy(target, rootPath, copyOptions);
 
 					// Save current settings on new .ini files
-					pConfig->WriteSettings();
+					re4t::cfg->WriteSettings();
 
 					// Done
 					updt.UpdateStatus = UpdateStatus::Success;
@@ -249,7 +249,7 @@ void updateDownloadApply()
 					updt.UpdateStatus = UpdateStatus::Failed;
 
 					// Try to restore the dll
-					MoveFileExA(module_path_del.c_str(), module_path.c_str(), MOVEFILE_REPLACE_EXISTING);
+					MoveFileExW(module_path_del.c_str(), module_path.c_str(), MOVEFILE_REPLACE_EXISTING);
 				}
 			}
 			else
@@ -264,7 +264,7 @@ void updateDownloadApply()
 	}
 
 	// Clear tmp dir
-	std::filesystem::remove_all(rootPath + "re4_tweaks\\tmp_updt");
+	std::filesystem::remove_all(rootPath + L"re4_tweaks\\tmp_updt");
 }
 
 void AutoUpdate::RenderUI()
@@ -272,8 +272,8 @@ void AutoUpdate::RenderUI()
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Min/Max window sizes
-	const float max_x = 415.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
-	const float max_y = 360.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
+	const float max_x = 415.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+	const float max_y = 360.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
 
 	if (updt.UpdateStatus == UpdateStatus::Available)
 	{
@@ -288,22 +288,22 @@ void AutoUpdate::RenderUI()
 			ImGui::Bullet(); ImGui::Text("Version available: %s", updt.version.c_str());
 			ImGui::Bullet(); ImGui::Text("Version installed: %s", std::string(APP_VERSION).c_str());
 
-			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale));
+			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 
 			ImGui::Text("Changelog:");
 
 			ImGui::Separator();
-			ImGui::BeginChild("chnglog", ImVec2(0, 130 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale));
+			ImGui::BeginChild("chnglog", ImVec2(0, 130 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 			ImGui::TextWrapped(updt.description.c_str());
 			ImGui::EndChild();
 			ImGui::Separator();
 			
-			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale));
+			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 
 			ImGui::Text("Do you want to update now?");
 			ImGui::Spacing();
 
-			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale, 35 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale);
+			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale, 35 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale);
 
 			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - btn_size.y - 10);
 
@@ -326,8 +326,8 @@ void AutoUpdate::RenderUI()
 
 			if (ImGui::Button("Never ask again", btn_size))
 			{
-				pConfig->bNeverCheckForUpdates = true;
-				pConfig->WriteSettings();
+				re4t::cfg->bNeverCheckForUpdates = true;
+				re4t::cfg->WriteSettings();
 				updt.UpdateStatus = UpdateStatus::Finished;
 			}
 
@@ -344,7 +344,7 @@ void AutoUpdate::RenderUI()
 			const ImU32 col = ImColor(255, 25, 40, 255);
 			const ImU32 bg = ImColor(143, 143, 143, 255);
 
-			ImVec2 bar_size = ImVec2(400 * pConfig->fdbg2, 25 * pConfig->fdbg2);
+			ImVec2 bar_size = ImVec2(400 * re4t::cfg->fdbg2, 25 * re4t::cfg->fdbg2);
 			
 			ImGui_BufferingBar("##buffer_bar", (float)(download_progress / 100.0f), bar_size, bg, col);
 
@@ -355,8 +355,8 @@ void AutoUpdate::RenderUI()
 	if (updt.UpdateStatus == UpdateStatus::Success)
 	{
 		// Min/Max window sizes
-		const float max_x = 400.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
-		const float max_y = 160.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
+		const float max_x = 400.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+		const float max_y = 160.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
 
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2(max_x, max_y), ImGuiCond_Always);
@@ -366,7 +366,7 @@ void AutoUpdate::RenderUI()
 		{
 			ImGui::TextWrapped("re4_tweaks has successfully been updated to version %s.\n\nPress OK to relaunch the game for the update to take effect!", updt.version.c_str());
 
-			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale, 35 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale);
+			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale, 35 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale);
 			
 			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - btn_size.y - 10);
 
@@ -377,8 +377,8 @@ void AutoUpdate::RenderUI()
 				updt.UpdateStatus = UpdateStatus::Finished;
 
 				// Relaunch the game
-				std::string bio4path = rootPath + "bio4.exe";
-				if ((int)ShellExecuteA(nullptr, "open", bio4path.c_str(), nullptr, nullptr, SW_SHOWDEFAULT) > 32)
+				std::wstring bio4path = rootPath + L"bio4.exe";
+				if ((int)ShellExecuteW(nullptr, L"open", bio4path.c_str(), nullptr, nullptr, SW_SHOWDEFAULT) > 32)
 				{
 					exit(0);
 					return;
@@ -392,8 +392,8 @@ void AutoUpdate::RenderUI()
 	if (updt.UpdateStatus == UpdateStatus::Failed)
 	{
 		// Min/Max window sizes
-		const float max_x = 400.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
-		const float max_y = 200.0f * esHook._cur_monitor_dpi * pConfig->fFontSizeScale;
+		const float max_x = 400.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+		const float max_y = 200.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
 
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2(max_x, max_y), ImGuiCond_Always);
@@ -405,7 +405,7 @@ void AutoUpdate::RenderUI()
 
 			ImGui::TextWrapped(fail_msg.c_str());
 
-			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale, 35 * esHook._cur_monitor_dpi * pConfig->fFontSizeScale);
+			ImVec2 btn_size = ImVec2(104 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale, 35 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale);
 
 			ImGui::SetCursorPosY(ImGui::GetWindowSize().y - btn_size.y - 10);
 

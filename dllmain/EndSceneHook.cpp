@@ -32,7 +32,7 @@ bool ParseImGuiUIFocusCombo(std::string_view in_combo)
 		return false;
 
 	KeyImGuiUIFocus.clear();
-	KeyImGuiUIFocus = ParseKeyCombo(in_combo);
+	KeyImGuiUIFocus = re4t::cfg->ParseKeyCombo(in_combo);
 
 	pInput->RegisterHotkey({ []() {
 		bImGuiUIFocus = !bImGuiUIFocus;
@@ -291,7 +291,7 @@ void BuildFontAtlas()
 	io.Fonts->Clear();
 
 	float fFontSize = 18.1f; // Base size
-	fFontSize *= pConfig->fFontSizeScale;
+	fFontSize *= re4t::cfg->fFontSizeScale;
 	fFontSize *= esHook._cur_monitor_dpi;
 
 	// Add IBM Plex Sans JP Medium for text
@@ -328,12 +328,12 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 
 	esHook._imgui_context = ImGui::CreateContext();
 
-	if (pConfig->bEnableDPIScale)
+	if (re4t::cfg->bEnableDPIScale)
 		esHook._cur_monitor_dpi = ImGui_ImplWin32_GetDpiScaleForHwnd(hWindow);
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	static const std::string path = rootPath + "re4_tweaks/imgui.ini";
+	static const std::string path = WstrToStr(rootPath) + "re4_tweaks/imgui.ini";
 	io.IniFilename = path.c_str();
 
 	BuildFontAtlas();
@@ -344,7 +344,7 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplDX9_Init(pDevice);
 
 	// Update console window title
-	con.TitleKeyCombo = pConfig->sConsoleKeyCombo;
+	con.TitleKeyCombo = re4t::cfg->sConsoleKeyCombo;
 
 	// Update cfgMenu window title
 	cfgMenuTitle.append(" v");
@@ -383,12 +383,12 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	Trainer_Update();
 
 	// Show cfgMenu tip
-	if (!pConfig->bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
+	if (!re4t::cfg->bDisableMenuTip && ((esHook._last_present_time - esHook._start_time) < std::chrono::seconds(10)))
 		ShowCfgMenuTip();
 
 	if (ShowDebugTrgHint)
 	{
-		if (pConfig->bTrainerShowDebugTrgHintText)
+		if (re4t::cfg->bTrainerShowDebugTrgHintText)
 			Trainer_DrawDebugTrgHint();
 		ShowDebugTrgHint = false; // always reset ShowDebugTrgHint regardless of ShowHintText value, otherwise it could appear next time user enables option...
 	}

@@ -26,7 +26,7 @@ uintptr_t* knife_r3_set40_jmpAddr;
 
 double CameraControl__getCameraPitch_hook()
 {
-	if (!pConfig->bCameraImprovements)
+	if (!re4t::cfg->bCameraImprovements)
 		return 0.0;
 
 	if (isController())
@@ -66,7 +66,7 @@ void __declspec(naked) knife_r3_set40_hook()
 {
 	__asm {pushad}
 
-	if (pConfig->bCameraImprovements)
+	if (re4t::cfg->bCameraImprovements)
 	{
 		__asm 
 		{
@@ -89,7 +89,7 @@ void __declspec(naked) knife_r3_set40_hook()
 	}
 }
 
-void Init_CameraTweaks()
+void re4t::init::CameraTweaks()
 {
 	auto pattern = hook::pattern("E8 ? ? ? ? D9 5D EC D9 EE D9 45 EC");
 	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CameraControl__getCameraPitch_hook, PATCH_JUMP);
@@ -129,7 +129,7 @@ void Init_CameraTweaks()
 			else // Classic
 				dMouseMulti = 70.0;
 
-			dMouseMulti /= (double)pConfig->fCameraSensitivity;
+			dMouseMulti /= (double)re4t::cfg->fCameraSensitivity;
 
 			__asm {fld dMouseMulti}
 		}
@@ -144,7 +144,7 @@ void Init_CameraTweaks()
 			// Original multi was just deltaTime
 			float fNewMulti = GlobalPtr()->deltaTime_70;
 
-			if (pConfig->bCameraImprovements && isKeyboardMouse())
+			if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 				fNewMulti *= 1.5f;
 
 			// Code we replaced
@@ -178,7 +178,7 @@ void Init_CameraTweaks()
 			if (*fCameraPosX != 0.0f)
 				fCameraPosX_backup = *fCameraPosX;
 
-			if (!pConfig->bCameraImprovements || isController())
+			if (!re4t::cfg->bCameraImprovements || isController())
 			{
 				float tmp = 0.0f;
 				float tmp2 = 0.0f;
@@ -201,7 +201,7 @@ void Init_CameraTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (!pConfig->bCameraImprovements || isController())
+			if (!re4t::cfg->bCameraImprovements || isController())
 			{
 				*fMousePosX = *(float*)(regs.ebp - 0x508);
 				*fMousePosY = *(float*)(regs.ebp - 0x50C);
@@ -216,7 +216,7 @@ void Init_CameraTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (pConfig->bCameraImprovements && isKeyboardMouse())
+			if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 			{
 				// Invert the X float if it reaches its limit.
 				// Makes it so we can fully rotate the camera.
@@ -248,7 +248,7 @@ void Init_CameraTweaks()
 			float fNewY;
 			float range = *C_RANGE_1097;
 
-			if (pConfig->bCameraImprovements && isKeyboardMouse())
+			if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 				fNewY = -(*fMousePosY * 127.0f);
 			else
 				fNewY = (float)*AnalogRY_9;
@@ -276,7 +276,7 @@ void Init_CameraTweaks()
 
 			*(float*)(regs.esi + 0x204) = tmp;
 
-			if (pConfig->bCameraImprovements && isKeyboardMouse())
+			if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 				*fMousePosX = 0.0f;
 		}
 	}; injector::MakeInline<calcDepressionRatioKeepXYZero>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -308,9 +308,9 @@ void Init_CameraTweaks()
 			// Code we replaced
 			*(uint32_t*)(regs.esi + 0xFC) = 0x4020300;
 
-			if (pConfig->bCameraImprovements 
-				&& pConfig->bResetCameraWhenRunning 
-				&& !pConfig->bUseMouseTurning
+			if (re4t::cfg->bCameraImprovements 
+				&& re4t::cfg->bResetCameraWhenRunning 
+				&& !re4t::cfg->bUseMouseTurning
 				&& isKeyboardMouse())
 			{
 				*fMousePosX = 0.0f;
@@ -330,7 +330,7 @@ void Init_CameraTweaks()
 			regs.ebp = regs.esp;
 			regs.eax = *(uint32_t*)(regs.ebp + 0x8);
 
-			if (pConfig->bCameraImprovements && isKeyboardMouse())
+			if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 			{
 				// Reseting AnalogRX_8 here fixes a weird issue that would occur in the vanilla game.
 				// When turning the camera to the side, pressing the aim button, and then releasing it, the camera
@@ -353,7 +353,7 @@ void Init_CameraTweaks()
 		void operator()(injector::reg_pack& regs)
 		{
 			// MouseTurn type A needs this regardless of whether or not CameraImprovements is enabled.
-			if (!pConfig->bCameraImprovements && !(pConfig->bUseMouseTurning && (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)))
+			if (!re4t::cfg->bCameraImprovements && !(re4t::cfg->bUseMouseTurning && (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)))
 			{
 				float tmp = 0.0f;
 				__asm {fst tmp}
@@ -372,7 +372,7 @@ void Init_CameraTweaks()
 			__asm {fstp tmp}
 
 			// MouseTurn type A needs this regardless of whether or not CameraImprovements is enabled.
-			if (!pConfig->bCameraImprovements && !(pConfig->bUseMouseTurning && (pConfig->iMouseTurnType == MouseTurnTypes::TypeA)))
+			if (!re4t::cfg->bCameraImprovements && !(re4t::cfg->bUseMouseTurning && (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)))
 			{
 				*fMousePosY = tmp;
 			}
@@ -386,7 +386,7 @@ void Init_CameraTweaks()
 	{
 		void operator()(injector::reg_pack& regs)
 		{
-			if (!pConfig->bCameraImprovements && isKeyboardMouse())
+			if (!re4t::cfg->bCameraImprovements && isKeyboardMouse())
 			{
 				*fMousePosY = 0.0f;
 			}
@@ -408,7 +408,7 @@ void Init_CameraTweaks()
 			float tmp = 0.0f;
 			__asm {fst tmp}
 
-			if (!pConfig->bCameraImprovements || isController())
+			if (!re4t::cfg->bCameraImprovements || isController())
 				*wepPitch = tmp;
 			else
 				*wepPitch = std::clamp(tmp, -1.0f, 1.0f);
@@ -431,7 +431,7 @@ void Init_CameraTweaks()
 			// you had to move the mouse all the way down before fCameraPosY would begin decreasing again.
 			// This solution is just better. We also allow fCameraPosY to go a bit above/beyond 1.0f/-1.0f to give a bit more
 			// range to the camera.
-			if (pConfig->bCameraImprovements && isKeyboardMouse())
+			if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 				*fMousePosY = std::clamp(*fMousePosY, -0.44f, 0.44f);
 			else // Vanilla behavior.
 			{
@@ -455,7 +455,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (pConfig->bCameraImprovements && isKeyboardMouse())
+				if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 					regs.ef |= (1 << regs.zero_flag);
 				else
 					regs.ef &= ~(1 << regs.zero_flag);
@@ -481,7 +481,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bCameraImprovements || isController())
+				if (!re4t::cfg->bCameraImprovements || isController())
 				{
 					*wepPitch = 0.0f;
 				}
@@ -500,7 +500,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bCameraImprovements || isController())
+				if (!re4t::cfg->bCameraImprovements || isController())
 				{
 					*wepPitch = 0.0f;
 				}
@@ -519,7 +519,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (pConfig->bCameraImprovements)
+				if (re4t::cfg->bCameraImprovements)
 					regs.ef |= (1 << regs.zero_flag);
 				else
 					regs.ef &= ~(1 << regs.zero_flag);
@@ -533,7 +533,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if ((bool)regs.eax || (pConfig->bCameraImprovements && isKeyboardMouse()))
+				if ((bool)regs.eax || (re4t::cfg->bCameraImprovements && isKeyboardMouse()))
 				{
 					*(uint32_t*)(regs.esi + 0xFC) = 0x10600;
 
@@ -552,7 +552,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bCameraImprovements || isController())
+				if (!re4t::cfg->bCameraImprovements || isController())
 					*wepPitch = 0.0f;
 			}
 		}; injector::MakeInline<wep19_r3_ready00>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -572,7 +572,7 @@ void Init_CameraTweaks()
 			{
 				regs.ecx = *(uint32_t*)(regs.esi + 0x7D8);
 
-				if (pConfig->bCameraImprovements && isKeyboardMouse())
+				if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 				{
 					PlayerPtr()->ang_A0.y += fCameraPosX_backup;
 					*fMousePosX += fCameraPosX_backup;
@@ -589,7 +589,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (pConfig->bCameraImprovements && isKeyboardMouse())
+				if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
 				{
 					*(uint32_t*)(regs.esi + 0x428) = 0;
 				}
@@ -604,7 +604,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bCameraImprovements || isController())
+				if (!re4t::cfg->bCameraImprovements || isController())
 				{
 					*fMousePosX = 0.0f;
 				}
@@ -616,7 +616,7 @@ void Init_CameraTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bCameraImprovements || isController())
+				if (!re4t::cfg->bCameraImprovements || re4t::cfg->bResetCameraAfterUsingKnife || isController())
 				{
 					*fMousePosY = 0.0f;
 				}

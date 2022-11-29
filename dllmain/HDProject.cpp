@@ -11,7 +11,7 @@
 const float fOptionsScale = 2.0f;
 const int iFixImagesScale = 4;
 
-void Init_HDProject()
+void re4t::init::HDProject()
 {
 	// BIO4\option\xxx_option.fix
 	{
@@ -27,7 +27,7 @@ void Init_HDProject()
 		pattern = hook::pattern("DC 0D ? ? ? ? D9 C0 DE CA D9 47 ? DE C2 D9 C9 E8 ? ? ? ? D9 C9 0F B7 ? E8");
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(2), &dNewScale, true);
 
-		if (pConfig->bVerboseLog)
+		if (re4t::cfg->bVerboseLog)
 		{
 			spd::log()->info("HDProject: \"option\\xxx_option.fix\": dNewScale = {}", dNewScale);
 		}
@@ -52,7 +52,7 @@ void Init_HDProject()
 				*(uint32_t*)(regs.esi + 0x4) = regs.ecx / iFixImagesScale;
 				*(uint32_t*)(regs.esi + 0x8) = regs.edx / iFixImagesScale;
 
-				if (pConfig->bVerboseLog)
+				if (re4t::cfg->bVerboseLog)
 				{
 					spd::log()->info("+-------------------------+-------------------------+");
 					spd::log()->info("HDProject: ***.fix: originalX = {}, scaledX = {}", regs.ecx, regs.ecx / iFixImagesScale);

@@ -40,7 +40,7 @@ bool ParseToolMenuKeyCombo(std::string_view in_combo)
 		return false;
 
 	toolMenuKeyCombo.clear();
-	toolMenuKeyCombo = ParseKeyCombo(in_combo);
+	toolMenuKeyCombo = re4t::cfg->ParseKeyCombo(in_combo);
 
 	return toolMenuKeyCombo.size() > 0;
 }
@@ -397,7 +397,7 @@ void GetToolMenuPointers()
 	LightTool_GetPointers();
 }
 
-void Init_ToolMenu()
+void re4t::init::ToolMenu()
 {
 	GetToolMenuPointers();
 
@@ -407,7 +407,7 @@ void Init_ToolMenu()
 	ReadCall(func, systemRestartInit_Orig);
 	InjectHook(func, systemRestartInit_Hook);
 
-	if (!pConfig->bEnableDebugMenu)
+	if (!re4t::cfg->bEnableDebugMenu)
 		return;
 
 	// Hook FlagEdit so we can slow it down by only exposing buttons to it when button state has changed at all

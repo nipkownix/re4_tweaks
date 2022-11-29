@@ -458,9 +458,9 @@ void MTXRotAxisRad(Mtx m, const Vec* axis, float rad)
 	m[2][3] = 0;
 }
 
-void Init_MathReimpl()
+void re4t::init::MathReimpl()
 {
-	if (pConfig->bEnableFastMath)
+	if (re4t::cfg->bEnableFastMath)
 	{
 		int cpuinfo[4];
 		__cpuid(cpuinfo, 1);

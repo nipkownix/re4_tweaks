@@ -56,17 +56,18 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>..\external\freetype\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>..\external\freetype\lib\debug_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
@@ -84,20 +85,21 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>
+      </UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>..\Wrappers\wrapper.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>..\external\freetype\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>..\external\freetype\lib\release_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
@@ -112,6 +114,535 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_adapter.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_annotation.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_buffer.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_common_buffer.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_common_texture.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_cursor.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_device.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_fixed_function.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_format.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_format_helpers.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_hud.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_initializer.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_interface.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_main.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_monitor.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_multithread.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_names.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_options.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_query.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_sampler.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_shader.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_state.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_stateblock.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_surface.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_swapchain.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_swvp_emu.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_texture.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_util.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_vertex_declaration.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\d3d9\d3d9_volume.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_analysis.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_chunk_isgn.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_chunk_shex.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_common.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_compiler.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_decoder.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_defs.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_header.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_module.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_names.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_options.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_reader.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxbc\dxbc_util.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_analysis.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_code.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_common.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_compiler.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_ctab.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_decoder.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_enums.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_header.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_module.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_options.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_reader.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_tables.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxso\dxso_util.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_adapter.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_barrier.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_buffer.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_cmdlist.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_compute.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_context.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_cs.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_data.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_descriptor.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_device.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_device_filter.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_extensions.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_fence.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_format.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_framebuffer.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_gpu_event.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_gpu_query.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_graphics.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_image.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_instance.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_lifetime.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_memory.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_meta_blit.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_meta_clear.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_meta_copy.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_meta_mipgen.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_meta_pack.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_meta_resolve.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_openvr.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_openxr.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_options.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipecache.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipecompiler.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipelayout.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipemanager.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_queue.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_renderpass.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_resource.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_sampler.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_shader.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_shader_key.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_signal.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_spec_const.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_staging.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_state_cache.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_stats.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_swapchain_blitter.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_unbound.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_util.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\hud\dxvk_hud.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\hud\dxvk_hud_font.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\hud\dxvk_hud_item.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\hud\dxvk_hud_renderer.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\platform\dxvk_win32_exts.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\spirv\spirv_code_buffer.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\spirv\spirv_compression.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\spirv\spirv_module.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\com\com_guid.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\com\com_private_data.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\config\config.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\log\log.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\log\log_debug.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\sha1\sha1.c" />
+    <ClCompile Include="..\dxvk\src\util\sha1\sha1_util.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\sync\sync_recursive.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\thread.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_env.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_fps_limiter.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_gdi.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_luid.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_matrix.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_monitor.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_shared_res.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\util\util_string.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\vulkan\vulkan_loader.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\vulkan\vulkan_names.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\vulkan\vulkan_presenter.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
     <ClCompile Include="..\external\eHooking\Hook.cpp" />
     <ClCompile Include="..\external\eHooking\HotPatch.cpp" />
     <ClCompile Include="..\external\eHooking\IATPatch.cpp" />
@@ -128,9 +659,11 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="..\external\ModUtils\Patterns.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
-    <ClCompile Include="..\Wrappers\wrapper.cpp" />
-    <ClCompile Include="60fpsFixes.cpp" />
+    <ClCompile Include="..\wrappers\wrappers.cpp" />
+    <ClCompile Include="FrameRateFixes.cpp" />
     <ClCompile Include="AudioTweaks.cpp" />
     <ClCompile Include="AutoUpdater.cpp" />
     <ClCompile Include="CameraTweaks.cpp" />
@@ -171,6 +704,249 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="ToolMenuLights.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dxvk\src\config.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_adapter.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_annotation.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_buffer.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_caps.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_common_buffer.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_common_texture.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_constant_layout.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_constant_set.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_cursor.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_device.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_device_child.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_fixed_function.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_format.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_format_helpers.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_hud.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_include.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_initializer.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_interface.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_main.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_monitor.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_multithread.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_names.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_options.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_query.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_resource.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_sampler.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_shader.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_shader_permutations.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_shader_validator.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_spec_constants.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_state.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_stateblock.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_subresource.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_surface.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_swapchain.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_swvp_emu.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_texture.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_util.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_vertex_declaration.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\d3d9_volume.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\shaders\d3d9_convert_a2w10v10u10.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\shaders\d3d9_convert_l6v5u5.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\shaders\d3d9_convert_nv12.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\shaders\d3d9_convert_x8l8v8u8.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\shaders\d3d9_convert_yuy2_uyvy.h" />
+    <ClInclude Include="..\dxvk\src\d3d9\shaders\d3d9_convert_yv12.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_analysis.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_chunk_isgn.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_chunk_shex.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_common.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_compiler.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_decoder.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_defs.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_enums.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_header.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_include.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_modinfo.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_module.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_names.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_options.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_reader.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_tag.h" />
+    <ClInclude Include="..\dxvk\src\dxbc\dxbc_util.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_analysis.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_code.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_common.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_compiler.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_ctab.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_decoder.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_enums.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_header.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_include.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_isgn.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_modinfo.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_module.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_options.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_reader.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_tables.h" />
+    <ClInclude Include="..\dxvk\src\dxso\dxso_util.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_adapter.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_annotation.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_barrier.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_bind_mask.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_buffer.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_cmdlist.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_compute.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_constant_state.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_context.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_context_state.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_cs.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_data.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_descriptor.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_device.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_device_filter.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_device_info.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_extensions.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_extension_provider.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_fence.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_format.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_framebuffer.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_gpu_event.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_gpu_query.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_graphics.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_graphics_state.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_hash.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_image.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_include.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_instance.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_lifetime.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_limits.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_memory.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_meta_blit.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_meta_clear.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_meta_copy.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_meta_mipgen.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_meta_pack.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_meta_resolve.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_objects.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_openvr.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_openxr.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_options.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipecache.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipecompiler.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipelayout.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipemanager.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_platform_exts.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_queue.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_recycler.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_renderpass.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_resource.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_sampler.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_shader.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_shader_key.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_signal.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_spec_const.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_staging.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_state_cache.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_state_cache_types.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_stats.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_swapchain_blitter.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_unbound.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_util.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_blit_frag_1d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_blit_frag_2d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_blit_frag_3d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_buffer_f.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_buffer_u.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image1darr_f.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image1darr_u.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image1d_f.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image1d_u.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image2darr_f.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image2darr_u.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image2d_f.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image2d_u.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image3d_f.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_clear_image3d_u.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_buffer_image.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_color_1d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_color_2d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_color_ms.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_depth_1d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_depth_2d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_depth_ms.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_depth_stencil_1d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_depth_stencil_2d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_copy_depth_stencil_ms.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_fullscreen_geom.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_fullscreen_layer_vert.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_fullscreen_vert.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_pack_d24s8.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_pack_d32s8.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_present_frag.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_present_frag_blit.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_present_frag_ms.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_present_frag_ms_amd.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_present_vert.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_resolve_frag_d.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_resolve_frag_ds.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_resolve_frag_f.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_resolve_frag_f_amd.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_resolve_frag_i.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_resolve_frag_u.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_unpack_d24s8.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_unpack_d24s8_as_d32s8.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\dxvk_unpack_d32s8.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\hud_graph_frag.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\hud_graph_vert.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\hud_text_frag.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\headers\hud_text_vert.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\hud\dxvk_hud.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\hud\dxvk_hud_font.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\hud\dxvk_hud_item.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\hud\dxvk_hud_renderer.h" />
+    <ClInclude Include="..\dxvk\src\spirv\spirv_code_buffer.h" />
+    <ClInclude Include="..\dxvk\src\spirv\spirv_compression.h" />
+    <ClInclude Include="..\dxvk\src\spirv\spirv_include.h" />
+    <ClInclude Include="..\dxvk\src\spirv\spirv_instruction.h" />
+    <ClInclude Include="..\dxvk\src\spirv\spirv_module.h" />
+    <ClInclude Include="..\dxvk\src\util\com\com_guid.h" />
+    <ClInclude Include="..\dxvk\src\util\com\com_include.h" />
+    <ClInclude Include="..\dxvk\src\util\com\com_object.h" />
+    <ClInclude Include="..\dxvk\src\util\com\com_pointer.h" />
+    <ClInclude Include="..\dxvk\src\util\com\com_private_data.h" />
+    <ClInclude Include="..\dxvk\src\util\config\config.h" />
+    <ClInclude Include="..\dxvk\src\util\log\log.h" />
+    <ClInclude Include="..\dxvk\src\util\log\log_debug.h" />
+    <ClInclude Include="..\dxvk\src\util\rc\util_rc.h" />
+    <ClInclude Include="..\dxvk\src\util\rc\util_rc_ptr.h" />
+    <ClInclude Include="..\dxvk\src\util\sha1\sha1.h" />
+    <ClInclude Include="..\dxvk\src\util\sha1\sha1_util.h" />
+    <ClInclude Include="..\dxvk\src\util\sync\sync_list.h" />
+    <ClInclude Include="..\dxvk\src\util\sync\sync_recursive.h" />
+    <ClInclude Include="..\dxvk\src\util\sync\sync_signal.h" />
+    <ClInclude Include="..\dxvk\src\util\sync\sync_spinlock.h" />
+    <ClInclude Include="..\dxvk\src\util\sync\sync_ticketlock.h" />
+    <ClInclude Include="..\dxvk\src\util\thread.h" />
+    <ClInclude Include="..\dxvk\src\util\util_bit.h" />
+    <ClInclude Include="..\dxvk\src\util\util_enum.h" />
+    <ClInclude Include="..\dxvk\src\util\util_env.h" />
+    <ClInclude Include="..\dxvk\src\util\util_error.h" />
+    <ClInclude Include="..\dxvk\src\util\util_flags.h" />
+    <ClInclude Include="..\dxvk\src\util\util_fps_limiter.h" />
+    <ClInclude Include="..\dxvk\src\util\util_gdi.h" />
+    <ClInclude Include="..\dxvk\src\util\util_lazy.h" />
+    <ClInclude Include="..\dxvk\src\util\util_likely.h" />
+    <ClInclude Include="..\dxvk\src\util\util_luid.h" />
+    <ClInclude Include="..\dxvk\src\util\util_math.h" />
+    <ClInclude Include="..\dxvk\src\util\util_matrix.h" />
+    <ClInclude Include="..\dxvk\src\util\util_misc.h" />
+    <ClInclude Include="..\dxvk\src\util\util_monitor.h" />
+    <ClInclude Include="..\dxvk\src\util\util_ratio.h" />
+    <ClInclude Include="..\dxvk\src\util\util_shared_res.h" />
+    <ClInclude Include="..\dxvk\src\util\util_small_vector.h" />
+    <ClInclude Include="..\dxvk\src\util\util_string.h" />
+    <ClInclude Include="..\dxvk\src\util\util_time.h" />
+    <ClInclude Include="..\dxvk\src\util\util_vector.h" />
+    <ClInclude Include="..\dxvk\src\version.h" />
+    <ClInclude Include="..\dxvk\src\vulkan\vulkan_loader.h" />
+    <ClInclude Include="..\dxvk\src\vulkan\vulkan_names.h" />
+    <ClInclude Include="..\dxvk\src\vulkan\vulkan_presenter.h" />
+    <ClInclude Include="..\dxvk\src\vulkan\vulkan_util.h" />
     <ClInclude Include="..\external\eHooking\Hook.h" />
     <ClInclude Include="..\external\imgui\imconfig.h" />
     <ClInclude Include="..\external\imgui\imgui.h" />
@@ -191,51 +967,42 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\external\injector\include\injector\utility.hpp" />
     <ClInclude Include="..\external\miniz\miniz.h" />
     <ClInclude Include="..\external\ModUtils\DelimStringReader.h" />
-    <ClInclude Include="..\external\ModUtils\HookInit.hpp" />
-    <ClInclude Include="..\external\ModUtils\LateStaticInit.h" />
-    <ClInclude Include="..\external\ModUtils\MemoryMgr.GTA.h" />
     <ClInclude Include="..\external\ModUtils\MemoryMgr.h" />
-    <ClInclude Include="..\external\ModUtils\ModuleList.hpp" />
     <ClInclude Include="..\external\ModUtils\Patterns.h" />
-    <ClInclude Include="..\external\ModUtils\Trampoline.h" />
     <ClInclude Include="..\external\spdlog\include\spdlog\spdlog.h" />
     <ClInclude Include="..\includes\exception.hpp" />
     <ClInclude Include="..\includes\FAhashes.h" />
     <ClInclude Include="..\includes\FAprolight.hpp" />
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp" />
     <ClInclude Include="..\includes\log.h" />
+    <ClInclude Include="..\includes\ModuleList.hpp" />
     <ClInclude Include="..\settings\settings.ini">
       <FileType>Text</FileType>
     </ClInclude>
     <ClInclude Include="..\settings\trainer_settings.ini">
       <FileType>Text</FileType>
     </ClInclude>
-    <ClInclude Include="..\Wrappers\bcrypt.h" />
-    <ClInclude Include="..\Wrappers\cryptsp.h" />
-    <ClInclude Include="..\Wrappers\d2d1.h" />
-    <ClInclude Include="..\Wrappers\d3d10.h" />
-    <ClInclude Include="..\Wrappers\d3d11.h" />
-    <ClInclude Include="..\Wrappers\d3d12.h" />
-    <ClInclude Include="..\Wrappers\d3d8.h" />
-    <ClInclude Include="..\Wrappers\d3d9.h" />
-    <ClInclude Include="..\Wrappers\dciman32.h" />
-    <ClInclude Include="..\Wrappers\ddraw.h" />
-    <ClInclude Include="..\Wrappers\dinput.h" />
-    <ClInclude Include="..\Wrappers\dinput8.h" />
-    <ClInclude Include="..\Wrappers\dplayx.h" />
-    <ClInclude Include="..\Wrappers\dsound.h" />
-    <ClInclude Include="..\Wrappers\dwmapi.h" />
-    <ClInclude Include="..\Wrappers\msacm32.h" />
-    <ClInclude Include="..\Wrappers\msvfw32.h" />
-    <ClInclude Include="..\Wrappers\shared.h" />
-    <ClInclude Include="..\Wrappers\version.h" />
-    <ClInclude Include="..\Wrappers\wininet.h" />
-    <ClInclude Include="..\Wrappers\winmm.h" />
-    <ClInclude Include="..\Wrappers\wrapper.h" />
-    <ClInclude Include="..\Wrappers\wsock32.h" />
-    <ClInclude Include="..\Wrappers\x3daudio1_7.h" />
-    <ClInclude Include="..\Wrappers\xinput1_3.h" />
-    <ClInclude Include="AutoUpdater.h" />
+    <ClInclude Include="..\wrappers\bink2w64.h" />
+    <ClInclude Include="..\wrappers\binkw32.h" />
+    <ClInclude Include="..\wrappers\d3d10.h" />
+    <ClInclude Include="..\wrappers\d3d11.h" />
+    <ClInclude Include="..\wrappers\d3d12.h" />
+    <ClInclude Include="..\wrappers\d3d8.h" />
+    <ClInclude Include="..\wrappers\d3d9.h" />
+    <ClInclude Include="..\wrappers\ddraw.h" />
+    <ClInclude Include="..\wrappers\dinput.h" />
+    <ClInclude Include="..\wrappers\dinput8.h" />
+    <ClInclude Include="..\wrappers\dsound.h" />
+    <ClInclude Include="..\wrappers\msacm32.h" />
+    <ClInclude Include="..\wrappers\msvfw32.h" />
+    <ClInclude Include="..\wrappers\shared.h" />
+    <ClInclude Include="..\wrappers\version.h" />
+    <ClInclude Include="..\wrappers\wininet.h" />
+    <ClInclude Include="..\wrappers\winmm.h" />
+    <ClInclude Include="..\wrappers\wrappers.h" />
+    <ClInclude Include="..\wrappers\X3DAudio1_7.h" />
+    <ClInclude Include="..\wrappers\xinput1_3.h" />
+    <ClInclude Include="AudioTweaks.h" />
     <ClInclude Include="D3D9hook.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Game.h" />
@@ -290,10 +1057,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ResourceCompile Include="dllmain.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Wrappers\wrapper.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\Wrappers\License.txt" />
+    <None Include="..\wrappers\x86.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

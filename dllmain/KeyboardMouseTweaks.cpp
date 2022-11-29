@@ -24,7 +24,7 @@ bool ParseJetSkiTrickCombo(std::string_view in_combo)
 		return false;
 
 	jetSkiTrickCombo.clear();
-	jetSkiTrickCombo = ParseKeyCombo(in_combo);
+	jetSkiTrickCombo = re4t::cfg->ParseKeyCombo(in_combo);
 
 	return jetSkiTrickCombo.size() > 0;
 }
@@ -137,7 +137,7 @@ int WINAPI ShowCursor_hook(BOOL bShow)
 FARPROC p_ShowCursor = nullptr;
 void InstallShowCursor_hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking ShowCursor...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -156,7 +156,7 @@ HCURSOR WINAPI SetCursor_hook(HCURSOR hCursor)
 FARPROC p_SetCursor = nullptr;
 void InstallSetCursor_hook()
 {
-	if (pConfig->bVerboseLog)
+	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("Hooking SetCursor...");
 
 	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
@@ -165,12 +165,12 @@ void InstallSetCursor_hook()
 	SetCursor_orig = (decltype(SetCursor_orig))InterlockedCompareExchangePointer((PVOID*)&p_SetCursor, nullptr, nullptr);
 }
 
-void Init_KeyboardMouseTweaks()
+void re4t::init::KeyboardMouseTweaks()
 {
-	Init_MouseTurning();
+	re4t::init::MouseTurning();
 
 	// Useful when debugging/breakpointing
-	if (pConfig->bNeverHideCursor)
+	if (re4t::cfg->bNeverHideCursor)
 	{
 		InstallShowCursor_hook();
 		InstallSetCursor_hook();
@@ -185,7 +185,7 @@ void Init_KeyboardMouseTweaks()
 			void operator()(injector::reg_pack& regs)
 			{
 				double deltaX = 0;
-				if (pConfig->bUseRawMouseInput)
+				if (re4t::cfg->bUseRawMouseInput)
 					deltaX = (pInput->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS();
 				else
 					deltaX = double(int(regs.eax));
@@ -206,7 +206,7 @@ void Init_KeyboardMouseTweaks()
 			void operator()(injector::reg_pack& regs)
 			{
 				double deltaY = 0;
-				if (pConfig->bUseRawMouseInput)
+				if (re4t::cfg->bUseRawMouseInput)
 					deltaY = -((pInput->raw_mouse_delta_y() / 6.0f) * g_MOUSE_SENS());
 				else
 					deltaY = double(int(regs.eax));
@@ -217,7 +217,7 @@ void Init_KeyboardMouseTweaks()
 			}
 		}; injector::MakeInline<MouseDeltaY>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		if (pConfig->bUseRawMouseInput)
+		if (re4t::cfg->bUseRawMouseInput)
 			spd::log()->info("{} -> Raw mouse input enabled", __FUNCTION__);
 	}
 
@@ -251,7 +251,7 @@ void Init_KeyboardMouseTweaks()
 
 				if (isKeyboardMouse())
 				{
-					if (pConfig->bUseRawMouseInput)
+					if (re4t::cfg->bUseRawMouseInput)
 					{
 						// Force aiming mode to "Modern". Our patch seems to break "Classic" mode somewhat, and that mode is irrelevant anyways.
 						if (GetMouseAimingMode() == MouseAimingModes::Classic)
@@ -291,7 +291,7 @@ void Init_KeyboardMouseTweaks()
 					regs.ef &= ~(1 << regs.carry_flag);
 				}
 
-				if (pConfig->bDetachCameraFromAim && isKeyboardMouse())
+				if (re4t::cfg->bDetachCameraFromAim && isKeyboardMouse())
 				{
 					// Make the game think the aiming mode is "Classic"
 					regs.ef |= (1 << regs.zero_flag);
@@ -309,7 +309,7 @@ void Init_KeyboardMouseTweaks()
 		pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? D9 05");
 		injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
-		if (pConfig->bDetachCameraFromAim)
+		if (re4t::cfg->bDetachCameraFromAim)
 			spd::log()->info("{} -> DetachCameraFromAim applied", __FUNCTION__);
 	}
 
@@ -325,10 +325,10 @@ void Init_KeyboardMouseTweaks()
 				
 				// input::is_key_pressed doesn't seem work reliably here. Not sure why, but using GetAsyncKeyState is fine since this code only runs if 
 				// the player is moving something in the inventory.
-				if ((GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemLeft)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemRight)) & 1))
+				if ((GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemLeft)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemRight)) & 1))
 					regs.eax = 0x00300000;
 
-				else if ((GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemUp)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(pConfig->sFlipItemDown)) & 1))
+				else if ((GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemUp)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemDown)) & 1))
 					regs.eax = 0x00C00000;
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -355,7 +355,7 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (pConfig->bFixRetryLoadMouseSelector)
+				if (re4t::cfg->bFixRetryLoadMouseSelector)
 				{
 					if (*(int32_t*)ptrRetryLoadDLGstate != 1)
 					{
@@ -369,7 +369,7 @@ void Init_KeyboardMouseTweaks()
 			}
 		}; injector::MakeInline<MouseMenuSelector>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	
-		if (pConfig->bFixRetryLoadMouseSelector)
+		if (re4t::cfg->bFixRetryLoadMouseSelector)
 			spd::log()->info("{} -> FixRetryLoadMouseSelector applied", __FUNCTION__);
 	}
 
@@ -381,17 +381,17 @@ void Init_KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!pConfig->bFixSniperZoom)
+				if (!re4t::cfg->bFixSniperZoom)
 					*(int32_t*)ptrRifleMovAddr = regs.eax;
 			}
 		}; injector::MakeInline<FixSniperZoom>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		if (pConfig->bFixSniperZoom)
+		if (re4t::cfg->bFixSniperZoom)
 			spd::log()->info("{} -> FixSniperZoom applied", __FUNCTION__);
 	}
 
 	// Fix the "focus animation" not looking as strong as when triggered with a controller
-	if (pConfig->bFixSniperFocus)
+	if (re4t::cfg->bFixSniperFocus)
 	{
 		pattern = hook::pattern("8B F1 8B 4D ? 57 85 C9 74 ? D9 56 ? 88 56");
 		struct FixScopeZoomFocus
@@ -438,7 +438,7 @@ void Init_KeyboardMouseTweaks()
 			{
 				regs.eax &= 1; // Code we overwrote
 
-				if (!pConfig->bUseSprintToggle)
+				if (!re4t::cfg->bUseSprintToggle)
 					regs.edx ^= regs.edx;
 			}
 		}; injector::MakeInline<SprintToggleHook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -451,7 +451,7 @@ void Init_KeyboardMouseTweaks()
 			{
 				regs.eax = regs.ecx; // Code we overwrote
 
-				if (!pConfig->bUseSprintToggle)
+				if (!re4t::cfg->bUseSprintToggle)
 					regs.eax &= 0x40;
 			}
 		}; injector::MakeInline<SprintToggleHook2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -479,7 +479,7 @@ void Init_KeyboardMouseTweaks()
 		}; injector::MakeInline<JetSkiTrickHook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
-	if (pConfig->bFallbackToEnglishKeyIcons)
+	if (re4t::cfg->bFallbackToEnglishKeyIcons)
 	{
 		// Get pointer to key icon data buffer
 		pattern = hook::pattern("53 56 57 68 00 04 00 00 6A 00 68 ? ? ? ?");
@@ -495,7 +495,7 @@ void Init_KeyboardMouseTweaks()
 
 		spd::log()->info("{} -> FallbackToEnglishKeyIcons applied", __FUNCTION__);
 
-		if (pConfig->bVerboseLog)
+		if (re4t::cfg->bVerboseLog)
 		{
 			// KeyboardLayout
 			wchar_t KeyboardLayoutBuff[25];

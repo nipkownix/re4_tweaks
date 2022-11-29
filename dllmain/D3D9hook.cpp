@@ -5,16 +5,54 @@
 #include "Patches.h"
 #include "Settings.h"
 
+#pragma warning(push, 0)
+#include "../dxvk/src/d3d9/d3d9_main.h"
+#include "../dxvk/src/config.h"
+#pragma warning(pop)
+
 static IDirect3D9* (WINAPI* orgDirect3DCreate9)(UINT SDKVersion);
 static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 {
-	spd::log()->info("{} -> Creating IDirect3D9 object", __FUNCTION__);
+	spd::log()->info("{} -> Creating IDirect3D9 object...", __FUNCTION__);
 
+	if (re4t::dxvk::cfg->bUseVulkanRenderer)
+	{
+		spd::log()->info("{} -> UseVulkanRenderer is enabled, using D3D9 -> VK translation layer...", __FUNCTION__);
+
+		// Check if vulkan-1.dll can be loaded, else fallback to d3d9
+		HMODULE vulkanDll = LoadLibraryA("vulkan-1.dll");
+
+		if (vulkanDll)
+		{
+			FreeLibrary(vulkanDll);
+
+			IDirect3D9Ex* pDirect3D = nullptr;
+			dxvk::CreateD3D9(false, &pDirect3D);
+
+			if (pDirect3D->GetAdapterCount() < 1)
+			{
+				spd::log()->info("{} -> Failed to get Vulkan adapter! Falling back to D3D9", __FUNCTION__);
+
+				// Cleanup
+				pDirect3D->Release();
+				pDirect3D = nullptr;
+			}
+			else
+			{
+				return new hook_Direct3D9(pDirect3D);
+			}
+		}
+		else
+		{
+			spd::log()->info("{} -> Failed to load vulkan-1.dll! Falling back to D3D9", __FUNCTION__);
+		}
+	}
+	
 	IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
 	return new hook_Direct3D9(d3dInterface);
 }
 
-void Init_D3D9Hook()
+void re4t::init::D3D9Hook()
 {
 	auto pattern = hook::pattern("E8 ? ? ? ? A3 ? ? ? ? 85 C0 75 17");
 
@@ -122,7 +160,7 @@ HMONITOR hook_Direct3D9::GetAdapterMonitor(UINT Adapter)
 HRESULT hook_Direct3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
 {
 	// Force v-sync off
-	if (pConfig->bDisableVsync)
+	if (re4t::cfg->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	IDirect3DDevice9* device = nullptr;
@@ -239,7 +277,7 @@ UINT hook_Direct3DDevice9::GetNumberOfSwapChains(void)
 HRESULT hook_Direct3DDevice9::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
 	// Force v-sync off
-	if (pConfig->bDisableVsync)
+	if (re4t::cfg->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	ImGui_ImplDX9_InvalidateDeviceObjects(); // Reset ImGui objects to prevent freezing
@@ -257,10 +295,10 @@ HRESULT hook_Direct3DDevice9::Present(const RECT* pSourceRect, const RECT* pDest
 	HRESULT res = m_direct3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 	if (res == D3DERR_DEVICELOST)
 	{
-		if (pConfig->bRestorePickupTransparency)
+		if (re4t::cfg->bRestorePickupTransparency)
 		{
 			// Avoid alt-tab crash when on item-pickup screen with bRestorePickupTransparency active
-			pConfig->bRestorePickupTransparency = false;
+			re4t::cfg->bRestorePickupTransparency = false;
 			restorePickupTransparency = true;
 		}
 	}
@@ -269,7 +307,7 @@ HRESULT hook_Direct3DDevice9::Present(const RECT* pSourceRect, const RECT* pDest
 		// Restore bRestorePickupTransparency if needed
 		if (restorePickupTransparency)
 		{
-			pConfig->bRestorePickupTransparency = true;
+			re4t::cfg->bRestorePickupTransparency = true;
 			restorePickupTransparency = false;
 		}
 	}

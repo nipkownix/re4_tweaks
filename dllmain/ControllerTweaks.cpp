@@ -16,7 +16,7 @@ float* fAnalogLY;
 float* fAnalogRX;
 float* fAnalogRY;
 
-void Init_ControllerTweaks()
+void re4t::init::ControllerTweaks()
 {
 	// Aiming speed
 	{
@@ -28,8 +28,8 @@ void Init_ControllerTweaks()
 			{
 				double aim_spd_val = *(double*)ptrAimSpeedFldAddr;
 
-				if (pConfig->bOverrideControllerSensitivity && isController())
-					aim_spd_val /= pConfig->fControllerSensitivity;
+				if (re4t::cfg->bOverrideControllerSensitivity && isController())
+					aim_spd_val /= re4t::cfg->fControllerSensitivity;
 
 				_asm {fld aim_spd_val}
 			}
@@ -38,7 +38,7 @@ void Init_ControllerTweaks()
 		pattern = hook::pattern("DD 05 ? ? ? ? DC F9 DD 05 ? ? ? ? DC FA D9 01");
 		injector::MakeInline<AimSpeed>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-		if (pConfig->bOverrideControllerSensitivity)
+		if (re4t::cfg->bOverrideControllerSensitivity)
 			spd::log()->info("{} -> Controller sensitivity changes applied", __FUNCTION__);
 	}
 
@@ -46,7 +46,7 @@ void Init_ControllerTweaks()
 	{
 		// Nop the extra deadzones that were added for Xinput inside PadRead
 		// No idea why this even exists since PadXinputRead also has deadzones for both sticks already. Oh well.
-		if (pConfig->bRemoveExtraXinputDeadzone)
+		if (re4t::cfg->bRemoveExtraXinputDeadzone)
 		{
 			auto pattern = hook::pattern("C6 46 ? ? 8A 46 ? 3A C1 7D ? 81 4E ? ? ? ? ? EB"); // RS X
 			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 4, true);
@@ -79,10 +79,10 @@ void Init_ControllerTweaks()
 				*(uint32_t*)(regs.esi - 0x44) = regs.edx;
 				*(uint32_t*)(regs.esi - 0x40) = regs.eax;
 
-				if (pConfig->bOverrideXinputDeadzone)
+				if (re4t::cfg->bOverrideXinputDeadzone)
 				{
-					*g_XInputDeadzone_LS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_LS);
-					*g_XInputDeadzone_RS = (int)(pConfig->fXinputDeadzone * iDefaultXIDeadzone_RS);
+					*g_XInputDeadzone_LS = (int)(re4t::cfg->fXinputDeadzone * iDefaultXIDeadzone_LS);
+					*g_XInputDeadzone_RS = (int)(re4t::cfg->fXinputDeadzone * iDefaultXIDeadzone_RS);
 				}
 				else
 				{

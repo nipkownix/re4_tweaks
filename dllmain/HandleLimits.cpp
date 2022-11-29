@@ -3,14 +3,14 @@
 #include "Settings.h"
 #include "Patches.h"
 
-void Init_HandleLimits()
+void re4t::init::HandleLimits()
 {
 	// SFD size
-	if (pConfig->bAllowHighResolutionSFD)
-		Init_sofdec();
+	if (re4t::cfg->bAllowHighResolutionSFD)
+		re4t::init::Sofdec();
 
 	// vertex buffers
-	if (pConfig->bRaiseVertexAlloc)
+	if (re4t::cfg->bRaiseVertexAlloc)
 	{
 		auto pattern = hook::pattern("68 80 1A 06 00 50 8B 41 ? FF D0 85 C0 0F 85 ? ? ? ? 46");
 		injector::WriteMemory<int>(pattern.count(2).get(0).get<uint32_t>(1), 800000, true);  // 400000 -> 800000
@@ -38,7 +38,7 @@ void Init_HandleLimits()
 	}
 
 	// Inventory screen mem
-	if (pConfig->bRaiseInventoryAlloc)
+	if (re4t::cfg->bRaiseInventoryAlloc)
 	{
 		const int SSOldSize = 0x34AC00;
 		const int SSNewSize = 0x2000000;

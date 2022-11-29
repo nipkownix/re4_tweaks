@@ -6,10 +6,10 @@
 
 void UI_Window::UpdateWindowTitle()
 {
-	if (pConfig->sTrainerFocusUIKeyCombo.empty())
+	if (re4t::cfg->sTrainerFocusUIKeyCombo.empty())
 		windowTitle = origWindowTitle;
 	else
-		windowTitle = origWindowTitle + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
+		windowTitle = origWindowTitle + " - " + re4t::cfg->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
 }
 
 std::string UI_EmManager::EmDisplayString(cEm& em, bool showEmPointers)
@@ -330,7 +330,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					else
 					{
 						ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
-						if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 245 * pConfig->fFontSizeScale * esHook._cur_monitor_dpi)))
+						if (ImGui::BeginTable("##flags", 2, ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, 245 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi)))
 						{
 							ImGui::TableNextColumn();
 
@@ -645,7 +645,7 @@ bool UI_Globals::Render(bool WindowMode)
 		}
 
 		ImGui::Text("Cur bound weapon IDs: %d %d %d %d %d", 
-			pConfig->iWeaponHotkeyWepIds[0], pConfig->iWeaponHotkeyWepIds[1], pConfig->iWeaponHotkeyWepIds[2], pConfig->iWeaponHotkeyWepIds[3], pConfig->iWeaponHotkeyWepIds[4]);
+			re4t::cfg->iWeaponHotkeyWepIds[0], re4t::cfg->iWeaponHotkeyWepIds[1], re4t::cfg->iWeaponHotkeyWepIds[2], re4t::cfg->iWeaponHotkeyWepIds[3], re4t::cfg->iWeaponHotkeyWepIds[4]);
 
 		ImGui::End();
 	}

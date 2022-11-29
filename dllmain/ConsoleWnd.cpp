@@ -27,7 +27,7 @@ bool ParseConsoleKeyCombo(std::string_view in_combo)
         return false;
 
     ConsoleCombo.clear();
-    ConsoleCombo = ParseKeyCombo(in_combo);
+    ConsoleCombo = re4t::cfg->ParseKeyCombo(in_combo);
 
     pInput->RegisterHotkey({ []() {
         bConsoleOpen = !bConsoleOpen;
@@ -153,18 +153,18 @@ void Draw(const char* title, bool* p_open = NULL)
 
     if (ImGui::CollapsingHeader("Debug"))
     {
-        ImGui::SliderFloat("fdbg1", &pConfig->fdbg1, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("fdbg2", &pConfig->fdbg2, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("fdbg3", &pConfig->fdbg3, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("fdbg4", &pConfig->fdbg4, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("fdbg5", &pConfig->fdbg5, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::SliderFloat("fdbg6", &pConfig->fdbg6, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg1", &re4t::cfg->fdbg1, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg2", &re4t::cfg->fdbg2, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg3", &re4t::cfg->fdbg3, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg4", &re4t::cfg->fdbg4, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg5", &re4t::cfg->fdbg5, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("fdbg6", &re4t::cfg->fdbg6, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
 
         ImGui::Spacing();
 
-        ImGui::Checkbox("bdbg1", &pConfig->bdbg1);
-        ImGui::Checkbox("bdbg2", &pConfig->bdbg2);
-        ImGui::Checkbox("bdbg3", &pConfig->bdbg3);
+        ImGui::Checkbox("bdbg1", &re4t::cfg->bdbg1);
+        ImGui::Checkbox("bdbg2", &re4t::cfg->bdbg2);
+        ImGui::Checkbox("bdbg3", &re4t::cfg->bdbg3);
     }
 
     // Options menu
@@ -225,7 +225,7 @@ void ConsoleOutput::ShowConsoleOutput()
     ImGui::SetNextWindowSize(ImVec2(500 * esHook._cur_monitor_dpi, 400 * esHook._cur_monitor_dpi), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowCollapsed(!bConsoleOpen);
 
-    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide") + " - " + pConfig->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
+    std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide") + " - " + re4t::cfg->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
     ImGui::Begin(name.data());
     ImGui::End();
     Draw(name.data());

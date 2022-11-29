@@ -663,7 +663,7 @@ bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
 	return true;
 }
 
-bool Init_Game()
+bool re4t::init::Game()
 {
 	// Detect game version
 	auto pattern = hook::pattern("31 2E ? ? ? 00 00 00 6D 6F 76 69 65 2F 64 65 6D 6F 30 65 6E 67 2E 73 66 64");

@@ -111,7 +111,7 @@ std::vector<uint32_t> KeyComboLastWeaponHotkey;
 
 void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 {
-	if (!pConfig->bWeaponHotkeysEnable)
+	if (!re4t::cfg->bWeaponHotkeysEnable)
 		return;
 
 	if (ImGuiShouldAcceptInput())
@@ -149,8 +149,8 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 				{
 					if (ItemPiece->pItem_24)
 					{
-						pConfig->iWeaponHotkeyWepIds[slotIdx] = ItemPiece->pItem_24->id_0;
-						pConfig->WriteSettings();
+						re4t::cfg->iWeaponHotkeyWepIds[slotIdx] = ItemPiece->pItem_24->id_0;
+						re4t::cfg->WriteSettings();
 						
 						// fall-thru to weapon switch code below, acts as an indicator that binding was set
 					}
@@ -160,11 +160,11 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 	}
 
 	// Not binding weapon, must be trying to switch to weapon instead
-	int weaponId = pConfig->iWeaponHotkeyWepIds[slotIdx];
+	int weaponId = re4t::cfg->iWeaponHotkeyWepIds[slotIdx];
 
 	// slotIdx is the actual weaponId if forceUseWepID is true
 	if (!forceUseWepID)
-		weaponId = pConfig->iWeaponHotkeyWepIds[slotIdx];
+		weaponId = re4t::cfg->iWeaponHotkeyWepIds[slotIdx];
 	else
 		weaponId = slotIdx;
 
@@ -172,7 +172,7 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 	{
 		static size_t weaponCycleIndex[5] = { 0 };
 
-		std::vector<int>& weaponCycle = pConfig->iWeaponHotkeyCycle[slotIdx];
+		std::vector<int>& weaponCycle = re4t::cfg->iWeaponHotkeyCycle[slotIdx];
 
 		size_t desiredIndex = weaponCycleIndex[slotIdx];
 
@@ -224,7 +224,7 @@ void Trainer_ParseKeyCombos()
 	// NoClip
 	{
 		KeyComboNoclipToggle.clear();
-		KeyComboNoclipToggle = ParseKeyCombo(pConfig->sTrainerNoclipKeyCombo);
+		KeyComboNoclipToggle = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerNoclipKeyCombo);
 
 		pInput->RegisterHotkey({ []() {
 			bool playerCollisionDisabled = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
@@ -235,27 +235,27 @@ void Trainer_ParseKeyCombos()
 	// Free cam
 	{
 		KeyComboFreeCamToggle.clear();
-		KeyComboFreeCamToggle = ParseKeyCombo(pConfig->sTrainerFreeCamKeyCombo);
+		KeyComboFreeCamToggle = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerFreeCamKeyCombo);
 
 		pInput->RegisterHotkey({ []() {
-			pConfig->bTrainerEnableFreeCam = !pConfig->bTrainerEnableFreeCam;
+			re4t::cfg->bTrainerEnableFreeCam = !re4t::cfg->bTrainerEnableFreeCam;
 		}, &KeyComboFreeCamToggle });
 	}
 
 	// SpeedOverride
 	{
 		KeyComboSpeedOverride.clear();
-		KeyComboSpeedOverride = ParseKeyCombo(pConfig->sTrainerSpeedOverrideKeyCombo);
+		KeyComboSpeedOverride = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerSpeedOverrideKeyCombo);
 
 		pInput->RegisterHotkey({ []() {
-			pConfig->bTrainerPlayerSpeedOverride = !pConfig->bTrainerPlayerSpeedOverride;
+			re4t::cfg->bTrainerPlayerSpeedOverride = !re4t::cfg->bTrainerPlayerSpeedOverride;
 		}, &KeyComboSpeedOverride });
 	}
 
 	// Move Ash to player
 	{
 		KeyComboAshToPlayer.clear();
-		KeyComboAshToPlayer = ParseKeyCombo(pConfig->sTrainerMoveAshToPlayerKeyCombo);
+		KeyComboAshToPlayer = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
 
 		pInput->RegisterHotkey({ []() {
 			MoveAshleyToPlayer();
@@ -265,7 +265,7 @@ void Trainer_ParseKeyCombos()
 	// DebugTrg
 	{
 		KeyComboDebugTrg.clear();
-		KeyComboDebugTrg = ParseKeyCombo(pConfig->sTrainerDebugTrgKeyCombo);
+		KeyComboDebugTrg = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerDebugTrgKeyCombo);
 	}
 
 	// WeaponHotkey
@@ -273,12 +273,12 @@ void Trainer_ParseKeyCombos()
 		for (int i = 0; i < 5; i++)
 		{
 			KeyComboWeaponHotkey[i].clear();
-			KeyComboWeaponHotkey[i] = ParseKeyCombo(pConfig->sWeaponHotkeys[i]);
+			KeyComboWeaponHotkey[i] = re4t::cfg->ParseKeyCombo(re4t::cfg->sWeaponHotkeys[i]);
 		}
 
 		{
 			KeyComboLastWeaponHotkey.clear();
-			KeyComboLastWeaponHotkey = ParseKeyCombo(pConfig->sLastWeaponHotkey);
+			KeyComboLastWeaponHotkey = re4t::cfg->ParseKeyCombo(re4t::cfg->sLastWeaponHotkey);
 		}
 
 		// TODO: make RegisterHotkey use std::function so that we could include `i` in the capture and handle this in the loop above...
@@ -296,10 +296,10 @@ void Trainer_ParseKeyCombos()
 void(__cdecl* j_GameAddPoint_orig)(int type);
 void __cdecl j_GameAddPoint_Hook(int type)
 {
-	if (pConfig->bTrainerOverrideDynamicDifficulty)
+	if (re4t::cfg->bTrainerOverrideDynamicDifficulty)
 	{
-		GlobalPtr()->dynamicDifficultyPoints_4F94 = pConfig->iTrainerDynamicDifficultyLevel * 1000 + 500;
-		GlobalPtr()->dynamicDifficultyLevel_4F98 = pConfig->iTrainerDynamicDifficultyLevel;
+		GlobalPtr()->dynamicDifficultyPoints_4F94 = re4t::cfg->iTrainerDynamicDifficultyLevel * 1000 + 500;
+		GlobalPtr()->dynamicDifficultyLevel_4F98 = re4t::cfg->iTrainerDynamicDifficultyLevel;
 		return;
 	}
 
@@ -309,7 +309,7 @@ void __cdecl j_GameAddPoint_Hook(int type)
 bool(__cdecl* cameraHitCheck_orig)(Vec *pCross, Vec *pNorm, Vec p0, Vec p1);
 bool __cdecl cameraHitCheck_hook(Vec *pCross, Vec *pNorm, Vec p0, Vec p1)
 {
-	if (pConfig->bTrainerEnableFreeCam)
+	if (re4t::cfg->bTrainerEnableFreeCam)
 		return false;
 	else
 		return cameraHitCheck_orig(pCross, pNorm, p0, p1);
@@ -322,7 +322,7 @@ bool ShowDebugTrgHint = false;
 // Gamepad combo is LB + B + X
 bool __cdecl DebugTrg_hook(uint32_t flag)
 {
-	if (!pConfig->bTrainerEnableDebugTrg)
+	if (!re4t::cfg->bTrainerEnableDebugTrg)
 		return false;
 
 	if (FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_PUBLICITY_VER)))
@@ -523,13 +523,13 @@ void Trainer_Init()
 				// Get pointer to cEm
 				cEm* Em_ptr = (cEm*)(regs.eax);
 
-				if (pConfig->bTrainerEnemyHPMultiplier)
+				if (re4t::cfg->bTrainerEnemyHPMultiplier)
 				{
 					float multi = 0.0f;
-					if (pConfig->bTrainerRandomHPMultiplier)
-						multi = GetRandomFloat(pConfig->fTrainerRandomHPMultiMin, pConfig->fTrainerRandomHPMultiMax);
+					if (re4t::cfg->bTrainerRandomHPMultiplier)
+						multi = GetRandomFloat(re4t::cfg->fTrainerRandomHPMultiMin, re4t::cfg->fTrainerRandomHPMultiMax);
 					else
-						multi = pConfig->fTrainerEnemyHPMultiplier;
+						multi = re4t::cfg->fTrainerEnemyHPMultiplier;
 
 					Em_ptr->hp_324 = (int16_t)(Em_ptr->hp_324 * multi);
 					Em_ptr->hp_max_326 = (int16_t)(Em_ptr->hp_max_326 * multi);
@@ -548,13 +548,13 @@ void Trainer_Init()
 				// Get pointer to cEm
 				cEm* Em_ptr = (cEm*)(regs.esi);
 
-				if (pConfig->bTrainerEnemyHPMultiplier)
+				if (re4t::cfg->bTrainerEnemyHPMultiplier)
 				{
 					float multi = 0.0f;
-					if (pConfig->bTrainerRandomHPMultiplier)
-						multi = GetRandomFloat(pConfig->fTrainerRandomHPMultiMin, pConfig->fTrainerRandomHPMultiMax);
+					if (re4t::cfg->bTrainerRandomHPMultiplier)
+						multi = GetRandomFloat(re4t::cfg->fTrainerRandomHPMultiMin, re4t::cfg->fTrainerRandomHPMultiMax);
 					else
-						multi = pConfig->fTrainerEnemyHPMultiplier;
+						multi = re4t::cfg->fTrainerEnemyHPMultiplier;
 
 					Em_ptr->hp_324 = (int16_t)(Em_ptr->hp_324 * multi);
 					Em_ptr->hp_max_326 = (int16_t)(Em_ptr->hp_max_326 * multi);
@@ -573,13 +573,13 @@ void Trainer_Init()
 				// Get pointer to cEm
 				cEm* Em_ptr = (cEm*)(regs.esi);
 
-				if (pConfig->bTrainerEnemyHPMultiplier)
+				if (re4t::cfg->bTrainerEnemyHPMultiplier)
 				{
 					float multi = 0.0f;
-					if (pConfig->bTrainerRandomHPMultiplier)
-						multi = GetRandomFloat(pConfig->fTrainerRandomHPMultiMin, pConfig->fTrainerRandomHPMultiMax);
+					if (re4t::cfg->bTrainerRandomHPMultiplier)
+						multi = GetRandomFloat(re4t::cfg->fTrainerRandomHPMultiMin, re4t::cfg->fTrainerRandomHPMultiMax);
 					else
-						multi = pConfig->fTrainerEnemyHPMultiplier;
+						multi = re4t::cfg->fTrainerEnemyHPMultiplier;
 
 					Em_ptr->hp_324 = (int16_t)(Em_ptr->hp_324 * multi);
 					Em_ptr->hp_max_326 = (int16_t)(Em_ptr->hp_max_326 * multi);
@@ -598,7 +598,7 @@ void Trainer_Init()
 				// Original cmp we replaced
 				bool isEqual = (*(uint8_t*)(regs.edi + 0x4FAD) == (uint8_t)regs.ecx);
 
-				if (!pConfig->bTrainerDisableEnemySpawn && isEqual)
+				if (!re4t::cfg->bTrainerDisableEnemySpawn && isEqual)
 					regs.ef |= (1 << regs.zero_flag);
 				else
 					regs.ef &= ~(1 << regs.zero_flag);
@@ -613,7 +613,7 @@ void Trainer_Init()
 				// Code we replaced
 				regs.edx = (uint32_t)GlobalPtr();
 
-				if (pConfig->bTrainerDisableEnemySpawn)
+				if (re4t::cfg->bTrainerDisableEnemySpawn)
 					regs.eax = 0;
 			}
 		}; injector::MakeInline<EmSetFromList2_hook1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -626,7 +626,7 @@ void Trainer_Init()
 				// Original cmp we replaced
 				bool isEqual = (*(uint8_t*)(regs.edx + 0x4FAD) == (uint8_t)regs.ecx);
 
-				if (!pConfig->bTrainerDisableEnemySpawn && isEqual)
+				if (!re4t::cfg->bTrainerDisableEnemySpawn && isEqual)
 					regs.ef |= (1 << regs.zero_flag);
 				else
 					regs.ef &= ~(1 << regs.zero_flag);
@@ -647,7 +647,7 @@ void Trainer_Init()
 				// Dead bodies have to disappear in room 11C, otherwise the game won't advance. Something about enemy recycling?
 				bool is11C = (GlobalPtr()->curRoomId_4FAC == 0x11C);
 
-				if (pConfig->bTrainerDeadBodiesNeverDisappear && !is11C)
+				if (re4t::cfg->bTrainerDeadBodiesNeverDisappear && !is11C)
 					regs.eax = 1;
 			}
 		}; injector::MakeInline<em10_R1_Die_Cramp_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -664,7 +664,7 @@ void Trainer_Init()
 				regs.eax = (uint32_t)AshleyPtr();
 
 				// Make game check for Leon's position against itself, instead of checking against Ashley's position.
-				if (pConfig->bTrainerAllowEnterDoorsWithoutAsh)
+				if (re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh)
 					regs.eax = (uint32_t)PlayerPtr();
 			}
 		}; injector::MakeInline<CheckAshleyActive_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -685,7 +685,7 @@ void Trainer_Init()
 			{
 				float direction;
 
-				if (pConfig->bTrainerEnableFreeCam)
+				if (re4t::cfg->bTrainerEnableFreeCam)
 					direction = fFreeCam_direction;
 				else
 					direction = CamCtrl->m_QuasiFPS_278.m_direction_ratio_208;
@@ -704,7 +704,7 @@ void Trainer_Init()
 			{
 				float depression;
 
-				if (pConfig->bTrainerEnableFreeCam)
+				if (re4t::cfg->bTrainerEnableFreeCam)
 					depression = fFreeCam_depression;
 				else
 					depression = CamCtrl->m_QuasiFPS_278.m_depression_ratio_204;
@@ -755,29 +755,29 @@ void Trainer_Update()
 	{
 		static bool prev_bPlayerSpeedOverride = false;
 		static float prev_PlayerSpeed = 0;
-		if (prev_bPlayerSpeedOverride != pConfig->bTrainerPlayerSpeedOverride)
+		if (prev_bPlayerSpeedOverride != re4t::cfg->bTrainerPlayerSpeedOverride)
 		{
-			if (pConfig->bTrainerPlayerSpeedOverride)
+			if (re4t::cfg->bTrainerPlayerSpeedOverride)
 			{
 				// changed from disabled -> enabled, backup previous speed value
 				prev_PlayerSpeed = player->Motion_1D8.Seq_speed_C0;
 			}
-			else if (!pConfig->bTrainerPlayerSpeedOverride)
+			else if (!re4t::cfg->bTrainerPlayerSpeedOverride)
 			{
 				// changed from enabled -> disabled, restore previous speed value
 				player->Motion_1D8.Seq_speed_C0 = prev_PlayerSpeed;
 			}
-			prev_bPlayerSpeedOverride = pConfig->bTrainerPlayerSpeedOverride;
+			prev_bPlayerSpeedOverride = re4t::cfg->bTrainerPlayerSpeedOverride;
 		}
 
-		if (pConfig->bTrainerPlayerSpeedOverride)
-			player->Motion_1D8.Seq_speed_C0 = pConfig->fTrainerPlayerSpeedOverride;
+		if (re4t::cfg->bTrainerPlayerSpeedOverride)
+			player->Motion_1D8.Seq_speed_C0 = re4t::cfg->fTrainerPlayerSpeedOverride;
 	}
 
 	// Handle the player's collision
 	if (pl_atariInfoFlagSet && 
 		!FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT)) &&
-		!pConfig->bTrainerEnableFreeCam)
+		!re4t::cfg->bTrainerEnableFreeCam)
 	{
 		// Restore collision flags
 		player->atari_2B4.m_flag_1A = pl_atariInfoFlagBackup;
@@ -786,7 +786,7 @@ void Trainer_Update()
 
 	// Handle Ashley's collision
 	cPlayer* ashley = AshleyPtr();
-	if (ashley && !pConfig->bTrainerEnableFreeCam)
+	if (ashley && !re4t::cfg->bTrainerEnableFreeCam)
 	{
 		// Restore collision flags
 		if (ash_atariInfoFlagSet)
@@ -807,10 +807,10 @@ void Trainer_Update()
 		player->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
 
 		// Handle numpad/mouse wheel movement
-		if (pConfig->bTrainerUseNumpadMovement && !pConfig->bTrainerEnableFreeCam)
+		if (re4t::cfg->bTrainerUseNumpadMovement && !re4t::cfg->bTrainerEnableFreeCam)
 		{
 			// Speed calculation
-			float movSpeed = 140.0f * pConfig->fTrainerNumMoveSpeed;
+			float movSpeed = 140.0f * re4t::cfg->fTrainerNumMoveSpeed;
 
 			// Cam directions
 			float Sine = CamCtrl->Camera_60.mat_0[2][0];
@@ -862,7 +862,7 @@ void Trainer_Update()
 			}
 
 			// Handle mouse wheel
-			if (pConfig->bTrainerUseMouseWheelUpDown && !ImGuiShouldAcceptInput())
+			if (re4t::cfg->bTrainerUseMouseWheelUpDown && !ImGuiShouldAcceptInput())
 			{
 				// Up
 				if (pInput->mouse_wheel_delta() > 0)
@@ -886,7 +886,7 @@ void Trainer_Update()
 	// Handle free camera
 	static bool stopPlFlagSet = false;
 	static float CamXYZbackup[3] = {0, 0, 0};
-	if (pConfig->bTrainerEnableFreeCam)
+	if (re4t::cfg->bTrainerEnableFreeCam)
 	{
 		// Camera rotation
 		if (isController())
@@ -961,7 +961,7 @@ void Trainer_Update()
 		}
 
 		// Speed calculation
-		float movSpeed = 140.0f * pConfig->fTrainerFreeCamSpeed;
+		float movSpeed = 140.0f * re4t::cfg->fTrainerFreeCamSpeed;
 
 		if (isPressingRun)
 			movSpeed *= 2.0f;
@@ -1076,7 +1076,7 @@ void Trainer_Update()
 
 void Trainer_ESP()
 {
-	if (!(pConfig->bShowSideInfo || pConfig->bShowESP))
+	if (!(re4t::cfg->bShowSideInfo || re4t::cfg->bShowESP))
 		return;
 
 	ImGui::PushFont(esHook.ESP_font);
@@ -1094,10 +1094,10 @@ void Trainer_ESP()
 		return;
 
 	// Draw side info
-	if (pConfig->bShowSideInfo)
+	if (re4t::cfg->bShowSideInfo)
 	{
 		// Drw Em count
-		if (pConfig->bSideShowEmCount)
+		if (re4t::cfg->bSideShowEmCount)
 		{
 			std::stringstream emCnt;
 			emCnt << "Em Count: " << emMgr.count_valid() << " | " << "Max: " << emMgr.count();
@@ -1106,9 +1106,9 @@ void Trainer_ESP()
 		}
 
 		// Draw Em list
-		if (pConfig->bSideShowEmList)
+		if (re4t::cfg->bSideShowEmList)
 		{
-			std::vector<cEm*> EnemiesVec = cEmMgr::GetVecClosestEms(pConfig->iSideClosestEmsAmount, pConfig->fSideMaxEmDistance, true, true, pConfig->bSideOnlyShowESLSpawned, true);
+			std::vector<cEm*> EnemiesVec = cEmMgr::GetVecClosestEms(re4t::cfg->iSideClosestEmsAmount, re4t::cfg->fSideMaxEmDistance, true, true, re4t::cfg->bSideOnlyShowESLSpawned, true);
 			std::reverse(EnemiesVec.begin(), EnemiesVec.end());
 
 			float InfoOffsetY = 60.0f;
@@ -1116,15 +1116,15 @@ void Trainer_ESP()
 			{
 				// Draw Em Name
 				std::stringstream EmName;
-				EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, pConfig->bSideShowSimpleNames);
-				if (!pConfig->bSideShowSimpleNames)
+				EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, re4t::cfg->bSideShowSimpleNames);
+				if (!re4t::cfg->bSideShowSimpleNames)
 				{
 					EmName << " (type " << (int)em->type_101 << ")";
 				}
 
 				ImGui::GetBackgroundDrawList()->AddText(ImVec2(10, screen_height - InfoOffsetY), ImColor(255, 255, 255, 255), EmName.str().c_str());
 
-				if ((pConfig->iSideEmHPMode != 0) && (em->hp_max_326 > 0))
+				if ((re4t::cfg->iSideEmHPMode != 0) && (em->hp_max_326 > 0))
 				{
 					float hp_percent = 0;
 					float hp_max = (float)em->hp_max_326;
@@ -1135,7 +1135,7 @@ void Trainer_ESP()
 					hp_percent = (float)em->hp_324 * 100.0f / hp_max;
 
 					// HP Bar
-					if (pConfig->iSideEmHPMode == 1)
+					if (re4t::cfg->iSideEmHPMode == 1)
 					{
 						float barScalex = 1.0f;
 
@@ -1144,7 +1144,7 @@ void Trainer_ESP()
 
 						InfoOffsetY += 12;
 					}
-					else if (pConfig->iSideEmHPMode == 2) // HP Text
+					else if (re4t::cfg->iSideEmHPMode == 2) // HP Text
 					{
 						char CurEmHp[256];
 						sprintf(CurEmHp, "Cur HP: %d", em->hp_324);
@@ -1166,19 +1166,19 @@ void Trainer_ESP()
 	}
 
 	// Draw ESP
-	if (pConfig->bShowESP)
+	if (re4t::cfg->bShowESP)
 	{
 		std::vector<cEm*> EmsVector;
-		if (pConfig->bEspOnlyShowClosestEms)
-			EmsVector = cEmMgr::GetVecClosestEms(pConfig->iEspClosestEmsAmount, pConfig->fEspMaxEmDistance, pConfig->bEspOnlyShowValidEms, pConfig->bEspOnlyShowEnemies, pConfig->bEspOnlyShowESLSpawned, pConfig->bEspOnlyShowAlive);
+		if (re4t::cfg->bEspOnlyShowClosestEms)
+			EmsVector = cEmMgr::GetVecClosestEms(re4t::cfg->iEspClosestEmsAmount, re4t::cfg->fEspMaxEmDistance, re4t::cfg->bEspOnlyShowValidEms, re4t::cfg->bEspOnlyShowEnemies, re4t::cfg->bEspOnlyShowESLSpawned, re4t::cfg->bEspOnlyShowAlive);
 		else
-			EmsVector = cEmMgr::GetVecClosestEms(emMgr.count(), pConfig->fEspMaxEmDistance, pConfig->bEspOnlyShowValidEms, pConfig->bEspOnlyShowEnemies, pConfig->bEspOnlyShowESLSpawned, pConfig->bEspOnlyShowAlive);
+			EmsVector = cEmMgr::GetVecClosestEms(emMgr.count(), re4t::cfg->fEspMaxEmDistance, re4t::cfg->bEspOnlyShowValidEms, re4t::cfg->bEspOnlyShowEnemies, re4t::cfg->bEspOnlyShowESLSpawned, re4t::cfg->bEspOnlyShowAlive);
 
 		for (auto& em : EmsVector)
 		{
 			auto coords = em->pos_94;
 
-			if (pConfig->bEspShowInfoOnTop)
+			if (re4t::cfg->bEspShowInfoOnTop)
 			{
 				// Replace coords.y with the y from the highest part instead
 				float highestPart = -FLT_MAX;
@@ -1200,9 +1200,9 @@ void Trainer_ESP()
 			if (WorldToScreen(coords, screenpos, pG->Camera_74.v_mat_30, pG->Camera_74.CamPoint_A4.Fovy_1C, screen_width, screen_height))
 			{
 				// Draw Em Name
-				if (pConfig->iEspEmNameMode != 0)
+				if (re4t::cfg->iEspEmNameMode != 0)
 				{
-					bool useSimpleNames = (pConfig->iEspEmNameMode == 2);
+					bool useSimpleNames = (re4t::cfg->iEspEmNameMode == 2);
 
 					std::stringstream EmName;
 					EmName << "#" << em->guid_F8 << " " << cEmMgr::EmIdToName(em->id_100, useSimpleNames);
@@ -1216,7 +1216,7 @@ void Trainer_ESP()
 				}
 
 				// Draw debug info
-				if (pConfig->bEspDrawDebugInfo)
+				if (re4t::cfg->bEspDrawDebugInfo)
 				{
 					char EmDbgInfo[256];
 					sprintf(EmDbgInfo, "0x%p, Rno %d-%d-%d-%d", em, int(em->r_no_0_FC), int(em->r_no_1_FD), int(em->r_no_2_FE), int(em->r_no_3_FF));
@@ -1226,7 +1226,7 @@ void Trainer_ESP()
 				}
 
 				// Draw HP
-				if ((pConfig->iEspEmHPMode != 0) && (em->hp_max_326 > 0))
+				if ((re4t::cfg->iEspEmHPMode != 0) && (em->hp_max_326 > 0))
 				{
 					float hp_percent = 0;
 					float hp_max = (float)em->hp_max_326;
@@ -1242,7 +1242,7 @@ void Trainer_ESP()
 					if (hp_percent)
 					{
 						// HP Bar
-						if (pConfig->iEspEmHPMode == 1)
+						if (re4t::cfg->iEspEmHPMode == 1)
 						{
 							float barScalex = 1.0f;
 
@@ -1269,7 +1269,7 @@ void Trainer_ESP()
 				}
 
 				// Draw lines pointing to the Em
-				if (pConfig->bEspDrawLines)
+				if (re4t::cfg->bEspDrawLines)
 					ImGui::GetBackgroundDrawList()->AddLine(ImVec2(io.DisplaySize.x / 2, io.DisplaySize.y), ImVec2(screenpos.x, screenpos.y + 5.0f), ImColor(255, 255, 255));
 			}
 		}
@@ -1285,7 +1285,7 @@ void Trainer_RenderUI(int columnCount)
 	ImColor active = ImColor(150, 10, 40, 255);
 	ImColor inactive = ImColor(31, 30, 31, 0);
 
-	ImVec2 btn_size = ImVec2(135 * pConfig->fFontSizeScale * esHook._cur_monitor_dpi, 31 * pConfig->fFontSizeScale * esHook._cur_monitor_dpi);
+	ImVec2 btn_size = ImVec2(135 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi, 31 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 
 	// Patches
 	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, btn_size);
@@ -1458,25 +1458,25 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Spacing();
 
 				ImGui::BeginDisabled(!DisablePlayerCollision);
-				if (ImGui::Checkbox("Numpad Movement", &pConfig->bTrainerUseNumpadMovement))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Numpad Movement", &re4t::cfg->bTrainerUseNumpadMovement))
+					re4t::cfg->HasUnsavedChanges = true;
 				ImGui::TextWrapped("Allows noclip movement via numpad.");
 
 				ImGui::Spacing();
 
-				if (ImGui::Checkbox("Use Mouse Wheel", &pConfig->bTrainerUseMouseWheelUpDown))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Use Mouse Wheel", &re4t::cfg->bTrainerUseMouseWheelUpDown))
+					re4t::cfg->HasUnsavedChanges = true;
 				ImGui::TextWrapped("Allows using the mouse wheel to go up and down.");
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				if (ImGui::SliderFloat("Speed##numpmov", &pConfig->fTrainerNumMoveSpeed, 0.0f, 10.0f, "%.2f"))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::SliderFloat("Speed##numpmov", &re4t::cfg->fTrainerNumMoveSpeed, 0.0f, 10.0f, "%.2f"))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				if (ImGui::Button("Reset##numpmov"))
 				{
-					pConfig->fTrainerNumMoveSpeed = 1.0f;
-					pConfig->HasUnsavedChanges = true;
+					re4t::cfg->fTrainerNumMoveSpeed = 1.0f;
+					re4t::cfg->HasUnsavedChanges = true;
 				}
 				ImGui::EndDisabled();
 			}
@@ -1485,8 +1485,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Enable Free Camera", &pConfig->bTrainerEnableFreeCam))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Enable Free Camera", &re4t::cfg->bTrainerEnableFreeCam))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1513,14 +1513,14 @@ void Trainer_RenderUI(int columnCount)
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::BeginDisabled(!pConfig->bTrainerEnableFreeCam);
-				if (ImGui::SliderFloat("Speed##freecam", &pConfig->fTrainerFreeCamSpeed, 0.0f, 10.0f, "%.2f"))
-					pConfig->HasUnsavedChanges = true;
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerEnableFreeCam);
+				if (ImGui::SliderFloat("Speed##freecam", &re4t::cfg->fTrainerFreeCamSpeed, 0.0f, 10.0f, "%.2f"))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				if (ImGui::Button("Reset##fcspdoverrid"))
 				{
-					pConfig->fTrainerFreeCamSpeed = 1.0f;
-					pConfig->HasUnsavedChanges = true;
+					re4t::cfg->fTrainerFreeCamSpeed = 1.0f;
+					re4t::cfg->HasUnsavedChanges = true;
 				}
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
@@ -1540,8 +1540,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Enable Player Speed Override", &pConfig->bTrainerPlayerSpeedOverride))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Enable Player Speed Override", &re4t::cfg->bTrainerPlayerSpeedOverride))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1552,14 +1552,14 @@ void Trainer_RenderUI(int columnCount)
 
 				ImGui::Spacing();
 
-				ImGui::BeginDisabled(!pConfig->bTrainerPlayerSpeedOverride);
-				if (ImGui::SliderFloat("Speed", &pConfig->fTrainerPlayerSpeedOverride, 0.0f, 50.0f, "%.2f"))
-					pConfig->HasUnsavedChanges = true;
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerPlayerSpeedOverride);
+				if (ImGui::SliderFloat("Speed", &re4t::cfg->fTrainerPlayerSpeedOverride, 0.0f, 50.0f, "%.2f"))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				if (ImGui::Button("Reset##spdoverrid"))
 				{
-					pConfig->fTrainerPlayerSpeedOverride = 1.0f;
-					pConfig->HasUnsavedChanges = true;
+					re4t::cfg->fTrainerPlayerSpeedOverride = 1.0f;
+					re4t::cfg->HasUnsavedChanges = true;
 				}
 				ImGui::EndDisabled();
 			}
@@ -1568,7 +1568,7 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				ImGui::Checkbox("Enable Difficulty Level Override", &pConfig->bTrainerOverrideDynamicDifficulty);
+				ImGui::Checkbox("Enable Difficulty Level Override", &re4t::cfg->bTrainerOverrideDynamicDifficulty);
 
 				ImGui_ItemSeparator();
 
@@ -1578,15 +1578,15 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::TextWrapped("(Affects enemy health, damage, speed, and aggression)");
 
 				ImGui::Spacing();
-				pConfig->iTrainerDynamicDifficultyLevel = GlobalPtr()->dynamicDifficultyLevel_4F98;
-				ImGui::BeginDisabled(!pConfig->bTrainerOverrideDynamicDifficulty);
-				ImGui::SliderInt("", &pConfig->iTrainerDynamicDifficultyLevel, 1, 10);
+				re4t::cfg->iTrainerDynamicDifficultyLevel = GlobalPtr()->dynamicDifficultyLevel_4F98;
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerOverrideDynamicDifficulty);
+				ImGui::SliderInt("", &re4t::cfg->iTrainerDynamicDifficultyLevel, 1, 10);
 				ImGui::EndDisabled();
 
 				if (ImGui::IsItemEdited())
 				{
-					GlobalPtr()->dynamicDifficultyPoints_4F94 = pConfig->iTrainerDynamicDifficultyLevel * 1000 + 500;
-					GlobalPtr()->dynamicDifficultyLevel_4F98 = pConfig->iTrainerDynamicDifficultyLevel;
+					GlobalPtr()->dynamicDifficultyPoints_4F94 = re4t::cfg->iTrainerDynamicDifficultyLevel * 1000 + 500;
+					GlobalPtr()->dynamicDifficultyLevel_4F98 = re4t::cfg->iTrainerDynamicDifficultyLevel;
 				}
 			}
 
@@ -1610,8 +1610,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Enemy HP Multiplier", &pConfig->bTrainerEnemyHPMultiplier))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Enemy HP Multiplier", &re4t::cfg->bTrainerEnemyHPMultiplier))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1619,49 +1619,49 @@ void Trainer_RenderUI(int columnCount)
 
 				ImGui::TextWrapped("Allows overriding the HP of enemies.");
 
-				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || pConfig->bTrainerRandomHPMultiplier);
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerEnemyHPMultiplier || re4t::cfg->bTrainerRandomHPMultiplier);
 
 				ImGui::TextWrapped("The new HP will be whatever their original HP was, multiplied by the value set here.");
 				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
 
 				ImGui::Spacing();
 
-				if (ImGui::SliderFloat("HP Multiplier", &pConfig->fTrainerEnemyHPMultiplier, 0.1f, 15.0f, "%.2f"))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::SliderFloat("HP Multiplier", &re4t::cfg->fTrainerEnemyHPMultiplier, 0.1f, 15.0f, "%.2f"))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				if (ImGui::Button("Reset##hpmulti"))
 				{
-					pConfig->fTrainerEnemyHPMultiplier = 1.0f;
-					pConfig->HasUnsavedChanges = true;
+					re4t::cfg->fTrainerEnemyHPMultiplier = 1.0f;
+					re4t::cfg->HasUnsavedChanges = true;
 				}
 				ImGui::EndDisabled();
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier);
-				pConfig->HasUnsavedChanges |= ImGui::Checkbox("Use random HP multiplier", &pConfig->bTrainerRandomHPMultiplier);
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerEnemyHPMultiplier);
+				re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("Use random HP multiplier", &re4t::cfg->bTrainerRandomHPMultiplier);
 				ImGui::EndDisabled();
-				ImGui::BeginDisabled(!pConfig->bTrainerEnemyHPMultiplier || !pConfig->bTrainerRandomHPMultiplier);
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerEnemyHPMultiplier || !re4t::cfg->bTrainerRandomHPMultiplier);
 				ImGui::TextWrapped("Randomly pick the HP multiplier of each enemy.");
 				ImGui::TextWrapped("You can also set the minimum and maximum values that can be generated.");
 				ImGui::TextWrapped("Ctrl+Click to input a custom value.");
 
 				ImGui::Spacing();
 
-				if (ImGui::SliderFloat("Random Min", &pConfig->fTrainerRandomHPMultiMin, 0.1f, 15.0f, "%.2f"))
+				if (ImGui::SliderFloat("Random Min", &re4t::cfg->fTrainerRandomHPMultiMin, 0.1f, 15.0f, "%.2f"))
 				{
-					if (pConfig->fTrainerRandomHPMultiMin > pConfig->fTrainerRandomHPMultiMax)
-						pConfig->fTrainerRandomHPMultiMin = pConfig->fTrainerRandomHPMultiMax;
+					if (re4t::cfg->fTrainerRandomHPMultiMin > re4t::cfg->fTrainerRandomHPMultiMax)
+						re4t::cfg->fTrainerRandomHPMultiMin = re4t::cfg->fTrainerRandomHPMultiMax;
 
-					pConfig->HasUnsavedChanges = true;
+					re4t::cfg->HasUnsavedChanges = true;
 				}
 
-				if (ImGui::SliderFloat("Random Max", &pConfig->fTrainerRandomHPMultiMax, 0.1f, 15.0f, "%.2f"))
+				if (ImGui::SliderFloat("Random Max", &re4t::cfg->fTrainerRandomHPMultiMax, 0.1f, 15.0f, "%.2f"))
 				{
-					if (pConfig->fTrainerRandomHPMultiMax < pConfig->fTrainerRandomHPMultiMin)
-						pConfig->fTrainerRandomHPMultiMax = pConfig->fTrainerRandomHPMultiMin;
+					if (re4t::cfg->fTrainerRandomHPMultiMax < re4t::cfg->fTrainerRandomHPMultiMin)
+						re4t::cfg->fTrainerRandomHPMultiMax = re4t::cfg->fTrainerRandomHPMultiMin;
 
-					pConfig->HasUnsavedChanges = true;
+					re4t::cfg->HasUnsavedChanges = true;
 				}
 
 				ImGui::EndDisabled();
@@ -1671,8 +1671,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Disable enemy spawn", &pConfig->bTrainerDisableEnemySpawn))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Disable enemy spawn", &re4t::cfg->bTrainerDisableEnemySpawn))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1686,8 +1686,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Dead bodies never disappear", &pConfig->bTrainerDeadBodiesNeverDisappear))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Dead bodies never disappear", &re4t::cfg->bTrainerDeadBodiesNeverDisappear))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1700,8 +1700,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Allow entering doors without Ashley", &pConfig->bTrainerAllowEnterDoorsWithoutAsh))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Allow entering doors without Ashley", &re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1714,8 +1714,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Enable DebugTrg function", &pConfig->bTrainerEnableDebugTrg))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Enable DebugTrg function", &re4t::cfg->bTrainerEnableDebugTrg))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1724,9 +1724,9 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::TextWrapped("Reimplements the games DebugTrg function, usually allowing certain sections of rooms/events to be skipped.");
 				ImGui::TextWrapped("Can be triggered by pressing LB + X + B together on controller, a hotkey can also be bound in the hotkeys page.");
 
-				ImGui::BeginDisabled(!pConfig->bTrainerEnableDebugTrg);
-				if (ImGui::Checkbox("Show DebugTrg hint on screen", &pConfig->bTrainerShowDebugTrgHintText))
-					pConfig->HasUnsavedChanges = true;
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerEnableDebugTrg);
+				if (ImGui::Checkbox("Show DebugTrg hint on screen", &re4t::cfg->bTrainerShowDebugTrgHintText))
+					re4t::cfg->HasUnsavedChanges = true;
 				ImGui::TextWrapped("Will display \"DebugTrg available!\" text on top-left whenever DebugTrg is being actively checked by the game.");
 				ImGui::EndDisabled();
 			}
@@ -1770,10 +1770,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(1);
-				if (ImGui::Button(pConfig->sTrainerFocusUIKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
+				if (ImGui::Button(re4t::cfg->sTrainerFocusUIKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerFocusUIKeyCombo, 0, NULL);
+					re4t::cfg->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerFocusUIKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1790,10 +1790,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(2);
-				if (ImGui::Button(pConfig->sTrainerNoclipKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
+				if (ImGui::Button(re4t::cfg->sTrainerNoclipKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerNoclipKeyCombo, 0, NULL);
+					re4t::cfg->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerNoclipKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1810,10 +1810,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(3);
-				if (ImGui::Button(pConfig->sTrainerFreeCamKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
+				if (ImGui::Button(re4t::cfg->sTrainerFreeCamKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerFreeCamKeyCombo, 0, NULL);
+					re4t::cfg->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerFreeCamKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1831,10 +1831,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(4);
-				if (ImGui::Button(pConfig->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
+				if (ImGui::Button(re4t::cfg->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerSpeedOverrideKeyCombo, 0, NULL);
+					re4t::cfg->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerSpeedOverrideKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1847,8 +1847,8 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Enable Weapon Hotkeys", &pConfig->bWeaponHotkeysEnable))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Enable Weapon Hotkeys", &re4t::cfg->bWeaponHotkeysEnable))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
@@ -1858,15 +1858,15 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::TextWrapped("By default hotkeys will cycle between weapons of different types, they can also be assigned to a weapon directly by highlighting the weapon in inventory and pressing the hotkey on it.");
 				ImGui::Spacing();
 
-				ImGui::BeginDisabled(!pConfig->bWeaponHotkeysEnable);
+				ImGui::BeginDisabled(!re4t::cfg->bWeaponHotkeysEnable);
 
 				for (int i = 0; i < 5; i++)
 				{
 					ImGui::PushID(250 + i);
-					if (ImGui::Button(pConfig->sWeaponHotkeys[i].c_str(), ImVec2(btn_size_x, 0)))
+					if (ImGui::Button(re4t::cfg->sWeaponHotkeys[i].c_str(), ImVec2(btn_size_x, 0)))
 					{
-						pConfig->HasUnsavedChanges = true;
-						CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sWeaponHotkeys[i], 0, NULL);
+						re4t::cfg->HasUnsavedChanges = true;
+						CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sWeaponHotkeys[i], 0, NULL);
 					}
 					ImGui::PopID();
 
@@ -1876,10 +1876,10 @@ void Trainer_RenderUI(int columnCount)
 				}
 
 				ImGui::PushID(200);
-				if (ImGui::Button(pConfig->sLastWeaponHotkey.c_str(), ImVec2(btn_size_x, 0)))
+				if (ImGui::Button(re4t::cfg->sLastWeaponHotkey.c_str(), ImVec2(btn_size_x, 0)))
 				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sLastWeaponHotkey, 0, NULL);
+					re4t::cfg->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sLastWeaponHotkey, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1887,12 +1887,12 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::TextWrapped("Last used weapon");
 
 				ImGui::Text("Assigned hotkey weapon IDs: %d %d %d %d %d",
-					pConfig->iWeaponHotkeyWepIds[0], pConfig->iWeaponHotkeyWepIds[1], pConfig->iWeaponHotkeyWepIds[2], pConfig->iWeaponHotkeyWepIds[3], pConfig->iWeaponHotkeyWepIds[4]);
+					re4t::cfg->iWeaponHotkeyWepIds[0], re4t::cfg->iWeaponHotkeyWepIds[1], re4t::cfg->iWeaponHotkeyWepIds[2], re4t::cfg->iWeaponHotkeyWepIds[3], re4t::cfg->iWeaponHotkeyWepIds[4]);
 
 				if (ImGui::Button("Reset assignments (use weapon cycling)"))
 				{
-					pConfig->iWeaponHotkeyWepIds[0] = pConfig->iWeaponHotkeyWepIds[1] = pConfig->iWeaponHotkeyWepIds[2] = pConfig->iWeaponHotkeyWepIds[3] = pConfig->iWeaponHotkeyWepIds[4] = 0;
-					pConfig->HasUnsavedChanges = true;
+					re4t::cfg->iWeaponHotkeyWepIds[0] = re4t::cfg->iWeaponHotkeyWepIds[1] = re4t::cfg->iWeaponHotkeyWepIds[2] = re4t::cfg->iWeaponHotkeyWepIds[3] = re4t::cfg->iWeaponHotkeyWepIds[4] = 0;
+					re4t::cfg->HasUnsavedChanges = true;
 				}
 
 				ImGui::EndDisabled();
@@ -1906,10 +1906,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(5);
-				if (ImGui::Button(pConfig->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
+				if (ImGui::Button(re4t::cfg->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerMoveAshToPlayerKeyCombo, 0, NULL);
+					re4t::cfg->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerMoveAshToPlayerKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1926,10 +1926,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(5);
-				if (ImGui::Button(pConfig->sTrainerDebugTrgKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
+				if (ImGui::Button(re4t::cfg->sTrainerDebugTrgKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
-					pConfig->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &pConfig->sTrainerDebugTrgKeyCombo, 0, NULL);
+					re4t::cfg->HasUnsavedChanges = true;
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerDebugTrgKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1981,7 +1981,7 @@ void Trainer_RenderUI(int columnCount)
 		{
 			ImGui::TableNextColumn();
 
-			ImGui::PushItemWidth(120.0f * pConfig->fFontSizeScale * esHook._cur_monitor_dpi);
+			ImGui::PushItemWidth(120.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 			if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
 			{
 				for (int i = 0; i < (sizeof(flagCategoryInfo) / sizeof(CategoryInfo)); i++)
@@ -2002,7 +2002,7 @@ void Trainer_RenderUI(int columnCount)
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 				ImGui::SetTooltip("Only display flags that are known to have an effect.\n(note that some working flags may be missing!)");
 
-			ImGui::PushItemWidth(220.0f * pConfig->fFontSizeScale * esHook._cur_monitor_dpi);
+			ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 			ImGui::InputText("Search", searchText, 256);
 			ImGui::PopItemWidth();
 
@@ -2119,49 +2119,49 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Show ESP", &pConfig->bShowESP))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Show ESP", &re4t::cfg->bShowESP))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
-				ImGui::BeginDisabled(!pConfig->bShowESP);
+				ImGui::BeginDisabled(!re4t::cfg->bShowESP);
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Displays information on Ems");
 				ImGui::Spacing();
 
-				ImGui::Checkbox("Show info on top of Ems", &pConfig->bEspShowInfoOnTop);
-				ImGui::Checkbox("Only show enemies", &pConfig->bEspOnlyShowEnemies);
-				ImGui::Checkbox("Only show alive", &pConfig->bEspOnlyShowAlive);
-				ImGui::Checkbox("Only show valid Ems", &pConfig->bEspOnlyShowValidEms);
-				ImGui::Checkbox("Only show ESL-spawned##esp", &pConfig->bEspOnlyShowESLSpawned);
-				ImGui::Checkbox("Draw Lines", &pConfig->bEspDrawLines);
-				ImGui::Checkbox("Draw Debug Info", &pConfig->bEspDrawDebugInfo);
+				ImGui::Checkbox("Show info on top of Ems", &re4t::cfg->bEspShowInfoOnTop);
+				ImGui::Checkbox("Only show enemies", &re4t::cfg->bEspOnlyShowEnemies);
+				ImGui::Checkbox("Only show alive", &re4t::cfg->bEspOnlyShowAlive);
+				ImGui::Checkbox("Only show valid Ems", &re4t::cfg->bEspOnlyShowValidEms);
+				ImGui::Checkbox("Only show ESL-spawned##esp", &re4t::cfg->bEspOnlyShowESLSpawned);
+				ImGui::Checkbox("Draw Lines", &re4t::cfg->bEspDrawLines);
+				ImGui::Checkbox("Draw Debug Info", &re4t::cfg->bEspDrawDebugInfo);
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Name display mode:");
-				ImGui::RadioButton("Don't show##nameesp", &pConfig->iEspEmNameMode, 0); ImGui::SameLine();
-				ImGui::RadioButton("Normal##esp", &pConfig->iEspEmNameMode, 1); ImGui::SameLine();
-				ImGui::RadioButton("Simplified##esp", &pConfig->iEspEmNameMode, 2);
+				ImGui::RadioButton("Don't show##nameesp", &re4t::cfg->iEspEmNameMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Normal##esp", &re4t::cfg->iEspEmNameMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Simplified##esp", &re4t::cfg->iEspEmNameMode, 2);
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("HP display mode:");
-				ImGui::RadioButton("Don't show##hpesp", &pConfig->iEspEmHPMode, 0); ImGui::SameLine();
-				ImGui::RadioButton("Bar##esp", &pConfig->iEspEmHPMode, 1); ImGui::SameLine();
-				ImGui::RadioButton("Text##esp", &pConfig->iEspEmHPMode, 2);
+				ImGui::RadioButton("Don't show##hpesp", &re4t::cfg->iEspEmHPMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Bar##esp", &re4t::cfg->iEspEmHPMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Text##esp", &re4t::cfg->iEspEmHPMode, 2);
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max distance of Ems").x - 10);
-				ImGui::SliderFloat("Max distance of Ems##esp", &pConfig->fEspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::SliderFloat("Max distance of Ems##esp", &re4t::cfg->fEspMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::Checkbox("Only show closest Ems", &pConfig->bEspOnlyShowClosestEms);
+				ImGui::Checkbox("Only show closest Ems", &re4t::cfg->bEspOnlyShowClosestEms);
 				ImGui::Spacing();
 
-				ImGui::BeginDisabled(!pConfig->bEspOnlyShowClosestEms);
+				ImGui::BeginDisabled(!re4t::cfg->bEspOnlyShowClosestEms);
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max amount of Ems").x - 10);
-				ImGui::InputInt("Max amount of Ems##esp", &pConfig->iEspClosestEmsAmount);
+				ImGui::InputInt("Max amount of Ems##esp", &re4t::cfg->iEspClosestEmsAmount);
 				ImGui::EndDisabled();
 
 				ImGui::EndDisabled();
@@ -2171,42 +2171,42 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				if (ImGui::Checkbox("Show side info", &pConfig->bShowSideInfo))
-					pConfig->HasUnsavedChanges = true;
+				if (ImGui::Checkbox("Show side info", &re4t::cfg->bShowSideInfo))
+					re4t::cfg->HasUnsavedChanges = true;
 
 				ImGui_ItemSeparator();
 
-				ImGui::BeginDisabled(!pConfig->bShowSideInfo);
+				ImGui::BeginDisabled(!re4t::cfg->bShowSideInfo);
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("Displays information on the left side of the screen.");
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::Checkbox("Show Em count", &pConfig->bSideShowEmCount);
+				ImGui::Checkbox("Show Em count", &re4t::cfg->bSideShowEmCount);
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::Checkbox("Show Em list", &pConfig->bSideShowEmList);
+				ImGui::Checkbox("Show Em list", &re4t::cfg->bSideShowEmList);
 				ImGui::TextWrapped("Ems are listed from bottom to top, with the top one being the closes to the player, and the bottom one being the farthest.");
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 				
-				ImGui::BeginDisabled(!pConfig->bSideShowEmList);
-				ImGui::Checkbox("Only show ESL-spawned##side", &pConfig->bSideOnlyShowESLSpawned);
-				ImGui::Checkbox("Show simplified names##side", &pConfig->bSideShowSimpleNames);
+				ImGui::BeginDisabled(!re4t::cfg->bSideShowEmList);
+				ImGui::Checkbox("Only show ESL-spawned##side", &re4t::cfg->bSideOnlyShowESLSpawned);
+				ImGui::Checkbox("Show simplified names##side", &re4t::cfg->bSideShowSimpleNames);
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::TextWrapped("HP display mode:");
-				ImGui::RadioButton("Don't show##side", &pConfig->iSideEmHPMode, 0); ImGui::SameLine();
-				ImGui::RadioButton("Bar##side", &pConfig->iSideEmHPMode, 1); ImGui::SameLine();
-				ImGui::RadioButton("Text##side", &pConfig->iSideEmHPMode, 2);
+				ImGui::RadioButton("Don't show##side", &re4t::cfg->iSideEmHPMode, 0); ImGui::SameLine();
+				ImGui::RadioButton("Bar##side", &re4t::cfg->iSideEmHPMode, 1); ImGui::SameLine();
+				ImGui::RadioButton("Text##side", &re4t::cfg->iSideEmHPMode, 2);
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Max amount of enemies").x - 10);
 				ImGui::Spacing();
-				ImGui::InputInt("Max amount of enemies##side", &pConfig->iSideClosestEmsAmount);
+				ImGui::InputInt("Max amount of enemies##side", &re4t::cfg->iSideClosestEmsAmount);
 
 				ImGui::Spacing();
-				ImGui::SliderFloat("Max distance of enemies##side", &pConfig->fSideMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::SliderFloat("Max distance of enemies##side", &re4t::cfg->fSideMaxEmDistance, 0.0f, 200000.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
 				ImGui::EndDisabled();
 

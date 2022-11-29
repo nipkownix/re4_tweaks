@@ -136,7 +136,7 @@ std::string g_GameDir_snd_bio4_project = "BIO4\\snd\\bio4_project.xgs";
 std::string g_GameDir_snd_bio4midi_xwb = "BIO4\\snd\\bio4midi.xwb";
 std::string g_GameDir_snd_bio4midi_xsb = "BIO4\\snd\\bio4midi.xsb";
 
-void Init_CommandLine()
+void re4t::init::CommandLine()
 {
 	// Parse command-line params, store values for later
 	{
@@ -305,8 +305,8 @@ void Init_CommandLine()
 		if (paramRoomValue || paramLoadSaveSlot > 0)
 		{
 			// User specified a room/save num, they probably want to skip intro logos too, let's give them a hand
-			pConfig->bSkipIntroLogos = true;
-			pConfig->bSkipMenuFades = true;
+			re4t::cfg->bSkipIntroLogos = true;
+			re4t::cfg->bSkipMenuFades = true;
 		}
 
 		if (gameDir)

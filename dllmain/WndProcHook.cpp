@@ -17,7 +17,7 @@ int curPosY;
 
 void EnableClipCursor(HWND window)
 {
-	if (pConfig->bNeverHideCursor)
+	if (re4t::cfg->bNeverHideCursor)
 		return;
 
 	if (window != GetForegroundWindow())
@@ -113,7 +113,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			EnableClipCursor(hWindow);
 
-			if (pConfig->bRememberWindowPos)
+			if (re4t::cfg->bRememberWindowPos)
 			{
 				// Write new window position
 				#ifdef VERBOSE
@@ -123,8 +123,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				CIniReader iniReader("");
 
-				pConfig->iWindowPositionX = curPosX;
-				pConfig->iWindowPositionY = curPosY;
+				re4t::cfg->iWindowPositionX = curPosX;
+				re4t::cfg->iWindowPositionY = curPosY;
 
 				iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
 				iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
@@ -175,10 +175,10 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	// Perform LAA check/prompt before game window has a chance to be created
 	LAACheck();
 
-	int windowX = pConfig->iWindowPositionX < 0 ? CW_USEDEFAULT : pConfig->iWindowPositionX;
-	int windowY = pConfig->iWindowPositionY < 0 ? CW_USEDEFAULT : pConfig->iWindowPositionY;
+	int windowX = re4t::cfg->iWindowPositionX < 0 ? CW_USEDEFAULT : re4t::cfg->iWindowPositionX;
+	int windowY = re4t::cfg->iWindowPositionY < 0 ? CW_USEDEFAULT : re4t::cfg->iWindowPositionY;
 
-	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, pConfig->bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, re4t::cfg->bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 
 	spd::log()->info("{} -> Window created; Registering for input", __FUNCTION__);
 
@@ -190,7 +190,7 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	return hWindow;
 }
 
-void Init_WndProcHook()
+void re4t::init::WndProcHook()
 {
 	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
 	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);

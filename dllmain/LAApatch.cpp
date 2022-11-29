@@ -130,8 +130,8 @@ void LAACheck()
 				"Game 4GB patched successfully!", 0);
 
 			// Relaunch the game
-			std::string bio4path = rootPath + "bio4.exe";
-			if ((int)ShellExecuteA(nullptr, "open", bio4path.c_str(), nullptr, nullptr, SW_SHOWDEFAULT) > 32)
+			std::wstring bio4path = rootPath + L"bio4.exe";
+			if ((int)ShellExecuteW(nullptr, L"open", bio4path.c_str(), nullptr, nullptr, SW_SHOWDEFAULT) > 32)
 			{
 				exit(0);
 				return;
