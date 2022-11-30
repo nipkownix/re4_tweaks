@@ -331,6 +331,11 @@ int GameVariableFrameRate()
 	return *(int32_t*)(ptrGameVariableFrameRate);
 }
 
+int CurrentFrameRate()
+{
+	return (int)std::round(30.0f / GlobalPtr()->deltaTime_70);
+}
+
 uint32_t* ptrLastUsedDevice = nullptr;
 InputDevices LastUsedDevice()
 {

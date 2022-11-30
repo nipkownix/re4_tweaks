@@ -93,6 +93,7 @@ public:
 
 	// FRAME RATE
 	bool bFixFallingItemsSpeed = true;
+	bool bFixCompartmentsOpeningSpeed = true;
 	bool bFixTurningSpeed = true;
 	bool bFixQTE = true;
 	bool bFixAshleyBustPhysics = true;

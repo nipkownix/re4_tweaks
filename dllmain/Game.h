@@ -38,6 +38,7 @@ std::string GameVersion();
 extern int iCurPlayTime[3];
 bool GameVersionIsDebug();
 int GameVariableFrameRate();
+int CurrentFrameRate();
 InputDevices LastUsedDevice();
 bool isController();
 bool isKeyboardMouse();

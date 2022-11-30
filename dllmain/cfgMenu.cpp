@@ -1094,7 +1094,19 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Fixes the speed of falling items in 60 FPS, making them not fall at double speed.");
+						ImGui::TextWrapped("Fixes the speed of falling items when using framerates other than 30FPS, making them not fall at double speed.");
+					}
+
+					// FixCompartmentsOpeningSpeed
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixCompartmentsOpeningSpeed", &re4t::cfg->bFixCompartmentsOpeningSpeed);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Fixes the speed of opening compartments such as drawers, cabinets, chests, boxes, shelves, etc.");
 					}
 
 					// FixTurningSpeed

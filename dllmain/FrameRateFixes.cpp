@@ -40,15 +40,15 @@ void re4t::init::FrameRateFixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					float vanillaSub = 10.0f;
+					double vanillaSub = 10.0;
 					
 					if (re4t::cfg->bFixFallingItemsSpeed)
 					{
-						float newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+						double newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
 
 						// How many frames to wait until newSub is subtracted from pEm->Spd_62C.y.
 						// On 30 fps, subtract every frame. On 60 fps, subtract every two frames, etc.
-						int interval = GameVariableFrameRate() / 30;
+						int interval = (int)std::round(CurrentFrameRate() / 30);
 
 						// Interval must be at least 1
 						if (interval < 1)
@@ -61,7 +61,9 @@ void re4t::init::FrameRateFixes()
 						}
 					}
 					else
+					{
 						_asm {fsub vanillaSub}
+					}
 				}
 			}; injector::MakeInline<emItem_R1_Drop_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 		}
@@ -74,13 +76,13 @@ void re4t::init::FrameRateFixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					float vanillaSub = 20.0f;
+					double vanillaSub = 20.0;
 
 					if (re4t::cfg->bFixFallingItemsSpeed)
 					{
-						float newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+						double newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
 
-						int interval = GameVariableFrameRate() / 30;
+						int interval = (int)std::round(CurrentFrameRate() / 30);
 
 						// Interval must be at least 1
 						if (interval < 1)
@@ -93,7 +95,9 @@ void re4t::init::FrameRateFixes()
 						}
 					}
 					else
+					{
 						_asm {fsub vanillaSub}
+					}
 				}
 			}; injector::MakeInline<cObj12__fallMove_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
@@ -102,27 +106,29 @@ void re4t::init::FrameRateFixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					float vanillaMulti = 10.0f;
+					double vanillaMulti = 10.0;
 
 					if (re4t::cfg->bFixFallingItemsSpeed)
 					{
-						float newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
+						double newMulti = GlobalPtr()->deltaTime_70 * vanillaMulti;
 						_asm {fmul newMulti}
 					}
 					else
+					{
 						_asm {fmul vanillaMulti}
+					}
 				}
 			}; 
 			
 			// First 3
-			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 66 89 87").count(3);
-			pattern.for_each_result([&](hook::pattern_match match) {
+			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 66 89 87");
+			pattern.count(3).for_each_result([&](hook::pattern_match match) {
 				injector::MakeInline<cObj12__setFall_hook>(match.get<uint32_t>(0), match.get<uint32_t>(6));
 			});
 
 			// 4, 5
-			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 8B ? ? 66 89 ? ? E8 ? ? ? ? D8").count(2);
-			pattern.for_each_result([&](hook::pattern_match match) {
+			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 8B ? ? 66 89 ? ? E8 ? ? ? ? D8");
+			pattern.count(2).for_each_result([&](hook::pattern_match match) {
 				injector::MakeInline<cObj12__setFall_hook>(match.get<uint32_t>(0), match.get<uint32_t>(6));
 			});
 
@@ -130,6 +136,426 @@ void re4t::init::FrameRateFixes()
 			pattern = hook::pattern("DC 0D ? ? ? ? E8 ? ? ? ? 8D 54 76");
 			injector::MakeInline<cObj12__setFall_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 		}
+	}
+
+	// Fix the speed of opening drawers/boxes/cabinets/etc
+	{
+		// r104_openShelf_main, r129_openShelf_main_mb, r12a_openShelf_main_mb
+		auto pattern = hook::pattern("DC 35 ? ? ? ? 6A ? 6A ? 6A ? 6A ? 6A ? 6A ? D9 5D ? E8 ? ? ? ? 83 C4 ? BF ? ? ? ? EB");
+		struct r104_r129_r12a_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newMulti = (double)CurrentFrameRate();
+					_asm {fdiv newMulti}
+				}
+				else
+				{
+					double vanillaMulti = 30.0;
+					_asm {fdiv vanillaMulti}
+				}
+			}
+		};
+
+		struct r104_r129_r12a_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.edi = CurrentFrameRate();
+				}
+				else
+				{
+					regs.edi = 30; // Vanilla loop count
+				}
+			}
+		};
+
+		pattern.count(3).for_each_result([&](hook::pattern_match match) {
+			injector::MakeInline<r104_r129_r12a_hook_1>(match.get<uint32_t>(0), match.get<uint32_t>(6));
+			injector::MakeInline<r104_r129_r12a_hook_2>(match.get<uint32_t>(29), match.get<uint32_t>(33));
+		});
+
+		// r106_openShelf_main, r128_openShelf_main_mb, r507_openShelf_main_mb
+		pattern = hook::pattern("DD 05 ? ? ? ? 6A ? DC F9 6A ? 6A ? 6A ? 6A ? 6A ? D9 C9 D9");
+		struct r106_r128_r507_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newMulti = (double)CurrentFrameRate();
+					_asm {fld newMulti}
+				}
+				else
+				{
+					double vanillaMulti = 30.0;
+					_asm {fld vanillaMulti}
+				}
+			}
+		};
+
+		struct r106_r128_r507_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.ebx = CurrentFrameRate();
+				}
+				else
+					regs.ebx = 30; // Vanilla loop count
+			}
+		};
+
+		pattern.count(3).for_each_result([&](hook::pattern_match match) {
+			injector::MakeInline<r106_r128_r507_hook_1>(match.get<uint32_t>(0), match.get<uint32_t>(6));
+			injector::MakeInline<r106_r128_r507_hook_2>(match.get<uint32_t>(39), match.get<uint32_t>(43));
+		});
+
+		// r20d_openShelf_main
+		pattern = hook::pattern("BB ? ? ? ? 8D A4 24 ? ? ? ? 8B 86 ? ? ? ? D9 80");
+		struct r20d_openShelf_main_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.ebx = CurrentFrameRate();
+				}
+				else
+					regs.ebx = 30; // Vanilla loop count
+			}
+		}; injector::MakeInline<r20d_openShelf_main_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		pattern = hook::pattern("DC 25 ? ? ? ? D9 98 ? ? ? ? 8B 87");
+		struct r20d_openShelf_main_hook_2_pos
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaSub = 0.07400000095367432;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+					_asm {fsub newSub}
+				}
+				else
+				{
+					_asm {fsub vanillaSub}
+				}
+			}
+		}; injector::MakeInline<r20d_openShelf_main_hook_2_pos>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		struct r20d_openShelf_main_hook_2_neg
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaSub = -0.07400000095367432;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+					_asm {fsub newSub}
+				}
+				else
+				{
+					_asm {fsub vanillaSub}
+				}
+			}
+		}; injector::MakeInline<r20d_openShelf_main_hook_2_neg>(pattern.count(1).get(0).get<uint32_t>(24), pattern.count(1).get(0).get<uint32_t>(30));
+
+		// r20e_openShelf_main
+		pattern = hook::pattern("BB ? ? ? ? EB ? 8D 9B ? ? ? ? 8B 86 ? ? ? ? DD 05");
+		struct r20e_openShelf_main_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.ebx = CurrentFrameRate();
+				}
+				else
+					regs.ebx = 30; // Vanilla loop count
+			}
+		}; injector::MakeInline<r20e_openShelf_main_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		struct r20e_openShelf_main_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = 0.07400000095367432;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		}; injector::MakeInline<r20e_openShelf_main_hook_2>(pattern.count(1).get(0).get<uint32_t>(19), pattern.count(1).get(0).get<uint32_t>(25));
+
+		// r104_openBox_main, r129_openBox_main_mb, r12a_openBox_main_mb, r200_openBox_main, r22e_openBox_main_mb
+		pattern = hook::pattern("BF ? ? ? ? 8B 86 ? ? ? ? D9 80 ? ? ? ? 6A ? DC 05 ? ? ? ? D9 98 ? ? ? ? E8");
+		struct r104_r129_r12a_r200_r22e_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.edi = CurrentFrameRate();
+				}
+				else
+					regs.edi = 30; // Vanilla loop count
+			}
+		};
+
+		struct r104_r129_r12a_r200_r22e_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaAdd = 0.05666666850447655;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newAdd = GlobalPtr()->deltaTime_70 * vanillaAdd;
+					_asm {fadd newAdd}
+				}
+				else
+				{
+					_asm {fadd vanillaAdd}
+				}
+			}
+		};
+
+		pattern.count(3).for_each_result([&](hook::pattern_match match) {
+			injector::MakeInline<r104_r129_r12a_r200_r22e_hook_1>(match.get<uint32_t>(0), match.get<uint32_t>(5));
+			injector::MakeInline<r104_r129_r12a_r200_r22e_hook_2>(match.get<uint32_t>(19), match.get<uint32_t>(25));
+		});
+
+		// r200_openBox_main and r22e_openBox_main_mb uses another pattern, but the same hooks
+		pattern = hook::pattern("BF ? ? ? ? 8D A4 24 ? ? ? ? 8B 86 ? ? ? ? D9 80 ? ? ? ? 6A");
+		pattern.count(2).for_each_result([&](hook::pattern_match match) {
+			injector::MakeInline<r104_r129_r12a_r200_r22e_hook_1>(match.get<uint32_t>(0), match.get<uint32_t>(5));
+			injector::MakeInline<r104_r129_r12a_r200_r22e_hook_2>(match.get<uint32_t>(26), match.get<uint32_t>(32));
+		});
+
+		// r202_openBox_main, r20e_openBox_main
+		pattern = hook::pattern("D9 05 ? ? ? ? 57 51 8D 45 ? D9 1C ? 50 8D 4D");
+		struct r202_r20e_openBox_main_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = 0.033333335;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		}; injector::MakeInline<r202_r20e_openBox_main_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("BF ? ? ? ? EB ? 8D A4 24 ? ? ? ? 8B FF 8B 86");
+		struct r202_r20e_openBox_main_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.edi = CurrentFrameRate();
+				}
+				else
+					regs.edi = 30; // Vanilla loop count
+			}
+		}; injector::MakeInline<r202_r20e_openBox_main_hook_2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		// r20e_openBox_main uses the same hooks
+		pattern = hook::pattern("D9 05 ? ? ? ? 57 51 8D 55 ? D9 1C ? 52 8D 45");
+		injector::MakeInline<r202_r20e_openBox_main_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("BF ? ? ? ? 8D 49 ? 8B 86 ? ? ? ? 05 ? ? ? ? 50");
+		injector::MakeInline<r202_r20e_openBox_main_hook_2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		// r326_openBox_main, r51b_openBox_main_mb
+		pattern = hook::pattern("D9 05 ? ? ? ? 51 8D 45 ? D9 1C ? 50 8D 4D ? 51 E8 ? ? ? ? D9 05 ? ? ? ? 83 C4");
+		struct r326_r51b_openBox_main_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = 0.033333335;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		};
+		
+		pattern.count(2).for_each_result([&](hook::pattern_match match) {
+			injector::MakeInline<r326_r51b_openBox_main_hook_1>(match.get<uint32_t>(0), match.get<uint32_t>(6));
+			injector::MakeInline<r326_r51b_openBox_main_hook_1>(match.get<uint32_t>(23), match.get<uint32_t>(29));
+		});
+
+		pattern = hook::pattern("C7 45 ? ? ? ? ? 53 8D 4D ? 51 53 E8 ? ? ? ? 8B 87 ? ? ? ? 05 ? ? ? ? 50");
+		struct r326_r51b_openBox_main_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					*(int32_t*)(regs.ebp - 0x38) = CurrentFrameRate();
+				}
+				else
+					*(int32_t*)(regs.ebp - 0x38) = 30; // Vanilla loop count
+			}
+		};
+
+		pattern.count(2).for_each_result([&](hook::pattern_match match) {
+			injector::MakeInline<r326_r51b_openBox_main_hook_2>(match.get<uint32_t>(0), match.get<uint32_t>(7));
+		});
+
+		// r20d_openDrawer_main 
+		pattern = hook::pattern("D9 05 ? ? ? ? 53 51 8D 45 ? D9 1C ? 50 8D 4D");
+		struct r20d_openDrawer_main_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = 0.033333335;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		}; injector::MakeInline<r20d_openDrawer_main_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("BB ? ? ? ? 56 8D 55 ? 52 56 E8 ? ? ? ? 83 C4 ? 85 FF");
+		struct r20d_openDrawer_main_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.ebx = CurrentFrameRate();
+				}
+				else
+				regs.ebx = 30; // Vanilla loop count
+			}
+		}; injector::MakeInline<r20d_openDrawer_main_hook_2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		// r107_openKiln_main
+		pattern = hook::pattern("DC 35 ? ? ? ? 6A ? 6A ? 6A ? 6A ? 6A ? 6A ? D9");
+		struct r107_openKiln_main_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newMulti = (double)CurrentFrameRate();
+					_asm {fdiv newMulti}
+				}
+				else
+				{
+					double vanillaMulti = 30.0;
+					_asm {fdiv vanillaMulti}
+				}
+			}
+		}; injector::MakeInline<r107_openKiln_main_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		struct r107_openKiln_main_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.ebx = CurrentFrameRate();
+				}
+				else
+				{
+					regs.ebx = 30; // Vanilla loop count
+				}
+			}
+		}; injector::MakeInline<r107_openKiln_main_2>(pattern.count(1).get(0).get<uint32_t>(29), pattern.count(1).get(0).get<uint32_t>(34));
+
+		// r315_TanaOpen, r515_TanaOpen
+		pattern = hook::pattern("D9 05 ? ? ? ? 83 C4 ? D9 5D ? 83 FE ? 75 ? D9 05 ? ? ? ? D9 5D ? BF");
+		struct r315_r515_TanaOpen_hook_1_pos
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = 26.666666;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		};
+
+		struct r315_r515_TanaOpen_hook_1_neg
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = -26.666666;
+
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		};
+
+		struct r315_r515_TanaOpen_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bFixCompartmentsOpeningSpeed)
+				{
+					regs.edi = CurrentFrameRate();
+				}
+				else
+				{
+					regs.edi = 30; // Vanilla loop count
+				}
+			}
+		};
+
+		pattern.count(2).for_each_result([&](hook::pattern_match match) {
+			injector::MakeInline<r315_r515_TanaOpen_hook_1_pos>(match.get<uint32_t>(0), match.get<uint32_t>(6));
+			injector::MakeInline<r315_r515_TanaOpen_hook_1_neg>(match.get<uint32_t>(17), match.get<uint32_t>(23));
+			injector::MakeInline<r315_r515_TanaOpen_hook_2>(match.get<uint32_t>(26), match.get<uint32_t>(31));
+		});
 	}
 
 	// Fix character backwards turning speed
