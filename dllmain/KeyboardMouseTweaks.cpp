@@ -406,7 +406,7 @@ void re4t::init::KeyboardMouseTweaks()
 				{
 					if (regs.ecx == 1)
 					{
-						iMinFocusTime = 5;
+						iMinFocusTime = (int)std::round(3.0f / GlobalPtr()->deltaTime_70);
 					}
 					else if (regs.ecx == 0)
 					{
