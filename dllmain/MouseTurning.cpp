@@ -52,7 +52,7 @@ bool isMouseTurnEnabled()
 	return state;
 }
 
-void MouseTurn(float TurnDelayFactor = 20.0f)
+void MouseTurn(float TurnDelayFactor = 10.0f)
 {
 	if (isController())
 		return;
@@ -71,18 +71,18 @@ void MouseTurn(float TurnDelayFactor = 20.0f)
 
 		// TurnDelayFactor is used to alter how long it will take for the player rotation to reach the camera rotation.
 		// Higher values = slower speed.
-		float factor = *fCameraPosX / TurnDelayFactor;
+		float factor = (*fCameraPosX / TurnDelayFactor) * GlobalPtr()->deltaTime_70;
 
 		PlayerPtr()->ang_A0.y += factor;
 		*fMousePosX += factor / fRangeMulti;
 	}
 	else // Type B
 	{
-		float SpeedMulti = 900.0f;
+		float SpeedMulti = 450.0f / GlobalPtr()->deltaTime_70; // 900.0f;
 
 		// "Classic" aiming mode (0x00) needs lower sensitivity here.
 		if (GetMouseAimingMode() == MouseAimingModes::Classic)
-			SpeedMulti = 1300.0f;
+			SpeedMulti = 650.0f / GlobalPtr()->deltaTime_70;
 
 		PlayerPtr()->ang_A0.y += (-*MouseDeltaX / SpeedMulti) * re4t::cfg->fTurnTypeBSensitivity;
 	}
@@ -273,7 +273,7 @@ void re4t::init::MouseTurning()
 			regs.ebp = *(int32_t*)(regs.esp);
 			*(int32_t*)(regs.esp) -= 0x8;
 
-			MouseTurn(5.0f);
+			MouseTurn(2.5f);
 		}
 	}; injector::MakeInline<TurnHookRun>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
