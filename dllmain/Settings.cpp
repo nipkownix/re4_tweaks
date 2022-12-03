@@ -279,6 +279,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	// FRAME RATE
 	re4t::cfg->bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
 	re4t::cfg->bFixCompartmentsOpeningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
+	re4t::cfg->bFixMovingGeometrySpeed = iniReader.ReadBoolean("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
 	re4t::cfg->bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
 	re4t::cfg->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
 	re4t::cfg->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
@@ -774,7 +775,9 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
 
 	// FRAME RATE
+	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
+	iniReader.WriteBoolean("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
@@ -942,6 +945,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("+ FRAME RATE---------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixQTE", re4t::cfg->bFixQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics ? "true" : "false");

@@ -75,6 +75,8 @@ namespace bio4 {
 	void(__cdecl* GXShaderCall)(int shaderNum);
 
 	void(__cdecl* CameraCurrentProjection)();
+
+	void(__cdecl* SceSleep)(uint32_t ctr);
 };
 
 // Current play time (H, M, S)
@@ -910,6 +912,9 @@ bool re4t::init::Game()
 
 	pattern = hook::pattern("E8 ? ? ? ? 8A 46 30 3C FD");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x0), bio4::CameraCurrentProjection); // 0x59F3A0
+
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 4E 75 C1 8B 0D ? ? ? ? 8B 91");
+	ReadCall(pattern.count(2).get(0).get<uint8_t>(0), bio4::SceSleep);
 
 	// Store current game time that's being calculated inside GetGameTime
 	pattern = hook::pattern("8B 55 ? 8B 45 ? 51 8B 4D ? 52 50 51 68");

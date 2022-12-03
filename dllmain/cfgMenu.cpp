@@ -1109,6 +1109,18 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Fixes the speed of opening compartments such as drawers, cabinets, chests, boxes, shelves, etc.");
 					}
 
+					// FixMovingGeometrySpeed
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixMovingGeometrySpeed", &re4t::cfg->bFixMovingGeometrySpeed);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Fixes the speed of moving geometry such as: doors, passages, gates, ceilings, etc.");
+					}
+
 					// FixTurningSpeed
 					{
 						ImGui_ColumnSwitch();
