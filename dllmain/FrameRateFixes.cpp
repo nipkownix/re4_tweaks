@@ -4,7 +4,6 @@
 #include "Settings.h"
 
 uint32_t ModelForceRenderAll_EndTick = 0;
-float fMercsDeltaTimer = 0.0F;
 
 // Called by AddOtModelPosRadius to check if model is in view of camera
 bool(*collision_sphere_hexahedron)(void*, void*);
@@ -632,6 +631,8 @@ void re4t::init::FrameRateFixes()
 
 	// Mercenaries: fix doubling of the village stage's passive difficulty gain in 60fps NTSC mode
 	{
+		static float fMercsDeltaTimer = 0.0F;
+
 		auto pattern = hook::pattern("A1 40 ? ? ? 80 ? ? 00 74 ? 6A 0E"); // R400Main());
 		struct MercsModeFPSFix
 		{
@@ -641,7 +642,7 @@ void re4t::init::FrameRateFixes()
 				if (fMercsDeltaTimer >= 1.0F)
 				{
 					fMercsDeltaTimer -= 1.0F;
-					regs.ef |= (1 << regs.zero_flag); // proceed through the function
+					regs.ef |= (1 << regs.zero_flag); // call j_GameAddPoint(LVADD_TIMECOUNT);
 				}
 				else
 					regs.ef &= ~(1 << regs.zero_flag);

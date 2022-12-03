@@ -96,7 +96,7 @@ public:
 };
 assert_size(cPlayer, 0x814);
 
-enum LVADD : uint8_t
+enum LVADD
 {
 	LVADD_UPDATE = 0,
 	LVADD_DIE = 1,

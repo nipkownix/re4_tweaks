@@ -123,8 +123,7 @@ void re4t::init::ControllerTweaks()
 
 	// Fix type III controls melee range firing bug
 	// When using type III config, knocking an enemy into a vulnerable state while in melee range with them interrupts your gunfire until you release the trigger
-	// Type II config doesn't have this bug, despite having the same dual trigger setup, because joyFireOn() explicitly checks for it
-	// Likely an oversight due to type III config being added later on for the UHD port
+	// joyFireOn() makes an explicit exemption for type II config, but not type III. QLOC must have overlooked this when they added type III config to UHD.
 	{
 		auto pattern = hook::pattern("8B ? ? ? ? ? 38 41 ? 74");
 		struct JoyFireOn_Type3Fix

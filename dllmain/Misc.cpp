@@ -603,7 +603,7 @@ void re4t::init::Misc()
 	// Hook cPlayer::weaponInit so we can add code to fix ditman glitch
 	{
 		auto pattern = hook::pattern("83 C4 0C E8 ? ? ? ? D9 EE 8B 06 D9 9E 44 05 00 00");
-		
+
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, PATCH_JUMP);
 	}
@@ -873,13 +873,13 @@ void re4t::init::Misc()
 			// Chicago Typewriter -- Issue: if Ashley is armored, Leon's Chicago Typewriter reload animation would always be the special Mafia one, regardless of Leon's costume
 			auto pattern_wep11_r2_reload_1 = hook::pattern("80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85 ? ? ? ? 8B 96");
 			auto pattern_wep11_r2_reload_2to7 = hook::pattern("80 B8 ? ? ? ? 02 75 ? 38 98 ? ? ? ? 75 ? 80 B8 ? ? ? ? 0C");
-			auto pattern_wep11_r2_reload_8 = hook::pattern("80 B8 ? ? ? ? ? D9 EE 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85"); 
+			auto pattern_wep11_r2_reload_8 = hook::pattern("80 B8 ? ? ? ? ? D9 EE 0F 85 ? ? ? ? 38 98 ? ? ? ? 0F 85 ? ? ? ? 80 B8 ? ? ? ? ? 0F 85");
 
 			auto pattern_ReadWepData = hook::pattern("80 B9 ? ? ? ? ? 75 ? BB ? ? ? ? EB ? BB ? ? ? ? 8D 3C DD");
 			auto pattern_cObjTompson__setMotion = hook::pattern("80 B8 ? ? ? ? ? 75 ? 38 88 ? ? ? ? 75 ? 8B 96 ? ? ? ? 89 8A ? ? ? ? 8B 86 ? ? ? ? 89");
 			auto pattern_cPlayer__seqSeCtrl = hook::pattern("80 B8 ? ? ? ? ? 75 ? 80 B8 ? ? ? ? ? 75 ? 83 FB ? 77 ? 0F B6 8B ? ? ? ? FF 24 8D");
 			auto pattern_cObjTompson__moveReload = hook::pattern("80 B9 ? ? ? ? ? 75 ? 80 B9 ? ? ? ? ? 0F 84 ? ? ? ? 80 BE ? ? ? ? ? 0F B6 81");
-	
+
 			injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(2), (uint8_t)0xC9, true); // +00004FCB -> +00004FC9
 			injector::WriteMemory(pattern_wep11_r2_reload_1.count(1).get(0).get<uint32_t>(6), (uint8_t)LeonCostume::Mafia, true); // 02 -> 04
 
@@ -1129,7 +1129,7 @@ void re4t::init::Misc()
 	// Enables difficulty modifiers previously exclusive to the NTSC console versions of RE4.
 	// These were locked behind checks for pSys->language_8 == 1 (NTSC English). Since RE4 UHD uses PAL English (language_8 == 2), Steam players never saw these.
 	{
-		if (pConfig->bEnableNTSCMode)
+		if (re4t::cfg->bEnableNTSCMode)
 		{
 			// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
 			auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
@@ -1144,7 +1144,7 @@ void re4t::init::Misc()
 			Patch(pattern.count(1).get(0).get<uint32_t>(2), { 0xB1, 0x01, 0x90 }); // cCap::check, { mov cl, 1 }
 
 			// Shooting range: use NTSC strings for the game rules note
-			// (only supports English for now, as only the eng/ss_file_01.MDT file contains the additional strings necessary for this)
+			// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
 			pattern = hook::pattern("3F 00 01 00 46 00 01 00");
 			file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
 			// update the note's message index whenever we load into r22c
@@ -1156,7 +1156,7 @@ void re4t::init::Misc()
 					file_msg_tbl_35[0].top_0 = SystemSavePtr()->language_8 == 2 ? 0x9D : 0x3F;
 
 					// code we overwrote
-					*(uint32_t*)(regs.ecx + 0x78) = (uint32_t)regs.eax;
+					*(uint32_t*)(regs.ecx + 0x78) = regs.eax;
 					regs.ecx += 0x7C;
 				}
 			}; injector::MakeInline<R22cInit_Hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -1172,18 +1172,18 @@ void re4t::init::Misc()
 			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 75");
 			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(9), 2); // titleLevelInit
 
-			// skip difficulty select on a New Game save
+			// skip difficulty select on a fresh system save
 			pattern = hook::pattern("B8 04 00 00 00 5B 8B E5");
 			struct SkipLevelSelect
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					bool newGame = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
-					regs.eax = newGame ? TTL_CMD_START : TTL_CMD_LEVEL;
+					bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
+					regs.eax = newSystemSave ? TTL_CMD_START : TTL_CMD_LEVEL;
 				}
 			}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-			// special handling for the JP.exe
+			// special handling for the JP exe
 			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 74");
 			if (pattern.empty())
 			{
@@ -1205,7 +1205,7 @@ void re4t::init::Misc()
 				pattern = hook::pattern("A1 40 ? ? ? 38 58 08 75");
 				Patch(pattern.count(1).get(0).get<uint32_t>(8), { 0xEB }); // titleMain, jnz -> jmp
 
-				// remove JP only 20% damage armor from Assignment Ada
+				// remove JP only 20% damage armor from Mercenaries mode
 				pattern = hook::pattern("F7 46 54 00 00 00 40");
 				Patch(pattern.count(1).get(0).get<uint32_t>(7), { 0xEB }); // LifeDownSet2, jz -> jmp
 			}

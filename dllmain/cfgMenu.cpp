@@ -1255,9 +1255,9 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnSwitch();
 
-						if(ImGui::Checkbox("EnableNTSCMode", &pConfig->bEnableNTSCMode))
+						if(ImGui::Checkbox("EnableNTSCMode", &re4t::cfg->bEnableNTSCMode))
 						{
-							pConfig->HasUnsavedChanges = true;
+							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
 

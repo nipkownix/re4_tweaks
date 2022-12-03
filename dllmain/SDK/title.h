@@ -67,7 +67,7 @@ struct __declspec(align(4)) TITLE_WORK
 };
 assert_size(TITLE_WORK, 0xBC);
 
-enum TITLE_COMMAND : uint8_t
+enum TITLE_COMMAND
 {
 	TTL_CMD_NULL = 0,
 	TTL_CMD_START = 1,
