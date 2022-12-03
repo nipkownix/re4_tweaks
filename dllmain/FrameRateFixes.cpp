@@ -1118,6 +1118,56 @@ void re4t::init::FrameRateFixes()
 				}
 			}
 		}; injector::MakeInline<cR50fDoor__open_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// cR50fDoor::close
+		pattern = hook::pattern("D9 05 ? ? ? ? 50 D9 5E 1C 6A 00 6A 00 05 ? ? ? ? 50 6A 26 E8");
+		struct cR50fDoor__close_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = -40.0;
+
+				if (re4t::cfg->bFixMovingGeometrySpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		}; injector::MakeInline<cR50fDoor__close_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("DC 25 ? ? ? ? D9 5D FC D9 45 FC D9 56 1C D8 80 ? ? ? ? D9 98");
+		struct cR50fDoor__close_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaSub = 10.0;
+
+				if (re4t::cfg->bFixMovingGeometrySpeed)
+				{
+					double newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+
+					int interval = (int)std::round(CurrentFrameRate() / 30);
+
+					// Interval must be at least 1
+					if (interval < 1)
+						interval = 1;
+
+					// Only apply the speed changes if the frame interval has passed
+					if (GlobalPtr()->frameCounter_530C % interval == 0)
+					{
+						_asm {fsub newSub}
+					}
+				}
+				else
+				{
+					_asm {fsub vanillaSub}
+				}
+			}
+		}; injector::MakeInline<cR50fDoor__close_hook_2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 		
 		// R50fExecCageMain_mb
 		pattern = hook::pattern("DE CA D9 C9 DC 35 ? ? ? ? DE E9 D9 5D ? D9");
