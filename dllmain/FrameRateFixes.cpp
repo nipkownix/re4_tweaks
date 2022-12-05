@@ -1366,6 +1366,119 @@ void re4t::init::FrameRateFixes()
 		pattern.count(2).for_each_result([&](hook::pattern_match match) {
 			injector::MakeInline<sub_7A32B0_hook_new_timer>(match.get<uint32_t>(0), match.get<uint32_t>(5));
 		});
+
+		// r305_ShutterCtrl
+		pattern = hook::pattern("B9 ? ? ? ? F7 F9 C7 45 ? ? ? ? ? 81 C2 ? ? ? ? 89");
+		struct r305_ShutterCtrl_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int vanillaNum = 30;
+
+				if (re4t::cfg->bFixMovingGeometrySpeed)
+				{
+					int newNum = CurrentFrameRate();
+
+					regs.ecx = newNum;
+				}
+				else
+				{
+					regs.ecx = vanillaNum;
+				}
+			}
+		}; injector::MakeInline<r305_ShutterCtrl_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		pattern = hook::pattern("81 C2 ? ? ? ? 89 55 DC E9 ? ? ? ? 80 B9 ? ? ? ? ? 74 08 8B 81");
+		struct r305_ShutterCtrl_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int vanillaAdd = 180;
+
+				if (re4t::cfg->bFixMovingGeometrySpeed)
+				{
+					int newAdd = (int)std::round((float)vanillaAdd / GlobalPtr()->deltaTime_70);
+
+					regs.edx += newAdd;
+				}
+				else
+				{
+					regs.edx += vanillaAdd;
+				}
+			}
+		}; injector::MakeInline<r305_ShutterCtrl_hook_2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// cR305Shutter::open 
+		pattern = hook::pattern("DC 05 ? ? ? ? D9 98 ? ? ? ? 8B 4E 04 D9 46 14");
+		struct cR305Shutter__open_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaAdd = 200.0;
+
+				if (re4t::cfg->bFixMovingGeometrySpeed)
+				{
+					double newAdd = GlobalPtr()->deltaTime_70 * vanillaAdd;
+
+					_asm {fadd newAdd}
+				}
+				else
+				{
+					_asm {fadd vanillaAdd}
+				}
+			}
+		}; injector::MakeInline<cR305Shutter__open_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// cR305Shutter::close
+		pattern = hook::pattern("D9 05 ? ? ? ? 8B 46 30 D9 5E 18 6A 00 50 E8 ? ? ? ? 8B");
+		struct cR305Shutter__close_hook_1
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaNum = -40.0;
+
+				if (re4t::cfg->bFixMovingGeometrySpeed)
+				{
+					double newNum = GlobalPtr()->deltaTime_70 * vanillaNum;
+
+					_asm {fld newNum}
+				}
+				else
+				{
+					_asm {fld vanillaNum}
+				}
+			}
+		}; injector::MakeInline<cR305Shutter__close_hook_1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		pattern = hook::pattern("DC 25 ? ? ? ? D9 5E ? D9 81 ? ? ? ? D9 46 ? DE D9 DF E0 F6 C4 ? 0F 85 ? ? ? ? D9 46 ? D9 99");
+		struct cR305Shutter__close_hook_2
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				double vanillaSub = 40.0;
+
+				if (re4t::cfg->bFixMovingGeometrySpeed)
+				{
+					double newSub = GlobalPtr()->deltaTime_70 * vanillaSub;
+
+					int interval = (int)std::round(CurrentFrameRate() / 30);
+
+					// Interval must be at least 1
+					if (interval < 1)
+						interval = 1;
+
+					// Only apply the speed changes if the frame interval has passed
+					if (GlobalPtr()->frameCounter_530C % interval == 0)
+					{
+						_asm {fsub newSub}
+					}
+				}
+				else
+				{
+					_asm {fsub vanillaSub}
+				}
+			}
+		}; injector::MakeInline<cR305Shutter__close_hook_2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// Fix character backwards turning speed
