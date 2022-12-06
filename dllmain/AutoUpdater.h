@@ -2,7 +2,6 @@
 
 enum class UpdateStatus
 {
-	CheckFailed,
 	Available,
 	InProgress,
 	Success,

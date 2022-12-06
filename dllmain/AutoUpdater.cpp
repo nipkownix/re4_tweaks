@@ -43,7 +43,7 @@ void updateCheck()
 		con.AddLogChar("AutoUpdate: Failed to connect to GitHub!");
 		#endif 
 
-		updt.UpdateStatus = UpdateStatus::CheckFailed;
+		updt.UpdateStatus = UpdateStatus::Finished;
 
 		return;
 	}
@@ -73,7 +73,7 @@ void updateCheck()
 		con.AddLogChar("AutoUpdate: Failed to download json from GitHub!");
 		#endif 
 
-		updt.UpdateStatus = UpdateStatus::CheckFailed;
+		updt.UpdateStatus = UpdateStatus::Finished;
 
 		return;
 	}
@@ -88,7 +88,7 @@ void updateCheck()
 		con.AddLogChar("AutoUpdate: Invalid json!");
 		#endif 
 
-		updt.UpdateStatus = UpdateStatus::CheckFailed;
+		updt.UpdateStatus = UpdateStatus::Finished;
 
 		return;
 	}
