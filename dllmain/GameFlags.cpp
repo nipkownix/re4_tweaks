@@ -1235,79 +1235,97 @@ const char* Flags_ROOM_r226_Names[] = {
 };
 
 // make sure to sync any changes here with EItemId (item.h)
+const char* ITEM_TYPE_Names[] = {
+	"Unk0",
+	"Wep",
+	"Ammo",
+	"Wep", // ITEM_TYPE_THROWABLE
+	"Unk4",
+	"Treasure",
+	"Healing",
+	"Key Item",
+	"Treasure", // ITEM_TYPE_TREASURE_MERCS
+	"Mod",
+	"File",
+	"Misc", // ITEM_TYPE_TREASURE_MAP
+	"Gem",
+	"Bottlecap",
+	"Key Item" // ITEM_TYPE_IMPORTANT
+};
+
 const char* EItemId_Names[] = {
-	"Ammo: Magnum Ammo", // Bullet_45in_H
-	"Wep: Hand Grenade",
-	"Wep: Incendiary Grenade",
-	"Wep: Matilda", // VP70
-	"Ammo: Handgun Ammo", // Bullet_9mm_H
-	"Item: First Aid Spray",
-	"Item: Green Herb", // Herb_G
-	"Ammo: Rifle Ammo", // Bullet_223in
-	"Wep: Chicken Egg", // Hen_Egg
-	"Wep: Brown Chicken Egg", // Iodine_Egg
-	"Wep: Gold Chicken Egg", // Golden_Egg
+	"Magnum Ammo", // Bullet_45in_H
+	"Hand Grenade",
+	"Incendiary Grenade",
+	"Matilda", // VP70
+	"Handgun Ammo", // Bullet_9mm_H
+	"First Aid Spray",
+	"Green Herb", // Herb_G
+	"Rifle Ammo", // Bullet_223in
+	"Chicken Egg", // Hen_Egg
+	"Brown Chicken Egg", // Iodine_Egg
+	"Gold Chicken Egg", // Golden_Egg
 	"Luis_Drug",
-	"Item: Plaga Sample", // Parasite_Sample
+	"Plaga Sample", // Parasite_Sample
 	"Krauser_Knife",
-	"Wep: Flash Grenade", // Light_Grenade
+	"Flash Grenade", // Light_Grenade
 	"Salazar_Crest",
-	"Wep: Bowgun",
-	"Ammo: Bowgun Bolts",
-	"Item: Green Herb (X2)", // Herb_G_G
-	"Item: Green Herb (X3)", // Herb_G_G_G
-	"Item: Mixed Herbs (G+R)", // Herb_G_R
-	"Item: Mixed Herbs (G+R+Y)", // Herb_G_R_Y
-	"Item: Mixed Herbs (G+Y)", // Herb_G_Y
-	"Wep: Rocket Launcher (Special)", // Ada_RPG
-	"Ammo: Shotgun Shells", // Bullet_12gg
-	"Item: Red Herb", // Herb_R
-	"Ammo: Handcannon Ammo", // Bullet_5in
+	"Bowgun",
+	"Bowgun Bolts",
+	"Green Herb (X2)", // Herb_G_G
+	"Green Herb (X3)", // Herb_G_G_G
+	"Mixed Herbs (G+R)", // Herb_G_R
+	"Mixed Herbs (G+R+Y)", // Herb_G_R_Y
+	"Mixed Herbs (G+Y)", // Herb_G_Y
+	"Rocket Launcher (Special)", // Ada_RPG
+	"Shotgun Shells", // Bullet_12gg
+	"Red Herb", // Herb_R
+	"Handcannon Ammo", // Bullet_5in
 	"Key_Sand_Clock",
-	"Item: Yellow Herb", // Herb_Y
+	"Yellow Herb", // Herb_Y
 	"Piece_Of_Slate",
 	"Golden_Gem",
 	"Silver_Gem",
-	"Ammo: TMP Ammo", // Bullet_9mm_M
-	"Wep: Punisher (FN57)", // FN57
-	"Mod: Scope (P.R.L. 412)", // Scope_New_Weapon (shows as Punisher w/ Silencer ingame??)
-	"Wep: Handgun", // Ruger
+	"TMP Ammo", // Bullet_9mm_M
+	"Punisher (FN57)", // FN57
+	"Scope (P.R.L. 412)", // Scope_New_Weapon (shows as Punisher w/ Silencer ingame??)
+	"Handgun", // Ruger
 	"Ruger_SA",
-	"Wep: Red9", // Mauser
+	"Red9", // Mauser
 	"Mauser_ST",
-	"Wep: Blacktail", // XD9
+	"Blacktail", // XD9
 	"New_Weapon_SC",
-	"Wep: Broken Butterfly", // Civilian
-	"Wep: Killer7", // Gov
+	"Broken Butterfly", // Civilian
+	"Killer7", // Gov
 	"Ada_New_Weapon",
-	"Wep: Shotgun",
-	"Wep: Striker",
-	"Wep: Rifle", // S_Field
-	"Wep: Rifle (semi-auto)", // HK_Sniper
-	"Wep: TMP", // Styer
+	"Shotgun",
+	"Striker",
+	"Rifle", // S_Field
+	"Rifle (semi-auto)", // HK_Sniper
+	"TMP", // Styer
 	"R513_Key_0a",
 	"Styer_St",
 	"R513_Key_0b",
-	"Wep: Chicago Typewriter", // Thompson
-	"Wep: Rocket Launcher", // RPG7
-	"Wep: Mine Thrower", // Mine
-	"Wep: Hand Cannon", // SW500
-	"Wep: Knife",
+	"Chicago Typewriter", // Thompson
+	"Rocket Launcher", // RPG7
+	"Mine Thrower", // Mine
+	"Hand Cannon", // SW500
+	"Knife",
 	"Cupric_Gem",
 	"Moon_Spall_1",
 	"Cult_Key",
 	"Cult_Crest",
 	"False_Eye",
-	"Wep: Custom TMP", // Krauser_Machine_Gun
-	"Mod: Silencer (Handgun)", // Silencer_9mm
-	"Wep: Punisher (Item_40)", // "Item_40" in re4vr
-	"Wep: P.R.L. 412", // "New_Weapon" in re4vr
-	"Mod: Stock (Red9)", // Stock_Mauser
-	"Mod: Stock (TMP)", // Stock_Styer
-	"Mod: Scope (Rifle)", // Scope_Sniper
-	"Mod: Scope (semi-auto rifle)", // Scope_HK_Sniper
-	"Ammo: Mine-Darts", // Bullet_Mine_A
-	"Wep: Shotgun (Ada)",
+	"Custom TMP", // Krauser_Machine_Gun
+	"Silencer (Handgun)", // Silencer_9mm
+	"Punisher (Item_40)", // "Item_40" in re4vr
+	"P.R.L. 412", // "New_Weapon" in re4vr
+	"Stock (Red9)", // Stock_Mauser
+	"Stock (TMP)", // Stock_Styer
+	"Scope (Rifle)", // Scope_Sniper
+	"Scope (semi-auto rifle)", // Scope_HK_Sniper
+	"Mine-Darts", // Bullet_Mine_A
+	"Shotgun (Ada)",
 	"File_13",
 	"File_14",
 	"File_15",
@@ -1318,8 +1336,8 @@ const char* EItemId_Names[] = {
 	"File_20",
 	"File_21",
 	"HK_Sniper_Thermo",
-	"Wep: Krauser's Bow",
-	"Wep: Chicago Typewriter (Ada)", // Ada_Machine_Gun
+	"Krauser's Bow",
+	"Chicago Typewriter (Ada)", // Ada_Machine_Gun
 	"Treasure_Map_2",
 	"Treasure_Map_3",
 	"Ore_White",
@@ -1342,15 +1360,15 @@ const char* EItemId_Names[] = {
 	"Beer_Stein_R_Y",
 	"Beer_Stein_G_R_Y",
 	"Moon_Spall_2",
-	"Ammo: Chicago Typewriter Ammo", // Bullet_45in_M
+	"Chicago Typewriter Ammo", // Bullet_45in_M
 	"S_Field_Sc",
 	"HK_Sniper_Sc",
-	"Wep: Infinite Launcher", // Omake_RPG
+	"Infinite Launcher", // Omake_RPG
 	"Pagan_Grail_1",
 	"Pagan_Grail_2",
 	"Pagan_Rod",
 	"Ingot_Bar",
-	"Ammo: Arrows", // Bullet_Arrow
+	"Arrows", // Bullet_Arrow
 	"Time_Bonus",
 	"R327_Card_Key",
 	"Point_Bonus",
@@ -1384,10 +1402,10 @@ const char* EItemId_Names[] = {
 	"Pearl_Ruby_Mirror",
 	"Key_To_R30b",
 	"Plush_Chessboard",
-	"Wep: Riot Gun",
-	"Item: Black Bass",
+	"Riot Gun",
+	"Black Bass",
 	"Sand_Clock",
-	"Item: Black Bass (L)",
+	"Black Bass (L)",
 	"Evil_Gem",
 	"S_Field_Thermo",
 	"Pot_Holed_Crown",
@@ -1404,9 +1422,9 @@ const char* EItemId_Names[] = {
 	"Crest_Left",
 	"Crest_Full",
 	"Key_To_201",
-	"Item: Mixed Herbs (R+Y)", // Herb_R_Y
+	"Mixed Herbs (R+Y)", // Herb_R_Y
 	"Treasure_Map",
-	"Mod: Scope (Mine Thrower)", // Scope_Mine
+	"Scope (Mine Thrower)", // Scope_Mine
 	"Mine_SC",
 	"File_01",
 	"File_02",
@@ -1433,7 +1451,7 @@ const char* EItemId_Names[] = {
 	"Lantern_G_R_Y",
 	"Dungeon_Key",
 	"Silver_Sword",
-	"Mod: Infrared Scope", // Scope_Thermo
+	"Infrared Scope", // Scope_Thermo
 	"Mask",
 	"Mask_Stone_G",
 	"Mask_Stone_R",

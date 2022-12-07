@@ -25,6 +25,7 @@ cFilter00Params2* Filter00Params2 = nullptr;
 cItemMgr* ItemMgr = nullptr;
 cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
+cItemMgr__get_Fn cItemMgr__get = nullptr;
 
 // event.h externs
 EventMgr* EvtMgr = nullptr;
@@ -41,6 +42,7 @@ cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
 // Original game funcs
 namespace bio4 {
 	bool(__cdecl* PutInCase)(ITEM_ID item_id, uint16_t item_num, uint32_t size);
+	void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
 
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
 
@@ -618,6 +620,24 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 	// 
 	// PutInCase tries adding the item to inventory, even rotating item to fit if necessary
 	// If not enough space it'll return false
+
+	ITEM_INFO info;
+	bio4::itemInfo(id, &info);
+
+	if (info.type_2 != ITEM_TYPE_WEAPON && 
+		info.type_2 != ITEM_TYPE_AMMO && 
+		info.type_2 != ITEM_TYPE_THROWABLE && 
+		info.type_2 != ITEM_TYPE_HEALING &&
+		info.type_2 != ITEM_TYPE_WEAPON_MOD &&
+		info.type_2 != ITEM_TYPE_IMPORTANT)
+	{
+		// If not one of the types above it likely isn't stored in puzzle inventory
+		// Add it via ItemMgr and return instead
+		// TODO: some kind of feedback to user to let them know it's been added?
+		ItemMgr->get(id, count);
+		return;
+	}
+
 	if (always_show_inv_ui || !bio4::PutInCase(id, count, SubScreenWk->board_size_2AA))
 	{
 		// PutInCase returned false, not enough space for item
@@ -883,6 +903,8 @@ bool re4t::init::Game()
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(9), cItemMgr__search);
 	pattern = hook::pattern("8B 0D ? ? ? ? 51 B9 ? ? ? ? E8 ? ? ? ? 5F 5E 5B 8B E5");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(12), cItemMgr__arm);
+	pattern = hook::pattern("56 50 B9 ? ? ? ? E8 ? ? ? ? A1");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(7), cItemMgr__get);
 
 	// EvtMgr
 	pattern = hook::pattern("75 ? 6A 00 6A 00 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 84 C0");
@@ -922,6 +944,10 @@ bool re4t::init::Game()
 	// PutInCase funcptr
 	pattern = hook::pattern("0F B7 4E 1C 52 50 51 E8");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::PutInCase);
+
+	// itemInfo funcptr
+	pattern = hook::pattern("8D 45 ? 50 51 E8 ? ? ? ? 8A 45 ? 83 C4 08");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), bio4::itemInfo);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");

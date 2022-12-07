@@ -286,12 +286,44 @@ struct ITEM_ORDER
 };
 assert_size(ITEM_ORDER, 8);
 
+// based on observations of ITEM_INFO type value for different items, names may be incorrect
+enum ITEM_TYPE_mb : uint8_t
+{
+	ITEM_TYPE_UNK0 = 0,
+	ITEM_TYPE_WEAPON = 1,
+	ITEM_TYPE_AMMO = 2,
+	ITEM_TYPE_THROWABLE = 3,
+	ITEM_TYPE_UNK4 = 4,
+	ITEM_TYPE_TREASURE = 5, // only combinable treasures?
+	ITEM_TYPE_HEALING = 6,
+	ITEM_TYPE_KEY_ITEM = 7,
+	ITEM_TYPE_TREASURE_MERCS = 8, // Ingot_Bar, Time_Bonus & Point_Bonus, maybe special items?
+	ITEM_TYPE_WEAPON_MOD = 9,
+	ITEM_TYPE_FILE = 10,
+	ITEM_TYPE_TREASURE_MAP = 11, // also handles attache cases?
+	ITEM_TYPE_TREASURE_GEM = 12,
+	ITEM_TYPE_BOTTLE_CAP = 13,
+	ITEM_TYPE_IMPORTANT = 14 // can't be thrown/disposed from inventory
+};
+extern const char* ITEM_TYPE_Names[]; // GameFlags.cpp
+
+struct ITEM_INFO
+{
+	ITEM_ID id_0;
+	ITEM_TYPE_mb type_2;
+	uint8_t defNum_3;
+	uint16_t maxNum_4;
+};
+assert_size(ITEM_INFO, 6);
+
 class cItemMgr;
 
 typedef cItem* (__fastcall* cItemMgr__search_Fn)(cItemMgr* thisptr, void* unused, ITEM_ID id);
 typedef bool(__fastcall* cItemMgr__arm_Fn)(cItemMgr* thisptr, void* unused, cItem* pItem);
+typedef bool(__fastcall* cItemMgr__get_Fn)(cItemMgr* thisptr, void* unused, ITEM_ID id, uint16_t num);
 extern cItemMgr__search_Fn cItemMgr__search;
 extern cItemMgr__arm_Fn cItemMgr__arm;
+extern cItemMgr__get_Fn cItemMgr__get;
 
 class cItemMgr
 {
@@ -321,7 +353,17 @@ public:
 	{
 		return cItemMgr__arm(this, nullptr, pItem);
 	}
+
+	inline bool get(ITEM_ID id, uint16_t num)
+	{
+		return cItemMgr__get(this, nullptr, id, num);
+	}
 };
 assert_size(cItemMgr, 0x30);
 
 extern cItemMgr* ItemMgr;
+
+namespace bio4
+{
+	extern void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
+};

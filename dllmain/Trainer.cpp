@@ -2326,95 +2326,57 @@ void Trainer_RenderUI(int columnCount)
 
 				std::string searchTextUpper = StrToUpper(searchText);
 
-				// Item IDs scraped from games "piece_info" array
-				// These are the only items that have valid puzzle pieces attached to them
-				// Adding an item that isn't in this list will cause crash since game won't find the puzzle piece for it
-				static std::vector<EItemId> validItemIds = {
-					EItemId::VP70,
-					EItemId::FN57,
-					EItemId::Punisher,
-					EItemId::Ruger,
-					EItemId::Mauser,
-					EItemId::XD9,
-					EItemId::Civilian,
-					EItemId::Gov,
-					EItemId::Shotgun,
-					EItemId::Striker,
-					EItemId::S_Field,
-					EItemId::HK_Sniper,
-					EItemId::Styer,
-					EItemId::Thompson,
-					EItemId::RPG7,
-					EItemId::Mine,
-					EItemId::SW500,
-					EItemId::Knife,
-					EItemId::Riot_Gun,
-					EItemId::Ada_RPG,
-					EItemId::Omake_RPG,
-					EItemId::Krauser_Machine_Gun,
-					EItemId::Krauser_Bow,
-					EItemId::Bullet_9mm_H,
-					EItemId::Bullet_9mm_M,
-					EItemId::Bullet_12gg,
-					EItemId::Bullet_223in,
-					EItemId::Bullet_45in_M,
-					EItemId::Bullet_5in,
-					EItemId::Bullet_45in_H,
-					EItemId::Bullet_Mine_A,
-					EItemId::Bullet_Arrow,
-					EItemId::Silencer_9mm,
-					EItemId::Stock_Mauser,
-					EItemId::Stock_Styer,
-					EItemId::Scope_Sniper,
-					EItemId::Scope_HK_Sniper,
-					EItemId::Scope_Mine,
-					EItemId::Scope_Thermo,
-					EItemId::Grenade,
-					EItemId::Flame_Grenade,
-					EItemId::Light_Grenade,
-					EItemId::Spray,
-					EItemId::Hen_Egg,
-					EItemId::Iodine_Egg,
-					EItemId::Golden_Egg,
-					EItemId::Black_Bass,
-					EItemId::Black_Bass_L,
-					EItemId::Herb_G,
-					EItemId::Herb_R,
-					EItemId::Herb_Y,
-					EItemId::Herb_G_R,
-					EItemId::Herb_G_Y,
-					EItemId::Herb_R_Y,
-					EItemId::Herb_G_G,
-					EItemId::Herb_G_G_G,
-					EItemId::Herb_G_R_Y,
-					EItemId::Parasite_Sample,
-					EItemId::PRL_412,
-					EItemId::Bow_Gun,
-					EItemId::Bullet_Bow_Gun,
-					EItemId::Ada_Shot_Gun,
-					EItemId::Ada_Machine_Gun,
-					EItemId::Scope_PRL_412
+				static std::vector<EItemId> badItems = {
+					// These use ITEM_TYPE_WEAPON but don't have any "piece_info" data in the game for them
+					// would cause crash if added, so filter them out instead
+					EItemId::Ruger_SA,
+					EItemId::Mauser_ST,
+					EItemId::New_Weapon_SC,
+					EItemId::Styer_St,
+					EItemId::HK_Sniper_Thermo,
+					EItemId::S_Field_Sc,
+					EItemId::HK_Sniper_Sc,
+					EItemId::S_Field_Thermo,
+					EItemId::Mine_SC,
+
+					// These don't seem to have any effect when added, probably requires some struct to be updated too..
+					EItemId::Attache_Case_S,
+					EItemId::Attache_Case_M,
+					EItemId::Attache_Case_L,
+					EItemId::Attache_Case_O,
+					EItemId::Assault_Jacket,
+					EItemId::Any
 				};
 
-				static EItemId itemId = EItemId::VP70;
+				static EItemId itemId = EItemId::Bullet_45in_H;
+
 				if (ImGui::BeginListBox("ItemId"))
 				{
-					for (auto& item_id : validItemIds)
+					for(int item_id = 0; item_id < 255; item_id++)
 					{
+						if (std::find(badItems.begin(), badItems.end(), EItemId(item_id)) != badItems.end())
+							continue;
+
+						ITEM_INFO curInfo;
+						curInfo.id_0 = ITEM_ID(item_id);
+						bio4::itemInfo(ITEM_ID(item_id), &curInfo);
+
+						std::string name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
+
 						bool makeVisible = true;
 						if (!searchTextUpper.empty())
 						{
-							std::string itemNameUpper = StrToUpper(EItemId_Names[int(item_id)]);
+							std::string itemNameUpper = StrToUpper(name);
 
 							makeVisible = itemNameUpper.find(searchTextUpper) != std::string::npos;
 						}
 
 						if (makeVisible)
 						{
-							bool selected = itemId == item_id;
-							if (ImGui::Selectable(EItemId_Names[int(item_id)], &selected))
+							bool selected = itemId == EItemId(item_id);
+							if (ImGui::Selectable(name.c_str(), &selected))
 								if (selected)
-									itemId = item_id;
+									itemId = EItemId(item_id);
 						}
 					}
 					ImGui::EndListBox();
@@ -2422,14 +2384,27 @@ void Trainer_RenderUI(int columnCount)
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
+				ITEM_INFO info;
+				info.id_0 = ITEM_ID(itemId);
+				bio4::itemInfo(ITEM_ID(itemId), &info);
+
+				if (TweaksDevMode)
+					ImGui::Text("selected: id %d type %d def %d, max %d", info.id_0, info.type_2, info.defNum_3, info.maxNum_4);
+
 				// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
 				// TODO: pause menu, checks below don't seem to catch it...
 				bool disable = !PlayerPtr() || !PlayerPtr()->subScrCheck() || SubScreenWk->open_flag_2C != 0;
 
 				static int stackCount = 1;
+				bool stackable = info.maxNum_4 > 1;
+				if (!stackable)
+					stackCount = 1;
+
+				ImGui::BeginDisabled(!stackable);
 				ImGui::InputInt("Stack count", &stackCount);
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 					ImGui::SetTooltip("Number of items in the stack, only applies to stackable items such as ammo.");
+				ImGui::EndDisabled();
 
 				ImGui::BeginDisabled(disable);
 				if (ImGui::Button("Add Item"))
