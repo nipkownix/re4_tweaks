@@ -1242,7 +1242,7 @@ const char* ITEM_TYPE_Names[] = {
 	"Wep", // ITEM_TYPE_THROWABLE
 	"Unk4",
 	"Treasure",
-	"Healing",
+	"Consumable",
 	"Key Item",
 	"Treasure", // ITEM_TYPE_TREASURE_MERCS
 	"Mod",

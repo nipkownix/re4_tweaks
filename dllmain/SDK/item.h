@@ -292,20 +292,22 @@ enum ITEM_TYPE_mb : uint8_t
 	ITEM_TYPE_UNK0 = 0,
 	ITEM_TYPE_WEAPON = 1,
 	ITEM_TYPE_AMMO = 2,
-	ITEM_TYPE_THROWABLE = 3,
+	ITEM_TYPE_GRENADE = 3,
 	ITEM_TYPE_UNK4 = 4,
-	ITEM_TYPE_TREASURE = 5, // only combinable treasures?
-	ITEM_TYPE_HEALING = 6,
+	ITEM_TYPE_TREASURE = 5,
+	ITEM_TYPE_CONSUMABLE = 6,
 	ITEM_TYPE_KEY_ITEM = 7,
 	ITEM_TYPE_TREASURE_MERCS = 8, // Ingot_Bar, Time_Bonus & Point_Bonus, maybe special items?
 	ITEM_TYPE_WEAPON_MOD = 9,
 	ITEM_TYPE_FILE = 10,
 	ITEM_TYPE_TREASURE_MAP = 11, // also handles attache cases?
 	ITEM_TYPE_TREASURE_GEM = 12,
-	ITEM_TYPE_BOTTLE_CAP = 13,
+	ITEM_TYPE_BOTTLECAP = 13,
 	ITEM_TYPE_IMPORTANT = 14 // can't be thrown/disposed from inventory
 };
 extern const char* ITEM_TYPE_Names[]; // GameFlags.cpp
+
+
 
 struct ITEM_INFO
 {
@@ -366,4 +368,14 @@ extern cItemMgr* ItemMgr;
 namespace bio4
 {
 	extern void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
+
+	inline bool itemShowsInInventory(ITEM_TYPE_mb type)
+	{
+		return type == ITEM_TYPE_WEAPON ||
+			type == ITEM_TYPE_AMMO ||
+			type == ITEM_TYPE_GRENADE ||
+			type == ITEM_TYPE_CONSUMABLE ||
+			type == ITEM_TYPE_WEAPON_MOD ||
+			type == ITEM_TYPE_IMPORTANT;
+	}
 };

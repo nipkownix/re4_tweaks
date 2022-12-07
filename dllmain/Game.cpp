@@ -624,14 +624,9 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 	ITEM_INFO info;
 	bio4::itemInfo(id, &info);
 
-	if (info.type_2 != ITEM_TYPE_WEAPON && 
-		info.type_2 != ITEM_TYPE_AMMO && 
-		info.type_2 != ITEM_TYPE_THROWABLE && 
-		info.type_2 != ITEM_TYPE_HEALING &&
-		info.type_2 != ITEM_TYPE_WEAPON_MOD &&
-		info.type_2 != ITEM_TYPE_IMPORTANT)
+	if (!bio4::itemShowsInInventory(info.type_2))
 	{
-		// If not one of the types above it likely isn't stored in puzzle inventory
+		// If itemShowsInInventory returned false it likely isn't stored in puzzle inventory
 		// Add it via ItemMgr and return instead
 		// TODO: some kind of feedback to user to let them know it's been added?
 		ItemMgr->get(id, count);

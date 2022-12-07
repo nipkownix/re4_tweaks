@@ -2339,6 +2339,8 @@ void Trainer_RenderUI(int columnCount)
 					EItemId::S_Field_Thermo,
 					EItemId::Mine_SC,
 
+					EItemId::Krauser_Knife, // gets added to key items, but freezes game when examining
+
 					// These don't seem to have any effect when added, probably requires some struct to be updated too..
 					EItemId::Attache_Case_S,
 					EItemId::Attache_Case_M,
@@ -2349,6 +2351,7 @@ void Trainer_RenderUI(int columnCount)
 				};
 
 				static EItemId itemId = EItemId::Bullet_45in_H;
+				static int stackCount = 100;
 
 				if (ImGui::BeginListBox("ItemId"))
 				{
@@ -2376,7 +2379,11 @@ void Trainer_RenderUI(int columnCount)
 							bool selected = itemId == EItemId(item_id);
 							if (ImGui::Selectable(name.c_str(), &selected))
 								if (selected)
+								{
 									itemId = EItemId(item_id);
+									if (curInfo.maxNum_4 > 1)
+										stackCount = curInfo.maxNum_4; // help user by setting stack count to max for this item
+								}
 						}
 					}
 					ImGui::EndListBox();
@@ -2387,24 +2394,34 @@ void Trainer_RenderUI(int columnCount)
 				ITEM_INFO info;
 				info.id_0 = ITEM_ID(itemId);
 				bio4::itemInfo(ITEM_ID(itemId), &info);
-
 				if (TweaksDevMode)
 					ImGui::Text("selected: id %d type %d def %d, max %d", info.id_0, info.type_2, info.defNum_3, info.maxNum_4);
 
-				// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
-				// TODO: pause menu, checks below don't seem to catch it...
-				bool disable = !PlayerPtr() || !PlayerPtr()->subScrCheck() || SubScreenWk->open_flag_2C != 0;
-
-				static int stackCount = 1;
 				bool stackable = info.maxNum_4 > 1;
+				bool showsInInventory = bio4::itemShowsInInventory(info.type_2);
+
 				if (!stackable)
 					stackCount = 1;
+				else
+				{
+					if (stackCount > info.maxNum_4)
+						stackCount = info.maxNum_4;
+				}
 
 				ImGui::BeginDisabled(!stackable);
 				ImGui::InputInt("Stack count", &stackCount);
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-					ImGui::SetTooltip("Number of items in the stack, only applies to stackable items such as ammo.");
+				{
+					if (!stackable)
+						ImGui::SetTooltip("The selected item is unable to be stacked.");
+					else
+						ImGui::SetTooltip("Number of items in the stack (max for this item: %d)", info.maxNum_4);
+				}
 				ImGui::EndDisabled();
+
+				// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
+				// TODO: pause menu, checks below don't seem to catch it...
+				bool disable = !PlayerPtr() || !PlayerPtr()->subScrCheck() || SubScreenWk->open_flag_2C != 0;
 
 				ImGui::BeginDisabled(disable);
 				if (ImGui::Button("Add Item"))
@@ -2417,7 +2434,12 @@ void Trainer_RenderUI(int columnCount)
 
 				ImGui_ItemSeparator();
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::BeginDisabled(!showsInInventory);
 				ImGui::Checkbox("Open inventory after adding", &alwaysShowInventory);
+				if (!showsInInventory && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+					ImGui::SetTooltip("The selected item will appear on treasure/file tab instead of inventory.");
+				ImGui::EndDisabled();
 			}
 
 			ImGui_ColumnFinish();
