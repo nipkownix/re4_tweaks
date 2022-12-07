@@ -2340,6 +2340,8 @@ void Trainer_RenderUI(int columnCount)
 					EItemId::Mine_SC,
 
 					EItemId::Krauser_Knife, // gets added to key items, but freezes game when examining
+					EItemId::Ada_New_Weapon, // gets added to key items as "Killer7 w/ Silencer", no icon, examine shows the model, but it's otherwise pretty useless
+					                         // maybe this can be made equippable if "piece_info" data is added for it though...
 
 					// These don't seem to have any effect when added, probably requires some struct to be updated too..
 					EItemId::Attache_Case_S,
@@ -2421,7 +2423,11 @@ void Trainer_RenderUI(int columnCount)
 
 				// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
 				// TODO: pause menu, checks below don't seem to catch it...
-				bool disable = !PlayerPtr() || !PlayerPtr()->subScrCheck() || SubScreenWk->open_flag_2C != 0;
+				bool disable =
+					!PlayerPtr() ||
+					!PlayerPtr()->subScrCheck() ||
+					SubScreenWk->open_flag_2C != 0 ||
+					FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
 
 				ImGui::BeginDisabled(disable);
 				if (ImGui::Button("Add Item"))
