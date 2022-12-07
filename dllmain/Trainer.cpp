@@ -2378,7 +2378,7 @@ void Trainer_RenderUI(int columnCount)
 								if (selected)
 								{
 									itemId = EItemId(item_id);
-									if (curInfo.maxNum_4 > 1)
+									if (curInfo.maxNum_4 > 1 && curInfo.type_2 == ITEM_TYPE_AMMO)
 										stackCount = curInfo.maxNum_4; // help user by setting stack count to max for this item
 								}
 						}
