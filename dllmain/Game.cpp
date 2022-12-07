@@ -630,6 +630,18 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 		// Add it via ItemMgr and return instead
 		// TODO: some kind of feedback to user to let them know it's been added?
 		ItemMgr->get(id, count);
+
+		// Special handling for certain items
+		EItemId eid = EItemId(id);
+		if (eid == EItemId::Attache_Case_S)
+			SubScreenWk->board_next_2AB = 0; // update inventory attache case size
+		else if (eid == EItemId::Attache_Case_M)
+			SubScreenWk->board_next_2AB = 1;
+		else if (eid == EItemId::Attache_Case_L)
+			SubScreenWk->board_next_2AB = 2;
+		else if (eid == EItemId::Attache_Case_O)
+			SubScreenWk->board_next_2AB = 3;
+
 		return;
 	}
 

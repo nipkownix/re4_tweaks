@@ -2344,10 +2344,6 @@ void Trainer_RenderUI(int columnCount)
 					                         // maybe this can be made equippable if "piece_info" data is added for it though...
 
 					// These don't seem to have any effect when added, probably requires some struct to be updated too..
-					EItemId::Attache_Case_S,
-					EItemId::Attache_Case_M,
-					EItemId::Attache_Case_L,
-					EItemId::Attache_Case_O,
 					EItemId::Assault_Jacket,
 					EItemId::Any
 				};
