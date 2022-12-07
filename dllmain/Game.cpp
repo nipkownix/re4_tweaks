@@ -619,49 +619,69 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 	// for items that aren't defined, pzlPlayer::appendExtraPiece will fail to setup pzlPlayer->m_extra_14, causing crash when those items are added...
 	// need to either add code to search piece_info for ITEM_ID first, or copy the piece_info data into our DLL
 	// or we could create a new enum with just the item ids that have valid pieces, hmm...
-	// 
-	// PutInCase tries adding the item to inventory, even rotating item to fit if necessary
-	// If not enough space it'll return false
 
 	ITEM_INFO info;
 	bio4::itemInfo(id, &info);
 
+	bool playSndEffect = true;
+
 	if (!bio4::itemShowsInInventory(info.type_2))
 	{
 		// If itemShowsInInventory returned false it likely isn't stored in puzzle inventory
-		// Add it via ItemMgr and return instead
-		// TODO: some kind of feedback to user to let them know it's been added?
-		ItemMgr->get(id, count);
-
-		// Special handling for certain items
-		EItemId eid = EItemId(id);
-		if (eid == EItemId::Assault_Jacket)
+		// Add it via ItemMgr instead of using PutInCase funcs
+		if (!ItemMgr->get(id, count))
+			playSndEffect = false;
+		else
 		{
-			extern BYTE __cdecl j_PlSetCostume_Hook(); // Misc.cpp
-			j_PlSetCostume_Hook();
-			bio4::PlChangeData();
+			// Special handling for certain items
+			EItemId eid = EItemId(id);
+			if (eid == EItemId::Assault_Jacket)
+			{
+				extern BYTE __cdecl j_PlSetCostume_Hook(); // Misc.cpp
+				j_PlSetCostume_Hook();
+				bio4::PlChangeData();
+			}
+			else if (eid == EItemId::Attache_Case_S)
+				SubScreenWk->board_next_2AB = 0; // update inventory attache case size
+			else if (eid == EItemId::Attache_Case_M)
+				SubScreenWk->board_next_2AB = 1;
+			else if (eid == EItemId::Attache_Case_L)
+				SubScreenWk->board_next_2AB = 2;
+			else if (eid == EItemId::Attache_Case_O)
+				SubScreenWk->board_next_2AB = 3;
 		}
-		else if (eid == EItemId::Attache_Case_S)
-			SubScreenWk->board_next_2AB = 0; // update inventory attache case size
-		else if (eid == EItemId::Attache_Case_M)
-			SubScreenWk->board_next_2AB = 1;
-		else if (eid == EItemId::Attache_Case_L)
-			SubScreenWk->board_next_2AB = 2;
-		else if (eid == EItemId::Attache_Case_O)
-			SubScreenWk->board_next_2AB = 3;
-
-		return;
+	}
+	else
+	{
+		// PutInCase tries adding the item to inventory, even rotating item to fit if necessary
+		// If not enough space it'll return false
+		if (always_show_inv_ui || !bio4::PutInCase(id, count, SubScreenWk->board_size_2AA))
+		{
+			// PutInCase returned false, not enough space for item
+			// Setup subscreen fields with the item info, for it to show the item-adding UI
+			// (if puzzle screen is already open this will have no effect until screen is closed, seems to then open puzzle screen again to handle adding the item)
+			// (maybe that seems a bit janky though, might be better to add some checks to only allow this func to work when subscr is closed...)
+			playSndEffect = false;
+			SubScreenWk->get_item_id_2F6 = id;
+			SubScreenWk->get_item_num_2F8 = count;
+			bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_PZZL, SS_ATTR_NULL);
+		}
 	}
 
-	if (always_show_inv_ui || !bio4::PutInCase(id, count, SubScreenWk->board_size_2AA))
+	if (playSndEffect)
 	{
-		// PutInCase returned false, not enough space for item
-		// Setup subscreen fields with the item info, for it to show the item-adding UI
-		// (if puzzle screen is already open this will have no effect until screen is closed, seems to then open puzzle screen again to handle adding the item)
-		// (maybe that seems a bit janky though, might be better to add some checks to only allow this func to work when subscr is closed...)
-		SubScreenWk->get_item_id_2F6 = id;
-		SubScreenWk->get_item_num_2F8 = count;
-		bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_PZZL, SS_ATTR_NULL);
+		// Play sound effect to signal to player that item was added
+
+		if (info.type_2 == ITEM_TYPE_WEAPON || info.type_2 == ITEM_TYPE_GRENADE)
+			bio4::SndCall(0, 0x0F, 0, 0, 0, 0); // weapon found sfx
+		else if (info.type_2 == ITEM_TYPE_AMMO)
+			bio4::SndCall(0, 0x11, 0, 0, 0, 0); // ammo found sfx
+		else if (info.type_2 == ITEM_TYPE_KEY_ITEM)
+			bio4::SndCall(0, 0x00, 0, 0, 0, 0); // key-item-found sfx
+		else
+			bio4::SndCall(0, 0x13, 0, 0, 0, 0); // item added sfx
+
+		//	bio4::SndCall(0, 0x10u, 0, 0, 0, 0); // money/coin found sfx
 	}
 }
 
