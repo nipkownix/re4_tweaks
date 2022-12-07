@@ -5950,7 +5950,7 @@ namespace dxvk {
       info.mipmapMode     = mipFilter.MipFilter;
       info.maxAnisotropy  = float(cKey.MaxAnisotropy);
       info.useAnisotropy  = cKey.MaxAnisotropy > 1;
-      info.mipmapLodBias  = cKey.MipmapLodBias;
+      info.mipmapLodBias  = -0.4; // cKey.MipmapLodBias; <- HACK: Workaround lower texture quality on Nvidia GPUs (Resident Evil 4)
       info.mipmapLodMin   = mipFilter.MipsEnabled ? float(cKey.MaxMipLevel) : 0;
       info.mipmapLodMax   = mipFilter.MipsEnabled ? FLT_MAX                 : 0;
       info.usePixelCoord  = VK_FALSE;
