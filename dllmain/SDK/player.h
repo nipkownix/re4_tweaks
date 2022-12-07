@@ -95,3 +95,8 @@ public:
 	}
 };
 assert_size(cPlayer, 0x814);
+
+namespace bio4
+{
+	extern void(__cdecl* PlChangeData)();
+};

@@ -1508,7 +1508,7 @@ const char* EItemId_Names[] = {
 	"File_29",
 	"File_30",
 	"File_31",
-	"Assault_Jacket",
+	"Tactical Vest",
 	"Any"
 };
 

@@ -44,6 +44,8 @@ namespace bio4 {
 	bool(__cdecl* PutInCase)(ITEM_ID item_id, uint16_t item_num, uint32_t size);
 	void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
 
+	void(__cdecl* PlChangeData)();
+
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
 
 	bool(__cdecl* SubScreenOpen)(SS_OPEN_FLAG open_flag, SS_ATTR_FLAG attr_flag);
@@ -633,7 +635,13 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 
 		// Special handling for certain items
 		EItemId eid = EItemId(id);
-		if (eid == EItemId::Attache_Case_S)
+		if (eid == EItemId::Assault_Jacket)
+		{
+			extern BYTE __cdecl j_PlSetCostume_Hook(); // Misc.cpp
+			j_PlSetCostume_Hook();
+			bio4::PlChangeData();
+		}
+		else if (eid == EItemId::Attache_Case_S)
 			SubScreenWk->board_next_2AB = 0; // update inventory attache case size
 		else if (eid == EItemId::Attache_Case_M)
 			SubScreenWk->board_next_2AB = 1;
@@ -955,6 +963,10 @@ bool re4t::init::Game()
 	// itemInfo funcptr
 	pattern = hook::pattern("8D 45 ? 50 51 E8 ? ? ? ? 8A 45 ? 83 C4 08");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), bio4::itemInfo);
+
+	// PlChangeData funcptr
+	pattern = hook::pattern("75 ? E8 ? ? ? ? E8 ? ? ? ? 38 1D ? ? ? ?");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::PlChangeData);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
