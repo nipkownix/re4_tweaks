@@ -1275,6 +1275,24 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
 					}
 
+					// RestoreDemoVideos
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreDemoVideos", &re4t::cfg->bRestoreDemoVideos);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Restores the playback of demo videos that play when the game is idle at the main menu or the \"press any key\" screen for about 20 seconds.");
+						ImGui::TextWrapped("By default, the PC port only includes a single demo video (demo0.sfd/demo0eng.sfd).");
+						ImGui::TextWrapped("However, if present in the BIO4/movie folder, re4_tweaks also supports playing the original GameCube videos.");
+						ImGui::TextWrapped("Supported demo videos:");
+						ImGui::BulletText("demo0_gc.sfd");
+						ImGui::BulletText("demo1_gc.sfd");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("demo0.sfd/demo0eng.sfd (included in the vanilla game, and also present in the Wii version as \"demo2.sfd\")");
+					}
+
 					// ViolenceLevelOverride
 					{
 						ImGui_ColumnSwitch();

@@ -115,6 +115,7 @@ public:
 	} CostumeOverride;
 
 	bool bAshleyJPCameraAngles = false;
+	bool bRestoreDemoVideos = true;
 	int iViolenceLevelOverride = -1;
 	bool bAllowSellingHandgunSilencer = true;
 	bool bAllowMafiaLeonCutscenes = true;

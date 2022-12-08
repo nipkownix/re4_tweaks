@@ -1,6 +1,7 @@
 #include <iostream>
 #include "dllmain.h"
 #include "Patches.h"
+#include "input.hpp"
 
 uintptr_t* ptrSFDMovAddr;
 
@@ -13,6 +14,14 @@ float newMovPosX;
 float newMovNegX;
 float newMovPosY;
 float newMovNegY;
+
+uint8_t* fadeflg;
+
+std::vector<std::string> demoSfdVec;
+
+int vidIndex = 0;
+
+void(__cdecl* FadeSet)(int no, uint32_t time, uint32_t ctrl_flag);
 
 // SFD functions
 int (__cdecl* mwPlyCalcWorkCprmSfd_Orig)(/* MwsfdCrePrm * */ void* cprm);
@@ -58,6 +67,61 @@ void __fastcall cSofdec__finishMovie_Hook(uint8_t* thisptr)
 	free(workarea);
 }
 
+bool(__fastcall* cSofdec__Initialize_orig)(void* thisptr, void* unused, char* fname, uint32_t flag);
+bool __fastcall cSofdec__Initialize_hook(void* thisptr, void* unused, char* fname, uint32_t flag)
+{
+	static bool init = false;
+
+	// We do this here instead of in re4t::init::Sofdec() so we can access SystemSavePtr()->language_8...
+	if (!init)
+	{
+		const std::string bio4Path = std::filesystem::canonical(rootPath).parent_path().string() + "\\BIO4\\";
+
+		const std::string demo0_gc_path = "movie/demo0_gc.sfd"; // GC
+		const std::string demo1_gc_path = "movie/demo1_gc.sfd"; // GC
+		const std::string demo2_path = "movie/demo0eng.sfd"; // Vanilla PC file, present on the Wii version as "demo2.sfd"
+		const std::string demo2jp_path = "movie/demo0.sfd"; // demo2.sfd, but with Japanese subtitles
+
+		const bool isJapanese = !SystemSavePtr()->language_8;
+
+		if (std::filesystem::exists(bio4Path + demo0_gc_path))
+			demoSfdVec.push_back(demo0_gc_path);
+
+		if (std::filesystem::exists(bio4Path + demo1_gc_path))
+			demoSfdVec.push_back(demo1_gc_path);
+
+		if (std::filesystem::exists(bio4Path + demo2_path) && !isJapanese)
+			demoSfdVec.push_back(demo2_path);
+
+		if (std::filesystem::exists(bio4Path + demo2jp_path) && isJapanese)
+			demoSfdVec.push_back(demo2jp_path);
+
+		// Log
+		spd::log()->info("RestoreDemoVideos -> Demo video list:");
+		spd::log()->info("+-------------+--------------+");
+
+		for (std::string video : demoSfdVec)
+			spd::log()->info("| ../BIO4/{:<18} |", video);
+
+		spd::log()->info("+-------------+--------------+");
+
+		// Start at a random vid
+		vidIndex = GetRandomInt(0, demoSfdVec.size() - 1);
+
+		init = true;
+	}
+
+	bool ret = cSofdec__Initialize_orig(thisptr, unused, demoSfdVec[vidIndex].data(), flag);
+
+	// Update index for the next time
+	if (vidIndex < (int)(demoSfdVec.size() - 1))
+		vidIndex++;
+	else
+		vidIndex = 0;
+
+	return ret;
+}
+
 void GetSofdecPointers()
 {
 	// SFD
@@ -77,6 +141,159 @@ void GetSofdecPointers()
 void re4t::init::Sofdec()
 {
 	GetSofdecPointers();
+
+	if (re4t::cfg->bRestoreDemoVideos)
+	{
+		// Get FadeSet
+		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C C6 06 07 E9 ? ? ? ? 8A 46 03");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), FadeSet);
+
+		// Get pointer to Fade[0].be_flg_18. TODO: Should probably do this properly in the SDK at some point...
+		pattern = hook::pattern("F6 05 ? ? ? ? ? 0F 85 ? ? ? ? C6 46 01 01");
+		fadeflg = *pattern.count(1).get(0).get<uint8_t*>(2);
+
+		// Hook both cSofdec::Initialize calls in routine 7 inside titleMain so we can play GC demo videos, if they exist in BIO4/movies
+		pattern = hook::pattern("E8 ? ? ? ? FE 46 ? E9 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? FE");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cSofdec__Initialize_orig);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(0), cSofdec__Initialize_hook, PATCH_CALL);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(18), cSofdec__Initialize_hook, PATCH_CALL);
+
+		// Nop call to FadeKill that is messing with our custom fade
+		pattern = hook::pattern("E8 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? A1 ? ? ? ? 83 C4 ? 53");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 5, true);
+
+		// Get the address of the instruction that sets the next routine to be executed after demo videos are done playing
+		static auto pattern_nextRno1_1 = hook::pattern("C6 46 ? ? E9 ? ? ? ? 53 E8 ? ? ? ? 83 C4 ? 3C ? 0F 85").count(1).get(0).get<uint32_t>(3);
+
+		// Hook titleStart to have a new demo video timer running in the "press any key" screen.
+		// This is not how it worked on the GC, since there wasn't a "press any key" screen there. Figured we should add it here regardless.
+		pattern = hook::pattern("D9 05 ? ? ? ? 51 D9 1C ? 68 ? ? ? ? 8B C8");
+		struct titleStart_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				float tmp = 0.2f;
+				__asm {fld tmp}
+
+				static bool triggered = false;
+
+				if (!triggered)
+				{
+					// Set up new timer
+					float defaultTime = 600.0f; // 20 seconds
+
+					static float timer = defaultTime;
+
+					timer -= GlobalPtr()->deltaTime_70;
+
+					// Reset timer if any key is pressed, or if the mouse is being moved
+					if (Key_btn_trg() || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
+						timer = defaultTime;
+
+					if (timer <= 0.0f)
+					{
+						timer = defaultTime; // Reset timer
+
+						// Custom fade. Seems it was present on GC, but it isn't on the PC version.
+						FadeSet(0, 30, 0);
+
+						triggered = true;
+					}
+				}
+				else
+				{
+					// Wait for the fade to finish before starting the video
+					if (*fadeflg == 2) // Finished fade
+					{
+						triggered = false;
+
+						// The end of routine 7 puts the menu into routine 1, which is the main menu (after the "press any key" screen).
+						// We change it to 17 here, to go back to the "press any key" screen instead.
+						injector::WriteMemory(pattern_nextRno1_1, uint8_t(17), true); // Rno1_1 = 17
+
+						TitleWorkPtr()->SetRoutine(TITLE_WORK::Routine0::Main, 7, 1, 0);
+					}
+				}
+			}
+		}; injector::MakeInline<titleStart_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Hook titleMain to have a new demo video timer running in the main menu screen.
+		pattern = hook::pattern("88 98 ? ? ? ? 8D 47 ? 83 C4 ? 83 F8");
+		struct titleMain_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				*(uint8_t*)(regs.eax + 0x847D) = uint8_t(regs.ebx);
+
+				static bool triggered = false;
+
+				if (!triggered)
+				{
+					// Set up new timer
+					float defaultTime = 600.0f; // 20 seconds
+
+					static float timer = defaultTime;
+
+					timer -= GlobalPtr()->deltaTime_70;
+
+					// Reset timer if any key is pressed, or if the mouse is being moved
+					if (Key_btn_trg() || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
+						timer = defaultTime;
+
+					if (timer <= 0.0f)
+					{
+						timer = defaultTime; // Reset timer
+
+						// Custom fade. Seems it was present on GC, but it isn't on the PC version.
+						FadeSet(0, 30, 0);
+
+						triggered = true;
+					}
+				}
+				else 
+				{
+					// Wait for the fade to finish before starting the video
+					if (*fadeflg == 2) // Finished fade
+					{
+						triggered = false;
+
+						// Make sure Rno1_1 is 1 in case it was modified by the previous hook
+						injector::WriteMemory(pattern_nextRno1_1, uint8_t(0x1), true); // Rno1_1 = 1
+
+						TitleWorkPtr()->SetRoutine(TITLE_WORK::Routine0::Main, 7, 1, 0);
+					}
+				}
+			}
+		}; injector::MakeInline<titleMain_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Hook cSofdec::appMain to workaround a KB/M quirk
+		pattern = hook::pattern("F7 05 ? ? ? ? ? ? ? ? 75 ? 8B 0D ? ? ? ? 81 E1");
+		struct cSofdec__appMain_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Unset SPF_KEY to let cSofdec::appMain check if the movie should be skipped. This only seems to be a problem during the demo
+				// videos in titleMain for some reason.
+				// TODO: Check if this messes something up during playback of other videos?
+				FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_KEY), false);
+
+				// Our key check replacements. Only checking Key.btn_trg_20, but the original code also used Joy[0].trg_18 for gamepads. 
+				// btn_trg_20 seems to work fine for gamepads, though.
+				// TODO: Check Dinput gamepads.
+				bool Pressed_EV_CANCEL = ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_EV_CANCEL) == (uint64_t)KEY_BTN::KEY_EV_CANCEL); // Xinput Back, Keyboard Esc
+				bool Pressed_CANCEL = ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_CANCEL) == (uint64_t)KEY_BTN::KEY_CANCEL); // Xinput B, Keyboard Esc
+
+				if (Pressed_EV_CANCEL || Pressed_CANCEL)
+					regs.ef &= ~(1 << regs.zero_flag);
+				else
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<cSofdec__appMain_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(28));
+
+		spd::log()->info("{} -> RestoreDemoVideos enabled", __FUNCTION__);
+	}
 
 	// Create mem hooks
 	ReadCall(ptrcSofdec__startApp, cSofdec__startApp_Orig);
