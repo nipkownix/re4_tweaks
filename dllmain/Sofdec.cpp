@@ -15,13 +15,9 @@ float newMovNegX;
 float newMovPosY;
 float newMovNegY;
 
-uint8_t* fadeflg;
-
 std::vector<std::string> demoSfdVec;
 
 int vidIndex = 0;
-
-void(__cdecl* FadeSet)(int no, uint32_t time, uint32_t ctrl_flag);
 
 // SFD functions
 int (__cdecl* mwPlyCalcWorkCprmSfd_Orig)(/* MwsfdCrePrm * */ void* cprm);
