@@ -11,6 +11,7 @@ SUB_SCREEN* SubScreenWk = nullptr; // extern inside sscrn.h
 pzlPlayer__ptrPiece_Fn pzlPlayer__ptrPiece = nullptr; // extern inside puzzle.h
 CameraControl* CamCtrl = nullptr; // extern inside cam_ctrl.h
 cPlayer__subScrCheck_Fn cPlayer__subScrCheck = nullptr; // extern inside player.h
+j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr; // extern inside fade.h
 
 // light.h externs
 cLightMgr* LightMgr = nullptr;
@@ -34,9 +35,6 @@ cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
 
 // Original game funcs
-bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
-void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
-
 namespace bio4 {
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
 
@@ -75,6 +73,12 @@ namespace bio4 {
 	void(__cdecl* GXShaderCall)(int shaderNum);
 
 	void(__cdecl* CameraCurrentProjection)();
+
+	void(__cdecl* C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
+
+	bool(__cdecl* KeyOnCheck_0)(KEY_BTN a1);
+
+	void(__cdecl* KeyStop)(uint64_t un_stop_bit);
 
 	void(__cdecl* SceSleep)(uint32_t ctr);
 };
@@ -461,6 +465,12 @@ TITLE_WORK* TitleWorkPtr()
 	return TitleWork_ptr;
 }
 
+FADE_WORK(*FadeWork_ptr)[4];
+FADE_WORK* FadeWorkPtr(FADE_NO no)
+{
+	return FadeWork_ptr[no];
+}
+
 itemPiece** g_p_Item_piece = nullptr; // not actual name...
 itemPiece* ItemPiecePtr()
 {
@@ -760,9 +770,13 @@ bool re4t::init::Game()
 	fGPUUsagePtr = *pattern.count(1).get(0).get<double*>(2);
 	fCPUUsagePtr = *pattern.count(1).get(0).get<double*>(0x17);
 
-	// Pointer to the original KeyOnCheck
+	// Pointer to KeyOnCheck_0
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
-	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), game_KeyOnCheck_0);
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::KeyOnCheck_0);
+
+	// Pointer to KeyStop
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 E8 ? ? ? ? 8B 0D ? ? ? ? F7 81 ? ? ? ? ? ? ? ? 74");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::KeyStop);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
@@ -773,6 +787,10 @@ bool re4t::init::Game()
 	pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 BC 00 00 00 E8");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xD), mem_calloc);
 	InjectHook(pattern.count(1).get(0).get<uint8_t>(0xD), mem_calloc_TITLE_WORK_hook, PATCH_CALL);
+
+	// pointer to FadeWork
+	pattern = hook::pattern("68 ? ? ? ? E8 ? ? ? ? D9 EE D9 15 ? ? ? ? 83 C4 08 ");
+	FadeWork_ptr = *pattern.count(1).get(0).get<FADE_WORK(*)[4]>(1);
 
 	// Mem_free call for TITLE_WORK, so we can set to nullptr once game frees it
 	pattern = hook::pattern("56 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 68 C0 01 00 00");
@@ -846,6 +864,10 @@ bool re4t::init::Game()
 	pattern = hook::pattern("8B 41 30 50 E8 ? ? ? ? C3");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(4), pzlPlayer__ptrPiece);
 
+	// j_j_j_FadeSet (kept the werid j_j_j to make clear this is the simplified version of FadeSet that takes less params)
+	pattern = hook::pattern("E8 ? ? ? ? 53 53 53 53 6A 04 53 E8 ? ? ? ? 83 C4 24 E9");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), j_j_j_FadeSet);
+
 	// cPlayer::subScrCheck
 	pattern = hook::pattern("80 B9 FC 00 00 00 00 75 ? 8A 81 FD 00 00 00");
 	cPlayer__subScrCheck = (cPlayer__subScrCheck_Fn)pattern.count(1).get(0).get<uint32_t>(0);
@@ -912,6 +934,9 @@ bool re4t::init::Game()
 
 	pattern = hook::pattern("E8 ? ? ? ? 8A 46 30 3C FD");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x0), bio4::CameraCurrentProjection); // 0x59F3A0
+
+	pattern = hook::pattern("E8 ? ? ? ? 8D 4D BC 6A 01 51 E8 ? ? ? ? 8D 55 98 52 8D 45 B0 50 8D 4D A4 51 56 E8 ? ? ? ? 8B 4D FC 83 C4 34");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::C_MTXOrtho);
 
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 4E 75 C1 8B 0D ? ? ? ? 8B 91");
 	ReadCall(pattern.count(2).get(0).get<uint8_t>(0), bio4::SceSleep);

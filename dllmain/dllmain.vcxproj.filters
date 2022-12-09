@@ -1596,6 +1596,9 @@
     <ClInclude Include="..\dxvk\src\config.h">
       <Filter>dxvk</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\fade.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

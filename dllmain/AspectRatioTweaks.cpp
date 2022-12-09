@@ -33,7 +33,7 @@ void __cdecl C_MTXOrtho_messageTrans_hook(Mtx44 mtx, float PosY, float NegY, flo
 		NegX -= fUIPosOffset;
 	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
+	return bio4::C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
 void __cdecl C_MTXOrtho_sub_1484C50_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far)
@@ -46,7 +46,7 @@ void __cdecl C_MTXOrtho_sub_1484C50_hook(Mtx44 mtx, float PosY, float NegY, floa
 		NegX -= fUIPosOffset;
 	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
+	return bio4::C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
 void __cdecl C_MTXOrtho_DrawTexture_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far)
@@ -55,7 +55,7 @@ void __cdecl C_MTXOrtho_DrawTexture_hook(Mtx44 mtx, float PosY, float NegY, floa
 	{
 		// Game's default behavior is stretching, so we simply return
 		if (re4t::cfg->bStretchFullscreenImages)
-			return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
+			return bio4::C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 
 		float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
 
@@ -65,7 +65,7 @@ void __cdecl C_MTXOrtho_DrawTexture_hook(Mtx44 mtx, float PosY, float NegY, floa
 		NegX -= fUIPosOffset;
 	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
+	return bio4::C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
 void __cdecl C_MTXOrtho_cSofdec_hook(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far)
@@ -74,7 +74,7 @@ void __cdecl C_MTXOrtho_cSofdec_hook(Mtx44 mtx, float PosY, float NegY, float Ne
 	{
 		// Game's default behavior is stretching, so we simply return
 		if (re4t::cfg->bStretchVideos)
-			return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
+			return bio4::C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 
 		float fNewAspectRatio = (fGameDisplayAspectRatio / 1.666667f);
 
@@ -84,17 +84,13 @@ void __cdecl C_MTXOrtho_cSofdec_hook(Mtx44 mtx, float PosY, float NegY, float Ne
 		NegX -= fUIPosOffset;
 	}
 
-	return game_C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
+	return bio4::C_MTXOrtho(mtx, PosY, NegY, NegX, PosX, Near, Far);
 }
 
 void re4t::init::AspectRatioTweaks()
 {
-	// Get original C_MTXOrtho
-	auto pattern = hook::pattern("E8 ? ? ? ? 8D 4D BC 6A 01 51 E8 ? ? ? ? 8D 55 98 52 8D 45 B0 50 8D 4D A4 51 56 E8 ? ? ? ? 8B 4D FC 83 C4 34");
-	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), game_C_MTXOrtho);
-
 	// messageTrans_messageCamera -> Used in most (all?) text drawn in the user interface
-	pattern = hook::pattern("E8 ? ? ? ? 8D 4D ? 6A ? 51 E8 ? ? ? ? 8D 55 ? 52 E8 ? ? ? ? 8D 45 ? 6A ? 50 E8 ? ? ? ? 6A ? E8 ? ? ? ? 8B 4D");
+	auto pattern = hook::pattern("E8 ? ? ? ? 8D 4D ? 6A ? 51 E8 ? ? ? ? 8D 55 ? 52 E8 ? ? ? ? 8D 45 ? 6A ? 50 E8 ? ? ? ? 6A ? E8 ? ? ? ? 8B 4D");
 	InjectHook(pattern.count(2).get(1).get<uint32_t>(0), C_MTXOrtho_messageTrans_hook);
 
 	// sub_1146150 -> Only used the scale the mouse cursor area, afaik. Same logic as before, so lets just reuse that func

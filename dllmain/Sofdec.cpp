@@ -144,16 +144,8 @@ void re4t::init::Sofdec()
 
 	if (re4t::cfg->bRestoreDemoVideos)
 	{
-		// Get FadeSet
-		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C C6 06 07 E9 ? ? ? ? 8A 46 03");
-		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), FadeSet);
-
-		// Get pointer to Fade[0].be_flg_18. TODO: Should probably do this properly in the SDK at some point...
-		pattern = hook::pattern("F6 05 ? ? ? ? ? 0F 85 ? ? ? ? C6 46 01 01");
-		fadeflg = *pattern.count(1).get(0).get<uint8_t*>(2);
-
 		// Hook both cSofdec::Initialize calls in routine 7 inside titleMain so we can play GC demo videos, if they exist in BIO4/movies
-		pattern = hook::pattern("E8 ? ? ? ? FE 46 ? E9 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? FE");
+		auto pattern = hook::pattern("E8 ? ? ? ? FE 46 ? E9 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? FE");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cSofdec__Initialize_orig);
 		InjectHook(pattern.count(1).get(0).get<uint32_t>(0), cSofdec__Initialize_hook, PATCH_CALL);
 		InjectHook(pattern.count(1).get(0).get<uint32_t>(18), cSofdec__Initialize_hook, PATCH_CALL);
@@ -196,7 +188,7 @@ void re4t::init::Sofdec()
 						timer = defaultTime; // Reset timer
 
 						// Custom fade. Seems it was present on GC, but it isn't on the PC version.
-						FadeSet(0, 30, 0);
+						FadeWorkPtr(FADE_NO_SYSTEM)->FadeSet(FADE_NO_SYSTEM, 30, 0);
 
 						triggered = true;
 					}
@@ -204,13 +196,16 @@ void re4t::init::Sofdec()
 				else
 				{
 					// Wait for the fade to finish before starting the video
-					if (*fadeflg == 2) // Finished fade
+					if ((FadeWorkPtr(FADE_NO_SYSTEM)->be_flg_18 & FADE_BE_ALIVE) == 0) // Finished fade
 					{
 						triggered = false;
 
 						// The end of routine 7 puts the menu into routine 1, which is the main menu (after the "press any key" screen).
 						// We change it to 17 here, to go back to the "press any key" screen instead.
 						injector::WriteMemory(pattern_nextRno1_1, uint8_t(17), true); // Rno1_1 = 17
+
+						// Need to call KeyStop here to set a flag that will allow the demo videos to be skipped using the keyboard.
+						bio4::KeyStop((uint64_t(0xF12000EFCF1000)));
 
 						TitleWorkPtr()->SetRoutine(TITLE_WORK::Routine0::Main, 7, 1, 0);
 					}
@@ -247,7 +242,7 @@ void re4t::init::Sofdec()
 						timer = defaultTime; // Reset timer
 
 						// Custom fade. Seems it was present on GC, but it isn't on the PC version.
-						FadeSet(0, 30, 0);
+						FadeWorkPtr(FADE_NO_SYSTEM)->FadeSet(FADE_NO_SYSTEM, 30, 0);
 
 						triggered = true;
 					}
@@ -255,42 +250,21 @@ void re4t::init::Sofdec()
 				else 
 				{
 					// Wait for the fade to finish before starting the video
-					if (*fadeflg == 2) // Finished fade
+					if ((FadeWorkPtr(FADE_NO_SYSTEM)->be_flg_18 & FADE_BE_ALIVE) == 0) // Finished fade
 					{
 						triggered = false;
 
 						// Make sure Rno1_1 is 1 in case it was modified by the previous hook
 						injector::WriteMemory(pattern_nextRno1_1, uint8_t(0x1), true); // Rno1_1 = 1
 
+						// Need to call KeyStop here to set a flag that will allow the demo videos to be skipped using the keyboard.
+						bio4::KeyStop((uint64_t(0xF12000EFCF1000)));
+
 						TitleWorkPtr()->SetRoutine(TITLE_WORK::Routine0::Main, 7, 1, 0);
 					}
 				}
 			}
 		}; injector::MakeInline<titleMain_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		// Hook cSofdec::appMain to workaround a KB/M quirk
-		pattern = hook::pattern("F7 05 ? ? ? ? ? ? ? ? 75 ? 8B 0D ? ? ? ? 81 E1");
-		struct cSofdec__appMain_hook
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				// Unset SPF_KEY to let cSofdec::appMain check if the movie should be skipped. This only seems to be a problem during the demo
-				// videos in titleMain for some reason.
-				// TODO: Check if this messes something up during playback of other videos?
-				FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_KEY), false);
-
-				// Our key check replacements. Only checking Key.btn_trg_20, but the original code also used Joy[0].trg_18 for gamepads. 
-				// btn_trg_20 seems to work fine for gamepads, though.
-				// TODO: Check Dinput gamepads.
-				bool Pressed_EV_CANCEL = ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_EV_CANCEL) == (uint64_t)KEY_BTN::KEY_EV_CANCEL); // Xinput Back, Keyboard Esc
-				bool Pressed_CANCEL = ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_CANCEL) == (uint64_t)KEY_BTN::KEY_CANCEL); // Xinput B, Keyboard Esc
-
-				if (Pressed_EV_CANCEL || Pressed_CANCEL)
-					regs.ef &= ~(1 << regs.zero_flag);
-				else
-					regs.ef |= (1 << regs.zero_flag);
-			}
-		}; injector::MakeInline<cSofdec__appMain_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(28));
 
 		spd::log()->info("{} -> RestoreDemoVideos enabled", __FUNCTION__);
 	}

@@ -166,3 +166,9 @@ struct JOY
 	int8_t wpad_rightStick_Y_26D;
 };
 assert_size(JOY, 0x270);
+
+namespace bio4
+{
+	extern bool(__cdecl* KeyOnCheck_0)(KEY_BTN a1);
+	extern void(__cdecl* KeyStop)(uint64_t un_stop_bit);
+}
