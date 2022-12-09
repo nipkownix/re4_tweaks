@@ -331,6 +331,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bRestoreDemoVideos = iniReader.ReadBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
 	re4t::cfg->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
 	re4t::cfg->iViolenceLevelOverride = std::min(std::max(re4t::cfg->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
+	re4t::cfg->bRifleScreenShake = iniReader.ReadBoolean("MISC", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	re4t::cfg->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
 	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
@@ -795,6 +796,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
 	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
+	iniReader.WriteBoolean("MISC", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
 	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
@@ -967,6 +969,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
+	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley ? "true" : "false");

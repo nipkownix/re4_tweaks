@@ -1116,6 +1116,22 @@ void re4t::init::Misc()
 			spd::log()->info("AshleyJPCameraAngles enabled");
 	}
 
+	// Add screenshake effect to scoped rifle shots
+	{
+		auto pattern = hook::pattern("8B 96 D8 07 00 00 8B 4A ? 6A 00 6A 01 E8"); // wep09_r3_fire00 is used for both rifles
+		struct RifleScreenShake
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bRifleScreenShake)
+					bio4::QuakeExec(0, 0, 5, 40.0f, 2u);
+
+				// Code we overwrote
+				regs.edx = *(uint32_t*)(regs.esi + 0x7D8);
+			}
+		}; injector::MakeInline<RifleScreenShake>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
 	// Allow changing games level of violence to users choice
 	{
 		// find cCard functbl (tbl.1654)
