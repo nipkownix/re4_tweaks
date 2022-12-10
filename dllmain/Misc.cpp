@@ -311,7 +311,7 @@ void __cdecl custom_titleLoop(TITLE_WORK* pT)
 	if (re4t::cfg->bRestoreAnalogTitleScroll)
 	{
 		if (*AnalogRX_8)
-			pT->scroll_add_5C = std::clamp((*AnalogRX_8 / 59.0f) * 3.0f, -3.0f, 3.0f);
+			pT->scroll_add_5C = std::clamp((*AnalogRX_8 / 63.0f) * 3.0f, -3.0f, 3.0f);
 
 		if (*AnalogRY_9)
 		{
@@ -1152,7 +1152,7 @@ void re4t::init::Misc()
 		// override the original titleLoop call with our custom titleLoop
 		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 33 DB 53");
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), custom_titleLoop, PATCH_JUMP);
-		// Pointer to IDSystem__unitPtr
+		// pointer to IDSystem__unitPtr
 		pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
 		ReadCall(pattern.count(1).get(0).get<uint8_t>(0), IDSystem__unitPtr);
 
