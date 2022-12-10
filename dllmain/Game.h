@@ -11,6 +11,7 @@
 #include "SDK/fade.h"
 #include "SDK/global.h"
 #include "SDK/snd.h"
+#include "SDK/game_ui.h"
 #include "SDK/title.h"
 #include "SDK/light.h"
 #include "SDK/item.h"

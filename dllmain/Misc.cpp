@@ -300,22 +300,23 @@ void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void*
 	SsTermMain_files.clear();
 }
 
-ID_UNIT*(__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
-void __cdecl custom_titleLoop(TITLE_WORK* pT)
+void __cdecl titleLoop_hook(TITLE_WORK* pT)
 {
-	if (FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_ID_SYSTEM)))
+	bool UIPause = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_ID_SYSTEM));
+	if (UIPause)
 		return;
 
-	ID_UNIT* tex = IDSystem__unitPtr(IDSystemPtr(), 6u, IDC_TITLE);
+	ID_UNIT* tex = bio4::IDSystem__unitPtr(IDSystemPtr(), 6u, IDC_TITLE);
 
 	if (re4t::cfg->bRestoreAnalogTitleScroll)
 	{
+		// prefer to use fAnalogR over AnalogR here, because it lets us to make the deadzone smaller
 		const float fDeadZone = 0.30f;
 
-		if ((*fAnalogRX <= -fDeadZone) || (*fAnalogRX >= fDeadZone))
+		if (abs(*fAnalogRX) >= fDeadZone)
 			pT->scroll_add_5C = *fAnalogRX * 3.0f;
 
-		if ((*fAnalogRY <= -fDeadZone) || (*fAnalogRY >= fDeadZone))
+		if (abs(*fAnalogRY) >= fDeadZone)
 		{
 			if (*fAnalogRY < 0)
 				tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
@@ -1149,19 +1150,16 @@ void re4t::init::Misc()
 			spd::log()->info("AshleyJPCameraAngles enabled");
 	}
 
-	// Restore TitleMenu right stick scroll behavior and zoom controls
+	// Restore Gamecube title menu pan and zoom controls
 	{
-		// override the original titleLoop call with our custom titleLoop
+		// hook the titleLoop call with our own reimplementation
 		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 33 DB 53");
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), custom_titleLoop, PATCH_JUMP);
-		// pointer to IDSystem__unitPtr
-		pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
-		ReadCall(pattern.count(1).get(0).get<uint8_t>(0), IDSystem__unitPtr);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), titleLoop_hook, PATCH_JUMP);
 
-		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like the Extras menu
+		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like 'Help & Options'
 		pattern = hook::pattern("D9 5E 5C C6 46 58 00 39");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7);
-		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries
+		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries 
 		pattern = hook::pattern("C7 06 01 00 00 00 E8 ? ? ? ? 57");
 		struct titleSub_resetScrollAdd
 		{

@@ -81,6 +81,8 @@ namespace bio4 {
 	void(__cdecl* KeyStop)(uint64_t un_stop_bit);
 
 	void(__cdecl* SceSleep)(uint32_t ctr);
+
+	ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
 };
 
 // Current play time (H, M, S)
@@ -787,6 +789,10 @@ bool re4t::init::Game()
 	// Pointer to IDSystem
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
 	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
+
+	// pointer to IDSystem__unitPtr
+	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::IDSystem__unitPtr);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
