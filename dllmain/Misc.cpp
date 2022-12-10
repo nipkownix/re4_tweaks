@@ -310,12 +310,14 @@ void __cdecl custom_titleLoop(TITLE_WORK* pT)
 
 	if (re4t::cfg->bRestoreAnalogTitleScroll)
 	{
-		if (*AnalogRX_8)
-			pT->scroll_add_5C = std::clamp((*AnalogRX_8 / 63.0f) * 3.0f, -3.0f, 3.0f);
+		const float fDeadZone = 0.30f;
 
-		if (*AnalogRY_9)
+		if ((*fAnalogRX <= -fDeadZone) || (*fAnalogRX >= fDeadZone))
+			pT->scroll_add_5C = *fAnalogRX * 3.0f;
+
+		if ((*fAnalogRY <= -fDeadZone) || (*fAnalogRY >= fDeadZone))
 		{
-			if (*AnalogRY_9 < 0)
+			if (*fAnalogRY < 0)
 				tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
 			else
 				tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
