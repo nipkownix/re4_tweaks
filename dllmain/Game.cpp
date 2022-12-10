@@ -43,6 +43,7 @@ cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
 namespace bio4 {
 	bool(__cdecl* PutInCase)(ITEM_ID item_id, uint16_t item_num, uint32_t size);
 	void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
+	uint8_t(__cdecl* WeaponId2MaxLevel)(ITEM_ID item_id, int type);
 
 	void(__cdecl* PlChangeData)();
 
@@ -983,6 +984,10 @@ bool re4t::init::Game()
 	// itemInfo funcptr
 	pattern = hook::pattern("8D 45 ? 50 51 E8 ? ? ? ? 8A 45 ? 83 C4 08");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), bio4::itemInfo);
+
+	// WeaponId2MaxLevel funcptr
+	pattern = hook::pattern("E8 ? ? ? ? 0F B6 D0 0F BE C3 83 C4 08 3B C2 75 70");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::WeaponId2MaxLevel);
 
 	// PlChangeData funcptr
 	pattern = hook::pattern("75 ? E8 ? ? ? ? E8 ? ? ? ? 38 1D ? ? ? ?");

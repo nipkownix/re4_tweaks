@@ -2440,9 +2440,14 @@ void Trainer_RenderUI(int columnCount)
 			static EItemId itemId = EItemId::Bullet_45in_H;
 			static int stackCount = 100;
 
+			static int customFirePower = 1;
+			static int customFiringSpeed = 1;
+			static int customReloadSpeed = 1;
+			static int customCapacity = 1;
+
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
-			//if (ImGui::BeginListBox("ItemId"))
-			if (ImGui::BeginTable("##itmadderlist", columns, ImGuiTableFlags_BordersInner | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - (120 * esHook._cur_monitor_dpi))))
+
+			if (ImGui::BeginTable("##itmadderlist", columns, ImGuiTableFlags_BordersInner | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - (190 * esHook._cur_monitor_dpi))))
 			{
 				for (int item_id = 0; item_id < 255; item_id++)
 				{
@@ -2485,6 +2490,12 @@ void Trainer_RenderUI(int columnCount)
 								itemId = EItemId(item_id);
 								if (curInfo.maxNum_4 > 1 && curInfo.type_2 == ITEM_TYPE_AMMO)
 									stackCount = curInfo.maxNum_4; // help user by setting stack count to max for this item
+
+								// Reset upgrades to 1
+								customFirePower = 1;
+								customFiringSpeed = 1;
+								customReloadSpeed = 1;
+								customCapacity = 1;
 							}
 					}
 				}
@@ -2500,6 +2511,67 @@ void Trainer_RenderUI(int columnCount)
 			if (TweaksDevMode)
 				ImGui::Text("selected: id %d type %d def %d, max %d", info.id_0, info.type_2, info.defNum_3, info.maxNum_4);
 
+			int maxFirePower = 1;
+			int maxFiringSpeed = 1;
+			int maxReloadSpeed = 1;
+			int maxCapacity = 1;
+
+			if (info.type_2 == ITEM_TYPE_WEAPON)
+			{
+				maxFirePower = bio4::WeaponId2MaxLevel(info.id_0, 0);
+				maxFiringSpeed = bio4::WeaponId2MaxLevel(info.id_0, 1);
+				maxReloadSpeed = bio4::WeaponId2MaxLevel(info.id_0, 2);
+				maxCapacity = bio4::WeaponId2MaxLevel(info.id_0, 3);
+			}
+
+			ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
+			ImGui::Text("Weapon Upgrades:");
+			ImGui::EndDisabled();
+
+			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
+			if (ImGui::BeginTable("##wepupgrades", 4, ImGuiTableFlags_BordersInnerV))
+			{
+				float sliderwidth = 15.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi;
+
+				ImGui::TableNextColumn();
+
+				ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
+				
+				ImGui::BeginDisabled(maxFirePower == 1);
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Fire Power").x - sliderwidth);
+				ImGui::SliderInt("Fire Power", &customFirePower, 1, maxFirePower, "%d", ImGuiSliderFlags_NoInput); 
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+				ImGui::TableNextColumn();
+
+				ImGui::BeginDisabled(maxFiringSpeed == 1);
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Firing Speed").x - sliderwidth);
+				ImGui::SliderInt("Firing Speed", &customFiringSpeed, 1, maxFiringSpeed, "%d", ImGuiSliderFlags_NoInput);
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+				ImGui::TableNextColumn();
+
+				ImGui::BeginDisabled(maxReloadSpeed == 1);
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Reload Speed").x - sliderwidth);
+				ImGui::SliderInt("Reload Speed", &customReloadSpeed, 1, maxReloadSpeed, "%d", ImGuiSliderFlags_NoInput); 
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+				ImGui::TableNextColumn();
+
+				ImGui::BeginDisabled(maxCapacity == 1);
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Capacity").x - sliderwidth);
+				ImGui::SliderInt("Capacity", &customCapacity, 1, maxCapacity, "%d", ImGuiSliderFlags_NoInput); 
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+
+				ImGui::EndDisabled();
+				
+				ImGui::EndTable();
+			}
+			ImGui::PopStyleVar();
+
+			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
 			bool stackable = info.maxNum_4 > 1;
 			bool showsInInventory = bio4::itemShowsInInventory(info.type_2);
 
@@ -2511,6 +2583,7 @@ void Trainer_RenderUI(int columnCount)
 					stackCount = info.maxNum_4;
 			}
 
+			ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 			ImGui::BeginDisabled(!stackable);
 			ImGui::InputInt("Stack count", &stackCount);
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
@@ -2521,6 +2594,7 @@ void Trainer_RenderUI(int columnCount)
 					ImGui::SetTooltip("Number of items in the stack (max for this item: %d)", info.maxNum_4);
 			}
 			ImGui::EndDisabled();
+			ImGui::PopItemWidth();
 
 			// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
 			// TODO: pause menu, checks below don't seem to catch it...
@@ -2530,9 +2604,34 @@ void Trainer_RenderUI(int columnCount)
 				SubScreenWk->open_flag_2C != 0 ||
 				FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
 
+			// Save the ITEM_ID of the wep that will be added so we can search for it later
+			static ITEM_ID wepAddedID = 0;
+
 			ImGui::BeginDisabled(disable);
 			if (ImGui::Button("Add Item"))
+			{
+				if (info.type_2 == ITEM_TYPE_WEAPON)
+					wepAddedID = ITEM_ID(itemId);
+
 				RequestInventoryAdd(ITEM_ID(itemId), stackCount, alwaysShowInventory);
+			}
+
+			// Apply weapon upgrades
+			if (wepAddedID)
+			{
+				auto wepItmPtr = ItemMgr->search(wepAddedID);
+
+				// Wait until the game has actually created the weapon
+				if (wepItmPtr)
+				{
+					wepItmPtr->setFirePower(customFirePower);
+					wepItmPtr->setFiringSpeed(customFiringSpeed);
+					wepItmPtr->setReloadSpeed(customReloadSpeed);
+					wepItmPtr->setCapacity(customCapacity);
+
+					wepAddedID = 0;
+				}
+			}
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
 				ImGui::SetTooltip("Items can only be added while outside of menus.");

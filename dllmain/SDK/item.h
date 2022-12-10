@@ -276,6 +276,26 @@ public:
 	int8_t pos_y_B;
 	int8_t orientation_C;
 	uint8_t onboard_D;
+
+	inline void setFirePower(int8_t newVal)
+	{
+		weapon_6[0] ^= (weapon_6[0] ^ (newVal - 1)) & 0xF;
+	}
+
+	inline void setFiringSpeed(int8_t newVal)
+	{
+		weapon_6[0] ^= (weapon_6[0] ^ (0x10 * (newVal - 1))) & 0xF0;
+	}
+
+	inline void setReloadSpeed(int8_t newVal)
+	{
+		weapon_6[0] ^= (weapon_6[0] ^ ((newVal - 1) << 8)) & 0xF00;
+	}
+
+	inline void setCapacity(int8_t newVal)
+	{
+		weapon_6[0] = weapon_6[0] & 0xFFF | ((newVal - 1) << 0xC);
+	}
 };
 assert_size(cItem, 0xE);
 
