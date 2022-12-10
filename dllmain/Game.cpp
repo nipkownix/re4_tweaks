@@ -471,6 +471,12 @@ FADE_WORK* FadeWorkPtr(FADE_NO no)
 	return FadeWork_ptr[no];
 }
 
+IDSystem* IDSystem_ptr = nullptr;
+IDSystem* IDSystemPtr()
+{
+	return IDSystem_ptr;
+}
+
 itemPiece** g_p_Item_piece = nullptr; // not actual name...
 itemPiece* ItemPiecePtr()
 {
@@ -777,6 +783,10 @@ bool re4t::init::Game()
 	// Pointer to KeyStop
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 E8 ? ? ? ? 8B 0D ? ? ? ? F7 81 ? ? ? ? ? ? ? ? 74");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::KeyStop);
+
+	// Pointer to IDSystem
+	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
+	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");

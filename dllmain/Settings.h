@@ -116,6 +116,7 @@ public:
 
 	bool bAshleyJPCameraAngles = false;
 	bool bRestoreDemoVideos = true;
+	bool bRestoreAnalogTitleScroll = true;
 	int iViolenceLevelOverride = -1;
 	bool bAllowSellingHandgunSilencer = true;
 	bool bAllowMafiaLeonCutscenes = true;

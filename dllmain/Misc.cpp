@@ -300,6 +300,37 @@ void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void*
 	SsTermMain_files.clear();
 }
 
+ID_UNIT*(__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
+void __cdecl custom_titleLoop(TITLE_WORK* pT)
+{
+	if (FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_ID_SYSTEM)))
+		return;
+
+	ID_UNIT* tex = IDSystem__unitPtr(IDSystemPtr(), 6u, IDC_TITLE);
+
+	if (re4t::cfg->bRestoreAnalogTitleScroll)
+	{
+		if (*AnalogRX_8)
+			pT->scroll_add_5C = std::clamp((*AnalogRX_8 / 59.0f) * 3.0f, -3.0f, 3.0f);
+
+		if (*AnalogRY_9)
+		{
+			if (*AnalogRY_9 < 0)
+				tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
+			else
+				tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
+
+			tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
+		}
+	}
+
+	tex->pos0_94.x -= pT->scroll_add_5C * GlobalPtr()->deltaTime_70;
+	if (tex->pos0_94.x > 1800.0f)
+		tex->pos0_94.x -= 2700.0f;
+	else if (tex->pos0_94.x < -900.0f)
+		tex->pos0_94.x += 2700.0f;
+}
+
 BYTE(__cdecl *j_PlSetCostume_Orig)();
 BYTE __cdecl j_PlSetCostume_Hook()
 {
@@ -1114,6 +1145,43 @@ void re4t::init::Misc()
 
 		if (re4t::cfg->bAshleyJPCameraAngles)
 			spd::log()->info("AshleyJPCameraAngles enabled");
+	}
+
+	// Restore TitleMenu right stick scroll behavior and zoom controls
+	{
+		// override the original titleLoop call with our custom titleLoop
+		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 33 DB 53");
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), custom_titleLoop, PATCH_JUMP);
+		// Pointer to IDSystem__unitPtr
+		pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
+		ReadCall(pattern.count(1).get(0).get<uint8_t>(0), IDSystem__unitPtr);
+
+		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like the Extras menu
+		pattern = hook::pattern("D9 5E 5C C6 46 58 00 39");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7);
+		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries
+		pattern = hook::pattern("C7 06 01 00 00 00 E8 ? ? ? ? 57");
+		struct titleSub_resetScrollAdd
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				TitleWorkPtr()->scroll_add_5C = 1.5f;
+				// Code we overwrote
+				__asm { mov dword ptr[esi], 0x1}
+			}
+		}; injector::MakeInline<titleSub_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		// reset scroll_add_5C when leaving Separate Ways
+		pattern = hook::pattern("C7 45 F4 00 00 00 FF 8B ? ? 52 8B C8 51 50");
+		struct titleAda_resetScrollAdd
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				TitleWorkPtr()->scroll_add_5C = 1.5f;
+				// Code we overwrote
+				int tmp = *(int*)(regs.ebp - 0xC);
+				__asm { mov dword ptr[tmp], 0xFF000000}
+			}
+		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
 	// Allow changing games level of violence to users choice
