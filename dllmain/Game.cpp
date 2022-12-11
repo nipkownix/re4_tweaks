@@ -792,7 +792,7 @@ bool re4t::init::Game()
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
 	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
 
-	// pointer to IDSystem__unitPtr
+	// pointer to IDSystem::unitPtr
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::IDSystem__unitPtr);
 

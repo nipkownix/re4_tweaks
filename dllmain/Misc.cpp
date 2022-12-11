@@ -1183,7 +1183,7 @@ void re4t::init::Misc()
 			file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
 			// update the note's message index whenever we load into r22c
 			pattern = hook::pattern("89 41 78 83 C1 7C E8");
-			struct R22cInit_Hook
+			struct R22cInit_UpdateMsgIdx
 			{
 				void operator()(injector::reg_pack& regs)
 				{
@@ -1193,7 +1193,7 @@ void re4t::init::Misc()
 					*(uint32_t*)(regs.ecx + 0x78) = regs.eax;
 					regs.ecx += 0x7C;
 				}
-			}; injector::MakeInline<R22cInit_Hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+			}; injector::MakeInline<R22cInit_UpdateMsgIdx>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
 			// Shooting range: only check for bottle cap reward once per results screen
 			pattern = hook::pattern("8B 15 ? ? ? ? 80 7A ? 01 74");
@@ -1217,7 +1217,7 @@ void re4t::init::Misc()
 				}
 			}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-			// Swap 'NEW GAME' texture for 'START" on a fresh system save
+			// Swap NEW GAME texture for START on a fresh system save
 			pattern = hook::pattern("89 51 68 8B 57 68 8B");
 			struct titleMenuInit_StartTex
 			{
@@ -1228,6 +1228,7 @@ void re4t::init::Misc()
 					{
 						float texW;
 
+						// texW = aspect ratio of image file * size0_H_E0 (14)
 						switch (SystemSavePtr()->language_8)
 						{
 						case 4: // French
@@ -1338,8 +1339,7 @@ void re4t::init::Misc()
 				TitleWorkPtr()->scroll_add_5C = 1.5f;
         
 				// Code we overwrote
-				int tmp = *(int*)(regs.ebp - 0xC);
-				__asm { mov dword ptr[tmp], 0xFF000000}
+				__asm { mov dword ptr[ebp - 0xC], 0xFF000000 }
 			}
 		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
