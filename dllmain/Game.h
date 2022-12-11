@@ -8,8 +8,10 @@
 #include "SDK/em10.h"
 #include "SDK/player.h"
 #include "SDK/pad.h"
+#include "SDK/fade.h"
 #include "SDK/global.h"
 #include "SDK/snd.h"
+#include "SDK/game_ui.h"
 #include "SDK/title.h"
 #include "SDK/light.h"
 #include "SDK/item.h"
@@ -57,6 +59,8 @@ cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
+FADE_WORK* FadeWorkPtr(FADE_NO no);
+IDSystem* IDSystemPtr();
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 
@@ -74,5 +78,8 @@ const char* GetEmListEnumName(int emListNumber);
 #define GAMESAVE_LENGTH 0xFFAA0
 
 // Original game funcs
-extern bool(__cdecl* game_KeyOnCheck_0)(KEY_BTN a1);
-extern void(__cdecl* game_C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
+namespace bio4
+{
+	extern void(__cdecl* C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
+	extern void(__cdecl* SceSleep)(uint32_t ctr);
+}

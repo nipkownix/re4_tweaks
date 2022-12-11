@@ -113,6 +113,11 @@ extern int* g_XInputDeadzone_RS;
 extern int8_t* AnalogRX_8;
 extern int8_t* AnalogRY_9;
 
+extern float* fAnalogLX;
+extern float* fAnalogLY;
+extern float* fAnalogRX;
+extern float* fAnalogRY;
+
 // Mouse vars
 extern float* fMousePosX;
 extern float* fMousePosY;

@@ -94,7 +94,7 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 
 	// Type A doesn't need this
 	if (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)
-		return game_KeyOnCheck_0(a1);
+		return bio4::KeyOnCheck_0(a1);
 
 	bool ret = false;
 	bool isMovingMouse = false;
@@ -107,14 +107,14 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 	switch (LastUsedDevice()) {
 		case InputDevices::DinputController:
 		case InputDevices::XinputController:
-			ret = game_KeyOnCheck_0(a1);
+			ret = bio4::KeyOnCheck_0(a1);
 			break;
 		case InputDevices::Keyboard:
 		case InputDevices::Mouse:
 			if (isMouseTurnEnabled() && isMovingMouse)
 				ret = true;
 			else
-				ret = game_KeyOnCheck_0(a1);
+				ret = bio4::KeyOnCheck_0(a1);
 			break;
 	}
 

@@ -309,6 +309,40 @@ void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void*
 	SsTermMain_files.clear();
 }
 
+void __cdecl titleLoop_hook(TITLE_WORK* pT)
+{
+	bool UIPause = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_ID_SYSTEM));
+	if (UIPause)
+		return;
+
+	ID_UNIT* tex = bio4::IDSystem__unitPtr(IDSystemPtr(), 6u, IDC_TITLE);
+
+	if (re4t::cfg->bRestoreAnalogTitleScroll)
+	{
+		// prefer to use fAnalogR over AnalogR here, because it lets us to make the deadzone smaller
+		const float fDeadZone = 0.30f;
+
+		if (abs(*fAnalogRX) >= fDeadZone)
+			pT->scroll_add_5C = *fAnalogRX * 3.0f;
+
+		if (abs(*fAnalogRY) >= fDeadZone)
+		{
+			if (*fAnalogRY < 0)
+				tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
+			else
+				tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
+
+			tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
+		}
+	}
+
+	tex->pos0_94.x -= pT->scroll_add_5C * GlobalPtr()->deltaTime_70;
+	if (tex->pos0_94.x > 1800.0f)
+		tex->pos0_94.x -= 2700.0f;
+	else if (tex->pos0_94.x < -900.0f)
+		tex->pos0_94.x += 2700.0f;
+}
+
 BYTE(__cdecl *j_PlSetCostume_Orig)();
 BYTE __cdecl j_PlSetCostume_Hook()
 {
@@ -1183,6 +1217,48 @@ void re4t::init::Misc()
 				}
 			}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
+			// Swap 'NEW GAME' texture for 'START" on a fresh system save
+			pattern = hook::pattern("89 51 68 8B 57 68 8B");
+			struct titleMenuInit_StartTex
+			{
+				void operator()(injector::reg_pack& regs)
+				{
+					bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
+					if (newSystemSave)
+					{
+						float texW;
+
+						switch (SystemSavePtr()->language_8)
+						{
+						case 4: // French
+							texW = 131.0f;
+							break;
+						case 5: // Spanish
+							texW = 70.0f;
+							break;
+						case 6: // Traditional Chinese / Italian
+							texW = GameVersion() == "1.1.0" ? 66.0f : 68.0f;
+							break;
+						case 8: // Italian
+							texW = 68.0f;
+							break;
+						default: // English, German, Japanese, Simplified Chinese
+							texW = 66.0f;
+							break;
+						}
+
+						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x1u, IDC_TITLE_MENU)->texId_78 = 164;
+						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
+						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x2u, IDC_TITLE_MENU)->texId_78 = 164;
+						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
+					}
+
+					// Code we overwrote
+					*(uint32_t*)(regs.ecx + 0x68) = regs.edx;
+					regs.edx = *(uint32_t*)(regs.edi + 0x68);
+				}
+			}; injector::MakeInline<titleMenuInit_StartTex>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
 			// special handling for the JP exe
 			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 74");
 			if (pattern.empty())
@@ -1212,6 +1288,60 @@ void re4t::init::Misc()
 
 			spd::log()->info("NTSC mode enabled");
 		}
+	}
+
+	// Add screenshake effect to scoped rifle shots
+	{
+		auto pattern = hook::pattern("8B 96 D8 07 00 00 8B 4A ? 6A 00 6A 01 E8"); // wep09_r3_fire00 is used for both rifles
+		struct RifleScreenShake
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bRifleScreenShake)
+					bio4::QuakeExec(0, 0, 5, 40.0f, 2u);
+
+				// Code we overwrote
+				regs.edx = *(uint32_t*)(regs.esi + 0x7D8);
+			}
+		}; injector::MakeInline<RifleScreenShake>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	}
+
+	// Restore Gamecube title menu pan and zoom controls
+	{
+		// hook the titleLoop call with our own reimplementation
+		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 33 DB 53");
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), titleLoop_hook, PATCH_JUMP);
+
+		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like 'Help & Options'
+		pattern = hook::pattern("D9 5E 5C C6 46 58 00 39");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7);
+    
+		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries 
+		pattern = hook::pattern("C7 06 01 00 00 00 E8 ? ? ? ? 57");
+		struct titleSub_resetScrollAdd
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				TitleWorkPtr()->scroll_add_5C = 1.5f;
+        
+				// Code we overwrote
+				__asm { mov dword ptr[esi], 0x1}
+			}
+		}; injector::MakeInline<titleSub_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+    
+		// reset scroll_add_5C when leaving Separate Ways
+		pattern = hook::pattern("C7 45 F4 00 00 00 FF 8B ? ? 52 8B C8 51 50");
+		struct titleAda_resetScrollAdd
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				TitleWorkPtr()->scroll_add_5C = 1.5f;
+        
+				// Code we overwrote
+				int tmp = *(int*)(regs.ebp - 0xC);
+				__asm { mov dword ptr[tmp], 0xFF000000}
+			}
+		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
 	// Allow changing games level of violence to users choice

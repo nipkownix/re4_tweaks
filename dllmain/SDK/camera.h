@@ -50,4 +50,5 @@ public:
 
 namespace bio4 {
 	extern void(__cdecl* CameraCurrentProjection)();
+	extern void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
 };

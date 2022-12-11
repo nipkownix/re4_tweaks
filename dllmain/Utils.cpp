@@ -40,8 +40,17 @@ std::string StrToUpper(std::string str)
 
 float GetRandomFloat(float min, float max)
 {
-	static std::mt19937 engi;
+	static std::random_device rd; // obtain a random number from hardware
+	static std::mt19937 engi(rd());
 	std::uniform_real_distribution<float> num(min, max); // range min - max
+	return num(engi);
+}
+
+int GetRandomInt(int min, int max)
+{
+	static std::random_device rd; // obtain a random number from hardware
+	static std::mt19937 engi(rd());
+	std::uniform_int_distribution<int> num(min, max); // range min - max
 	return num(engi);
 }
 
