@@ -1278,7 +1278,7 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Unlocks minor difficulty boosts previously exclusive to the North American console versions of RE4.");
 						ImGui::TextWrapped("Higher starting adaptive difficulty, more difficult Ada missions, and a more difficult Mercenaries village stage.");
-						ImGui::TextWrapped("Shooting gallery requirements are higher, and Easy difficulty is removed from the title menu.");
+						ImGui::TextWrapped("Bottle caps require 3000 points in the shooting gallery, and Easy difficulty is removed from the title menu.");
 					}
 
 					// AshleyJPCameraAngles
