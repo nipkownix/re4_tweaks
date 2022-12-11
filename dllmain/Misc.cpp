@@ -1164,7 +1164,7 @@ void re4t::init::Misc()
 				regs.edx = *(uint32_t*)(regs.esi + 0x7D8);
 			}
 		}; injector::MakeInline<RifleScreenShake>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-  }
+	}
 
 	// Restore Gamecube title menu pan and zoom controls
 	{
