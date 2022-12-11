@@ -1337,6 +1337,18 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
 					}
 
+					// RestoreAnalogTitleScroll
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreAnalogTitleScroll", &re4t::cfg->bRestoreAnalogTitleScroll);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick.");
+					}
+
 					// AllowMafiaLeonCutscenes
 					{
 						ImGui_ColumnSwitch();
