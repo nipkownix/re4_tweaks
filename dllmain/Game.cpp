@@ -82,6 +82,8 @@ namespace bio4 {
 
 	void(__cdecl* SceSleep)(uint32_t ctr);
 
+	void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
+  
 	ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
 };
 
@@ -867,6 +869,10 @@ bool re4t::init::Game()
 	// SndCall funcptr
 	pattern = hook::pattern("05 94 00 00 00 50 6A 0C 6A 01 E8");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xA)).as_int(), bio4::SndCall);
+
+	// QuakeExec ptr
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 8B E5 5D");
+	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::QuakeExec);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");

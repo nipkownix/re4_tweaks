@@ -1321,6 +1321,22 @@ void cfgMenuRender()
 						ImGui::PopItemWidth();
 					}
 
+					// RifleScreenShake
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("RifleScreenShake", &re4t::cfg->bRifleScreenShake))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::TextWrapped("Adds a screen shake effect when firing a rifle.");
+					}
+
 					// AllowSellingHandgunSilencer
 					{
 						ImGui_ColumnSwitch();
