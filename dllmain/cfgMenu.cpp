@@ -455,23 +455,6 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(Change the resolution for this setting to take effect)");
 					}
 
-					// ReplaceFramelimiter
-					{
-						ImGui_ColumnSwitch();
-
-						if (ImGui::Checkbox("ReplaceFramelimiter", &re4t::cfg->bReplaceFramelimiter))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
-						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
-					}
-
 					// FixDPIScale
 					{
 						ImGui_ColumnSwitch();
@@ -1173,6 +1156,23 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Replaces older math functions in the game with much more optimized equivalents.");
 						ImGui::TextWrapped("Experimental, can hopefully improve framerate in some areas that had dips.");
+					}
+
+					// ReplaceFramelimiter
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("ReplaceFramelimiter", &re4t::cfg->bReplaceFramelimiter))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
+						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
 					}
 
 					// MultithreadFix
