@@ -1270,7 +1270,7 @@ const char* EItemId_Names[] = {
 	"Plaga Sample", // Parasite_Sample
 	"Krauser_Knife",
 	"Flash Grenade", // Light_Grenade
-	"Salazar_Crest",
+	"Salazar Family Insignia", // Salazar_Crest
 	"Bowgun",
 	"Bowgun Bolts",
 	"Green Herb (X2)", // Herb_G_G
@@ -1282,11 +1282,11 @@ const char* EItemId_Names[] = {
 	"Shotgun Shells", // Bullet_12gg
 	"Red Herb", // Herb_R
 	"Handcannon Ammo", // Bullet_5in
-	"Key_Sand_Clock",
+	"Hourgalss w/ gold decor (key item)", // Key_Sand_Clock
 	"Yellow Herb", // Herb_Y
-	"Piece_Of_Slate",
-	"Golden_Gem",
-	"Silver_Gem",
+	"Stone Tablet", // Piece_Of_Slate
+	"Lion Ornament", // Golden_Gem
+	"Goat Ornament", // Silver_Gem
 	"TMP Ammo", // Bullet_9mm_M
 	"Punisher (FN57)", // FN57
 	"Scope (P.R.L. 412)", // Scope_New_Weapon (shows as Punisher w/ Silencer ingame??)
@@ -1304,19 +1304,19 @@ const char* EItemId_Names[] = {
 	"Rifle", // S_Field
 	"Rifle (semi-auto)", // HK_Sniper
 	"TMP", // Styer
-	"R513_Key_0a",
+	"Activation Key (blue) (r513)", // R513_Key_0a
 	"Styer_St",
-	"R513_Key_0b",
+	"Activation Key (red) (r513)",
 	"Chicago Typewriter", // Thompson
 	"Rocket Launcher", // RPG7
 	"Mine Thrower", // Mine
 	"Hand Cannon", // SW500
 	"Knife",
-	"Cupric_Gem",
-	"Moon_Spall_1",
-	"Cult_Key",
-	"Cult_Crest",
-	"False_Eye",
+	"Serpent Ornament", // Cupric_Gem
+	"Moonstone (right half)", // Moon_Spall_1
+	"Insignia Key", // Cult_Key
+	"Round Insignia", // Cult_Crest
+	"False Eye",
 	"Custom TMP", // Krauser_Machine_Gun
 	"Silencer (Handgun)", // Silencer_9mm
 	"Punisher (Item_40)", // "Item_40" in re4vr
@@ -1327,201 +1327,206 @@ const char* EItemId_Names[] = {
 	"Scope (semi-auto rifle)", // Scope_HK_Sniper
 	"Mine-Darts", // Bullet_Mine_A
 	"Shotgun (Ada)",
-	"File_13",
-	"File_14",
-	"File_15",
-	"File_16",
-	"File_17",
-	"File_18",
-	"File_19",
-	"File_20",
-	"File_21",
+	"Capture Luis Sera", // File_13
+	"Target Practice", // File_14
+	"Luis' Memo", // File_15
+	"Castellan Memo", // File_16
+	"Female Intruder", // File_17
+	"Butler's Memo", // File_18
+	"Sample Retrieved", // File_19
+	"Ritual Preparation", // File_20
+	"Luis' Memo 2", // File_21
 	"HK_Sniper_Thermo",
 	"Krauser's Bow",
 	"Chicago Typewriter (Ada)", // Ada_Machine_Gun
-	"Treasure_Map_2",
-	"Treasure_Map_3",
-	"Ore_White",
-	"Ore_Black",
-	"Pearl_Pendant",
-	"Brass_Fob_Watch",
-	"Silver_Whistle",
-	"Gold_Dish",
-	"Platinum_Cup",
-	"Crystal_Mask",
-	"Beer_Stein",
-	"Agate_Green",
-	"Garnett_Red",
-	"Amber_Yellow",
-	"Beer_Stein_G",
-	"Beer_Stein_R",
-	"Beer_Stein_Y",
-	"Beer_Stein_G_R",
-	"Beer_Stein_G_Y",
-	"Beer_Stein_R_Y",
-	"Beer_Stein_G_R_Y",
-	"Moon_Spall_2",
+	"Treasure Map (Castle)", // Treasure_Map_2
+	"Treasure Map (Island)", // Treasure_Map_3
+	"Velvet Blue", // Ore_White
+	"Spinel", // Ore_Black
+	"Pearl Pendant",
+	"Brass Pocket Watch", // Brass_Fob_Watch
+	"Elegant Headdress", // Silver_Whistle
+	"Antique Pipe", // Gold_Dish
+	"Gold Bangle w/ Pearls", // Platinum_Cup
+	"Amber Ring", // Crystal_Mask
+	"Beerstein", // Beer_Stein
+	"Green Catseye", // Agate_Green
+	"Red Catseye", // Garnett_Red
+	"Yellow Catseye", // Amber_Yellow
+	"Beerstein w/ (G)", // Beer_Stein_G
+	"Beerstein w/ (R)", // Beer_Stein_R
+	"Beerstein w/ (Y)", // Beer_Stein_Y
+	"Beerstein w/ (G, R)", // Beer_Stein_G_R
+	"Beerstein w/ (G, Y)", // Beer_Stein_G_Y
+	"Beerstein w/ (R, Y)", // Beer_Stein_R_Y
+	"Beerstein w/ (G, R, Y)", // Beer_Stein_G_R_Y
+	"Moonstone (Left half)", // Moon_Spall_2
 	"Chicago Typewriter Ammo", // Bullet_45in_M
 	"S_Field_Sc",
 	"HK_Sniper_Sc",
 	"Infinite Launcher", // Omake_RPG
-	"Pagan_Grail_1",
-	"Pagan_Grail_2",
-	"Pagan_Rod",
+	"King's Grail", // Pagan_Grail_1
+	"Queen's Grail", // Pagan_Grail_2
+	"Staff of Royalty", // Pagan_Rod
 	"Ingot_Bar",
 	"Arrows", // Bullet_Arrow
 	"Time_Bonus",
-	"R327_Card_Key",
+	"Emergency Lock Card Key (R327)", // R327_Card_Key
 	"Point_Bonus",
-	"Key_Green_Gem",
+	"Green Catseye (key item)", // Key_Green_Gem
 	"Ruby",
 	"Gold_Box_S_Std",
 	"Gold_Box_L_Std",
-	"Moon_Crest",
-	"Seal_Key",
-	"Attache_Case_S",
-	"Attache_Case_M",
-	"Attache_Case_L",
-	"Attache_Case_O",
-	"Golden_Sword",
-	"Key_To_R50b",
-	"Dragon_Dream",
-	"Key_To_R30c",
-	"Key_To_R308",
-	"Crest_A",
-	"Crest_B",
-	"Crest_C",
-	"Key_To_Jet_Ski",
-	"Smelly_Pendant",
-	"Smelly_Fob_Watch",
-	"Key_To_Shrine",
-	"Key_To_Barrier",
+	"Blue Moonstone", // Moon_Crest
+	"Key to the Mine", // Seal_Key
+	"Attache Case S", // Attache_Case_S
+	"Attache Case M", // Attache_Case_M
+	"Attache Case L", // Attache_Case_L
+	"Attache Case XL", // Attache_Case_O
+	"Golden Sword", // Golden_Sword
+	"Iron Key (r50b)", // Key_To_R50b
+	"Stone of Sacrifice", // Dragon_Dream
+	"Storage Room Card Key (r30c)", // Key_To_R30c
+	"Freezer Card Key (r308)", // Key_To_R308
+	"Piece of the Holy Beast, Panther", // Crest_A
+	"Piece of the Holy Beast, Serpent", // Crest_B
+	"Piece of the Holy Beast, Eagle", // Crest_C
+	"Jet-ski Key", // Key_To_Jet_Ski
+	"Dirty Pearl Pendant", // Smelly_Pendant
+	"Dirty Brass Pocket Watch", // Smelly_Fob_Watch
+	"Old Key", // Key_To_Shrine
+	"Camp Key", // Key_To_Barrier
 	"Dynamite",
-	"Key_To_Control_Room",
-	"Gold_Bracelet",
-	"Perfume_Bottle",
-	"Pearl_Ruby_Mirror",
-	"Key_To_R30b",
-	"Plush_Chessboard",
+	"Lift Activation Key", // Key_To_Control_Room
+	"Gold Bangle", // Gold_Bracelet
+	"Elegant Perfume Bottle", // Perfume_Bottle
+	"Mirro w/ Pearls & Rubies", // Pearl_Ruby_Mirror
+	"Waste Disposal Card Key (r30b)", // Key_To_R30b
+	"Elegant Chessboard", // Plush_Chessboard
 	"Riot Gun",
 	"Black Bass",
-	"Sand_Clock",
+	"Hourgalss w/ gold decor", // Sand_Clock
 	"Black Bass (L)",
-	"Evil_Gem",
+	"Illuminados Pendant", // Evil_Gem
 	"S_Field_Thermo",
-	"Pot_Holed_Crown",
-	"Kingdom_Heart",
-	"Royal_Crest",
-	"Crown_Heart",
-	"Crown_Crest",
-	"Crown_Heart_Crest",
-	"Item_A0",
-	"Spinel_02",
-	"Pedestal",
-	"Key_To_Salon",
-	"Crest_Right",
-	"Crest_Left",
-	"Crest_Full",
-	"Key_To_201",
+	"Crown", // Pot_Holed_Crown
+	"Crown Jewel", // Kingdom_Heart
+	"Royal Insignia", // Royal_Crest
+	"Crown with Jewels", // Crown_Heart
+	"Crown with an insignia", // Crown_Crest
+	"Salazar Family Crown", // Crown_Heart_Crest
+	"Rifle Ammo (Infrared)", // Item_A0 <-- is this even used by the game?
+	"Emerald", // Spinel_02
+	"Pedestal (Bottle Caps)",
+	"Gallery Key", // Key_To_Salon
+	"Emblem (Right half)", // Crest_Right
+	"Emblem (Left half)", // Crest_Left
+	"Hexagonal Emblem", // Crest_Full
+	"Castle Gate Key", // Key_To_201
 	"Mixed Herbs (R+Y)", // Herb_R_Y
-	"Treasure_Map",
+	"Treasure Map (Village)", // Treasure_Map
 	"Scope (Mine Thrower)", // Scope_Mine
 	"Mine_SC",
-	"File_01",
-	"File_02",
-	"File_03",
-	"File_04",
-	"File_05",
-	"File_06",
-	"File_07",
-	"File_08",
-	"File_09",
-	"File_10",
-	"File_11",
-	"File_12",
-	"Lantern",
-	"Lantern_Stone_G",
-	"Lantern_Stone_R",
-	"Lantern_Stone_Y",
-	"Lantern_G",
-	"Lantern_R",
-	"Lantern_Y",
-	"Lantern_G_R",
-	"Lantern_G_Y",
-	"Lantern_R_Y",
-	"Lantern_G_R_Y",
-	"Dungeon_Key",
-	"Silver_Sword",
+	"Playing Manual 1", // File_01
+	"Info on Ashley", // File_02
+	"Playing Manual 2", // File_03
+	"Alert Order", // File_04
+	"About the Blue Medallions", // File_05
+	"Chief's Note", // File_06
+	"Closure of the Church", // File_07
+	"Anonymous Letter", // File_08
+	"Playing Manual 3", // File_09
+	"Sera and the 3rd Party", // File_10
+	"Two Routes", // File_11
+	"Village's Last Defense", // File_12
+	"Butterfly Lamp", // Lantern
+	"Green Eye", // Lantern_Stone_G
+	"Red Eye", // Lantern_Stone_R
+	"Blue Eye", // Lantern_Stone_Y
+	"Butterfly Lamp w/ (G)", // Lantern_G
+	"Butterfly Lamp w/ (R)", // Lantern_R
+	"Butterfly Lamp w/ (B)", // Lantern_Y
+	"Butterfly Lamp w/ (G, R)", // Lantern_G_R
+	"Butterfly Lamp w/ (G, B)", // Lantern_G_Y
+	"Butterfly Lamp w/ (R, B)", // Lantern_R_Y
+	"Butterfly Lamp w/ (R, G, B)", // Lantern_G_R_Y
+	"Prison Key", // Dungeon_Key
+	"Platinum Sword", // Silver_Sword
 	"Infrared Scope", // Scope_Thermo
-	"Mask",
-	"Mask_Stone_G",
-	"Mask_Stone_R",
-	"Mask_Stone_Y",
-	"Mask_G",
-	"Mask_R",
-	"Mask_Y",
-	"Mask_G_R",
-	"Mask_G_Y",
-	"Mask_R_Y",
-	"Mask_G_R_Y",
-	"Cat_Statue",
-	"Cat_Stone_G",
-	"Cat_Stone_R",
-	"Cat_Stone_Y",
-	"Cat_Statue_G",
-	"Cat_Statue_R",
-	"Cat_Statue_Y",
-	"Cat_Statue_G_R",
-	"Cat_Statue_G_Y",
-	"Cat_Statue_R_Y",
-	"Cat_Statue_G_R_Y",
-	"Bottle_Cap_01",
-	"Bottle_Cap_02",
-	"Bottle_Cap_03",
-	"Bottle_Cap_04",
-	"Bottle_Cap_05",
-	"Bottle_Cap_06",
-	"Bottle_Cap_07",
-	"Bottle_Cap_08",
-	"Bottle_Cap_09",
-	"Bottle_Cap_10",
-	"Bottle_Cap_11",
-	"Bottle_Cap_12",
-	"Bottle_Cap_13",
-	"Bottle_Cap_14",
-	"Bottle_Cap_15",
-	"Bottle_Cap_16",
-	"Bottle_Cap_17",
-	"Bottle_Cap_18",
-	"Bottle_Cap_19",
-	"Bottle_Cap_20",
-	"Bottle_Cap_21",
-	"Bottle_Cap_22",
-	"Bottle_Cap_23",
-	"Bottle_Cap_24",
-	"File_22",
-	"File_23",
-	"File_24",
-	"File_25",
-	"File_26",
-	"File_27",
-	"File_28",
-	"File_29",
+	"Elegant Mask", // Mask
+	"Green Gem", // Mask_Stone_G
+	"Red Gem", // Mask_Stone_R
+	"Purple Gem", // Mask_Stone_Y
+	"Elegant Mask w/ (G)", // Mask_G
+	"Elegant Mask w/ (R)", // Mask_R
+	"Elegant Mask w/ (P)", // Mask_Y
+	"Elegant Mask w/ (G, R)", // Mask_G_R
+	"Elegant Mask w/ (G, P)", // Mask_G_Y
+	"Elegant Mask w/ (R, P)", // Mask_R_Y
+	"Elegant Mask w/ (R, G, P)", // Mask_G_R_Y
+	"Golden Lynx", // Cat_Statue
+	"Green Stone of Judgement", // Cat_Stone_G
+	"Red Stone of Faith", // Cat_Stone_R
+	"Blue Stone of Treason", // Cat_Stone_Y
+	"Golden Lynx w/ (G)", // Cat_Statue_G
+	"Golden Lynx w/ (R)", // Cat_Statue_R
+	"Golden Lynx w/ (B)", // Cat_Statue_Y
+	"Golden Lynx w/ (G, R)", // Cat_Statue_G_R
+	"Golden Lynx w/ (G, B)", // Cat_Statue_G_Y
+	"Golden Lynx w/ (R, B)", // Cat_Statue_R_Y
+	"Golden Lynx w/ (R, G, B)", // Cat_Statue_G_R_Y
+	"Bottle Cap 01",
+	"Bottle Cap 02",
+	"Bottle Cap 03",
+	"Bottle Cap 04",
+	"Bottle Cap 05",
+	"Bottle Cap 06",
+	"Bottle Cap 07",
+	"Bottle Cap 08",
+	"Bottle Cap 09",
+	"Bottle Cap 10",
+	"Bottle Cap 11",
+	"Bottle Cap 12",
+	"Bottle Cap 13",
+	"Bottle Cap 14",
+	"Bottle Cap 15",
+	"Bottle Cap 16",
+	"Bottle Cap 17",
+	"Bottle Cap 18",
+	"Bottle Cap 19",
+	"Bottle Cap 20",
+	"Bottle Cap 21",
+	"Bottle Cap 22",
+	"Bottle Cap 23",
+	"Bottle Cap 24",
+	"Letter from Ada", // File_22
+	"Luis' Memo 3", // File_23
+	"Paper Airplane", // File_24
+	"Our Plan", // File_25
+	"Luis' Memo 4", // File_26
+	"Krauser's Note", // File_27
+	"Luis' Memo 5", // File_28
+	"Our Mission", // File_29
 	"File_30",
 	"File_31",
 	"Tactical Vest",
 	"aaa", // Gets added to key items, freezes the game when you examine it?
-	"PunisherKeyItem", // Same
-	"HandgunKeyItem", // Same
-	"ShotgunKeyItem", // Same
-	"MineThrowerKeyItem", // Same
-	"HandcannonKeyItem", // Same
-	"MineThrowerwScopeKeyItem", // Same
-	"Mission Directives 1",
-	"Mission Directives 2",
-	"Mission Directives 3",
-	"Mission Directives 4",
-	"Mission Directives 5",
+	"Punisher_KeyItem", // Same
+	"Handgun_KeyItem", // Same
+	"Shotgun_KeyItem", // Same
+	"MineThrower_KeyItem", // Same
+	"Handcannon_KeyItem", // Same
+	"MineThrowerwScope_KeyItem", // Same
+	"Mission Directives 1 (Ada)",
+	"Mission Directives 2 (Ada)",
+	"Mission Directives 3 (Ada)",
+	"Mission Directives 4 (Ada)",
+	"Mission Directives 5 (Ada)",
+	"Mission 1 Treasure Map (Ada)",
+	"Mission 2 Treasure Map (Ada)",
+	"Mission 3 Treasure Map (Ada)",
+	"Mission 4 Treasure Map (Ada)",
+	"Mission 5 Treasure Map (Ada)",
 	"Any"
 };
 
@@ -1540,7 +1545,7 @@ std::unordered_map<EItemId, upgradeTypes> extra_upgrades = {
 	{ EItemId::Ruger, { 1, 0, 0 ,0 }  },	 // Handgun
 	{ EItemId::Shotgun, { 1, 0, 0 ,0 }  },   // Shotgun
 	{ EItemId::FN57, { 1, 0, 0 ,0 }  },		 // Punisher (FN57)
-	// { EItemId::Punisher, { 1, 0, 0 ,0 }  },  // Punisher <- does this wep even work?
+	{ EItemId::Punisher, { 1, 0, 0 ,0 }  },  // Punisher <- does this wep even work?
 	{ EItemId::SW500, { 1, 0, 0 ,1 }  },	 // Handcannon
 	{ EItemId::Thompson, { 1, 0, 0 ,1 }  },  // Chicago Typewriter
 	{ EItemId::Ada_Machine_Gun, { 1, 0, 0 ,1 }  }  // Chicago Typewriter (Ada)

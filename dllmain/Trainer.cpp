@@ -1438,12 +1438,12 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			// These get added to key items, but freeze game when examining
 			EItemId::Krauser_Knife, 
 			EItemId::aaa,
-			EItemId::PunisherKeyItem,
-			EItemId::HandgunKeyItem,
-			EItemId::ShotgunKeyItem,
-			EItemId::MineThrowerKeyItem,
-			EItemId::HandcannonKeyItem,
-			EItemId::MineThrowerwScopeKeyItem,
+			EItemId::Punisher_KeyItem,
+			EItemId::Handgun_KeyItem,
+			EItemId::Shotgun_KeyItem,
+			EItemId::MineThrower_KeyItem,
+			EItemId::Handcannon_KeyItem,
+			EItemId::MineThrowerwScope_KeyItem,
 
 			EItemId::Ada_New_Weapon, // gets added to key items as "Killer7 w/ Silencer", no icon, examine shows the model, but it's otherwise pretty useless
 									 // maybe this can be made equippable if "piece_info" data is added for it though...
@@ -1474,8 +1474,11 @@ void InvItemAdder_SetPopUp(const char* popupname)
 
 			for (auto& type : chosenTypes)
 			{
-				for (int item_id = 0; item_id < 255; item_id++)
+				for (int item_id = 0; item_id < 272; item_id++)
 				{
+					auto size = badItems.size();
+					
+					con.AddLogInt(size);
 
 					if (std::find(badItems.begin(), badItems.end(), EItemId(item_id)) != badItems.end())
 						continue;
@@ -2878,7 +2881,7 @@ void Trainer_RenderUI(int columnCount)
 							// Context menu for items
 							if (ImGui::BeginPopupContextItem()) // <-- use last item id as popup id
 							{
-								ImGui::Text("\"%s\" (%d):", EItemId_Names[int(item_id)], item_id);
+								ImGui::Text("\"%s\"):", EItemId_Names[int(item_id)]);
 
 								ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 

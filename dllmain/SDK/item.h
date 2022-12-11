@@ -261,18 +261,23 @@ enum class EItemId
 	File_31 = 253,
 	Assault_Jacket = 254, // items below here have guessed names (cut from RE4VR?)
 	aaa = 255,
-	PunisherKeyItem = 256,
-	HandgunKeyItem = 257,
-	ShotgunKeyItem = 258,
-	MineThrowerKeyItem = 259,
-	HandcannonKeyItem = 260,
-	MineThrowerwScopeKeyItem = 261,
+	Punisher_KeyItem = 256,
+	Handgun_KeyItem = 257,
+	Shotgun_KeyItem = 258,
+	MineThrower_KeyItem = 259,
+	Handcannon_KeyItem = 260,
+	MineThrowerwScope_KeyItem = 261,
 	Mission_Directives_1 = 262,
 	Mission_Directives_2 = 263,
 	Mission_Directives_3 = 264,
 	Mission_Directives_4 = 265,
 	Mission_Directives_5 = 266,
-	Any = 267
+	Mission1_Treasure_Map = 267,
+	Mission2_Treasure_Map = 268,
+	Mission3_Treasure_Map = 269,
+	Mission4_Treasure_Map = 270,
+	Mission5_Treasure_Map = 271,
+	Any = 272
 };
 extern const char* EItemId_Names[]; // GameFlags.cpp
 
