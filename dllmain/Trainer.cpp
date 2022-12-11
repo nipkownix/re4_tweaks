@@ -762,6 +762,11 @@ void Trainer_Update()
 	{
 		auto wepItmPtr = ItemMgr->search(wepAdded_ID);
 
+		// Game seems to be adding wep id 33 (FN57) when you request id 64 (Punisher), so ItemMgr->search never finds it in the inventory.
+		// Workaround that by changint the wepAdded_ID if wepItmPtr is null.
+		if (!wepItmPtr && (EItemId(wepAdded_ID) == EItemId::Punisher))
+			wepAdded_ID = int(EItemId::FN57);
+
 		// Wait until the game has actually created the weapon
 		if (wepItmPtr)
 		{
@@ -1488,6 +1493,8 @@ void InvItemAdder_SetPopUp(const char* popupname)
 						ImGui::TableNextColumn();
 
 						bool selected = itemId == EItemId(item_id);
+
+						ImGui::BeginDisabled(wepAdded_ID != 0); // Disable if there's a pending weapon upgrade
 						if (ImGui::Selectable(name.c_str(), &selected))
 						{
 							if (selected)
@@ -1495,8 +1502,14 @@ void InvItemAdder_SetPopUp(const char* popupname)
 								itemId = EItemId(item_id);
 								if (curInfo.maxNum_4 > 1 && curInfo.type_2 == ITEM_TYPE_AMMO)
 									stackCount = curInfo.maxNum_4; // help user by setting stack count to max for this item
+
+								wepAdded_FirePower = 1;
+								wepAdded_FiringSpeed = 1;
+								wepAdded_ReloadSpeed = 1;
+								wepAdded_Capacity = 1;
 							}
 						}
+						ImGui::EndDisabled();
 					}
 				}
 			}
@@ -1520,13 +1533,13 @@ void InvItemAdder_SetPopUp(const char* popupname)
 
 		if (info.type_2 == ITEM_TYPE_WEAPON)
 		{
-			maxFirePower = bio4::WeaponId2MaxLevel(info.id_0, 0);
-			maxFiringSpeed = bio4::WeaponId2MaxLevel(info.id_0, 1);
-			maxReloadSpeed = bio4::WeaponId2MaxLevel(info.id_0, 2);
-			maxCapacity = bio4::WeaponId2MaxLevel(info.id_0, 3);
+			maxFirePower = bio4::WeaponId2MaxLevel(info.id_0, 0) + extra_upgrades[EItemId(info.id_0)].firePower;
+			maxFiringSpeed = bio4::WeaponId2MaxLevel(info.id_0, 1) + extra_upgrades[EItemId(info.id_0)].firingSpeed;
+			maxReloadSpeed = bio4::WeaponId2MaxLevel(info.id_0, 2) + extra_upgrades[EItemId(info.id_0)].reloadSpeed;
+			maxCapacity = bio4::WeaponId2MaxLevel(info.id_0, 3) + extra_upgrades[EItemId(info.id_0)].Capacity;
 		}
 
-		ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
+		ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON || wepAdded_ID != 0);
 		ImGui::Text("Weapon Upgrades:");
 		ImGui::EndDisabled();
 
@@ -1537,7 +1550,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 
 			ImGui::TableNextColumn();
 
-			ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
+			ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON || wepAdded_ID != 0);
 
 			ImGui::BeginDisabled(maxFirePower == 1);
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Fire Power").x - sliderwidth);
@@ -1614,7 +1627,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			SubScreenWk->open_flag_2C != 0 ||
 			FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
 
-		ImGui::BeginDisabled(disable);
+		ImGui::BeginDisabled(disable || wepAdded_ID != 0);
 		if (ImGui::Button("Add Item", ImVec2(120 * esHook._cur_monitor_dpi, 0)))
 		{
 			if (info.type_2 == ITEM_TYPE_WEAPON)
@@ -2851,7 +2864,7 @@ void Trainer_RenderUI(int columnCount)
 							// Context menu for items
 							if (ImGui::BeginPopupContextItem()) // <-- use last item id as popup id
 							{
-								ImGui::Text("\"%s\":", EItemId_Names[int(item_id)]);
+								ImGui::Text("\"%s\" (%d):", EItemId_Names[int(item_id)], item_id);
 
 								ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
@@ -2873,10 +2886,10 @@ void Trainer_RenderUI(int columnCount)
 									static int customReloadSpeed = 1;
 									static int customCapacity = 1;
 
-									int maxFirePower = bio4::WeaponId2MaxLevel(curInfo.id_0, 0);
-									int maxFiringSpeed = bio4::WeaponId2MaxLevel(curInfo.id_0, 1);
-									int maxReloadSpeed = bio4::WeaponId2MaxLevel(curInfo.id_0, 2);
-									int maxCapacity = bio4::WeaponId2MaxLevel(curInfo.id_0, 3);
+									int maxFirePower = bio4::WeaponId2MaxLevel(curInfo.id_0, 0) + extra_upgrades[EItemId(curInfo.id_0)].firePower;
+									int maxFiringSpeed = bio4::WeaponId2MaxLevel(curInfo.id_0, 1) + extra_upgrades[EItemId(curInfo.id_0)].firingSpeed;
+									int maxReloadSpeed = bio4::WeaponId2MaxLevel(curInfo.id_0, 2) + extra_upgrades[EItemId(curInfo.id_0)].reloadSpeed;
+									int maxCapacity = bio4::WeaponId2MaxLevel(curInfo.id_0, 3) + extra_upgrades[EItemId(curInfo.id_0)].Capacity;
 
 									// Disable if there's nothing to upgrade
 									bool disable = ((maxFirePower == 1) && (maxFiringSpeed == 1) && (maxReloadSpeed == 1) && (maxCapacity == 1));

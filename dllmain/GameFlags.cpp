@@ -1,6 +1,7 @@
 #include <unordered_map>
 #include <string>
 #include "GameFlags.h"
+#include "SDK/item.h"
 
 const char* Flags_DEBUG_Names[] = {
 	"DBG_TEST_MODE", // 0x80000000 (@ 0x0)
@@ -1510,6 +1511,27 @@ const char* EItemId_Names[] = {
 	"File_31",
 	"Tactical Vest",
 	"Any"
+};
+
+// List of weapons that have upgrades above their normal limit
+std::unordered_map<EItemId, upgradeTypes> extra_upgrades = {
+	{ EItemId::HK_Sniper, { 0, 1, 0 ,0 } },	 // Automatic Rifle
+	{ EItemId::Styer, { 1, 0, 0 ,0 }  },	 // TMP
+	{ EItemId::Riot_Gun, { 1, 0, 0 ,0 }  },  // Riot Gun
+	{ EItemId::VP70, { 0, 0, 0 ,1 }  },		 // Matilda
+	{ EItemId::Striker, { 0, 0, 0 ,1 }  },   // Striker
+	{ EItemId::S_Field, { 1, 0, 0 ,0 }  },   // Rifle
+	{ EItemId::XD9, { 1, 0, 0 ,0 }  },		 // Blacktail
+	{ EItemId::Mauser, { 1, 0, 0 ,0 }  },	 // Red9
+	{ EItemId::Civilian, { 1, 0, 0 ,0 }  },  // Broken Butterfly
+	{ EItemId::Mine, { 1, 0, 0 ,0 }  },		 // Mine Thrower
+	{ EItemId::Ruger, { 1, 0, 0 ,0 }  },	 // Handgun
+	{ EItemId::Shotgun, { 1, 0, 0 ,0 }  },   // Shotgun
+	{ EItemId::FN57, { 1, 0, 0 ,0 }  },		 // Punisher (FN57)
+	// { EItemId::Punisher, { 1, 0, 0 ,0 }  },  // Punisher <- does this wep even work?
+	{ EItemId::SW500, { 1, 0, 0 ,1 }  },	 // Handcannon
+	{ EItemId::Thompson, { 1, 0, 0 ,1 }  },  // Chicago Typewriter
+	{ EItemId::Ada_Machine_Gun, { 1, 0, 0 ,1 }  }  // Chicago Typewriter (Ada)
 };
 
 // Descriptions of the known effects of game flags can be added here

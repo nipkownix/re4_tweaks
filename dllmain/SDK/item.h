@@ -264,6 +264,15 @@ enum class EItemId
 };
 extern const char* EItemId_Names[]; // GameFlags.cpp
 
+struct upgradeTypes {
+	int8_t firePower;
+	int8_t firingSpeed;
+	int8_t reloadSpeed;
+	int8_t Capacity;
+};
+
+extern std::unordered_map<EItemId, upgradeTypes> extra_upgrades;
+
 class cItem
 {
 public:
@@ -284,12 +293,12 @@ public:
 
 	inline int8_t getFiringSpeed()
 	{
-		return (LOBYTE(weapon_6[0]) >> 4) & 0xF;
+		return ((*((int8_t*)&(weapon_6[0]))) >> 4) & 0xF;
 	}
 
 	inline int8_t getReloadSpeed()
 	{
-		return HIBYTE(weapon_6[0]) & 0xF;
+		return (*((int8_t*)&(weapon_6[0]) + 1)) & 0xF;
 	}
 
 	inline int8_t getCapacity()
