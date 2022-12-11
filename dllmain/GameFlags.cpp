@@ -1510,6 +1510,18 @@ const char* EItemId_Names[] = {
 	"File_30",
 	"File_31",
 	"Tactical Vest",
+	"aaa", // Gets added to key items, freezes the game when you examine it?
+	"PunisherKeyItem", // Same
+	"HandgunKeyItem", // Same
+	"ShotgunKeyItem", // Same
+	"MineThrowerKeyItem", // Same
+	"HandcannonKeyItem", // Same
+	"MineThrowerwScopeKeyItem", // Same
+	"Mission Directives 1",
+	"Mission Directives 2",
+	"Mission Directives 3",
+	"Mission Directives 4",
+	"Mission Directives 5",
 	"Any"
 };
 

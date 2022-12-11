@@ -1435,7 +1435,16 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			EItemId::S_Field_Thermo,
 			EItemId::Mine_SC,
 
-			EItemId::Krauser_Knife, // gets added to key items, but freezes game when examining
+			// These get added to key items, but freeze game when examining
+			EItemId::Krauser_Knife, 
+			EItemId::aaa,
+			EItemId::PunisherKeyItem,
+			EItemId::HandgunKeyItem,
+			EItemId::ShotgunKeyItem,
+			EItemId::MineThrowerKeyItem,
+			EItemId::HandcannonKeyItem,
+			EItemId::MineThrowerwScopeKeyItem,
+
 			EItemId::Ada_New_Weapon, // gets added to key items as "Killer7 w/ Silencer", no icon, examine shows the model, but it's otherwise pretty useless
 									 // maybe this can be made equippable if "piece_info" data is added for it though...
 
@@ -2840,7 +2849,12 @@ void Trainer_RenderUI(int columnCount)
 
 						bool stackable = curInfo.maxNum_4 > 1;
 
-						std::string name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
+						std::string name;
+
+						if (EItemId_Names[int(item_id)])
+							name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
+						else
+							name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + std::to_string(int(item_id)) + " (missing name)";
 
 						if (stackable)
 							name += " (" + std::to_string(itmPtr->num_2) + ")";
