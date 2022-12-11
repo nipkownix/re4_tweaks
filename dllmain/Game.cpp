@@ -26,6 +26,7 @@ cItemMgr* ItemMgr = nullptr;
 cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 cItemMgr__get_Fn cItemMgr__get = nullptr;
+cItemMgr__erase_Fn cItemMgr__erase = nullptr;
 
 // event.h externs
 EventMgr* EvtMgr = nullptr;
@@ -666,6 +667,9 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 			SubScreenWk->get_item_id_2F6 = id;
 			SubScreenWk->get_item_num_2F8 = count;
 			bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_PZZL, SS_ATTR_NULL);
+
+			// Close cfgMenu
+			bCfgMenuOpen = false;
 		}
 	}
 
@@ -941,6 +945,8 @@ bool re4t::init::Game()
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(12), cItemMgr__arm);
 	pattern = hook::pattern("56 50 B9 ? ? ? ? E8 ? ? ? ? A1");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(7), cItemMgr__get);
+	pattern = hook::pattern("E8 ? ? ? ? 8A 45 ? 8B 4D ? 24 ? 66 0F ? ? 8D 04 FD ? ? ? ? 66 0B ? 66 89 53");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), cItemMgr__erase);
 
 	// EvtMgr
 	pattern = hook::pattern("75 ? 6A 00 6A 00 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 84 C0");

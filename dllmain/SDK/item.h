@@ -277,6 +277,26 @@ public:
 	int8_t orientation_C;
 	uint8_t onboard_D;
 
+	inline int8_t getFirePower()
+	{
+		return weapon_6[0] & 0xF;
+	}
+
+	inline int8_t getFiringSpeed()
+	{
+		return (LOBYTE(weapon_6[0]) >> 4) & 0xF;
+	}
+
+	inline int8_t getReloadSpeed()
+	{
+		return HIBYTE(weapon_6[0]) & 0xF;
+	}
+
+	inline int8_t getCapacity()
+	{
+		return (weapon_6[0] >> 0xC) & 0xF;
+	}
+
 	inline void setFirePower(int8_t newVal)
 	{
 		weapon_6[0] ^= (weapon_6[0] ^ (newVal - 1)) & 0xF;
@@ -343,9 +363,11 @@ class cItemMgr;
 typedef cItem* (__fastcall* cItemMgr__search_Fn)(cItemMgr* thisptr, void* unused, ITEM_ID id);
 typedef bool(__fastcall* cItemMgr__arm_Fn)(cItemMgr* thisptr, void* unused, cItem* pItem);
 typedef bool(__fastcall* cItemMgr__get_Fn)(cItemMgr* thisptr, void* unused, ITEM_ID id, uint16_t num);
+typedef void(__fastcall* cItemMgr__erase_Fn)(cItemMgr* thisptr, void* unused, cItem* pItem);
 extern cItemMgr__search_Fn cItemMgr__search;
 extern cItemMgr__arm_Fn cItemMgr__arm;
 extern cItemMgr__get_Fn cItemMgr__get;
+extern cItemMgr__erase_Fn cItemMgr__erase;
 
 class cItemMgr
 {
@@ -379,6 +401,11 @@ public:
 	inline bool get(ITEM_ID id, uint16_t num)
 	{
 		return cItemMgr__get(this, nullptr, id, num);
+	}
+
+	inline void erase(cItem* pItem)
+	{
+		return cItemMgr__erase(this, nullptr, pItem);
 	}
 };
 assert_size(cItemMgr, 0x30);

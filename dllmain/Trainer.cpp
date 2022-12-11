@@ -28,6 +28,12 @@ bool pl_atariInfoFlagSet = false;
 uint16_t ash_atariInfoFlagBackup = 0;
 bool ash_atariInfoFlagSet = false;
 
+ITEM_ID wepAdded_ID = 0;
+int wepAdded_FirePower = 1;
+int wepAdded_FiringSpeed = 1;
+int wepAdded_ReloadSpeed = 1;
+int wepAdded_Capacity = 1;
+
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
 // Unfortunately, most existing trainer-like-mods for the game are done as code patches
@@ -751,6 +757,28 @@ void Trainer_Update()
 	if (!player)
 		return;
 
+	// Apply weapon upgrades from the item adder
+	if (wepAdded_ID)
+	{
+		auto wepItmPtr = ItemMgr->search(wepAdded_ID);
+
+		// Wait until the game has actually created the weapon
+		if (wepItmPtr)
+		{
+			wepItmPtr->setFirePower(wepAdded_FirePower);
+			wepItmPtr->setFiringSpeed(wepAdded_FiringSpeed);
+			wepItmPtr->setReloadSpeed(wepAdded_ReloadSpeed);
+			wepItmPtr->setCapacity(wepAdded_Capacity);
+
+			// Reset upgrades
+			wepAdded_ID = 0;
+			wepAdded_FirePower = 1;
+			wepAdded_FiringSpeed = 1;
+			wepAdded_ReloadSpeed = 1;
+			wepAdded_Capacity = 1;
+		}
+	}
+
 	// Player speed override handling
 	{
 		static bool prev_bPlayerSpeedOverride = false;
@@ -1278,6 +1306,341 @@ void Trainer_ESP()
 	ImGui::PopFont();
 }
 
+void InvItemAdder_SetPopUp(const char* popupname)
+{
+	// Always center this window when appearing
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	// Min/Max window sizes
+	const float min_x = 840.0f * esHook._cur_monitor_dpi;
+	const float min_y = 540.0f * esHook._cur_monitor_dpi;
+
+	const float max_x = 1920.0f * esHook._cur_monitor_dpi;
+	const float max_y = 1080.0f * esHook._cur_monitor_dpi;
+
+	ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
+
+	if (ImGui::BeginPopupModal(popupname, NULL))
+	{
+		// Inventory Item Adder
+		static bool show_ALL = true;
+		static bool show_WEAPON = true;
+		static bool show_AMMO = true;
+		static bool show_TREASURE = true;
+		static bool show_CONSUMABLE = true;
+		static bool show_KEY_ITEM = true;
+		static bool show_WEAPON_MOD = true;
+		static bool show_FILE = true;
+		static bool show_TREASURE_MAP = true;
+		static bool show_TREASURE_GEM = true;
+		static bool show_BOTTLECAP = true;
+
+		ImGui::Text("Filter categories:");
+
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
+		if (ImGui::BeginTable("itmadderfilter", 6))
+		{
+			ImGui::TableNextColumn();
+			ImGui::PushID(10001);
+			if (ImGui::Checkbox("Show All", &show_ALL))
+			{
+				show_WEAPON = show_ALL;
+				show_AMMO = show_ALL;
+				show_TREASURE = show_ALL;
+				show_CONSUMABLE = show_ALL;
+				show_KEY_ITEM = show_ALL;
+				show_WEAPON_MOD = show_ALL;
+				show_FILE = show_ALL;
+				show_TREASURE_MAP = show_ALL;
+				show_TREASURE_GEM = show_ALL;
+				show_BOTTLECAP = show_ALL;
+			}
+
+			ImGui::PopID();
+
+			ImGui::BeginDisabled(show_ALL);
+			ImGui::TableNextColumn(); ImGui::PushID(10002); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_WEAPON], &show_WEAPON); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10003); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_AMMO], &show_AMMO); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10006); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE], &show_TREASURE); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10007); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_CONSUMABLE], &show_CONSUMABLE); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10008); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_KEY_ITEM], &show_KEY_ITEM); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10010); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_WEAPON_MOD], &show_WEAPON_MOD); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10011); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_FILE], &show_FILE); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10012); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE_MAP], &show_TREASURE_MAP); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10013); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE_GEM], &show_TREASURE_GEM); ImGui::PopID();
+			ImGui::TableNextColumn(); ImGui::PushID(10014); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_BOTTLECAP], &show_BOTTLECAP); ImGui::PopID();
+			ImGui::EndDisabled();
+
+			ImGui::EndTable();
+		}
+		ImGui::PopStyleVar();
+
+		static char searchText[256] = { 0 };
+		static bool alwaysShowInventory = true;
+		static int columns = 3;
+
+		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
+		if (ImGui::BeginTable("##itmaddersearch", 2))
+		{
+			ImGui::TableNextColumn();
+
+			ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+			ImGui::InputText("Search", searchText, 256);
+			ImGui::PopItemWidth();
+
+			ImGui::TableNextColumn();
+
+			ImGui::Dummy(ImVec2((ImGui::GetContentRegionAvail().x - (270 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi)), 1));
+
+			ImGui::SameLine();
+
+			ImGui::Text("Columns: %i", columns);
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Remove column"))
+				columns--;
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Add column"))
+				columns++;
+
+			columns = std::clamp(columns, 1, 6);
+
+			ImGui::EndTable();
+		}
+		ImGui::PopStyleVar();
+
+		std::string searchTextUpper = StrToUpper(searchText);
+
+		static std::vector<EItemId> badItems = {
+			// These use ITEM_TYPE_WEAPON but don't have any "piece_info" data in the game for them
+			// would cause crash if added, so filter them out instead
+			EItemId::Ruger_SA,
+			EItemId::Mauser_ST,
+			EItemId::New_Weapon_SC,
+			EItemId::Styer_St,
+			EItemId::HK_Sniper_Thermo,
+			EItemId::S_Field_Sc,
+			EItemId::HK_Sniper_Sc,
+			EItemId::S_Field_Thermo,
+			EItemId::Mine_SC,
+
+			EItemId::Krauser_Knife, // gets added to key items, but freezes game when examining
+			EItemId::Ada_New_Weapon, // gets added to key items as "Killer7 w/ Silencer", no icon, examine shows the model, but it's otherwise pretty useless
+									 // maybe this can be made equippable if "piece_info" data is added for it though...
+
+			// These don't seem to have any effect when added, probably requires some struct to be updated too..
+			EItemId::Any
+		};
+
+		static EItemId itemId = EItemId::Bullet_45in_H;
+		static int stackCount = 100;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
+
+		if (ImGui::BeginTable("##itmadderlist", columns, ImGuiTableFlags_BordersInner | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - (195 * esHook._cur_monitor_dpi))))
+		{
+			std::vector<ITEM_TYPE_mb> chosenTypes;
+
+			if (show_WEAPON) chosenTypes.push_back(ITEM_TYPE_WEAPON);
+			if (show_AMMO) chosenTypes.push_back(ITEM_TYPE_AMMO);
+			if (show_TREASURE) chosenTypes.push_back(ITEM_TYPE_TREASURE);
+			if (show_CONSUMABLE) chosenTypes.push_back(ITEM_TYPE_CONSUMABLE);
+			if (show_KEY_ITEM) chosenTypes.push_back(ITEM_TYPE_KEY_ITEM);
+			if (show_WEAPON_MOD) chosenTypes.push_back(ITEM_TYPE_WEAPON_MOD);
+			if (show_FILE) chosenTypes.push_back(ITEM_TYPE_FILE);
+			if (show_TREASURE_MAP) chosenTypes.push_back(ITEM_TYPE_TREASURE_MAP);
+			if (show_TREASURE_GEM) chosenTypes.push_back(ITEM_TYPE_TREASURE_GEM);
+			if (show_BOTTLECAP) chosenTypes.push_back(ITEM_TYPE_BOTTLECAP);
+
+			for (auto& type : chosenTypes)
+			{
+				for (int item_id = 0; item_id < 255; item_id++)
+				{
+
+					if (std::find(badItems.begin(), badItems.end(), EItemId(item_id)) != badItems.end())
+						continue;
+
+					ITEM_INFO curInfo;
+					curInfo.id_0 = ITEM_ID(item_id);
+					bio4::itemInfo(ITEM_ID(item_id), &curInfo);
+
+					if (curInfo.type_2 != type)
+						continue;
+
+					std::string name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
+
+					bool makeVisible = true;
+					if (!searchTextUpper.empty())
+					{
+						std::string itemNameUpper = StrToUpper(name);
+
+						makeVisible = itemNameUpper.find(searchTextUpper) != std::string::npos;
+					}
+
+					if (makeVisible)
+					{
+						ImGui::TableNextColumn();
+
+						bool selected = itemId == EItemId(item_id);
+						if (ImGui::Selectable(name.c_str(), &selected))
+						{
+							if (selected)
+							{
+								itemId = EItemId(item_id);
+								if (curInfo.maxNum_4 > 1 && curInfo.type_2 == ITEM_TYPE_AMMO)
+									stackCount = curInfo.maxNum_4; // help user by setting stack count to max for this item
+							}
+						}
+					}
+				}
+			}
+
+			ImGui::EndTable();
+		}
+		ImGui::PopStyleVar();
+
+		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+		ITEM_INFO info;
+		info.id_0 = ITEM_ID(itemId);
+		bio4::itemInfo(ITEM_ID(itemId), &info);
+		if (TweaksDevMode)
+			ImGui::Text("selected: id %d type %d def %d, max %d", info.id_0, info.type_2, info.defNum_3, info.maxNum_4);
+
+		int maxFirePower = 1;
+		int maxFiringSpeed = 1;
+		int maxReloadSpeed = 1;
+		int maxCapacity = 1;
+
+		if (info.type_2 == ITEM_TYPE_WEAPON)
+		{
+			maxFirePower = bio4::WeaponId2MaxLevel(info.id_0, 0);
+			maxFiringSpeed = bio4::WeaponId2MaxLevel(info.id_0, 1);
+			maxReloadSpeed = bio4::WeaponId2MaxLevel(info.id_0, 2);
+			maxCapacity = bio4::WeaponId2MaxLevel(info.id_0, 3);
+		}
+
+		ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
+		ImGui::Text("Weapon Upgrades:");
+		ImGui::EndDisabled();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
+		if (ImGui::BeginTable("##wepupgrades", 4, ImGuiTableFlags_BordersInnerV))
+		{
+			float sliderwidth = 15.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi;
+
+			ImGui::TableNextColumn();
+
+			ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
+
+			ImGui::BeginDisabled(maxFirePower == 1);
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Fire Power").x - sliderwidth);
+			ImGui::SliderInt("Fire Power", &wepAdded_FirePower, 1, maxFirePower, "%d", ImGuiSliderFlags_NoInput);
+			ImGui::PopItemWidth();
+			ImGui::EndDisabled();
+			ImGui::TableNextColumn();
+
+			ImGui::BeginDisabled(maxFiringSpeed == 1);
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Firing Speed").x - sliderwidth);
+			ImGui::SliderInt("Firing Speed", &wepAdded_FiringSpeed, 1, maxFiringSpeed, "%d", ImGuiSliderFlags_NoInput);
+			ImGui::PopItemWidth();
+			ImGui::EndDisabled();
+			ImGui::TableNextColumn();
+
+			ImGui::BeginDisabled(maxReloadSpeed == 1);
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Reload Speed").x - sliderwidth);
+			ImGui::SliderInt("Reload Speed", &wepAdded_ReloadSpeed, 1, maxReloadSpeed, "%d", ImGuiSliderFlags_NoInput);
+			ImGui::PopItemWidth();
+			ImGui::EndDisabled();
+			ImGui::TableNextColumn();
+
+			ImGui::BeginDisabled(maxCapacity == 1);
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Capacity").x - sliderwidth);
+			ImGui::SliderInt("Capacity", &wepAdded_Capacity, 1, maxCapacity, "%d", ImGuiSliderFlags_NoInput);
+			ImGui::PopItemWidth();
+			ImGui::EndDisabled();
+
+			ImGui::EndDisabled();
+
+			ImGui::EndTable();
+		}
+		ImGui::PopStyleVar();
+
+		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+		bool stackable = info.maxNum_4 > 1;
+		bool showsInInventory = bio4::itemShowsInInventory(info.type_2);
+
+		if (!stackable)
+			stackCount = 1;
+		else
+		{
+			if (stackCount > info.maxNum_4)
+				stackCount = info.maxNum_4;
+		}
+
+		ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+		ImGui::BeginDisabled(!stackable);
+		ImGui::InputInt("Stack count", &stackCount);
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+		{
+			if (!stackable)
+				ImGui::SetTooltip("The selected item is unable to be stacked.");
+			else
+				ImGui::SetTooltip("Number of items in the stack (max for this item: %d)", info.maxNum_4);
+		}
+		ImGui::EndDisabled();
+		ImGui::PopItemWidth();
+
+		ImGui_ItemSeparator();
+		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+		ImGui::BeginDisabled(!showsInInventory);
+		ImGui::Checkbox("Open inventory after adding", &alwaysShowInventory);
+		if (!showsInInventory && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			ImGui::SetTooltip("The selected item will appear on treasure/file tab instead of inventory.");
+		ImGui::EndDisabled();
+
+		// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
+		// TODO: pause menu, checks below don't seem to catch it...
+		bool disable =
+			!PlayerPtr() ||
+			!PlayerPtr()->subScrCheck() ||
+			SubScreenWk->open_flag_2C != 0 ||
+			FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
+
+		ImGui::BeginDisabled(disable);
+		if (ImGui::Button("Add Item", ImVec2(120 * esHook._cur_monitor_dpi, 0)))
+		{
+			if (info.type_2 == ITEM_TYPE_WEAPON)
+			{
+				// Save info about the added wep so we can apply upgrades later
+				wepAdded_ID = ITEM_ID(itemId);
+			}
+
+			RequestInventoryAdd(ITEM_ID(itemId), stackCount, alwaysShowInventory);
+		}
+		ImGui::EndDisabled();
+
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
+			ImGui::SetTooltip("Items can only be added while outside of menus.");
+
+		ImGui::SameLine();
+
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Close").x - 97.0f, 0.0f));
+		ImGui::SameLine();
+		if (ImGui::Button("Close", ImVec2(120 * esHook._cur_monitor_dpi, 0))) { ImGui::CloseCurrentPopup(); }
+
+		ImGui::EndPopup();
+	}
+}
+
 void Trainer_RenderUI(int columnCount)
 {
 	ImColor icn_color = ImColor(230, 15, 95);
@@ -1307,7 +1670,7 @@ void Trainer_RenderUI(int columnCount)
 
 	// ItemAdder
 	ImVec2 btn_size_itmadder = ImVec2(170 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi, 31 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-	ImGui_TrainerTabButton("##itemadder", "Inventory Item Adder", active, inactive, TrainerTab::ItemAdder, ICON_FA_SUITCASE, icn_color, IM_COL32_WHITE, btn_size_itmadder);
+	ImGui_TrainerTabButton("##itemmgr", "Inventory Manager", active, inactive, TrainerTab::ItemMgr, ICON_FA_SUITCASE, icn_color, IM_COL32_WHITE, btn_size_itmadder);
 
 	// Globals
 	if (ImGui_TrainerTabButton("##globals", "Globals", active, inactive, TrainerTab::NumTabs, ICON_FA_GLOBE, icn_color, IM_COL32_WHITE, btn_size, false))
@@ -2319,9 +2682,9 @@ void Trainer_RenderUI(int columnCount)
 		}
 	}
 
-	if (CurTrainerTab == TrainerTab::ItemAdder)
+	if (CurTrainerTab == TrainerTab::ItemMgr)
 	{
-		// Inventory Item Adder
+		// Inventory Item Manager
 		{
 			static bool show_ALL = true;
 			static bool show_WEAPON = true;
@@ -2335,13 +2698,17 @@ void Trainer_RenderUI(int columnCount)
 			static bool show_TREASURE_GEM = true;
 			static bool show_BOTTLECAP = true;
 
+			ImGui::Text("Right-click on an item to make changes.");
+
+			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
 			ImGui::Text("Filter categories:");
 
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
-			if (ImGui::BeginTable("itmadderfilter", 6))
+			if (ImGui::BeginTable("itmmgrfilter", 6))
 			{
 				ImGui::TableNextColumn(); 
-				ImGui::PushID(10001); 
+				ImGui::PushID(10101); 
 				if (ImGui::Checkbox("Show All", &show_ALL))
 				{
 					show_WEAPON = show_ALL;
@@ -2359,16 +2726,16 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::PopID();
 
 				ImGui::BeginDisabled(show_ALL);
-				ImGui::TableNextColumn(); ImGui::PushID(10002); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_WEAPON], &show_WEAPON); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10003); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_AMMO], &show_AMMO); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10006); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE], &show_TREASURE); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10007); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_CONSUMABLE], &show_CONSUMABLE); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10008); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_KEY_ITEM], &show_KEY_ITEM); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10010); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_WEAPON_MOD], &show_WEAPON_MOD); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10011); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_FILE], &show_FILE); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10012); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE_MAP], &show_TREASURE_MAP); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10013); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE_GEM], &show_TREASURE_GEM); ImGui::PopID();
-				ImGui::TableNextColumn(); ImGui::PushID(10014); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_BOTTLECAP], &show_BOTTLECAP); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10102); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_WEAPON], &show_WEAPON); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10103); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_AMMO], &show_AMMO); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10106); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE], &show_TREASURE); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10107); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_CONSUMABLE], &show_CONSUMABLE); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10108); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_KEY_ITEM], &show_KEY_ITEM); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10110); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_WEAPON_MOD], &show_WEAPON_MOD); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10111); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_FILE], &show_FILE); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10112); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE_MAP], &show_TREASURE_MAP); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10113); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_TREASURE_GEM], &show_TREASURE_GEM); ImGui::PopID();
+				ImGui::TableNextColumn(); ImGui::PushID(10114); ImGui::Checkbox(ITEM_TYPE_Names[ITEM_TYPE_BOTTLECAP], &show_BOTTLECAP); ImGui::PopID();
 				ImGui::EndDisabled();
 
 				ImGui::EndTable();
@@ -2382,7 +2749,7 @@ void Trainer_RenderUI(int columnCount)
 			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
-			if (ImGui::BeginTable("##itmaddersearch", 2))
+			if (ImGui::BeginTable("##itmmgrsearch", 2))
 			{
 				ImGui::TableNextColumn();
 
@@ -2416,87 +2783,247 @@ void Trainer_RenderUI(int columnCount)
 
 			std::string searchTextUpper = StrToUpper(searchText);
 
-			static std::vector<EItemId> badItems = {
-				// These use ITEM_TYPE_WEAPON but don't have any "piece_info" data in the game for them
-				// would cause crash if added, so filter them out instead
-				EItemId::Ruger_SA,
-				EItemId::Mauser_ST,
-				EItemId::New_Weapon_SC,
-				EItemId::Styer_St,
-				EItemId::HK_Sniper_Thermo,
-				EItemId::S_Field_Sc,
-				EItemId::HK_Sniper_Sc,
-				EItemId::S_Field_Thermo,
-				EItemId::Mine_SC,
-
-				EItemId::Krauser_Knife, // gets added to key items, but freezes game when examining
-				EItemId::Ada_New_Weapon, // gets added to key items as "Killer7 w/ Silencer", no icon, examine shows the model, but it's otherwise pretty useless
-										 // maybe this can be made equippable if "piece_info" data is added for it though...
-
-				// These don't seem to have any effect when added, probably requires some struct to be updated too..
-				EItemId::Any
-			};
-
-			static EItemId itemId = EItemId::Bullet_45in_H;
-			static int stackCount = 100;
-
-			static int customFirePower = 1;
-			static int customFiringSpeed = 1;
-			static int customReloadSpeed = 1;
-			static int customCapacity = 1;
-
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
 
-			if (ImGui::BeginTable("##itmadderlist", columns, ImGuiTableFlags_BordersInner | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - (190 * esHook._cur_monitor_dpi))))
+			if (ImGui::BeginTable("##itmmgrlist", columns, ImGuiTableFlags_BordersInner | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, 
+				ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - (60 * esHook._cur_monitor_dpi))))
 			{
-				for (int item_id = 0; item_id < 255; item_id++)
+				std::vector<ITEM_TYPE_mb> chosenTypes;
+
+				if (show_WEAPON) chosenTypes.push_back(ITEM_TYPE_WEAPON);
+				if (show_AMMO) chosenTypes.push_back(ITEM_TYPE_AMMO);
+				if (show_TREASURE) chosenTypes.push_back(ITEM_TYPE_TREASURE);
+				if (show_CONSUMABLE) chosenTypes.push_back(ITEM_TYPE_CONSUMABLE);
+				if (show_KEY_ITEM) chosenTypes.push_back(ITEM_TYPE_KEY_ITEM);
+				if (show_WEAPON_MOD) chosenTypes.push_back(ITEM_TYPE_WEAPON_MOD);
+				if (show_FILE) chosenTypes.push_back(ITEM_TYPE_FILE);
+				if (show_TREASURE_MAP) chosenTypes.push_back(ITEM_TYPE_TREASURE_MAP);
+				if (show_TREASURE_GEM) chosenTypes.push_back(ITEM_TYPE_TREASURE_GEM);
+				if (show_BOTTLECAP) chosenTypes.push_back(ITEM_TYPE_BOTTLECAP);
+
+				for (auto& type : chosenTypes)
 				{
-					if (std::find(badItems.begin(), badItems.end(), EItemId(item_id)) != badItems.end())
-						continue;
+					int m_array_num_1C = ItemMgr->m_array_num_1C;
 
-					ITEM_INFO curInfo;
-					curInfo.id_0 = ITEM_ID(item_id);
-					bio4::itemInfo(ITEM_ID(item_id), &curInfo);
+					cItem* itmPtr = ItemMgr->m_pItem_14;
 
-					if ((curInfo.type_2 == ITEM_TYPE_WEAPON || curInfo.type_2 == ITEM_TYPE_GRENADE) && !show_WEAPON) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_AMMO) && !show_AMMO) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_TREASURE || curInfo.type_2 == ITEM_TYPE_TREASURE_MERCS) && !show_TREASURE) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_CONSUMABLE) && !show_CONSUMABLE) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_KEY_ITEM || curInfo.type_2 == ITEM_TYPE_IMPORTANT) && !show_KEY_ITEM) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_WEAPON_MOD) && !show_WEAPON_MOD) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_FILE) && !show_FILE) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_TREASURE_MAP) && !show_TREASURE_MAP) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_TREASURE_GEM) && !show_TREASURE_GEM) continue;
-					if ((curInfo.type_2 == ITEM_TYPE_BOTTLECAP) && !show_BOTTLECAP) continue;
-
-					std::string name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
-
-					bool makeVisible = true;
-					if (!searchTextUpper.empty())
+					for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
 					{
-						std::string itemNameUpper = StrToUpper(name);
+						itmPtr++;
 
-						makeVisible = itemNameUpper.find(searchTextUpper) != std::string::npos;
-					}
+						if ((itmPtr->be_flag_4 & 1) == 0)
+							continue;
 
-					if (makeVisible)
-					{
-						ImGui::TableNextColumn();
+						if (itmPtr->chr_5 != ItemMgr->m_char_13)
+							continue;
 
-						bool selected = itemId == EItemId(item_id);
-						if (ImGui::Selectable(name.c_str(), &selected))
-							if (selected)
+						int item_id = itmPtr->id_0;
+
+						ITEM_INFO curInfo;
+						curInfo.id_0 = ITEM_ID(item_id);
+						bio4::itemInfo(ITEM_ID(item_id), &curInfo);
+
+						if (curInfo.type_2 != type) 
+							continue;
+
+						std::string name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
+
+						bool makeVisible = true;
+						if (!searchTextUpper.empty())
+						{
+							std::string itemNameUpper = StrToUpper(name);
+
+							makeVisible = itemNameUpper.find(searchTextUpper) != std::string::npos;
+						}
+
+						if (makeVisible)
+						{
+							ImGui::TableNextColumn();
+
+							ImGui::PushID((int)itmPtr);
+							ImGui::Selectable(name.c_str());
+							ImGui::PopID();
+
+							// Context menu for items
+							if (ImGui::BeginPopupContextItem()) // <-- use last item id as popup id
 							{
-								itemId = EItemId(item_id);
-								if (curInfo.maxNum_4 > 1 && curInfo.type_2 == ITEM_TYPE_AMMO)
-									stackCount = curInfo.maxNum_4; // help user by setting stack count to max for this item
+								ImGui::Text("Options for \"%s\":", EItemId_Names[int(item_id)]);
 
-								// Reset upgrades to 1
-								customFirePower = 1;
-								customFiringSpeed = 1;
-								customReloadSpeed = 1;
-								customCapacity = 1;
+								ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+								// Manage weapon upgrades
+								if (curInfo.type_2 == ITEM_TYPE_WEAPON)
+								{
+									static int customFirePower = 1;
+									static int customFiringSpeed = 1;
+									static int customReloadSpeed = 1;
+									static int customCapacity = 1;
+
+									int maxFirePower = bio4::WeaponId2MaxLevel(curInfo.id_0, 0);
+									int maxFiringSpeed = bio4::WeaponId2MaxLevel(curInfo.id_0, 1);
+									int maxReloadSpeed = bio4::WeaponId2MaxLevel(curInfo.id_0, 2);
+									int maxCapacity = bio4::WeaponId2MaxLevel(curInfo.id_0, 3);
+
+									// Disable if there's nothing to upgrade
+									bool disable = ((maxFirePower == 1) && (maxFiringSpeed == 1) && (maxReloadSpeed == 1) && (maxCapacity == 1));
+
+									ImGui::BeginDisabled(!itmPtr || disable);
+									if (ImGui::Button("Adjust upgrades"))
+									{
+										if (itmPtr)
+										{
+											// Get wep's current values
+											customFirePower = itmPtr->getFirePower() + 1;
+											customFiringSpeed = itmPtr->getFiringSpeed() + 1;
+											customReloadSpeed = itmPtr->getReloadSpeed() + 1;
+											customCapacity = itmPtr->getCapacity() + 1;
+										}
+
+										ImGui::OpenPopup("Adjust upgrades");
+									}
+									ImGui::EndDisabled();
+
+									// Always center this window when appearing
+									ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+									ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+									if (ImGui::BeginPopupModal("Adjust upgrades", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+									{
+										ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+
+										ImGui::BeginDisabled(maxFirePower == 1);
+										ImGui::SliderInt("Fire Power", &customFirePower, 1, maxFirePower, "%d", ImGuiSliderFlags_NoInput);
+										ImGui::EndDisabled();
+
+										ImGui::BeginDisabled(maxFiringSpeed == 1);
+										ImGui::SliderInt("Firing Speed", &customFiringSpeed, 1, maxFiringSpeed, "%d", ImGuiSliderFlags_NoInput);
+										ImGui::EndDisabled();
+
+										ImGui::BeginDisabled(maxReloadSpeed == 1);
+										ImGui::SliderInt("Reload Speed", &customReloadSpeed, 1, maxReloadSpeed, "%d", ImGuiSliderFlags_NoInput);
+										ImGui::EndDisabled();
+
+										ImGui::BeginDisabled(maxCapacity == 1);
+										ImGui::SliderInt("Capacity", &customCapacity, 1, maxCapacity, "%d", ImGuiSliderFlags_NoInput);
+										ImGui::EndDisabled();
+
+										ImGui::PopItemWidth();
+
+										ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+										ImGui::Separator();
+
+										if (ImGui::Button("OK", ImVec2(120, 0)))
+										{
+											itmPtr->setFirePower(customFirePower);
+											itmPtr->setFiringSpeed(customFiringSpeed);
+											itmPtr->setReloadSpeed(customReloadSpeed);
+											itmPtr->setCapacity(customCapacity);
+
+											ImGui::CloseCurrentPopup();
+										}
+
+										ImGui::SameLine();
+
+										if (ImGui::Button("Cancel", ImVec2(120, 0)))
+										{
+											ImGui::CloseCurrentPopup();
+										}
+										ImGui::EndPopup();
+									}
+								}
+
+								// Change stack amount
+								bool stackable = curInfo.maxNum_4 > 1;
+								if (stackable)
+								{
+									static int newAmount = 1;
+
+									if (ImGui::Button("Change stack amount"))
+									{
+										newAmount = itmPtr->num_2;
+										ImGui::OpenPopup("Change stack amount");
+									}
+
+									// Always center this window when appearing
+									ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+									ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+									if (ImGui::BeginPopupModal("Change stack amount", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+									{
+										ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+										ImGui::SliderInt("Stack count", &newAmount, 1, curInfo.maxNum_4);
+										ImGui::PopItemWidth();
+
+										ImGui::Separator();
+
+										if (ImGui::Button("OK", ImVec2(120, 0)))
+										{
+											itmPtr->num_2 = newAmount;
+
+											ImGui::CloseCurrentPopup();
+										}
+
+										ImGui::SameLine();
+
+										if (ImGui::Button("Cancel", ImVec2(120, 0)))
+										{
+											ImGui::CloseCurrentPopup();
+										}
+										ImGui::EndPopup();
+									}
+								}
+
+								// Erase items
+								{
+									static bool DontAskAgain = false;
+
+									ImGui::BeginDisabled(!itmPtr);
+									if (ImGui::Button("Delete item"))
+									{
+										if (!DontAskAgain)
+											ImGui::OpenPopup("Delete item");
+										else
+											ItemMgr->erase(itmPtr);
+									}
+
+									ImGui::EndDisabled();
+									// Always center this window when appearing
+									ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+									ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+									if (ImGui::BeginPopupModal("Delete item", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+									{
+										ImGui::Text("Are you sure you want to delete this item?\n\n");
+										ImGui::Separator();
+
+										ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+										ImGui::Checkbox("Don't ask next time", &DontAskAgain);
+										ImGui::PopStyleVar();
+
+										if (ImGui::Button("Yes", ImVec2(120, 0)))
+										{
+											ItemMgr->erase(itmPtr);
+											ImGui::CloseCurrentPopup();
+										}
+
+										ImGui::SameLine();
+										if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+										ImGui::EndPopup();
+									}
+
+
+								}
+
+								if (ImGui::Button("Close"))
+									ImGui::CloseCurrentPopup();
+
+								ImGui::EndPopup();
 							}
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("Right-click to open popup");
+
+						}
 					}
 				}
 				ImGui::EndTable();
@@ -2505,147 +3032,13 @@ void Trainer_RenderUI(int columnCount)
 
 			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-			ITEM_INFO info;
-			info.id_0 = ITEM_ID(itemId);
-			bio4::itemInfo(ITEM_ID(itemId), &info);
-			if (TweaksDevMode)
-				ImGui::Text("selected: id %d type %d def %d, max %d", info.id_0, info.type_2, info.defNum_3, info.maxNum_4);
-
-			int maxFirePower = 1;
-			int maxFiringSpeed = 1;
-			int maxReloadSpeed = 1;
-			int maxCapacity = 1;
-
-			if (info.type_2 == ITEM_TYPE_WEAPON)
+			// Item adder popup
 			{
-				maxFirePower = bio4::WeaponId2MaxLevel(info.id_0, 0);
-				maxFiringSpeed = bio4::WeaponId2MaxLevel(info.id_0, 1);
-				maxReloadSpeed = bio4::WeaponId2MaxLevel(info.id_0, 2);
-				maxCapacity = bio4::WeaponId2MaxLevel(info.id_0, 3);
+				if (ImGui::Button("Add items to the inventory"))
+					ImGui::OpenPopup("Inventory Item Adder");
+
+				InvItemAdder_SetPopUp("Inventory Item Adder");
 			}
-
-			ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
-			ImGui::Text("Weapon Upgrades:");
-			ImGui::EndDisabled();
-
-			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
-			if (ImGui::BeginTable("##wepupgrades", 4, ImGuiTableFlags_BordersInnerV))
-			{
-				float sliderwidth = 15.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi;
-
-				ImGui::TableNextColumn();
-
-				ImGui::BeginDisabled(info.type_2 != ITEM_TYPE_WEAPON);
-				
-				ImGui::BeginDisabled(maxFirePower == 1);
-				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Fire Power").x - sliderwidth);
-				ImGui::SliderInt("Fire Power", &customFirePower, 1, maxFirePower, "%d", ImGuiSliderFlags_NoInput); 
-				ImGui::PopItemWidth();
-				ImGui::EndDisabled();
-				ImGui::TableNextColumn();
-
-				ImGui::BeginDisabled(maxFiringSpeed == 1);
-				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Firing Speed").x - sliderwidth);
-				ImGui::SliderInt("Firing Speed", &customFiringSpeed, 1, maxFiringSpeed, "%d", ImGuiSliderFlags_NoInput);
-				ImGui::PopItemWidth();
-				ImGui::EndDisabled();
-				ImGui::TableNextColumn();
-
-				ImGui::BeginDisabled(maxReloadSpeed == 1);
-				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Reload Speed").x - sliderwidth);
-				ImGui::SliderInt("Reload Speed", &customReloadSpeed, 1, maxReloadSpeed, "%d", ImGuiSliderFlags_NoInput); 
-				ImGui::PopItemWidth();
-				ImGui::EndDisabled();
-				ImGui::TableNextColumn();
-
-				ImGui::BeginDisabled(maxCapacity == 1);
-				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Capacity").x - sliderwidth);
-				ImGui::SliderInt("Capacity", &customCapacity, 1, maxCapacity, "%d", ImGuiSliderFlags_NoInput); 
-				ImGui::PopItemWidth();
-				ImGui::EndDisabled();
-
-				ImGui::EndDisabled();
-				
-				ImGui::EndTable();
-			}
-			ImGui::PopStyleVar();
-
-			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-			bool stackable = info.maxNum_4 > 1;
-			bool showsInInventory = bio4::itemShowsInInventory(info.type_2);
-
-			if (!stackable)
-				stackCount = 1;
-			else
-			{
-				if (stackCount > info.maxNum_4)
-					stackCount = info.maxNum_4;
-			}
-
-			ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-			ImGui::BeginDisabled(!stackable);
-			ImGui::InputInt("Stack count", &stackCount);
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-			{
-				if (!stackable)
-					ImGui::SetTooltip("The selected item is unable to be stacked.");
-				else
-					ImGui::SetTooltip("Number of items in the stack (max for this item: %d)", info.maxNum_4);
-			}
-			ImGui::EndDisabled();
-			ImGui::PopItemWidth();
-
-			// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
-			// TODO: pause menu, checks below don't seem to catch it...
-			bool disable =
-				!PlayerPtr() ||
-				!PlayerPtr()->subScrCheck() ||
-				SubScreenWk->open_flag_2C != 0 ||
-				FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
-
-			// Save the ITEM_ID of the wep that will be added so we can search for it later
-			static ITEM_ID wepAddedID = 0;
-
-			ImGui::BeginDisabled(disable);
-			if (ImGui::Button("Add Item"))
-			{
-				if (info.type_2 == ITEM_TYPE_WEAPON)
-					wepAddedID = ITEM_ID(itemId);
-
-				RequestInventoryAdd(ITEM_ID(itemId), stackCount, alwaysShowInventory);
-			}
-
-			// Apply weapon upgrades
-			if (wepAddedID)
-			{
-				auto wepItmPtr = ItemMgr->search(wepAddedID);
-
-				// Wait until the game has actually created the weapon
-				if (wepItmPtr)
-				{
-					wepItmPtr->setFirePower(customFirePower);
-					wepItmPtr->setFiringSpeed(customFiringSpeed);
-					wepItmPtr->setReloadSpeed(customReloadSpeed);
-					wepItmPtr->setCapacity(customCapacity);
-
-					wepAddedID = 0;
-				}
-			}
-
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
-				ImGui::SetTooltip("Items can only be added while outside of menus.");
-
-			ImGui::EndDisabled();
-
-			ImGui_ItemSeparator();
-			ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-			ImGui::BeginDisabled(!showsInInventory);
-			ImGui::Checkbox("Open inventory after adding", &alwaysShowInventory);
-			if (!showsInInventory && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-				ImGui::SetTooltip("The selected item will appear on treasure/file tab instead of inventory.");
-			ImGui::EndDisabled();
 		}
 	}
 	ImGui::EndChild();
