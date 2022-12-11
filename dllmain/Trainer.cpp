@@ -2789,11 +2789,11 @@ void Trainer_RenderUI(int columnCount)
 			{
 				std::vector<ITEM_TYPE_mb> chosenTypes;
 
-				if (show_WEAPON) chosenTypes.push_back(ITEM_TYPE_WEAPON);
+				if (show_WEAPON) { chosenTypes.push_back(ITEM_TYPE_WEAPON); chosenTypes.push_back(ITEM_TYPE_GRENADE); }
 				if (show_AMMO) chosenTypes.push_back(ITEM_TYPE_AMMO);
-				if (show_TREASURE) chosenTypes.push_back(ITEM_TYPE_TREASURE);
+				if (show_TREASURE) { chosenTypes.push_back(ITEM_TYPE_TREASURE); chosenTypes.push_back(ITEM_TYPE_TREASURE_MERCS); }
 				if (show_CONSUMABLE) chosenTypes.push_back(ITEM_TYPE_CONSUMABLE);
-				if (show_KEY_ITEM) chosenTypes.push_back(ITEM_TYPE_KEY_ITEM);
+				if (show_KEY_ITEM) { chosenTypes.push_back(ITEM_TYPE_KEY_ITEM); chosenTypes.push_back(ITEM_TYPE_IMPORTANT); }
 				if (show_WEAPON_MOD) chosenTypes.push_back(ITEM_TYPE_WEAPON_MOD);
 				if (show_FILE) chosenTypes.push_back(ITEM_TYPE_FILE);
 				if (show_TREASURE_MAP) chosenTypes.push_back(ITEM_TYPE_TREASURE_MAP);
