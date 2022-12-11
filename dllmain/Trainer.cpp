@@ -1608,7 +1608,6 @@ void InvItemAdder_SetPopUp(const char* popupname)
 		ImGui::EndDisabled();
 
 		// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
-		// TODO: pause menu, checks below don't seem to catch it...
 		bool disable =
 			!PlayerPtr() ||
 			!PlayerPtr()->subScrCheck() ||
@@ -2826,7 +2825,12 @@ void Trainer_RenderUI(int columnCount)
 						if (curInfo.type_2 != type) 
 							continue;
 
+						bool stackable = curInfo.maxNum_4 > 1;
+
 						std::string name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
+
+						if (stackable)
+							name += " (" + std::to_string(itmPtr->num_2) + ")";
 
 						bool makeVisible = true;
 						if (!searchTextUpper.empty())
@@ -2847,9 +2851,19 @@ void Trainer_RenderUI(int columnCount)
 							// Context menu for items
 							if (ImGui::BeginPopupContextItem()) // <-- use last item id as popup id
 							{
-								ImGui::Text("Options for \"%s\":", EItemId_Names[int(item_id)]);
+								ImGui::Text("\"%s\":", EItemId_Names[int(item_id)]);
 
 								ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+								// Disable buttons if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
+								bool disable =
+									!PlayerPtr() ||
+									!PlayerPtr()->subScrCheck() ||
+									SubScreenWk->open_flag_2C != 0 ||
+									FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
+
+								ImGui::BeginDisabled(disable);
+								ImGui::BeginGroup();
 
 								// Manage weapon upgrades
 								if (curInfo.type_2 == ITEM_TYPE_WEAPON)
@@ -2934,7 +2948,6 @@ void Trainer_RenderUI(int columnCount)
 								}
 
 								// Change stack amount
-								bool stackable = curInfo.maxNum_4 > 1;
 								if (stackable)
 								{
 									static int newAmount = 1;
@@ -3011,9 +3024,13 @@ void Trainer_RenderUI(int columnCount)
 										if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
 										ImGui::EndPopup();
 									}
-
-
 								}
+								
+								ImGui::EndGroup();
+								ImGui::EndDisabled();
+
+								if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
+									ImGui::SetTooltip("Items can only be edited while outside of menus.");
 
 								if (ImGui::Button("Close"))
 									ImGui::CloseCurrentPopup();
@@ -3022,7 +3039,6 @@ void Trainer_RenderUI(int columnCount)
 							}
 							if (ImGui::IsItemHovered())
 								ImGui::SetTooltip("Right-click to open popup");
-
 						}
 					}
 				}
@@ -3034,8 +3050,20 @@ void Trainer_RenderUI(int columnCount)
 
 			// Item adder popup
 			{
+				// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
+				bool disable =
+					!PlayerPtr() ||
+					!PlayerPtr()->subScrCheck() ||
+					SubScreenWk->open_flag_2C != 0 ||
+					FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
+
+				ImGui::BeginDisabled(disable);
 				if (ImGui::Button("Add items to the inventory"))
 					ImGui::OpenPopup("Inventory Item Adder");
+				ImGui::EndDisabled();
+
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
+					ImGui::SetTooltip("Items can only be added while outside of menus.");
 
 				InvItemAdder_SetPopUp("Inventory Item Adder");
 			}
