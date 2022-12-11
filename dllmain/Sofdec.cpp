@@ -175,8 +175,12 @@ void re4t::init::Sofdec()
 
 					timer -= GlobalPtr()->deltaTime_70;
 
-					// Reset timer if any key is pressed, or if the mouse is being moved
-					if (Key_btn_trg() || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
+					// Reset timer if active keys are pressed, or if the mouse is being moved
+					bool pressedActiveKey = ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_U) == (uint64_t)KEY_BTN::KEY_U) ||
+						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_D) == (uint64_t)KEY_BTN::KEY_D) ||
+						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_A) == (uint64_t)KEY_BTN::KEY_A) ||
+						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_B) == (uint64_t)KEY_BTN::KEY_B);
+					if (pressedActiveKey || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
 						timer = defaultTime;
 
 					if (timer <= 0.0f)
@@ -200,8 +204,10 @@ void re4t::init::Sofdec()
 						// We change it to 17 here, to go back to the "press any key" screen instead.
 						injector::WriteMemory(pattern_nextRno1_1, uint8_t(17), true); // Rno1_1 = 17
 
-						// Need to call KeyStop here to set a flag that will allow the demo videos to be skipped using the keyboard.
+						// Need to call KeyStop here to set a mask that will allow the demo videos to be skipped using the keyboard.
 						bio4::KeyStop((uint64_t(0xF12000EFCF1000)));
+						// Unset the SPF_KEY flag that KeyStop just set as a side effect to prevent it from persisting through the demo.
+						FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_KEY), false);
 
 						TitleWorkPtr()->SetRoutine(TITLE_WORK::Routine0::Main, 7, 1, 0);
 					}
@@ -229,9 +235,15 @@ void re4t::init::Sofdec()
 
 					timer -= GlobalPtr()->deltaTime_70;
 
-					// Reset timer if any key is pressed, or if the mouse is being moved
-					if (Key_btn_trg() || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
+					// Reset timer if active keys are pressed, or if the mouse is being moved
+					bool pressedActiveKey = ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_U) == (uint64_t)KEY_BTN::KEY_U) ||
+						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_D) == (uint64_t)KEY_BTN::KEY_D) ||
+						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_A) == (uint64_t)KEY_BTN::KEY_A) ||
+						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_B) == (uint64_t)KEY_BTN::KEY_B);
+					if (pressedActiveKey || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
+					{
 						timer = defaultTime;
+					}
 
 					if (timer <= 0.0f)
 					{
@@ -253,8 +265,10 @@ void re4t::init::Sofdec()
 						// Make sure Rno1_1 is 1 in case it was modified by the previous hook
 						injector::WriteMemory(pattern_nextRno1_1, uint8_t(0x1), true); // Rno1_1 = 1
 
-						// Need to call KeyStop here to set a flag that will allow the demo videos to be skipped using the keyboard.
+						// Need to call KeyStop here to set a mask that will allow the demo videos to be skipped using the keyboard.
 						bio4::KeyStop((uint64_t(0xF12000EFCF1000)));
+						// Unset the SPF_KEY flag that KeyStop just set as a side effect to prevent it from persisting through the demo.
+						FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_KEY), false);
 
 						TitleWorkPtr()->SetRoutine(TITLE_WORK::Routine0::Main, 7, 1, 0);
 					}
