@@ -1310,7 +1310,7 @@ const char* EItemId_Names[] = {
 	"Chicago Typewriter", // Thompson
 	"Rocket Launcher", // RPG7
 	"Mine Thrower", // Mine
-	"Hand Cannon", // SW500
+	"Handcannon", // SW500
 	"Knife",
 	"Serpent Ornament", // Cupric_Gem
 	"Moonstone (right half)", // Moon_Spall_1
@@ -1368,15 +1368,15 @@ const char* EItemId_Names[] = {
 	"King's Grail", // Pagan_Grail_1
 	"Queen's Grail", // Pagan_Grail_2
 	"Staff of Royalty", // Pagan_Rod
-	"Ingot_Bar",
+	"Gold Bar", // Ingot_Bar
 	"Arrows", // Bullet_Arrow
-	"Time_Bonus",
+	"Bonus Time", // Time_Bonus
 	"Emergency Lock Card Key (R327)", // R327_Card_Key
-	"Point_Bonus",
+	"Bonus Points", // Point_Bonus
 	"Green Catseye (key item)", // Key_Green_Gem
 	"Ruby",
-	"Gold_Box_S_Std",
-	"Gold_Box_L_Std",
+	"Treasure Box S", // Gold_Box_S_Std
+	"Treasure Box L", // Gold_Box_L_Std
 	"Blue Moonstone", // Moon_Crest
 	"Key to the Mine", // Seal_Key
 	"Attache Case S", // Attache_Case_S
@@ -1475,30 +1475,30 @@ const char* EItemId_Names[] = {
 	"Golden Lynx w/ (G, B)", // Cat_Statue_G_Y
 	"Golden Lynx w/ (R, B)", // Cat_Statue_R_Y
 	"Golden Lynx w/ (R, G, B)", // Cat_Statue_G_R_Y
-	"Bottle Cap 01",
-	"Bottle Cap 02",
-	"Bottle Cap 03",
-	"Bottle Cap 04",
-	"Bottle Cap 05",
-	"Bottle Cap 06",
-	"Bottle Cap 07",
-	"Bottle Cap 08",
-	"Bottle Cap 09",
-	"Bottle Cap 10",
-	"Bottle Cap 11",
-	"Bottle Cap 12",
-	"Bottle Cap 13",
-	"Bottle Cap 14",
-	"Bottle Cap 15",
-	"Bottle Cap 16",
-	"Bottle Cap 17",
-	"Bottle Cap 18",
-	"Bottle Cap 19",
-	"Bottle Cap 20",
-	"Bottle Cap 21",
-	"Bottle Cap 22",
-	"Bottle Cap 23",
-	"Bottle Cap 24",
+	"Leon w/ rocket launcher", // Bottle_Cap_01
+	"Leon w/ shotgun", // Bottle_Cap_02
+	"Leon w/ handgun", // Bottle_Cap_03
+	"Ashley Graham", // Bottle_Cap_04
+	"Luis Sera", // Bottle_Cap_05
+	"Don Jose", // Bottle_Cap_06
+	"Don Diego", // Bottle_Cap_07
+	"Don Esteban", // Bottle_Cap_08
+	"Don Manuel", // Bottle_Cap_09
+	"Dr. Salvador", // Bottle_Cap_10
+	"Merchant", // Bottle_Cap_11
+	"Zealot w/ scythe", // Bottle_Cap_12
+	"Zealot w/ shield", // Bottle_Cap_13
+	"Zealot w/ bowgun", // Bottle_Cap_14
+	"Leader Zealot", // Bottle_Cap_15
+	"Soldier w/ dynamite", // Bottle_Cap_16
+	"Soldier w/ stun-rod", // Bottle_Cap_17
+	"Soldier w/ Hammer", // Bottle_Cap_18
+	"Isabel", // Bottle_Cap_19
+	"Maria", // Bottle_Cap_20
+	"Ada Wong", // Bottle_Cap_21
+	"Bella Sisters", // Bottle_Cap_22
+	"Don Pedro", // Bottle_Cap_23
+	"J.J", // Bottle_Cap_24
 	"Letter from Ada", // File_22
 	"Luis' Memo 3", // File_23
 	"Paper Airplane", // File_24
