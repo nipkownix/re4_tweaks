@@ -2829,10 +2829,9 @@ void Trainer_RenderUI(int columnCount)
 
 				for (auto& type : chosenTypes)
 				{
-					int m_array_num_1C = ItemMgr->m_array_num_1C;
-
 					cItem* itmPtr = ItemMgr->m_pItem_14;
 
+					int m_array_num_1C = ItemMgr->m_array_num_1C;
 					for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
 					{
 						itmPtr++;

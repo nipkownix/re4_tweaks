@@ -645,13 +645,25 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 				bio4::PlChangeData();
 			}
 			else if (eid == EItemId::Attache_Case_S)
-				SubScreenWk->board_next_2AB = 0; // update inventory attache case size
+			{
+				SubScreenWk->board_size_2AA = 0; // update inventory attache case size
+				SubScreenWk->board_next_2AB = 0;
+			}
 			else if (eid == EItemId::Attache_Case_M)
+			{
+				SubScreenWk->board_size_2AA = 1;
 				SubScreenWk->board_next_2AB = 1;
+			}
 			else if (eid == EItemId::Attache_Case_L)
+			{
+				SubScreenWk->board_size_2AA = 2;
 				SubScreenWk->board_next_2AB = 2;
+			}
 			else if (eid == EItemId::Attache_Case_O)
+			{
+				SubScreenWk->board_size_2AA = 3;
 				SubScreenWk->board_next_2AB = 3;
+			}
 		}
 	}
 	else
