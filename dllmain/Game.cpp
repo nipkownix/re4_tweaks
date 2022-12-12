@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Patches.h"
 #include "SDK/filter00.h"
+#include <deque>
 
 std::string gameVersion;
 bool gameIsDebugBuild = false;
@@ -47,6 +48,7 @@ namespace bio4 {
 	void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
 	uint8_t(__cdecl* WeaponId2MaxLevel)(ITEM_ID item_id, int type);
 
+	void(__cdecl* WeaponChange)();
 	void(__cdecl* PlChangeData)();
 
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
@@ -605,14 +607,14 @@ void __cdecl Mem_free_TITLE_WORK_hook(void* mem)
 	Mem_free(mem);
 }
 
-int InventoryAddRequested = -1;
-int InventoryAddCount = 1;
-bool InventoryAddShowInventory = false;
-void RequestInventoryAdd(ITEM_ID id, int count, bool showInventoryUI)
+std::mutex pending_functions_mutex_;
+std::deque<std::function<void()>> pending_functions_;
+
+void Game_ScheduleInMainThread(std::function<void()> function)
 {
-	InventoryAddRequested = id;
-	InventoryAddCount = count;
-	InventoryAddShowInventory = showInventoryUI;
+	std::unique_lock<std::mutex> pending_functions_lock(
+		pending_functions_mutex_);
+	pending_functions_.emplace_back(std::move(function));
 }
 
 void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
@@ -703,53 +705,20 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 	}
 }
 
-bool WeaponChangeRequested = false;
-void RequestWeaponChange()
-{
-	WeaponChangeRequested = true; // signal main thread
-}
-
-bool SaveGameRequested = false;
-void RequestSaveGame()
-{
-	SaveGameRequested = true; // signal main thread
-}
-
-bool MerchantRequested = false;
-void RequestMerchant()
-{
-	MerchantRequested = true; // signal main thread
-}
-
-void(__cdecl* WeaponChange)();
 void(__fastcall* cSceSys__scheduler)(void* thisptr, void* unused);
 void __fastcall cSceSys__scheduler_Hook(void* thisptr, void* unused)
 {
-	if (InventoryAddRequested != -1)
+	// Call any functions we have scheduled to run on the main game thread...
 	{
-		ITEM_ID item = ITEM_ID(InventoryAddRequested);
-		InventoryAddRequested = -1;
-		InventoryItemAdd(item, InventoryAddCount, InventoryAddShowInventory);
-	}
+		std::unique_lock<std::mutex> pending_functions_lock(pending_functions_mutex_);
+		while (!pending_functions_.empty()) {
+			std::function<void()> function = std::move(pending_functions_.front());
+			pending_functions_.pop_front();
 
-	if (WeaponChangeRequested)
-	{
-		WeaponChangeRequested = false;
-		WeaponChange();
-	}
-
-	if (SaveGameRequested)
-	{
-		SaveGameRequested = false;
-		bio4::CardSave(0, 1);
-	}
-
-	if (MerchantRequested)
-	{
-		MerchantRequested = false;
-		// If SubScreen is closed and game status is "playing"
-		if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
-			bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
+			pending_functions_lock.unlock();
+			function();
+			pending_functions_lock.lock();
+		}
 	}
 
 	cSceSys__scheduler(thisptr, unused);
@@ -978,7 +947,7 @@ bool re4t::init::Game()
 
 	// WeaponChange funcptr
 	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), WeaponChange);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), bio4::WeaponChange);
 
 	// Card related funcptrs
 	pattern = hook::pattern("E8 ? ? ? ? 3C 01 75 ? 8B 4D ? 8B 55");

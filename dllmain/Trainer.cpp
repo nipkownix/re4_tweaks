@@ -222,7 +222,7 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 		cItem* item = ItemMgr->search(weaponId);
 		if (ItemMgr->arm(item))
 		{
-			RequestWeaponChange();
+			Game_ScheduleInMainThread([]() { bio4::WeaponChange(); });
 		}
 	}
 }
@@ -1654,7 +1654,13 @@ void InvItemAdder_SetPopUp(const char* popupname)
 				wepAdded_ID = ITEM_ID(itemId);
 			}
 
-			RequestInventoryAdd(ITEM_ID(itemId), stackCount, alwaysShowInventory);
+			EItemId lambda_itemId = itemId;
+			int lambda_stackCount = stackCount;
+			bool lambda_alwaysShowInventory = alwaysShowInventory;
+			Game_ScheduleInMainThread([lambda_itemId, lambda_stackCount, lambda_alwaysShowInventory]()
+			{
+				InventoryItemAdd(ITEM_ID(lambda_itemId), lambda_stackCount, lambda_alwaysShowInventory);
+			});
 		}
 		ImGui::EndDisabled();
 
@@ -1773,10 +1779,13 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				if (ImGui::Button("Save game"))
-					RequestSaveGame();
+					Game_ScheduleInMainThread([]() {bio4::CardSave(0, 1); });
 
 				if (ImGui::Button("Open Merchant"))
-					RequestMerchant();
+					Game_ScheduleInMainThread([]() {
+						if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
+						bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
+					});
 			}
 
 			// Invincibility
@@ -3327,12 +3336,13 @@ void Trainer_RenderUI(int columnCount)
 								{
 									// Add item to inventory
 									ITEM_ID itemId = ITEM_ID(items["id"]);
+									int itemNum = items["num"];
 
 									// Use our cSceSys__scheduler_Hook for the Assault_Jacket, otherwise the game crashes
 									if (EItemId(itemId) == EItemId::Assault_Jacket)
-										RequestInventoryAdd(itemId, items["num"], false);
+										Game_ScheduleInMainThread([itemId, itemNum]() { InventoryItemAdd(itemId, itemNum, false); });
 									else
-										InventoryItemAdd(itemId, items["num"], false);
+										InventoryItemAdd(itemId, itemNum, false);
 
 									// Loop through all the items to find the one we just added, excluding items that have already been modified by us before.
 									// We do this so we can restore the stats of all items, including ones that have the same ITEM_ID in the inventory 

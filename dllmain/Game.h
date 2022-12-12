@@ -65,10 +65,7 @@ IDSystem* IDSystemPtr();
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 
-void RequestInventoryAdd(ITEM_ID id, int count, bool showInventoryUI);
-void RequestWeaponChange();
-void RequestSaveGame();
-void RequestMerchant();
+void Game_ScheduleInMainThread(std::function<void()> function);
 bool AreaJump(uint16_t roomNo, Vec& position, float rotation);
 
 void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui);
