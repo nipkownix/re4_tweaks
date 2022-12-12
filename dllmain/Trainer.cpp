@@ -3137,7 +3137,7 @@ void Trainer_RenderUI(int columnCount)
 			// Item adder popup
 			{
 				ImGui::BeginDisabled(disable);
-				if (ImGui::Button("Add items to the inventory"))
+				if (ImGui::Button("Add items to inventory"))
 					ImGui::OpenPopup("Inventory Item Adder");
 				ImGui::EndDisabled();
 
@@ -3147,165 +3147,76 @@ void Trainer_RenderUI(int columnCount)
 				InvItemAdder_SetPopUp("Inventory Item Adder");
 			}
 
-			// Save/Load buttons
-
-			static float saveBtnWidth = 0;
-			static float loadBtnWidth = 0;
-			
-			ImGui::SameLine();
-			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - saveBtnWidth - loadBtnWidth - 25.0f, 0.0f));
 			ImGui::SameLine();
 
-			// Save json
+			// Clear inventory
 			{
-				if (ImGui::Button("Save inventory to .json"))
-				{
-					ImGuiFileDialog::Instance()->OpenDialog("SaveJson", " Choose a File to Save", ".json", ".", "", 1, IGFDUserDatas("SaveFile"), ImGuiFileDialogFlags_ConfirmOverwrite);
-					ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".json", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
-				}
+				ImGui::BeginDisabled(disable);
+				if (ImGui::Button("Clear inventory"))
+					ImGui::OpenPopup("Clear inventory");
+				ImGui::EndDisabled();
 
-				saveBtnWidth = ImGui::GetItemRectSize().x;
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
+					ImGui::SetTooltip("Items can only be removed while outside of menus.");
 
-				// Show file picker
-				const float min_x = 840.0f * esHook._cur_monitor_dpi;
-				const float min_y = 540.0f * esHook._cur_monitor_dpi;
-				ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
-				if (ImGuiFileDialog::Instance()->Display("SaveJson", ImGuiWindowFlags_NoCollapse, ImVec2(min_x, min_y)))
+				// Always center this window when appearing
+				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+				if (ImGui::BeginPopupModal("Clear inventory", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 				{
-					// If user pressed Ok
-					if (ImGuiFileDialog::Instance()->IsOk())
+					ImGui::Text("Are you sure you want to delete ALL items?\n\n");
+					ImGui::Separator();
+
+					if (ImGui::Button("Yes", ImVec2(120 * esHook._cur_monitor_dpi, 0)))
 					{
-						using json = nlohmann::json;
-						json js;
-
-						cItem* itmPtr = ItemMgr->m_pItem_14;
-
-						// Save the Attache Case regardless if the user has or not an attache case item in their inventory, as this is needed
-						// to make sure the items will fit when loaded later
-						js["AttacheCase"]["board_size"] = SubScreenWk->board_size_2AA;
-
-						int m_array_num_1C = ItemMgr->m_array_num_1C;
-						for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
-						{
-							itmPtr++;
-
-							if ((itmPtr->be_flag_4 & 1) == 0)
-								continue;
-
-							if (itmPtr->chr_5 != ItemMgr->m_char_13)
-								continue;
-
-							ITEM_INFO curInfo;
-							curInfo.id_0 = ITEM_ID(itmPtr->id_0);
-							bio4::itemInfo(ITEM_ID(itmPtr->id_0), &curInfo);
-
-							std::string itemName = EItemId_Names[curInfo.id_0] + std::string(" - ") + IntToHexStr((int)itmPtr);
-
-							js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["id"] = itmPtr->id_0;
-							js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["pos_x"] = itmPtr->pos_x_A;
-							js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["pos_y"] = itmPtr->pos_y_B;
-							js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["orientation"] = itmPtr->orientation_C;
-							js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["num"] = itmPtr->num_2;
-							js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["be_flag"] = itmPtr->be_flag_4;
-							js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["chr"] = itmPtr->chr_5;
-
-							if (curInfo.type_2 == ITEM_TYPE_WEAPON)
-							{
-								// Upgrades
-								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["firePower"] = itmPtr->getFirePower() + 1;
-								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["firingSpeed"] = itmPtr->getFiringSpeed() + 1;
-								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["reloadSpeed"] = itmPtr->getReloadSpeed() + 1;
-								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["Capacity"] = itmPtr->getCapacity() + 1;
-
-								// Ammo
-								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon1"]["ammo"] = itmPtr->getAmmo();
-							}
-						}
-
-						std::ofstream o(ImGuiFileDialog::Instance()->GetFilePathName());
-						o << std::setw(4) << js << std::endl;
+						ItemMgr->eraseAll();
+						ImGui::CloseCurrentPopup();
 					}
 
-					ImGuiFileDialog::Instance()->Close();
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel", ImVec2(120 * esHook._cur_monitor_dpi, 0))) { ImGui::CloseCurrentPopup(); }
+					ImGui::EndPopup();
 				}
-				ImGui::PopStyleVar();
 			}
 
 			ImGui::SameLine();
 
-			// Load json
+			// Save/Load buttons
 			{
-				ImGui::BeginDisabled(disable);
-				if (ImGui::Button("Load inventory from .json"))
+				static float saveBtnWidth = 0;
+				static float loadBtnWidth = 0;
+
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - saveBtnWidth - loadBtnWidth - 25.0f, 0.0f));
+				ImGui::SameLine();
+
+				// Save json
 				{
-					ImGuiFileDialog::Instance()->OpenDialog("LoadJson", " Choose a File to Load", ".json", ".", "", 1, nullptr);
-					ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".json", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
-				}
-				ImGui::EndDisabled();
-
-				loadBtnWidth = ImGui::GetItemRectSize().x;
-
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
-					ImGui::SetTooltip("Items can only be added while outside of menus.");
-
-				// Show file picker
-				const float min_x = 840.0f * esHook._cur_monitor_dpi;
-				const float min_y = 540.0f * esHook._cur_monitor_dpi;
-				ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
-				if (ImGuiFileDialog::Instance()->Display("LoadJson", ImGuiWindowFlags_NoCollapse, ImVec2(min_x, min_y)))
-			{
-				// If user pressed Ok
-				if (ImGuiFileDialog::Instance()->IsOk())
-				{
-					using json = nlohmann::json;
-
-					std::ifstream f(ImGuiFileDialog::Instance()->GetFilePathName());
-					json js = json::parse(f);
-
-					std::vector<int> editedItms;
-
-					// Clear inventory
-					cItem* itmPtr = ItemMgr->m_pItem_14;
-					int m_array_num_1C = ItemMgr->m_array_num_1C;
-					for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
+					if (ImGui::Button("Save inventory to .json"))
 					{
-						itmPtr++;
-
-						if ((itmPtr->be_flag_4 & 1) == 0)
-							continue;
-
-						if (itmPtr->chr_5 != ItemMgr->m_char_13)
-							continue;
-
-						ItemMgr->erase(itmPtr);
+						ImGuiFileDialog::Instance()->OpenDialog("SaveJson", " Choose a File to Save", ".json", ".", "", 1, IGFDUserDatas("SaveFile"), ImGuiFileDialogFlags_ConfirmOverwrite);
+						ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".json", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
 					}
 
-					// Disarm current wep
-					ItemMgr->arm(0);
+					saveBtnWidth = ImGui::GetItemRectSize().x;
 
-					// Setup proper board size to fit everything from the json
-					SubScreenWk->board_size_2AA = js["AttacheCase"]["board_size"];
-					SubScreenWk->board_next_2AB = js["AttacheCase"]["board_size"];
-
-					// Add items from json
-					for (auto& types : js["items"].items())
+					// Show file picker
+					const float min_x = 840.0f * esHook._cur_monitor_dpi;
+					const float min_y = 540.0f * esHook._cur_monitor_dpi;
+					ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
+					if (ImGuiFileDialog::Instance()->Display("SaveJson", ImGuiWindowFlags_NoCollapse, ImVec2(min_x, min_y)))
 					{
-						for (const auto& items : types.value())
+						// If user pressed Ok
+						if (ImGuiFileDialog::Instance()->IsOk())
 						{
-							// Add item to inventory
-							ITEM_ID itemId = ITEM_ID(items["id"]);
+							using json = nlohmann::json;
+							json js;
 
-							// Use our cSceSys__scheduler_Hook for the Assault_Jacket, otherwise the game crashes
-							if (EItemId(itemId) == EItemId::Assault_Jacket)
-								RequestInventoryAdd(itemId, items["num"], false);
-							else
-								InventoryItemAdd(itemId, items["num"], false);
-
-							// Loop through all the items to find the one we just added, excluding items that have already been modified by us before.
-							// We do this so we can restore the stats of all items, including ones that have the same ITEM_ID in the inventory 
-							// (such as multiple First-Aid sprays), which would fail with ItemMgr->search since that func only returns the first instance it finds.
-							// (Is there a less weird way to do this?)
 							cItem* itmPtr = ItemMgr->m_pItem_14;
+
+							// Save the Attache Case regardless if the user has or not an attache case item in their inventory, as this is needed
+							// to make sure the items will fit when loaded later
+							js["AttacheCase"]["board_size"] = SubScreenWk->board_size_2AA;
 
 							int m_array_num_1C = ItemMgr->m_array_num_1C;
 							for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
@@ -3318,48 +3229,159 @@ void Trainer_RenderUI(int columnCount)
 								if (itmPtr->chr_5 != ItemMgr->m_char_13)
 									continue;
 
-								if (itmPtr->id_0 == itemId)
-								{
-									if (std::find(editedItms.begin(), editedItms.end(), (int)itmPtr) != editedItms.end())
-										continue;
-									else
-										break;
-								}
-							}
-
-							// Apply the stats from the json
-							if (itmPtr)
-							{
-								editedItms.push_back((int)itmPtr);
-
-								itmPtr->pos_x_A = items["pos_x"];
-								itmPtr->pos_y_B = items["pos_y"];
-								itmPtr->orientation_C = items["orientation"];
-								itmPtr->num_2 = items["num"];
-								itmPtr->be_flag_4 = items["be_flag"];
-								itmPtr->chr_5 = items["chr"];
-
 								ITEM_INFO curInfo;
 								curInfo.id_0 = ITEM_ID(itmPtr->id_0);
 								bio4::itemInfo(ITEM_ID(itmPtr->id_0), &curInfo);
 
+								std::string itemName = EItemId_Names[curInfo.id_0] + std::string(" - ") + IntToHexStr((int)itmPtr);
+
+								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["id"] = itmPtr->id_0;
+								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["pos_x"] = itmPtr->pos_x_A;
+								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["pos_y"] = itmPtr->pos_y_B;
+								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["orientation"] = itmPtr->orientation_C;
+								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["num"] = itmPtr->num_2;
+								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["be_flag"] = itmPtr->be_flag_4;
+								js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["chr"] = itmPtr->chr_5;
+
 								if (curInfo.type_2 == ITEM_TYPE_WEAPON)
 								{
-									itmPtr->setFirePower(items["weapon0"]["firePower"]);
-									itmPtr->setFiringSpeed(items["weapon0"]["firingSpeed"]);
-									itmPtr->setReloadSpeed(items["weapon0"]["reloadSpeed"]);
-									itmPtr->setCapacity(items["weapon0"]["Capacity"]);
+									// Upgrades
+									js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["firePower"] = itmPtr->getFirePower() + 1;
+									js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["firingSpeed"] = itmPtr->getFiringSpeed() + 1;
+									js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["reloadSpeed"] = itmPtr->getReloadSpeed() + 1;
+									js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon0"]["Capacity"] = itmPtr->getCapacity() + 1;
 
-									itmPtr->setAmmo(items["weapon1"]["ammo"]);
+									// Ammo
+									js["items"][ITEM_TYPE_Names[curInfo.type_2]][itemName]["weapon1"]["ammo"] = itmPtr->getAmmo();
+								}
+							}
+
+							std::ofstream o(ImGuiFileDialog::Instance()->GetFilePathName());
+							o << std::setw(4) << js << std::endl;
+						}
+
+						ImGuiFileDialog::Instance()->Close();
+					}
+					ImGui::PopStyleVar();
+				}
+
+				ImGui::SameLine();
+
+				// Load json
+				{
+					ImGui::BeginDisabled(disable);
+					if (ImGui::Button("Load inventory from .json"))
+					{
+						ImGuiFileDialog::Instance()->OpenDialog("LoadJson", " Choose a File to Load", ".json", ".", "", 1, nullptr);
+						ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".json", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
+					}
+					ImGui::EndDisabled();
+
+					loadBtnWidth = ImGui::GetItemRectSize().x;
+
+					if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && disable)
+						ImGui::SetTooltip("Items can only be added while outside of menus.");
+
+					// Show file picker
+					const float min_x = 840.0f * esHook._cur_monitor_dpi;
+					const float min_y = 540.0f * esHook._cur_monitor_dpi;
+					ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
+					if (ImGuiFileDialog::Instance()->Display("LoadJson", ImGuiWindowFlags_NoCollapse, ImVec2(min_x, min_y)))
+					{
+						// If user pressed Ok
+						if (ImGuiFileDialog::Instance()->IsOk())
+						{
+							using json = nlohmann::json;
+
+							std::ifstream f(ImGuiFileDialog::Instance()->GetFilePathName());
+							json js = json::parse(f);
+
+							std::vector<int> editedItms;
+
+							// Clear inventory
+							ItemMgr->eraseAll();
+
+							// Disarm current wep
+							ItemMgr->arm(0);
+
+							// Setup proper board size to fit everything from the json
+							SubScreenWk->board_size_2AA = js["AttacheCase"]["board_size"];
+							SubScreenWk->board_next_2AB = js["AttacheCase"]["board_size"];
+
+							// Add items from json
+							for (auto& types : js["items"].items())
+							{
+								for (const auto& items : types.value())
+								{
+									// Add item to inventory
+									ITEM_ID itemId = ITEM_ID(items["id"]);
+
+									// Use our cSceSys__scheduler_Hook for the Assault_Jacket, otherwise the game crashes
+									if (EItemId(itemId) == EItemId::Assault_Jacket)
+										RequestInventoryAdd(itemId, items["num"], false);
+									else
+										InventoryItemAdd(itemId, items["num"], false);
+
+									// Loop through all the items to find the one we just added, excluding items that have already been modified by us before.
+									// We do this so we can restore the stats of all items, including ones that have the same ITEM_ID in the inventory 
+									// (such as multiple First-Aid sprays), which would fail with ItemMgr->search since that func only returns the first instance it finds.
+									// (Is there a less weird way to do this?)
+									cItem* itmPtr = ItemMgr->m_pItem_14;
+
+									int m_array_num_1C = ItemMgr->m_array_num_1C;
+									for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
+									{
+										itmPtr++;
+
+										if ((itmPtr->be_flag_4 & 1) == 0)
+											continue;
+
+										if (itmPtr->chr_5 != ItemMgr->m_char_13)
+											continue;
+
+										if (itmPtr->id_0 == itemId)
+										{
+											if (std::find(editedItms.begin(), editedItms.end(), (int)itmPtr) != editedItms.end())
+												continue;
+											else
+												break;
+										}
+									}
+
+									// Apply the stats from the json
+									if (itmPtr)
+									{
+										editedItms.push_back((int)itmPtr);
+
+										itmPtr->pos_x_A = items["pos_x"];
+										itmPtr->pos_y_B = items["pos_y"];
+										itmPtr->orientation_C = items["orientation"];
+										itmPtr->num_2 = items["num"];
+										itmPtr->be_flag_4 = items["be_flag"];
+										itmPtr->chr_5 = items["chr"];
+
+										ITEM_INFO curInfo;
+										curInfo.id_0 = ITEM_ID(itmPtr->id_0);
+										bio4::itemInfo(ITEM_ID(itmPtr->id_0), &curInfo);
+
+										if (curInfo.type_2 == ITEM_TYPE_WEAPON)
+										{
+											itmPtr->setFirePower(items["weapon0"]["firePower"]);
+											itmPtr->setFiringSpeed(items["weapon0"]["firingSpeed"]);
+											itmPtr->setReloadSpeed(items["weapon0"]["reloadSpeed"]);
+											itmPtr->setCapacity(items["weapon0"]["Capacity"]);
+
+											itmPtr->setAmmo(items["weapon1"]["ammo"]);
+										}
+									}
 								}
 							}
 						}
-					}
-				}
 
-				ImGuiFileDialog::Instance()->Close();
-			}
-				ImGui::PopStyleVar();
+						ImGuiFileDialog::Instance()->Close();
+					}
+					ImGui::PopStyleVar();
+				}
 			}
 		}
 	}

@@ -456,6 +456,24 @@ public:
 	{
 		return cItemMgr__erase(this, nullptr, pItem);
 	}
+
+	inline void eraseAll()
+	{
+		cItem* itmPtr = m_pItem_14;
+		int arraynum = m_array_num_1C;
+		for (int loopcnt = 0; loopcnt <= arraynum; loopcnt++)
+		{
+			itmPtr++;
+
+			if ((itmPtr->be_flag_4 & 1) == 0)
+				continue;
+
+			if (itmPtr->chr_5 != m_char_13)
+				continue;
+
+			erase(itmPtr);
+		}
+	}
 };
 assert_size(cItemMgr, 0x30);
 
