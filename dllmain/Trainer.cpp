@@ -3191,7 +3191,12 @@ void Trainer_RenderUI(int columnCount)
 
 					if (ImGui::Button("Yes", ImVec2(120 * esHook._cur_monitor_dpi, 0)))
 					{
+						// Disarm current wep
+						ItemMgr->arm(0);
+						Game_ScheduleInMainThread([]() { bio4::WeaponChange(); });
+
 						ItemMgr->eraseAll();
+
 						ImGui::CloseCurrentPopup();
 					}
 
@@ -3324,6 +3329,7 @@ void Trainer_RenderUI(int columnCount)
 
 							// Disarm current wep
 							ItemMgr->arm(0);
+							Game_ScheduleInMainThread([]() { bio4::WeaponChange(); });
 
 							// Setup proper board size to fit everything from the json
 							SubScreenWk->board_size_2AA = js["AttacheCase"]["board_size"];
