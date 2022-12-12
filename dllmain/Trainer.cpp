@@ -1398,6 +1398,10 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			ImGui::InputText("Search", searchText, 256);
 			ImGui::PopItemWidth();
 
+			ImGui::SameLine();
+			if (ImGui::SmallButton("X"))
+				strcpy(searchText, "");
+
 			ImGui::TableNextColumn();
 
 			ImGui::Dummy(ImVec2((ImGui::GetContentRegionAvail().x - (270 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi)), 1));
@@ -2433,6 +2437,10 @@ void Trainer_RenderUI(int columnCount)
 			ImGui::InputText("Search", searchText, 256);
 			ImGui::PopItemWidth();
 
+			ImGui::SameLine();
+			if (ImGui::SmallButton("X"))
+				strcpy(searchText, "");
+
 			ImGui::TableNextColumn();
 
 			ImGui::Text("Columns: %i", columns);
@@ -2782,6 +2790,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 				ImGui::InputText("Search", searchText, 256);
 				ImGui::PopItemWidth();
+
+				ImGui::SameLine();
+				if (ImGui::SmallButton("X"))
+					strcpy(searchText, "");
 
 				ImGui::TableNextColumn();
 
