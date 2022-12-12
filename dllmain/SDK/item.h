@@ -290,6 +290,9 @@ struct upgradeTypes {
 
 extern std::unordered_map<EItemId, upgradeTypes> extra_upgrades;
 
+typedef uint16_t(__cdecl* WeaponId2ChargeNum_Fn)(ITEM_ID item_id, int level);
+extern WeaponId2ChargeNum_Fn WeaponId2ChargeNum;
+
 class cItem
 {
 public:
@@ -323,6 +326,21 @@ public:
 		return (weapon_6[0] >> 0xC) & 0xF;
 	}
 
+	inline int getAmmo()
+	{
+		return weapon_6[1] >> 3;
+	}
+
+	inline int getMaxAmmo()
+	{
+		int maxAmmo = WeaponId2ChargeNum(id_0, (((weapon_6[0] >> 0xC) & 0xF) + 1));
+
+		if (maxAmmo == 0x8000)
+			return 1;
+		else
+			return maxAmmo;
+	}
+
 	inline void setFirePower(int8_t newVal)
 	{
 		weapon_6[0] ^= (weapon_6[0] ^ (newVal - 1)) & 0xF;
@@ -341,6 +359,11 @@ public:
 	inline void setCapacity(int8_t newVal)
 	{
 		weapon_6[0] = weapon_6[0] & 0xFFF | ((newVal - 1) << 0xC);
+	}
+
+	inline void setAmmo(int newVal)
+	{
+		weapon_6[1] = newVal << 3;
 	}
 };
 assert_size(cItem, 0xE);

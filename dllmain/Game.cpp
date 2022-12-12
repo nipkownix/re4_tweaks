@@ -27,6 +27,7 @@ cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 cItemMgr__get_Fn cItemMgr__get = nullptr;
 cItemMgr__erase_Fn cItemMgr__erase = nullptr;
+WeaponId2ChargeNum_Fn WeaponId2ChargeNum = nullptr;
 
 // event.h externs
 EventMgr* EvtMgr = nullptr;
@@ -994,6 +995,10 @@ bool re4t::init::Game()
 	// WeaponId2MaxLevel funcptr
 	pattern = hook::pattern("E8 ? ? ? ? 0F B6 D0 0F BE C3 83 C4 08 3B C2 75 70");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::WeaponId2MaxLevel);
+
+	// WeaponId2ChargeNum funcptr
+	pattern = hook::pattern("E8 ? ? ? ? 66 8B 56 08 66 C1 EA 03 83 C4 08 66 3B D0 73 67 0F B6");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), WeaponId2ChargeNum);
 
 	// PlChangeData funcptr
 	pattern = hook::pattern("75 ? E8 ? ? ? ? E8 ? ? ? ? 38 1D ? ? ? ?");

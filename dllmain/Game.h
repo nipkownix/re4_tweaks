@@ -71,6 +71,8 @@ void RequestSaveGame();
 void RequestMerchant();
 bool AreaJump(uint16_t roomNo, Vec& position, float rotation);
 
+void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui);
+
 bool IsGanado(int id);
 bool IsEnemy(int id);
 const char* GetEmListName(int emListNumber);
