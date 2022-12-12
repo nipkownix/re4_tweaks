@@ -1204,6 +1204,27 @@ void re4t::init::Misc()
 		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
+	// Limit Matilda to three round bursts once per trigger pull
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
+		struct wep17_r2_set_LimitMatildaBurst
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bLimitMatildaBurst)
+				{
+					regs.ef |= (1 << regs.zero_flag);
+					return;
+				}
+
+				if (bio4::joyFireOn())
+					regs.ef &= ~(1 << regs.zero_flag);
+				else
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<wep17_r2_set_LimitMatildaBurst>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+	}
+
 	// Allow changing games level of violence to users choice
 	{
 		// find cCard functbl (tbl.1654)

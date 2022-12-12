@@ -59,3 +59,8 @@ public:
 	virtual void beginReload() = 0;
 };
 assert_size(cObjWep, 0x76C);
+
+namespace bio4
+{
+	extern bool(__cdecl* joyFireOn)();
+}

@@ -84,6 +84,8 @@ namespace bio4 {
 
 	void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
   
+	bool(__cdecl* joyFireOn)();
+  
 	ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
 };
 
@@ -873,6 +875,10 @@ bool re4t::init::Game()
 	// QuakeExec ptr
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 8B E5 5D");
 	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::QuakeExec);
+
+	// joyFireOn ptr
+	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::joyFireOn);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
