@@ -34,6 +34,10 @@ EventMgr__IsAliveEvt_Fn EventMgr__IsAliveEvt = nullptr;
 cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
 
+// ID.h externs
+IDSystem* IDSys = nullptr;
+IDSystem__unitPtr_Fn IDSystem__unitPtr = nullptr;
+
 // Original game funcs
 namespace bio4 {
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
@@ -83,8 +87,6 @@ namespace bio4 {
 	void(__cdecl* SceSleep)(uint32_t ctr);
 
 	void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
-  
-	ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
 };
 
 // Current play time (H, M, S)
@@ -475,12 +477,6 @@ FADE_WORK* FadeWorkPtr(FADE_NO no)
 	return FadeWork_ptr[no];
 }
 
-IDSystem* IDSystem_ptr = nullptr;
-IDSystem* IDSystemPtr()
-{
-	return IDSystem_ptr;
-}
-
 itemPiece** g_p_Item_piece = nullptr; // not actual name...
 itemPiece* ItemPiecePtr()
 {
@@ -790,11 +786,11 @@ bool re4t::init::Game()
 
 	// Pointer to IDSystem
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
-	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
+	IDSys = *pattern.count(1).get(0).get<IDSystem*>(1);
 
 	// pointer to IDSystem::unitPtr
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::IDSystem__unitPtr);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), IDSystem__unitPtr);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");

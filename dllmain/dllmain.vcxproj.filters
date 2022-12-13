@@ -1599,7 +1599,7 @@
     <ClInclude Include="SDK\fade.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
-    <ClInclude Include="SDK\game_ui.h">
+    <ClInclude Include="SDK\ID.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
   </ItemGroup>

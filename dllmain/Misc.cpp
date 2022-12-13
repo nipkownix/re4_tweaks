@@ -315,7 +315,7 @@ void __cdecl titleLoop_hook(TITLE_WORK* pT)
 	if (UIPause)
 		return;
 
-	ID_UNIT* tex = bio4::IDSystem__unitPtr(IDSystemPtr(), 6u, IDC_TITLE);
+	ID_UNIT* tex = IDSys->unitPtr(0x6u, IDC_TITLE);
 
 	if (re4t::cfg->bRestoreAnalogTitleScroll)
 	{
@@ -1248,10 +1248,10 @@ void re4t::init::Misc()
 							break;
 						}
 
-						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x1u, IDC_TITLE_MENU)->texId_78 = 164;
-						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
-						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x2u, IDC_TITLE_MENU)->texId_78 = 164;
-						bio4::IDSystem__unitPtr(IDSystemPtr(), 0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
+						IDSys->unitPtr(0x1u, IDC_TITLE_MENU)->texId_78 = 164;
+						IDSys->unitPtr(0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
+						IDSys->unitPtr(0x2u, IDC_TITLE_MENU)->texId_78 = 164;
+						IDSys->unitPtr(0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
 					}
 
 					// Code we overwrote

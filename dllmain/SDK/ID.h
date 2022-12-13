@@ -74,8 +74,14 @@ struct ID_UNIT
 };
 assert_size(ID_UNIT, 0x144);
 
-struct IDSystem
+class IDSystem;
+enum ID_CLASS;
+typedef ID_UNIT* (__thiscall* IDSystem__unitPtr_Fn)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
+extern IDSystem__unitPtr_Fn IDSystem__unitPtr;
+
+class IDSystem
 {
+public:
 	int m_maxId_0;
 	int m_nId_4;
 	int m_levelMax_8;
@@ -84,8 +90,15 @@ struct IDSystem
 	ID_UNIT* m_pRoot_4C;
 	ID_UNIT* m_IdUnit_50;
 	void* ptr_54;
+
+	inline ID_UNIT* unitPtr(uint8_t markNo, ID_CLASS classNo)
+	{
+		return IDSystem__unitPtr(this, markNo, classNo);
+	}
 };
 assert_size(IDSystem, 0x58);
+
+extern IDSystem* IDSys;
 
 enum ID_CLASS
 {
@@ -142,9 +155,3 @@ enum ID_CLASS
 	IDC_TOOL = 0xFE,
 	IDC_ANY = 0xFF,
 };
-
-namespace bio4
-{
-	extern ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
-}
-
