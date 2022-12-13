@@ -1211,13 +1211,7 @@ void re4t::init::Misc()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (re4t::cfg->bLimitMatildaBurst)
-				{
-					regs.ef |= (1 << regs.zero_flag);
-					return;
-				}
-
-				if (bio4::joyFireOn())
+				if (!re4t::cfg->bLimitMatildaBurst && bio4::joyFireOn())
 					regs.ef &= ~(1 << regs.zero_flag);
 				else
 					regs.ef |= (1 << regs.zero_flag);
