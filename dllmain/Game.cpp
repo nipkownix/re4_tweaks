@@ -607,14 +607,26 @@ void __cdecl Mem_free_TITLE_WORK_hook(void* mem)
 	Mem_free(mem);
 }
 
-std::mutex pending_functions_mutex_;
-std::deque<std::function<void()>> pending_functions_;
+DWORD game_mainThreadID = 0;
+bool Game_IsRunningInMainThread()
+{
+	return game_mainThreadID == GetCurrentThreadId();
+}
+
+std::mutex game_pendingMainThreadFuncsMutex;
+std::deque<std::function<void()>> game_pendingMainThreadFuncs;
 
 void Game_ScheduleInMainThread(std::function<void()> function)
 {
-	std::unique_lock<std::mutex> pending_functions_lock(
-		pending_functions_mutex_);
-	pending_functions_.emplace_back(std::move(function));
+	if (Game_IsRunningInMainThread())
+	{
+		// Caller is already running in the main thread, so we can just run the function right now
+		function();
+		return;
+	}
+
+	std::unique_lock<std::mutex> pending_functions_lock(game_pendingMainThreadFuncsMutex);
+	game_pendingMainThreadFuncs.emplace_back(std::move(function));
 }
 
 void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
@@ -708,12 +720,17 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 void(__fastcall* cSceSys__scheduler)(void* thisptr, void* unused);
 void __fastcall cSceSys__scheduler_Hook(void* thisptr, void* unused)
 {
+	// cSceSys::scheduler is always running in main game thread, save the ID of it:
+	// TODO: find a better place for us to grab this, cSceSys::scheduler only runs once game is actually running (ie. not on main menu)
+	game_mainThreadID = GetCurrentThreadId();
+
 	// Call any functions we have scheduled to run on the main game thread...
 	{
-		std::unique_lock<std::mutex> pending_functions_lock(pending_functions_mutex_);
-		while (!pending_functions_.empty()) {
-			std::function<void()> function = std::move(pending_functions_.front());
-			pending_functions_.pop_front();
+		std::unique_lock<std::mutex> pending_functions_lock(game_pendingMainThreadFuncsMutex);
+		while (!game_pendingMainThreadFuncs.empty())
+		{
+			std::function<void()> function = std::move(game_pendingMainThreadFuncs.front());
+			game_pendingMainThreadFuncs.pop_front();
 
 			pending_functions_lock.unlock();
 			function();
