@@ -16,6 +16,7 @@
 #include "SDK/light.h"
 #include "SDK/item.h"
 #include "SDK/puzzle.h"
+#include "SDK/roomdata.h"
 #include "SDK/sscrn.h"
 #include "SDK/card.h"
 #include "SDK/cam_ctrl.h"

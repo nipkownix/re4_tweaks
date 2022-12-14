@@ -34,6 +34,10 @@ EventMgr__IsAliveEvt_Fn EventMgr__IsAliveEvt = nullptr;
 cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
 
+// roomdata.h externs
+cRoomData* RoomData = nullptr;
+cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
+
 // Original game funcs
 namespace bio4 {
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
@@ -903,6 +907,11 @@ bool re4t::init::Game()
 	SatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0xF);
 	pattern = hook::pattern("6A 00 53 56 50 51 B9 ? ? ? ? E8");
 	EatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0x7);
+
+	// RoomData ptrs
+	pattern = hook::pattern("8B 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 85 C0");
+	RoomData = *pattern.count(1).get(0).get<cRoomData*>(0x5);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(9), cRoomData__getRoomSavePtr);
 
 	// GX function ptrs
 	pattern = hook::pattern("56 53 6A 05 6A 04 6A 01 E8");
