@@ -36,6 +36,12 @@ int wepAdded_FiringSpeed = 1;
 int wepAdded_ReloadSpeed = 1;
 int wepAdded_Capacity = 1;
 
+bool* OptionOpenFlag;
+
+extern int stopFlagsBackup; // cfgMenu.cpp
+extern bool stopFlagsBackedUp; // cfgMenu.cpp
+extern bool bPauseGameWhileInCfgMenu; // cfgMenu.cpp
+
 // Trainer.cpp: checks certain game flags & patches code in response to them
 // Ideally we would hook each piece of code instead and add a flag check there
 // Unfortunately, most existing trainer-like-mods for the game are done as code patches
@@ -489,6 +495,12 @@ void Trainer_Init()
 		FlagPatch patch_em10FindCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK));
 		patch_em10FindCk.SetPatch((uint8_t*)em10FindCk.as_int(), { 0x31, 0xC0, 0xC3 });
 		flagPatches.push_back(patch_em10FindCk);
+	}
+
+	// OptionOpenFlag <- Maybe should be somewhere else in the SDK/Game.cpp?
+	{
+		auto pattern = hook::pattern("A2 ? ? ? ? A2 ? ? ? ? A1 ? ? ? ? 81 48 ? ? ? ? ? E9");
+		OptionOpenFlag = (bool*)*pattern.count(1).get(0).get<uint32_t>(1);
 	}
 
 	// Ashley presence
@@ -1643,7 +1655,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			!PlayerPtr() ||
 			!PlayerPtr()->subScrCheck() ||
 			SubScreenWk->open_flag_2C != 0 ||
-			FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
+			*OptionOpenFlag;
 
 		ImGui::BeginDisabled(disable || wepAdded_ID != 0);
 		if (ImGui::Button("Add Item", ImVec2(120 * esHook._cur_monitor_dpi, 0)))
@@ -1654,12 +1666,33 @@ void InvItemAdder_SetPopUp(const char* popupname)
 				wepAdded_ID = ITEM_ID(itemId);
 			}
 
+			if (alwaysShowInventory)
+			{
+				bCfgMenuOpen = false;
+			}
+
+			// Gotta unpause everything so the item actually gets added
+			if (bPauseGameWhileInCfgMenu && stopFlagsBackedUp)
+			{
+				GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
+				stopFlagsBackedUp = false;
+			}
+
 			EItemId lambda_itemId = itemId;
 			int lambda_stackCount = stackCount;
 			bool lambda_alwaysShowInventory = alwaysShowInventory;
 			Game_ScheduleInMainThread([lambda_itemId, lambda_stackCount, lambda_alwaysShowInventory]()
 			{
+				// Add the new item
 				InventoryItemAdd(ITEM_ID(lambda_itemId), lambda_stackCount, lambda_alwaysShowInventory);
+
+				// Pause the game again if needed
+				if (bCfgMenuOpen && !stopFlagsBackedUp && bPauseGameWhileInCfgMenu)
+				{
+					stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
+					stopFlagsBackedUp = true;
+					GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
+				}
 			});
 		}
 		ImGui::EndDisabled();
@@ -1775,17 +1808,37 @@ void Trainer_RenderUI(int columnCount)
 						GlobalPtr()->subHpCur_4FB8 = Ash_maxHP;
 					}
 				}
-				
+
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				if (ImGui::Button("Save game"))
+				{
+					bCfgMenuOpen = false;
+					
+					if (bPauseGameWhileInCfgMenu && stopFlagsBackedUp)
+					{
+						GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
+						stopFlagsBackedUp = false;
+					}
+
 					Game_ScheduleInMainThread([]() {bio4::CardSave(0, 1); });
+				}
 
 				if (ImGui::Button("Open Merchant"))
+				{
+					bCfgMenuOpen = false;
+					
+					if (bPauseGameWhileInCfgMenu && stopFlagsBackedUp)
+					{
+						GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
+						stopFlagsBackedUp = false;
+					}
+
 					Game_ScheduleInMainThread([]() {
 						if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
-						bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
+							bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
 					});
+				}
 			}
 
 			// Invincibility
@@ -2907,12 +2960,12 @@ void Trainer_RenderUI(int columnCount)
 
 								ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-								// Disable buttons if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
+								// Disable button if no player character, or game wouldn't allow player to open inventory, or inventory is already opened
 								bool disable =
 									!PlayerPtr() ||
 									!PlayerPtr()->subScrCheck() ||
 									SubScreenWk->open_flag_2C != 0 ||
-									FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
+									*OptionOpenFlag;
 
 								ImGui::BeginDisabled(disable);
 								ImGui::BeginGroup();
@@ -3153,7 +3206,7 @@ void Trainer_RenderUI(int columnCount)
 				!PlayerPtr() ||
 				!PlayerPtr()->subScrCheck() ||
 				SubScreenWk->open_flag_2C != 0 ||
-				FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL)); // disallow if player stop flag is set (eg. during pause screen)
+				*OptionOpenFlag;
 
 			// Item adder popup
 			{

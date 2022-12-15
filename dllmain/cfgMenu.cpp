@@ -14,14 +14,18 @@
 #include "AudioTweaks.h"
 #include "../dxvk/src/config.h"
 
-bool bCfgMenuOpen;
-bool NeedsToRestart;
-bool bWaitingForHotkey;
+bool bCfgMenuOpen = false;
+bool NeedsToRestart = false;
+bool bWaitingForHotkey = false;
+bool bPauseGameWhileInCfgMenu = true;
 
 int iGCBlurMode = 0;
 int iCostumeComboLeon;
 int iCostumeComboAshley;
 int iCostumeComboAda;
+
+bool stopFlagsBackedUp = false;
+int stopFlagsBackup = -1;
 
 float fLaserColorPicker[3]{ 0.0f, 0.0f, 0.0f };
 
@@ -44,6 +48,19 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 
 	pInput->RegisterHotkey({ []() {
 		bCfgMenuOpen = !bCfgMenuOpen;
+
+		// Pause game while cfgMenu is open
+		if (bCfgMenuOpen && !stopFlagsBackedUp && bPauseGameWhileInCfgMenu)
+		{
+		  stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
+		  stopFlagsBackedUp = true;
+		  GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
+		}
+		else if (stopFlagsBackedUp)
+		{
+			GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
+			stopFlagsBackedUp = false;
+		}
 	}, &cfgMenuCombo });
 
 	return cfgMenuCombo.size() > 0;
@@ -264,7 +281,7 @@ void cfgMenuRender()
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Font Size");
 
-			ImGui::SameLine();
+			
 
 			// Tips
 			float tip_offset = 45.0f;
@@ -273,18 +290,39 @@ void cfgMenuRender()
 
 			if (re4t::cfg->HasUnsavedChanges)
 			{
-				const char *txt = "You have unsaved changes!";
+				ImGui::SameLine();
 
-				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y / 2));
+				const char* txt = "You have unsaved changes!";
+
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y / 3.0f));
 				ImGui::SameLine();
 				ImGui::BulletText(txt);
 			}
 
+			if (ImGui::Checkbox("Pause game", &bPauseGameWhileInCfgMenu))
+			{
+				if (bCfgMenuOpen && !stopFlagsBackedUp && bPauseGameWhileInCfgMenu)
+				{
+					stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
+					stopFlagsBackedUp = true;
+					GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
+				}
+				else if (stopFlagsBackedUp)
+				{
+					GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
+					stopFlagsBackedUp = false;
+				}
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Keep the game frozen while the config menu is open");
+
 			if (NeedsToRestart)
 			{
+				ImGui::SameLine();
+
 				const char* txt = "Changes that have been made require the game to be restarted!";
 
-				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y / 6));
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y));
 				ImGui::SameLine();
 				ImGui::BulletText(txt);
 			}
