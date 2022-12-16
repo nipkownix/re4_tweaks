@@ -72,6 +72,7 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui);
 
 bool IsGanado(int id);
 bool IsEnemy(int id);
+bool OptionOpenFlag();
 const char* GetEmListName(int emListNumber);
 const char* GetEmListEnumName(int emListNumber);
 

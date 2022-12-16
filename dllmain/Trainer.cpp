@@ -36,10 +36,7 @@ int wepAdded_FiringSpeed = 1;
 int wepAdded_ReloadSpeed = 1;
 int wepAdded_Capacity = 1;
 
-bool* OptionOpenFlag;
-
-extern int stopFlagsBackup; // cfgMenu.cpp
-extern bool stopFlagsBackedUp; // cfgMenu.cpp
+extern void PauseGame(bool setPaused); // cfgMenu.cpp
 extern bool bPauseGameWhileInCfgMenu; // cfgMenu.cpp
 
 // Trainer.cpp: checks certain game flags & patches code in response to them
@@ -495,12 +492,6 @@ void Trainer_Init()
 		FlagPatch patch_em10FindCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK));
 		patch_em10FindCk.SetPatch((uint8_t*)em10FindCk.as_int(), { 0x31, 0xC0, 0xC3 });
 		flagPatches.push_back(patch_em10FindCk);
-	}
-
-	// OptionOpenFlag <- Maybe should be somewhere else in the SDK/Game.cpp?
-	{
-		auto pattern = hook::pattern("A2 ? ? ? ? A2 ? ? ? ? A1 ? ? ? ? 81 48 ? ? ? ? ? E9");
-		OptionOpenFlag = (bool*)*pattern.count(1).get(0).get<uint32_t>(1);
 	}
 
 	// Ashley presence
@@ -1655,7 +1646,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			!PlayerPtr() ||
 			!PlayerPtr()->subScrCheck() ||
 			SubScreenWk->open_flag_2C != 0 ||
-			*OptionOpenFlag;
+			OptionOpenFlag();
 
 		ImGui::BeginDisabled(disable || wepAdded_ID != 0);
 		if (ImGui::Button("Add Item", ImVec2(120 * esHook._cur_monitor_dpi, 0)))
@@ -1672,11 +1663,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			}
 
 			// Gotta unpause everything so the item actually gets added
-			if (bPauseGameWhileInCfgMenu && stopFlagsBackedUp)
-			{
-				GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
-				stopFlagsBackedUp = false;
-			}
+			PauseGame(false);
 
 			EItemId lambda_itemId = itemId;
 			int lambda_stackCount = stackCount;
@@ -1687,12 +1674,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 				InventoryItemAdd(ITEM_ID(lambda_itemId), lambda_stackCount, lambda_alwaysShowInventory);
 
 				// Pause the game again if needed
-				if (bCfgMenuOpen && !stopFlagsBackedUp && bPauseGameWhileInCfgMenu)
-				{
-					stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
-					stopFlagsBackedUp = true;
-					GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
-				}
+				PauseGame(bCfgMenuOpen && bPauseGameWhileInCfgMenu);
 			});
 		}
 		ImGui::EndDisabled();
@@ -1815,11 +1797,7 @@ void Trainer_RenderUI(int columnCount)
 				{
 					bCfgMenuOpen = false;
 					
-					if (bPauseGameWhileInCfgMenu && stopFlagsBackedUp)
-					{
-						GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
-						stopFlagsBackedUp = false;
-					}
+					PauseGame(false);
 
 					Game_ScheduleInMainThread([]() {bio4::CardSave(0, 1); });
 				}
@@ -1828,11 +1806,7 @@ void Trainer_RenderUI(int columnCount)
 				{
 					bCfgMenuOpen = false;
 					
-					if (bPauseGameWhileInCfgMenu && stopFlagsBackedUp)
-					{
-						GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
-						stopFlagsBackedUp = false;
-					}
+					PauseGame(false);
 
 					Game_ScheduleInMainThread([]() {
 						if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
@@ -2965,7 +2939,7 @@ void Trainer_RenderUI(int columnCount)
 									!PlayerPtr() ||
 									!PlayerPtr()->subScrCheck() ||
 									SubScreenWk->open_flag_2C != 0 ||
-									*OptionOpenFlag;
+									OptionOpenFlag();
 
 								ImGui::BeginDisabled(disable);
 								ImGui::BeginGroup();
@@ -3206,7 +3180,7 @@ void Trainer_RenderUI(int columnCount)
 				!PlayerPtr() ||
 				!PlayerPtr()->subScrCheck() ||
 				SubScreenWk->open_flag_2C != 0 ||
-				*OptionOpenFlag;
+				OptionOpenFlag();
 
 			// Item adder popup
 			{

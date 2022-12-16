@@ -516,7 +516,6 @@ bool IsGanado(int id) // same as games IsGanado func
 	return id <= 0x20;
 }
 
-
 bool IsEnemy(int id) // Since the game's IsGanado doesn't account for some enemies, we have this as an alternative
 {
 	bool blacklist = false;
@@ -530,6 +529,12 @@ bool IsEnemy(int id) // Since the game's IsGanado doesn't account for some enemi
 		return false;
 
 	return (id > 0x10 && id < 0x4F);
+}
+
+bool* OptionOpenFlag_ptr;
+bool OptionOpenFlag() // True if the options screen is open
+{
+	return *OptionOpenFlag_ptr;
 }
 
 const char* emlist_name[] = {
@@ -997,6 +1002,10 @@ bool re4t::init::Game()
 	// WeaponId2ChargeNum funcptr
 	pattern = hook::pattern("E8 ? ? ? ? 66 8B 56 08 66 C1 EA 03 83 C4 08 66 3B D0 73 67 0F B6");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), WeaponId2ChargeNum);
+
+	// OptionOpenFlag <- Maybe should be somewhere else in the SDK/Game.cpp?
+	pattern = hook::pattern("A2 ? ? ? ? A2 ? ? ? ? A1 ? ? ? ? 81 48 ? ? ? ? ? E9");
+	OptionOpenFlag_ptr = (bool*)*pattern.count(1).get(0).get<uint32_t>(1);
 
 	// PlChangeData funcptr
 	pattern = hook::pattern("75 ? E8 ? ? ? ? E8 ? ? ? ? 38 1D ? ? ? ?");

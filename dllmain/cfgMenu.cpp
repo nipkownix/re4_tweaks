@@ -24,9 +24,6 @@ int iCostumeComboLeon;
 int iCostumeComboAshley;
 int iCostumeComboAda;
 
-bool stopFlagsBackedUp = false;
-int stopFlagsBackup = -1;
-
 float fLaserColorPicker[3]{ 0.0f, 0.0f, 0.0f };
 
 ImVec2 PrevRightColumnPos;
@@ -37,6 +34,35 @@ int MenuTipTimer = 500; // cfgMenu tooltip timer
 std::string cfgMenuTitle = "re4_tweaks";
 
 std::vector<uint32_t> cfgMenuCombo;
+
+void PauseGame(bool setPaused)
+{
+	static bool stopFlagsBackedUp = false;
+	static int stopFlagsBackup = -1;
+
+	// Disable pausing when not needed or when pausing would casue issues
+	bool disable =
+		!PlayerPtr() ||
+		SubScreenWk->open_flag_2C != 0 ||
+		OptionOpenFlag() ||
+		GlobalPtr()->playerHpCur_4FB4 == 0 ||
+		GlobalPtr()->subHpCur_4FB8 == 0;
+
+	if (disable)
+		return;
+
+	if (setPaused && !stopFlagsBackedUp)
+	{
+		stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
+		stopFlagsBackedUp = true;
+		GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
+	}
+	else if (!setPaused && stopFlagsBackedUp)
+	{
+		GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
+		stopFlagsBackedUp = false;
+	}
+}
 
 bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 {
@@ -50,17 +76,7 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 		bCfgMenuOpen = !bCfgMenuOpen;
 
 		// Pause game while cfgMenu is open
-		if (bCfgMenuOpen && !stopFlagsBackedUp && bPauseGameWhileInCfgMenu)
-		{
-		  stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
-		  stopFlagsBackedUp = true;
-		  GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
-		}
-		else if (stopFlagsBackedUp)
-		{
-			GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
-			stopFlagsBackedUp = false;
-		}
+		PauseGame(bCfgMenuOpen && bPauseGameWhileInCfgMenu);
 	}, &cfgMenuCombo });
 
 	return cfgMenuCombo.size() > 0;
@@ -301,17 +317,7 @@ void cfgMenuRender()
 
 			if (ImGui::Checkbox("Pause game", &bPauseGameWhileInCfgMenu))
 			{
-				if (bCfgMenuOpen && !stopFlagsBackedUp && bPauseGameWhileInCfgMenu)
-				{
-					stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
-					stopFlagsBackedUp = true;
-					GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
-				}
-				else if (stopFlagsBackedUp)
-				{
-					GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
-					stopFlagsBackedUp = false;
-				}
+				PauseGame(bCfgMenuOpen&& bPauseGameWhileInCfgMenu);
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Keep the game frozen while the config menu is open");
