@@ -249,6 +249,7 @@ void Trainer_ParseKeyCombos()
 		KeyComboFreeCamToggle = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerFreeCamKeyCombo);
 
 		pInput->RegisterHotkey({ []() {
+			PauseGame(false);
 			re4t::cfg->bTrainerEnableFreeCam = !re4t::cfg->bTrainerEnableFreeCam;
 		}, &KeyComboFreeCamToggle });
 	}
@@ -1919,7 +1920,10 @@ void Trainer_RenderUI(int columnCount)
 				ImGui_ColumnSwitch();
 
 				if (ImGui::Checkbox("Enable Free Camera", &re4t::cfg->bTrainerEnableFreeCam))
+				{
+					PauseGame(false);
 					re4t::cfg->HasUnsavedChanges = true;
+				}
 
 				ImGui_ItemSeparator();
 

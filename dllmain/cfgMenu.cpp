@@ -55,7 +55,7 @@ void PauseGame(bool setPaused)
 	{
 		stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
 		stopFlagsBackedUp = true;
-		GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF7F; // Same flags the game sets during its pause screen
+		GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF3F; // Same flags the game sets during its pause screen minus SPF_ID_SYSTEM 
 	}
 	else if (!setPaused && stopFlagsBackedUp)
 	{
