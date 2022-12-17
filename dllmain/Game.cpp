@@ -38,6 +38,9 @@ EventMgr__IsAliveEvt_Fn EventMgr__IsAliveEvt = nullptr;
 cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
 
+// ID.h externs
+IDSystem__unitPtr_Fn IDSystem__unitPtr = nullptr;
+
 // roomdata.h externs
 cRoomData* RoomData = nullptr;
 cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
@@ -98,6 +101,8 @@ namespace bio4 {
 	void(__cdecl* SceSleep)(uint32_t ctr);
 
 	void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
+  
+	bool(__cdecl* joyFireOn)();
   
 	ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
 };
@@ -484,16 +489,16 @@ TITLE_WORK* TitleWorkPtr()
 	return TitleWork_ptr;
 }
 
-FADE_WORK(*FadeWork_ptr)[4];
-FADE_WORK* FadeWorkPtr(FADE_NO no)
-{
-	return FadeWork_ptr[no];
-}
-
 IDSystem* IDSystem_ptr = nullptr;
 IDSystem* IDSystemPtr()
 {
 	return IDSystem_ptr;
+}
+
+FADE_WORK(*FadeWork_ptr)[4];
+FADE_WORK* FadeWorkPtr(FADE_NO no)
+{
+	return FadeWork_ptr[no];
 }
 
 itemPiece** g_p_Item_piece = nullptr; // not actual name...
@@ -901,9 +906,9 @@ bool re4t::init::Game()
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
 	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
 
-	// pointer to IDSystem__unitPtr
+	// pointer to IDSystem::unitPtr
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::IDSystem__unitPtr);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), IDSystem__unitPtr);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
@@ -1010,6 +1015,10 @@ bool re4t::init::Game()
 	// PlChangeData funcptr
 	pattern = hook::pattern("75 ? E8 ? ? ? ? E8 ? ? ? ? 38 1D ? ? ? ?");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::PlChangeData);
+
+	// joyFireOn ptr
+	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::joyFireOn);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");

@@ -78,16 +78,18 @@ public:
 
 	float raw_mouse_delta_x()
 	{ 
-		float delta = _raw_mouse_delta[0];
-		_raw_mouse_delta[0] = 0;
-		return delta;
+		if (_mouseReadCount != _mouseWriteCount)
+			_mouseReadCount = _mouseWriteCount;
+
+		return _raw_mouse_delta[0];
 	}
 
 	float raw_mouse_delta_y() 
 	{
-		float delta = _raw_mouse_delta[1];
-		_raw_mouse_delta[1] = 0;
-		return delta;
+		if (_mouseReadCount != _mouseWriteCount)
+			_mouseReadCount = _mouseWriteCount;
+
+		return _raw_mouse_delta[1];
 	}
 
 	void clear_mouse_delta()
@@ -150,6 +152,8 @@ private:
 	unsigned int _last_mouse_position[2] = {};
 	float _raw_mouse_delta[2] = {};
 	float _last_raw_mouse_delta[2] = {};
+	unsigned int _mouseReadCount = 0;
+	unsigned int _mouseWriteCount = 0;
 	std::pair<float, float> position;
 
 	uint64_t _frame_count = 0; // Keep track of frame count to identify windows with a lot of rendering

@@ -1552,6 +1552,27 @@ void re4t::init::FrameRateFixes()
 		injector::MakeInline<TurnSpeedLoad>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
+	// Mercenaries: fix doubling of the village stage's passive difficulty gain in 60fps NTSC mode
+	{
+		static float fMercsDeltaTimer = 0.0F;
+
+		auto pattern = hook::pattern("A1 40 ? ? ? 80 ? ? 00 74 ? 6A 0E"); // R400Main());
+		struct MercsModeFPSFix
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				fMercsDeltaTimer += GlobalPtr()->deltaTime_70;
+				if (fMercsDeltaTimer >= 1.0F)
+				{
+					fMercsDeltaTimer -= 1.0F;
+					regs.ef |= (1 << regs.zero_flag); // call j_GameAddPoint(LVADD_TIMECOUNT);
+				}
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<MercsModeFPSFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
+	}
+
 	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust
 	// Seems to make Ashley bust physics speed match between 30 & 60FPS
 	{

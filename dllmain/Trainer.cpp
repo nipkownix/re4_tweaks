@@ -305,8 +305,8 @@ void Trainer_ParseKeyCombos()
 	}
 }
 
-void(__cdecl* j_GameAddPoint_orig)(int type);
-void __cdecl j_GameAddPoint_Hook(int type)
+void(__cdecl* GameAddPoint_orig)(LVADD type);
+void __cdecl GameAddPoint_Hook(LVADD type)
 {
 	if (re4t::cfg->bTrainerOverrideDynamicDifficulty)
 	{
@@ -315,7 +315,7 @@ void __cdecl j_GameAddPoint_Hook(int type)
 		return;
 	}
 
-	j_GameAddPoint_orig(type);
+	GameAddPoint_orig(type);
 }
 
 bool(__cdecl* cameraHitCheck_orig)(Vec *pCross, Vec *pNorm, Vec p0, Vec p1);
@@ -744,11 +744,11 @@ void Trainer_Init()
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), DebugTrg_hook, PATCH_JUMP);
 	}
 
-	// Hook j_GameAddPoint to override the Dynamic Difficulty Level
+	// Hook GameAddPoint to override the Dynamic Difficulty Level
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 0F B6 C8");
-		ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), j_GameAddPoint_orig);
-		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), j_GameAddPoint_Hook);
+		ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), GameAddPoint_orig);
+		InjectHook(injector::GetBranchDestination(pattern.get_first()).as_int(), GameAddPoint_Hook);
 	}
 }
 

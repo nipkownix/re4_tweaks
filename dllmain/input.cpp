@@ -163,6 +163,8 @@ bool input::handle_window_message(const void *message_data)
 		case RIM_TYPEMOUSE:
 			is_mouse_message = true;
 
+			++input->_mouseWriteCount;
+
 			if (raw_input_window == s_raw_input_windows.end() || (raw_input_window->second & 0x2) == 0)
 				break; // Input is already handled (since legacy mouse messages are enabled), so nothing to do here
 
@@ -173,19 +175,24 @@ bool input::handle_window_message(const void *message_data)
 				float xChange = (raw_data.data.mouse.lLastX / 65535.0f) * GetSystemMetrics(isVirtualDesktop ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
 				float yChange = (raw_data.data.mouse.lLastY / 65535.0f) * GetSystemMetrics(isVirtualDesktop ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
 
-				input->_raw_mouse_delta[0] = input->_raw_mouse_delta[0] + raw_data.data.mouse.lLastX - input->position.first;
-				input->_raw_mouse_delta[1] = input->_raw_mouse_delta[1] + raw_data.data.mouse.lLastY - input->position.second;
+				input->_raw_mouse_delta[0] = raw_data.data.mouse.lLastX - input->position.first;
+				input->_raw_mouse_delta[1] = raw_data.data.mouse.lLastY - input->position.second;
 
 				input->position.first += xChange;
 				input->position.second += yChange;
 			}
 			else
 			{
-				input->_raw_mouse_delta[0] = input->_raw_mouse_delta[0] + raw_data.data.mouse.lLastX;
-				input->_raw_mouse_delta[1] = input->_raw_mouse_delta[1] + raw_data.data.mouse.lLastY;
-
-				input->position.first += raw_data.data.mouse.lLastX;
-				input->position.second += raw_data.data.mouse.lLastY;
+				if ((input->_mouseWriteCount - input->_mouseReadCount) <= 1)
+				{
+					input->_raw_mouse_delta[0] = float(raw_data.data.mouse.lLastX);
+					input->_raw_mouse_delta[1] = float(raw_data.data.mouse.lLastY);
+				}
+				else
+				{
+					input->_raw_mouse_delta[0] += float(raw_data.data.mouse.lLastX);
+					input->_raw_mouse_delta[1] += float(raw_data.data.mouse.lLastY);
+				}
 			}
 
 			if (raw_data.data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
@@ -611,6 +618,8 @@ void input::next_frame()
 
 	_text_input.clear();
 	_mouse_wheel_delta = 0;
+	_raw_mouse_delta[0] = 0;
+	_raw_mouse_delta[1] = 0;
 	_last_mouse_position[0] = _mouse_position[0];
 	_last_mouse_position[1] = _mouse_position[1];
 	_last_raw_mouse_delta[0] = _raw_mouse_delta[0];

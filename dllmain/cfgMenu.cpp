@@ -1307,6 +1307,24 @@ void cfgMenuRender()
 						ImGui::EndDisabled();
 					}
 
+					// EnableNTSCMode
+					{
+						ImGui_ColumnSwitch();
+
+						if(ImGui::Checkbox("EnableNTSCMode", &re4t::cfg->bEnableNTSCMode))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Unlocks minor difficulty boosts previously exclusive to the North American console versions of RE4.");
+						ImGui::TextWrapped("Higher starting adaptive difficulty, more difficult Ada missions, and a more difficult Mercenaries village stage.");
+						ImGui::TextWrapped("Bottle caps require 3000 points in the shooting gallery, and Easy difficulty is removed from the title menu.");
+					}
+
 					// AshleyJPCameraAngles
 					{
 						ImGui_ColumnSwitch();
@@ -1406,7 +1424,8 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick.");
+						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
+						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
 					}
 
 					// AllowMafiaLeonCutscenes
@@ -1531,6 +1550,18 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Reduces the length of menu fades/messages (eg. 'Save/Load successful!') and skips the initial \"Resident Evil 4\" logo / \"PRESS ANY KEY\" screen.");
 						ImGui::TextWrapped("(will only take effect when SkipIntroLogos is also set to true)");
+					}
+
+					// LimitMatildaBurst
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Limit the Matilda to one three round burst per trigger pull.");
 					}
 
 					// EnableDebugMenu

@@ -11,7 +11,7 @@
 #include "SDK/fade.h"
 #include "SDK/global.h"
 #include "SDK/snd.h"
-#include "SDK/game_ui.h"
+#include "SDK/ID.h"
 #include "SDK/title.h"
 #include "SDK/light.h"
 #include "SDK/item.h"
@@ -60,8 +60,8 @@ cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
-FADE_WORK* FadeWorkPtr(FADE_NO no);
 IDSystem* IDSystemPtr();
+FADE_WORK* FadeWorkPtr(FADE_NO no);
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 
