@@ -1489,6 +1489,18 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(will only take effect when SkipIntroLogos is also set to true)");
 					}
 
+					// LimitMatildaBurst
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Limit the Matilda to one three round burst per trigger pull.");
+					}
+
 					// EnableDebugMenu
 					{
 						ImGui_ColumnSwitch();

@@ -133,6 +133,7 @@ public:
 	bool bEnableDebugMenu = false;
 	bool bEnableModExpansion = false;
 	bool bForceETSApplyScale = false;
+	bool bLimitMatildaBurst = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;

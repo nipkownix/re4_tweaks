@@ -171,4 +171,5 @@ namespace bio4
 {
 	extern bool(__cdecl* KeyOnCheck_0)(KEY_BTN a1);
 	extern void(__cdecl* KeyStop)(uint64_t un_stop_bit);
+	extern bool(__cdecl* joyFireOn)();
 }
