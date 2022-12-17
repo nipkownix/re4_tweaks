@@ -135,6 +135,7 @@ public:
 	bool bForceETSApplyScale = false;
 	bool bEnableNTSCMode = false;
 	bool bLimitMatildaBurst = false;
+	bool bSeparateWaysDifficultyMenu = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;

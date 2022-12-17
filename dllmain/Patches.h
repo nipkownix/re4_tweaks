@@ -37,6 +37,7 @@ namespace re4t
 		void MultithreadFix();
 		void QTEfixes();
 		void Sofdec();
+		void TitleMenu();
 		void ToolMenu();
 		void ToolMenuDebug();
 		void WndProcHook();

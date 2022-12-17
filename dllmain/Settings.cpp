@@ -349,6 +349,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
+	re4t::cfg->bSeparateWaysDifficultyMenu = iniReader.ReadBoolean("MISC", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 
 	// MEMORY
 	re4t::cfg->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
@@ -814,6 +815,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
 	iniReader.WriteBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
+	iniReader.WriteBoolean("MISC", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
 	// We don't have any UI options for those anyway, so pointless for us to write it back
@@ -993,6 +995,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY

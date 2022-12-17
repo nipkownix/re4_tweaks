@@ -1,0 +1,215 @@
+#include <iostream>
+#include "dllmain.h"
+#include "Patches.h"
+#include "Game.h"
+#include "Settings.h"
+
+void re4t::init::TitleMenu()
+{
+	// Add Professional mode select to Separate Ways
+	// TODO: support Assignment Ada as well. Not possible with this method currently, as all the difficulty select textures get unloaded in titleSub.
+	{
+		static const int def_texId[4] = { 170, 170, 187, 187 };
+		static const int jpn_texId[4] = { 220, 220, 187, 187 };
+
+		static const float eng_texW[4] = { 149.0f, 149.0f, 87.0f, 87.0f };
+		static const float deu_texW[4] = {  60.0f,  60.0f, 87.0f, 87.0f };
+		static const float fra_texW[4] = { 160.0f, 160.0f, 87.0f, 87.0f };
+		static const float esp_texW[4] = { 140.0f, 140.0f, 87.0f, 87.0f };
+		static const float ita_texW[4] = {  90.0f,  90.0f, 99.0f, 99.0f };
+
+		static int texId_orig[4] = {};
+		static float texW_orig[4] = {};
+		static float texH_orig[4] = {};
+
+		static bool insideLevelMenu = false;
+
+		static uint8_t* mouseMenuNum = hook::pattern("03 7C ? BA 01 00 00 00 8B").count(1).get(0).get<uint8_t>(0);
+		static uint32_t* snd_id_1654 = *hook::pattern("A3 ? ? ? ? 5F 5E 8B E5 5D").count(1).get(0).get<uint32_t*>(1);
+
+		auto pattern_begin = hook::pattern("8B ? ? ? ? ? 8B ? ? ? ? ? 8B C1 25 00 00 00 40 81 E7 00 20 00 00 0B C7 74 ? 33");
+		auto pattern_end = hook::pattern("33 FF EB ? 8D 49 00 0F");
+		struct titleAda_levelMenu
+		{
+			enum TitleAda
+			{
+				MenuExit = 6,
+				CardLoad = 7,
+				GameStart = 8
+			};
+
+			static const float* getLangW()
+			{
+				switch (SystemSavePtr()->language_8)
+				{
+				case 3: // German
+					return deu_texW;
+				case 4: // French
+					return fra_texW;
+				case 5: // Spanish
+					return esp_texW;
+				case 6: // Traditional Chinese / Italian
+					return GameVersion() == "1.1.0" ? eng_texW : ita_texW;
+				case 8: // Italian
+					return ita_texW;
+				default: // English, Japanese, Simplified Chinese
+					return eng_texW;
+				}
+			}
+
+			static void enterLevelMenu()
+			{
+				insideLevelMenu = true;
+				injector::WriteMemory(mouseMenuNum, uint8_t(2), true); // disable mouse interaction with the MenuExit texture
+				TitleWorkPtr()->omk_menu_no_6C = 1;
+
+				bio4::SndCall(0, 4u, 0, 0, 0, 0);
+
+				const int* texId = SystemSavePtr()->language_8 ? def_texId : jpn_texId;
+				const float* texW = getLangW();
+
+				for (int i = 0; i < 4; i++)
+				{
+					ID_UNIT* tex = IDSystemPtr()->unitPtr(i + 1, IDC_OPTION_BG);
+
+					texId_orig[i] = tex->texId_78;
+					texW_orig[i] = tex->size0_W_DC;
+					texH_orig[i] = tex->size0_H_E0;
+
+					tex->texId_78 = texId[i];
+					tex->size0_W_DC = texW[i];
+					tex->size0_H_E0 = 14;
+					tex->pos0_94.y -= 14;
+					IDSystemPtr()->setTime(tex, 0); // fade in
+				}
+
+				IDSystemPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+				IDSystemPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+			}
+
+			static void exitLevelMenu()
+			{
+				insideLevelMenu = false;
+				injector::WriteMemory(mouseMenuNum, uint8_t(3), true);
+				TitleWorkPtr()->omk_menu_no_6C = 0;
+
+				bio4::SndCall(0, 5u, 0, 0, 0, 0);
+
+				for (int i = 0; i < 4; i++)
+				{
+					ID_UNIT* tex = IDSystemPtr()->unitPtr(i + 1, IDC_OPTION_BG);
+
+					tex->texId_78 = texId_orig[i];
+					tex->size0_W_DC = texW_orig[i];
+					tex->size0_H_E0 = texH_orig[i];
+					tex->pos0_94.y += 14;
+					IDSystemPtr()->setTime(tex, 0);
+				}
+
+				IDSystemPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+				IDSystemPtr()->setTime(IDSystemPtr()->unitPtr(0x5u, IDC_OPTION_BG), 0);
+				IDSystemPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+				IDSystemPtr()->setTime(IDSystemPtr()->unitPtr(0x6u, IDC_OPTION_BG), 0);
+			}
+
+			void operator()(injector::reg_pack& regs)
+			{
+				TITLE_WORK* pT = TitleWorkPtr();
+
+				if ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_MINUS) == (uint64_t)KEY_BTN::KEY_MINUS ||
+					(Key_btn_trg() & (uint64_t)KEY_BTN::KEY_CANCEL) == (uint64_t)KEY_BTN::KEY_CANCEL)
+				{
+					if (!insideLevelMenu)
+					{
+						pT->Rno1_1 = TitleAda::MenuExit;
+						FadeWorkPtr(FADE_NO_SYSTEM)->FadeSet(FADE_NO_SYSTEM, 5u, 0);
+						bio4::SndCall(0, 5u, 0, 0, 0, 0);
+						bio4::SndStrReq_0(*(uint32_t*)snd_id_1654, 4, 0x3C, 0); // cancel music
+					}
+					else
+						exitLevelMenu();
+				}
+				else if ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_OK) == (uint64_t)KEY_BTN::KEY_OK ||
+					(Key_btn_trg() & (uint64_t)KEY_BTN::KEY_Y) == (uint64_t)KEY_BTN::KEY_Y)
+				{
+					switch (pT->omk_menu_no_6C)
+					{
+					case 0:
+						if (!re4t::cfg->bSeparateWaysDifficultyMenu)
+							pT->Rno1_1 = TitleAda::GameStart;
+						else if (!insideLevelMenu)
+							enterLevelMenu();
+						else
+						{
+							pT->Rno1_1 = TitleAda::GameStart;
+							GlobalPtr()->gameDifficulty_847C = GameDifficulty::Pro;
+							insideLevelMenu = false;
+							injector::WriteMemory(mouseMenuNum, uint8_t(3), true);
+						}
+						break;
+					case 1:
+						if (!insideLevelMenu)
+							pT->Rno1_1 = TitleAda::CardLoad;
+						else
+						{
+							pT->Rno1_1 = TitleAda::GameStart;
+							insideLevelMenu = false;
+							injector::WriteMemory(mouseMenuNum, uint8_t(3), true);
+						}
+						break;
+					case 2:
+						pT->Rno1_1 = TitleAda::MenuExit;
+						FadeWorkPtr(FADE_NO_SYSTEM)->FadeSet(FADE_NO_SYSTEM, 5u, 0);
+						bio4::SndCall(0, 5u, 0, 0, 0, 0);
+						bio4::SndStrReq_0(*(uint32_t*)snd_id_1654, 4, 0x3C, 0);
+						break;
+					}
+				}
+				else if ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_U) == (uint64_t)KEY_BTN::KEY_U ||
+					(Key_btn_trg() & (uint64_t)KEY_BTN::KEY_D) == (uint64_t)KEY_BTN::KEY_D)
+				{
+					int omk_menu_no_6C = pT->omk_menu_no_6C;
+					if ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_U) == (uint64_t)KEY_BTN::KEY_U)
+						omk_menu_no_6C -= 1;
+					else
+						omk_menu_no_6C += 1;
+
+					if (insideLevelMenu)
+					{
+						if (omk_menu_no_6C < 0)
+							omk_menu_no_6C = 1;
+						else if (omk_menu_no_6C > 1)
+							omk_menu_no_6C = 0;
+					}
+					else
+						omk_menu_no_6C = std::clamp(omk_menu_no_6C, 0, 2);
+
+					if (omk_menu_no_6C != pT->omk_menu_no_6C)
+					{
+						bio4::SndCall(0, 0xAu, 0, 0, 0, 0);
+						pT->omk_menu_no_6C = omk_menu_no_6C;
+					}
+				}
+			}
+		}; injector::MakeInline<titleAda_levelMenu>(pattern_begin.count(1).get(0).get<uint32_t>(0), pattern_end.count(1).get(0).get<uint32_t>(0));
+
+		// gameInit: don't overwrite Professional mode difficulty for Separate Ways or Assignment Ada
+		auto pattern = hook::pattern("F7 40 54 00 10 00 C0 74 ? C6 80 7C 84 00 00 05 A1");
+		struct gameInit_AdaPro
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				bool isSeparateWays = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_PS2_ADA_GAME));
+				bool isAssignmentAda = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ADA_GAME));
+				bool isMercenaries = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ADA_GAME));
+
+				if (isMercenaries ||
+					((isSeparateWays || isAssignmentAda) && GlobalPtr()->gameDifficulty_847C != GameDifficulty::Pro))
+				{
+					GlobalPtr()->gameDifficulty_847C = GameDifficulty::Medium;
+				}
+			}
+		}; injector::MakeInline<gameInit_AdaPro>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(21));
+	}
+}
+

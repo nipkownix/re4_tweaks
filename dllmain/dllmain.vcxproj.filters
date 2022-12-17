@@ -562,6 +562,9 @@
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipecompiler.cpp">
       <Filter>dxvk\dxvk</Filter>
     </ClCompile>
+    <ClCompile Include="TitleMenu.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">

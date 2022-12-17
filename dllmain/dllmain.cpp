@@ -93,6 +93,8 @@ void Init_Main()
 
 	re4t::init::DebugDisplay();
 
+	re4t::init::TitleMenu();
+
 	Trainer_Init();
 
 	// Apply changes needed by the HD Project

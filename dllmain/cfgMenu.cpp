@@ -1355,6 +1355,31 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Adds a screen shake effect when firing a rifle.");
 					}
 
+					// SeparateWaysDifficultyMenu
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysDifficultySelect", &re4t::cfg->bSeparateWaysDifficultyMenu);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Choose between Professional and Normal difficulty modes when starting a new game of Separate Ways.");
+					}
+
+					// RestoreAnalogTitleScroll
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreAnalogTitleScroll", &re4t::cfg->bRestoreAnalogTitleScroll);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
+						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
+					}
+
 					// AllowSellingHandgunSilencer
 					{
 						ImGui_ColumnSwitch();
@@ -1369,19 +1394,6 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
-					}
-
-					// RestoreAnalogTitleScroll
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreAnalogTitleScroll", &re4t::cfg->bRestoreAnalogTitleScroll);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
-						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
 					}
 
 					// AllowMafiaLeonCutscenes

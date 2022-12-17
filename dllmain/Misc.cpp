@@ -1346,7 +1346,7 @@ void re4t::init::Misc()
 		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like 'Help & Options'
 		pattern = hook::pattern("D9 5E 5C C6 46 58 00 39");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7);
-    
+
 		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries 
 		pattern = hook::pattern("C7 06 01 00 00 00 E8 ? ? ? ? 57");
 		struct titleSub_resetScrollAdd
@@ -1354,12 +1354,12 @@ void re4t::init::Misc()
 			void operator()(injector::reg_pack& regs)
 			{
 				TitleWorkPtr()->scroll_add_5C = 1.5f;
-        
+
 				// Code we overwrote
 				__asm { mov dword ptr[esi], 0x1}
 			}
 		}; injector::MakeInline<titleSub_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-    
+
 		// reset scroll_add_5C when leaving Separate Ways
 		pattern = hook::pattern("C7 45 F4 00 00 00 FF 8B ? ? 52 8B C8 51 50");
 		struct titleAda_resetScrollAdd
@@ -1367,14 +1367,14 @@ void re4t::init::Misc()
 			void operator()(injector::reg_pack& regs)
 			{
 				TitleWorkPtr()->scroll_add_5C = 1.5f;
-        
+
 				// Code we overwrote
 				__asm { mov dword ptr[ebp - 0xC], 0xFF000000 }
 			}
 		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
-	// Limit Matilda to three round bursts once per trigger pull
+	// Limit the Matilda to one three round burst per trigger pull
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
 		struct wep17_r2_set_LimitMatildaBurst
