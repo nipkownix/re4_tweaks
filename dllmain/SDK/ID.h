@@ -98,8 +98,6 @@ public:
 };
 assert_size(IDSystem, 0x58);
 
-extern IDSystem* IDSys;
-
 enum ID_CLASS
 {
 	IDC_SSCRN_MAIN_MENU = 0x0,

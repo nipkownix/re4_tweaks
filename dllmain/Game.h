@@ -60,6 +60,7 @@ cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
+IDSystem* IDSystemPtr();
 FADE_WORK* FadeWorkPtr(FADE_NO no);
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;

@@ -35,7 +35,6 @@ cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
 
 // ID.h externs
-IDSystem* IDSys = nullptr;
 IDSystem__unitPtr_Fn IDSystem__unitPtr = nullptr;
 
 // roomdata.h externs
@@ -479,6 +478,12 @@ TITLE_WORK* TitleWorkPtr()
 	return TitleWork_ptr;
 }
 
+IDSystem* IDSystem_ptr = nullptr;
+IDSystem* IDSystemPtr()
+{
+	return IDSystem_ptr;
+}
+
 FADE_WORK(*FadeWork_ptr)[4];
 FADE_WORK* FadeWorkPtr(FADE_NO no)
 {
@@ -794,7 +799,7 @@ bool re4t::init::Game()
 
 	// Pointer to IDSystem
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
-	IDSys = *pattern.count(1).get(0).get<IDSystem*>(1);
+	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
 
 	// pointer to IDSystem::unitPtr
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
