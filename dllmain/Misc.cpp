@@ -319,24 +319,51 @@ void __cdecl titleLoop_hook(TITLE_WORK* pT)
 
 	if (re4t::cfg->bRestoreAnalogTitleScroll)
 	{
-		// prefer to use fAnalogR over AnalogR here, because it lets us to make the deadzone smaller
-		const float fDeadZone = 0.30f;
-
-		if (abs(*fAnalogRX) >= fDeadZone)
-			pT->scroll_add_5C = *fAnalogRX * 3.0f;
-
-		if (abs(*fAnalogRY) >= fDeadZone)
+		if (isController())
 		{
-			if (*fAnalogRY < 0)
-				tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
-			else
-				tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
+			// prefer to use fAnalogR over AnalogR here, because it lets us to make the deadzone smaller
+			const float fDeadZone = 0.30f;
 
-			tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
+			if (abs(*fAnalogRX) >= fDeadZone)
+				pT->scroll_add_5C = *fAnalogRX * 3.0f;
+
+			if (abs(*fAnalogRY) >= fDeadZone)
+			{
+				if (*fAnalogRY < 0)
+					tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
+				else
+					tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
+
+				tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
+			}
+		}
+		else
+		{
+			// Using our own KB/M input here instead of the game's, since the game's function to handle input (PadRead) is a mess.
+			if (pInput->is_key_down(VK_CONTROL))
+			{
+				if (abs(pInput->raw_mouse_delta_x()) > 0)
+				{
+					tex->pos0_94.x -= pInput->raw_mouse_delta_x() * 0.2f;
+
+					if (pInput->raw_mouse_delta_x() < 0)
+						pT->scroll_add_5C = -(fabsf(pT->scroll_add_5C));
+					else
+						pT->scroll_add_5C = fabsf(pT->scroll_add_5C);
+				}
+
+				if (abs(pInput->raw_mouse_delta_y()) > 0)
+				{
+
+					tex->pos0_94.z -= pInput->raw_mouse_delta_y() * 0.2f;
+					tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
+				}
+			}
 		}
 	}
 
-	tex->pos0_94.x -= pT->scroll_add_5C * GlobalPtr()->deltaTime_70;
+	if (!re4t::cfg->bRestoreAnalogTitleScroll || !pInput->is_key_down(VK_CONTROL))
+		tex->pos0_94.x -= pT->scroll_add_5C * GlobalPtr()->deltaTime_70;
 	if (tex->pos0_94.x > 1800.0f)
 		tex->pos0_94.x -= 2700.0f;
 	else if (tex->pos0_94.x < -900.0f)

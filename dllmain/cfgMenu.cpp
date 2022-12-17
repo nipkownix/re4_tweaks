@@ -1380,7 +1380,8 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick.");
+						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
+						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
 					}
 
 					// AllowMafiaLeonCutscenes
