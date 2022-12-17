@@ -16,7 +16,7 @@ public:
 	// Funcs
 	void ReadSettings();
 	void ReadSettings(std::wstring ini_path);
-	void WriteSettings();
+	void WriteSettings(bool trainerOnly);
 	void LogSettings();
 
 	void ParseHotkeys();

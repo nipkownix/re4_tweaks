@@ -161,7 +161,7 @@ void HotkeySlotPressed(int slotIdx, bool forceUseWepID = false)
 					if (ItemPiece->pItem_24)
 					{
 						re4t::cfg->iWeaponHotkeyWepIds[slotIdx] = ItemPiece->pItem_24->id_0;
-						re4t::cfg->WriteSettings();
+						re4t::cfg->WriteSettings(true);
 						
 						// fall-thru to weapon switch code below, acts as an indicator that binding was set
 					}

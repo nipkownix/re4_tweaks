@@ -842,22 +842,28 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 
 DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 {
+	bool writeTrainerOnly = bool(lpParameter);
+
 	std::wstring iniPathMain = rootPath + wrapperName + L".ini";
 	std::wstring iniPathTrainer = rootPath + L"\\re4_tweaks\\trainer.ini";
-	WriteSettings(iniPathMain, false);
+
 	WriteSettings(iniPathTrainer, true);
 
-	re4t::cfg->HasUnsavedChanges = false;
+	if (!writeTrainerOnly)
+	{
+		WriteSettings(iniPathMain, false);
+		re4t::cfg->HasUnsavedChanges = false;
+	}
 
 	return 0;
 }
 
-void re4t_cfg::WriteSettings()
+void re4t_cfg::WriteSettings(bool trainerOnly)
 {
 	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // if thread is already running, wait for it to finish
 
 	// Spawn a new thread to handle writing settings, as INI writing funcs that get used are pretty slow
-	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, NULL, 0, NULL);
+	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, (LPVOID)trainerOnly, 0, NULL);
 }
 
 void re4t_cfg::LogSettings()

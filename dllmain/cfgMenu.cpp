@@ -197,7 +197,7 @@ void cfgMenuRender()
 					if (ImGui::Button("Yes", ImVec2(120, 0)))
 					{
 						re4t::cfg->bTrainerEnable = true;
-						re4t::cfg->WriteSettings();
+						re4t::cfg->WriteSettings(true);
 						ImGui::CloseCurrentPopup();
 					}
 
@@ -252,7 +252,7 @@ void cfgMenuRender()
 				// Update console title
 				con.TitleKeyCombo = re4t::cfg->sConsoleKeyCombo;
 
-				re4t::cfg->WriteSettings();
+				re4t::cfg->WriteSettings(false);
 			}
 
 			ImGui::PopStyleColor();

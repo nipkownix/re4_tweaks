@@ -232,7 +232,7 @@ void updateDownloadApply()
 					std::filesystem::copy(target, rootPath, copyOptions);
 
 					// Save current settings on new .ini files
-					re4t::cfg->WriteSettings();
+					re4t::cfg->WriteSettings(false);
 
 					// Done
 					updt.UpdateStatus = UpdateStatus::Success;
@@ -327,7 +327,7 @@ void AutoUpdate::RenderUI()
 			if (ImGui::Button("Never ask again", btn_size))
 			{
 				re4t::cfg->bNeverCheckForUpdates = true;
-				re4t::cfg->WriteSettings();
+				re4t::cfg->WriteSettings(false);
 				updt.UpdateStatus = UpdateStatus::Finished;
 			}
 
