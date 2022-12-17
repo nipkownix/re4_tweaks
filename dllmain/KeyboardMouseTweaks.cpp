@@ -186,7 +186,7 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				double deltaX = 0;
 				if (re4t::cfg->bUseRawMouseInput)
-					deltaX = (pInput->raw_mouse_delta_x() / 7.0f) * g_MOUSE_SENS();
+					deltaX = (pInput->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS();
 				else
 					deltaX = double(int(regs.eax));
 
@@ -207,7 +207,7 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				double deltaY = 0;
 				if (re4t::cfg->bUseRawMouseInput)
-					deltaY = -((pInput->raw_mouse_delta_y() / 4.0f) * g_MOUSE_SENS());
+					deltaY = -((pInput->raw_mouse_delta_y() / 7.0f) * g_MOUSE_SENS());
 				else
 					deltaY = double(int(regs.eax));
 
