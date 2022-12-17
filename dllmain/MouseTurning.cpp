@@ -186,7 +186,7 @@ void re4t::init::MouseTurning()
 				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
 				if (isPressingDefaultKey && (mi_ptr->Mot_attr_40 == 4))
 					regs.eax = 0;
-				else if (isMouseTurnEnabled() && (*MouseDeltaX < -8) && !isPressingDefaultKey)
+				else if (isMouseTurnEnabled() && (*MouseDeltaX < -3) && !isPressingDefaultKey)
 				{
 					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
 					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
@@ -224,7 +224,7 @@ void re4t::init::MouseTurning()
 				// Make game go back to the default procedure if the user started to hold the default key after moving the mouse
 				if (isPressingDefaultKey && (mi_ptr->Mot_attr_40 == 4))
 					regs.eax = 0;
-				else if (isMouseTurnEnabled() && (*MouseDeltaX > 8) && !isPressingDefaultKey)
+				else if (isMouseTurnEnabled() && (*MouseDeltaX > 3) && !isPressingDefaultKey)
 				{
 					// Setting this flag to 4 makes MotionMove not apply any rotation/position changes
 					// Very lucky for us, but I'm not sure what the real intent of this value/flag even is
