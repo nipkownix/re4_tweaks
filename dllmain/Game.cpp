@@ -34,6 +34,9 @@ EventMgr__IsAliveEvt_Fn EventMgr__IsAliveEvt = nullptr;
 cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
 
+// ID.h externs
+IDSystem__unitPtr_Fn IDSystem__unitPtr = nullptr;
+
 // roomdata.h externs
 cRoomData* RoomData = nullptr;
 cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
@@ -475,16 +478,16 @@ TITLE_WORK* TitleWorkPtr()
 	return TitleWork_ptr;
 }
 
-FADE_WORK(*FadeWork_ptr)[4];
-FADE_WORK* FadeWorkPtr(FADE_NO no)
-{
-	return FadeWork_ptr[no];
-}
-
 IDSystem* IDSystem_ptr = nullptr;
 IDSystem* IDSystemPtr()
 {
 	return IDSystem_ptr;
+}
+
+FADE_WORK(*FadeWork_ptr)[4];
+FADE_WORK* FadeWorkPtr(FADE_NO no)
+{
+	return FadeWork_ptr[no];
 }
 
 itemPiece** g_p_Item_piece = nullptr; // not actual name...
@@ -798,9 +801,9 @@ bool re4t::init::Game()
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
 	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
 
-	// pointer to IDSystem__unitPtr
+	// pointer to IDSystem::unitPtr
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::IDSystem__unitPtr);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), IDSystem__unitPtr);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");

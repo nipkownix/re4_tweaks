@@ -327,6 +327,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 			iCostumeComboAda--;
 	}
 
+	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	re4t::cfg->bRestoreDemoVideos = iniReader.ReadBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
 	re4t::cfg->bRestoreAnalogTitleScroll = iniReader.ReadBoolean("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
@@ -795,6 +796,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[iCostumeComboLeon]));
 	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[iCostumeComboAshley]));
 	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[iCostumeComboAda]));
+	iniReader.WriteBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
 	iniReader.WriteBoolean("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
@@ -989,6 +991,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
