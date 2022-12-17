@@ -1602,6 +1602,9 @@
     <ClInclude Include="SDK\ID.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\roomdata.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

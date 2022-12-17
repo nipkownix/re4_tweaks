@@ -42,6 +42,8 @@ namespace dxvk {
     if (!re4t::dxvk::cfg->bDisableAsync)
         m_config.setOption("dxvk.enableAsync", "true");
 
+    m_config.setOption("d3d9.maxFrameLatency", "1");
+
     m_config.logOptions();
 
     m_options = DxvkOptions(m_config);

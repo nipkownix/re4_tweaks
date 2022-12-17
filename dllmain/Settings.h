@@ -33,7 +33,6 @@ public:
 	bool bStretchFullscreenImages = false;
 	bool bStretchVideos = false;
 	bool bRemove16by10BlackBars = true;
-	bool bReplaceFramelimiter = true;
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
 	int iCustomRefreshRate = -1;
@@ -99,6 +98,7 @@ public:
 	bool bFixQTE = true;
 	bool bFixAshleyBustPhysics = true;
 	bool bEnableFastMath = true;
+	bool bReplaceFramelimiter = true;
 	bool bMultithreadFix = true;
 	bool bPrecacheModels = false;
 
@@ -134,6 +134,7 @@ public:
 	bool bEnableModExpansion = false;
 	bool bForceETSApplyScale = false;
 	bool bEnableNTSCMode = false;
+	bool bLimitMatildaBurst = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;

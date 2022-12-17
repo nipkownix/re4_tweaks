@@ -38,6 +38,10 @@ cSatMgr* EatMgr = nullptr;
 IDSystem* IDSys = nullptr;
 IDSystem__unitPtr_Fn IDSystem__unitPtr = nullptr;
 
+// roomdata.h externs
+cRoomData* RoomData = nullptr;
+cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
+
 // Original game funcs
 namespace bio4 {
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
@@ -87,6 +91,10 @@ namespace bio4 {
 	void(__cdecl* SceSleep)(uint32_t ctr);
 
 	void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
+  
+	bool(__cdecl* joyFireOn)();
+  
+	ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
 };
 
 // Current play time (H, M, S)
@@ -870,6 +878,10 @@ bool re4t::init::Game()
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 8B E5 5D");
 	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::QuakeExec);
 
+	// joyFireOn ptr
+	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::joyFireOn);
+
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
 	bio4::SubScreenOpen = (decltype(bio4::SubScreenOpen))pattern.count(1).get(0).get<uint32_t>(0);
@@ -899,6 +911,11 @@ bool re4t::init::Game()
 	SatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0xF);
 	pattern = hook::pattern("6A 00 53 56 50 51 B9 ? ? ? ? E8");
 	EatMgr = *pattern.count(1).get(0).get<cSatMgr*>(0x7);
+
+	// RoomData ptrs
+	pattern = hook::pattern("8B 45 ? 50 B9 ? ? ? ? E8 ? ? ? ? 85 C0");
+	RoomData = *pattern.count(1).get(0).get<cRoomData*>(0x5);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(9), cRoomData__getRoomSavePtr);
 
 	// GX function ptrs
 	pattern = hook::pattern("56 53 6A 05 6A 04 6A 01 E8");

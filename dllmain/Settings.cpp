@@ -172,7 +172,6 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bStretchVideos = iniReader.ReadBoolean("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
 	re4t::cfg->bRemove16by10BlackBars = iniReader.ReadBoolean("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
 
-	re4t::cfg->bReplaceFramelimiter = iniReader.ReadBoolean("DISPLAY", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
 	re4t::cfg->bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 	re4t::cfg->bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
 	re4t::cfg->iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
@@ -284,6 +283,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
 	re4t::cfg->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
 	re4t::cfg->bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
+	re4t::cfg->bReplaceFramelimiter = iniReader.ReadBoolean("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
 	re4t::cfg->bMultithreadFix = iniReader.ReadBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
 	re4t::cfg->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
 
@@ -348,6 +348,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
+	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
 
 	// MEMORY
 	re4t::cfg->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
@@ -709,7 +710,6 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages);
 	iniReader.WriteBoolean("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
 	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
-	iniReader.WriteBoolean("DISPLAY", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
 	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
 	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
@@ -786,6 +786,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
 	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
+	iniReader.WriteBoolean("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
 	iniReader.WriteBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
 	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
 
@@ -812,6 +813,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+	iniReader.WriteBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
 	// We don't have any UI options for those anyway, so pointless for us to write it back
@@ -873,7 +875,6 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "StretchVideos", re4t::cfg->bStretchVideos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", re4t::cfg->bFixDPIScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", re4t::cfg->bFixDisplayMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
@@ -958,6 +959,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "FixQTE", re4t::cfg->bFixQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableFastMath", re4t::cfg->bEnableFastMath ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "MultithreadFix", re4t::cfg->bMultithreadFix ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "PrecacheModels", re4t::cfg->bPrecacheModels ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
@@ -990,6 +992,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY

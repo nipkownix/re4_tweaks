@@ -455,23 +455,6 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(Change the resolution for this setting to take effect)");
 					}
 
-					// ReplaceFramelimiter
-					{
-						ImGui_ColumnSwitch();
-
-						if (ImGui::Checkbox("ReplaceFramelimiter", &re4t::cfg->bReplaceFramelimiter))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
-						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
-					}
-
 					// FixDPIScale
 					{
 						ImGui_ColumnSwitch();
@@ -1175,6 +1158,23 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Experimental, can hopefully improve framerate in some areas that had dips.");
 					}
 
+					// ReplaceFramelimiter
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("ReplaceFramelimiter", &re4t::cfg->bReplaceFramelimiter))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Replaces the games 60/30FPS framelimiter with our own version, which reduces CPU usage quite a lot.");
+						ImGui::TextWrapped("(experimental, not known if the new framelimiter performs the same as the old one yet)");
+					}
+
 					// MultithreadFix
 					{
 						ImGui_ColumnSwitch();
@@ -1505,6 +1505,18 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Reduces the length of menu fades/messages (eg. 'Save/Load successful!') and skips the initial \"Resident Evil 4\" logo / \"PRESS ANY KEY\" screen.");
 						ImGui::TextWrapped("(will only take effect when SkipIntroLogos is also set to true)");
+					}
+
+					// LimitMatildaBurst
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Limit the Matilda to one three round burst per trigger pull.");
 					}
 
 					// EnableDebugMenu

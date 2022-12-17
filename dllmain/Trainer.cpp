@@ -1954,8 +1954,8 @@ void Trainer_RenderUI(int columnCount)
 			int numValues;
 		};
 
-		// TODO: ROOM, ROOM_SAVE
-		CategoryInfo flagCategoryInfo[] = {
+		// Make sure to keep order of this in sync with CategoryInfoIdx enum below
+		std::vector<CategoryInfo> flagCategoryInfo = {
 			{ "DEBUG", GlobalPtr()->flags_DEBUG_0_60, Flags_DEBUG_Names, &Flags_DEBUG_Descriptions, 128 },
 			{ "STOP", GlobalPtr()->flags_STOP_0_170, Flags_STOP_Names, &Flags_STOP_Descriptions, 32 },
 			{ "STATUS", GlobalPtr()->flags_STATUS_0_501C, Flags_STATUS_Names, &Flags_STATUS_Descriptions, 128 },
@@ -1966,6 +1966,40 @@ void Trainer_RenderUI(int columnCount)
 			{ "DISP", GlobalPtr()->Flags_DISP_0_58, Flags_DISP_Names, &Flags_DISP_Descriptions, 32 },
 			{ "EXTRA", SystemSavePtr()->flags_EXTRA_4, Flags_EXTRA_Names, &Flags_EXTRA_Descriptions, 16 },
 			{ "CONFIG", SystemSavePtr()->flags_CONFIG_0, Flags_CONFIG_Names, &Flags_CONFIG_Descriptions, 6 },
+		};
+
+		// cRoomData::getRoomSavePtr returns nullptr for certain rooms like r120 (or maybe just returns that in main menu), check it's not null before adding:
+		ROOM_SAVE_DATA* roomSaveData = RoomData->getRoomSavePtr(GlobalPtr()->curRoomId_4FAC);
+		if (roomSaveData)
+		{
+			// We have flag names for r226, so display them:
+			if (GlobalPtr()->curRoomId_4FAC == 0x226)
+			{
+				flagCategoryInfo.push_back({ "ROOM_SAVE", roomSaveData->save_flg_4, Flags_ROOM_SAVE_r226_Names, &Flags_ROOM_SAVE_Descriptions, 32 });
+				flagCategoryInfo.push_back({ "ROOM", GlobalPtr()->flags_ROOM_0_174, Flags_ROOM_r226_Names, &Flags_ROOM_Descriptions, 128 });
+			}
+			else
+			{
+				flagCategoryInfo.push_back({ "ROOM_SAVE", roomSaveData->save_flg_4, Flags_ROOM_SAVE_Names, &Flags_ROOM_SAVE_Descriptions, 32 });
+				flagCategoryInfo.push_back({ "ROOM", GlobalPtr()->flags_ROOM_0_174, Flags_ROOM_Names, &Flags_ROOM_Descriptions, 128 });
+			}
+		}
+
+		// Make sure to keep order of this in sync with flagCategoryInfo vector above
+		enum class CategoryInfoIdx
+		{
+			DEBUG,
+			STOP,
+			STATUS,
+			SYSTEM,
+			ITEM_SET,
+			SCENARIO,
+			KEY_LOCK,
+			DISP,
+			EXTRA,
+			CONFIG,
+			ROOM_SAVE,
+			ROOM
 		};
 
 		static bool filter_descriptions_only = true;
@@ -1984,7 +2018,7 @@ void Trainer_RenderUI(int columnCount)
 			ImGui::PushItemWidth(120.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 			if (ImGui::BeginCombo("Category", flagCategoryInfo[flagCategory].categoryName))
 			{
-				for (int i = 0; i < (sizeof(flagCategoryInfo) / sizeof(CategoryInfo)); i++)
+				for (size_t i = 0; i < flagCategoryInfo.size(); i++)
 				{
 					bool selected = false;
 					if (ImGui::Selectable(flagCategoryInfo[i].categoryName, &selected))
@@ -2024,18 +2058,27 @@ void Trainer_RenderUI(int columnCount)
 		}
 		ImGui::PopStyleVar();
 
-		// make search uppercase to make case insensitive search easier...
-		std::string searchTextUpper = StrToUpper(searchText);
-
-		if (curFlagCategoryIsExtra)
+		CategoryInfoIdx flagCategoryIdx = CategoryInfoIdx(flagCategory);
+		const char* helpText = nullptr;
+		if (flagCategoryIdx == CategoryInfoIdx::EXTRA)
 		{
 			if (!bio4::CardCheckDone())
-				ImGui::TextWrapped("EXTRA flags disabled: flags can only be modified after the intro/'PRESS ANY KEY' screens");
+				helpText = "EXTRA flags disabled: flags can only be modified after the intro/'PRESS ANY KEY' screens";
 			else if (FlagsExtraValue.has_value())
-				ImGui::TextWrapped("EXTRA flags changed: exit to main menu & back out to the game logo/'PRESS ANY KEY' screen for them to take effect!");
+				helpText = "EXTRA flags changed: exit to main menu & back out to the game logo/'PRESS ANY KEY' screen for them to take effect!";
 			else
-				ImGui::NewLine(); // reserve space for the text above
+				helpText = ""; // reserve space for the text above
 		}
+		else if (flagCategoryIdx == CategoryInfoIdx::ROOM_SAVE)
+			helpText = "ROOM_SAVE: state of the current room which is saved between rooms; reload area after changing to take effect.";
+		else if (flagCategoryIdx == CategoryInfoIdx::ROOM)
+			helpText = "ROOM: temporary flags set by the current room to keep track of the current state, will be reset on room load.";
+
+		if (helpText)
+			ImGui::TextWrapped(helpText);
+
+		// make search uppercase to make case insensitive search easier...
+		std::string searchTextUpper = StrToUpper(searchText);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
 		if (ImGui::BeginTable("##flags", columns, ImGuiTableFlags_ScrollY))
@@ -2062,10 +2105,11 @@ void Trainer_RenderUI(int columnCount)
 					}
 
 					// Filter flag list to only ones that we've provided descriptions for (meaning they're functional)
-					// Except for SCENARIO / ITEM_SET / KEY_LOCK / CONFIG / EXTRA flags
+					// Except for ITEM_SET / SCENARIO / KEY_LOCK / CONFIG / EXTRA / ROOM / ROOM_SAVE flags
 					// (we'll always display them since they're all useful AFAIK)
 					if (filter_descriptions_only)
-						if (flagCategory != 4 && flagCategory != 5 && flagCategory != 6 && flagCategory != 8 && flagCategory != 9)
+						if (flagCategoryIdx != CategoryInfoIdx::ITEM_SET && flagCategoryIdx != CategoryInfoIdx::SCENARIO && flagCategoryIdx != CategoryInfoIdx::KEY_LOCK &&
+							flagCategoryIdx != CategoryInfoIdx::EXTRA && flagCategoryIdx != CategoryInfoIdx::CONFIG && flagCategoryIdx != CategoryInfoIdx::ROOM && flagCategoryIdx != CategoryInfoIdx::ROOM_SAVE)
 							if (!description)
 								makeVisible = false;
 

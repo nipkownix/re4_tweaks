@@ -1344,6 +1344,21 @@ void re4t::init::Misc()
 		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
+	// Limit Matilda to three round bursts once per trigger pull
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
+		struct wep17_r2_set_LimitMatildaBurst
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (!re4t::cfg->bLimitMatildaBurst && bio4::joyFireOn())
+					regs.ef &= ~(1 << regs.zero_flag);
+				else
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<wep17_r2_set_LimitMatildaBurst>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+	}
+
 	// Allow changing games level of violence to users choice
 	{
 		// find cCard functbl (tbl.1654)
@@ -1695,5 +1710,21 @@ void re4t::init::Misc()
 				regs.eax = shop->_list_no_8;
 			}
 		}; injector::MakeInline<listRangeCheck_AllowSkipToBottomFix_LvUpMenu>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(0x14));
+	}
+
+	// HACK: Fix for Saddler item drop appearing before cutscene begins, making the item glow show up through the cutscene
+	// Item gets spawned by em31_R1_Die_Normal when r_no_2 == 4
+	// Some reason r_no_2 gets set to 4 twice, once immediately after death anim, before the cutscene starts (causing the early item spawn)
+	// And then later R332RocketShootEnd calls into cEm31::setDieCancel, which forces r_no_2 to 4 (seems to be part of the cutscene code)
+	// 
+	// We can patch out the first one by removing the r_no_2 increment call inside the r_no_2 == 3 block, which stops it from spawning early
+	// However GC (which doesn't have this issue) still seems to have the increment code, so this likely isn't fixing the root cause, but it's a workaround at least...
+	// Main issue could be the MotionMove check that r_no_2 == 3 runs before incrementing to 4 - maybe that only passed on GC once cutscene was over, but UHD passes immediately
+	// Need to check with GC debug and see if that also calls r_no_2 == 4 twice, and check what moment it actually increments it to 4...
+	// 
+	// More info at https://github.com/nipkownix/re4_tweaks/issues/331
+	{
+		auto pattern = hook::pattern("FE 86 FE 00 00 00 5B 5F 5E 5D C3 DD"); // "inc byte ptr [esi+0FEh]", 4EE833 in 1.1.0
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 6, true);
 	}
 }
