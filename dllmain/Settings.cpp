@@ -403,6 +403,8 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
 	re4t::cfg->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
 	re4t::cfg->bTrainerOpenInventoryOnItemAdd = iniReader.ReadBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+	re4t::cfg->iTrainerLastAreaJumpStage = iniReader.ReadInteger("TRAINER", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+	re4t::cfg->iTrainerLastAreaJumpRoomIdx = iniReader.ReadInteger("TRAINER", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
 
 	// ESP
 	re4t::cfg->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
@@ -594,6 +596,8 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
 		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
 		iniReader.WriteBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+		iniReader.WriteInteger("TRAINER", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+		iniReader.WriteInteger("TRAINER", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
 
 		// ESP
 		iniReader.WriteBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);

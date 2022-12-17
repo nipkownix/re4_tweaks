@@ -70,6 +70,8 @@ class UI_AreaJump : public UI_Window
 	Vec curRoomPosition = { 0 };
 	float curRoomRotation = 0;
 
+	bool roomPosRotNeedsUpdate = true;
+
 	std::string RoomDisplayString(int stage, int room);
 	void UpdateRoomInfo();
 public:

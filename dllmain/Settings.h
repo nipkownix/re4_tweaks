@@ -229,6 +229,8 @@ public:
 	bool bTrainerOverrideDynamicDifficulty = false;
 	int iTrainerDynamicDifficultyLevel = 5;
 	bool bTrainerOpenInventoryOnItemAdd = true;
+	int iTrainerLastAreaJumpStage = 1;
+	int iTrainerLastAreaJumpRoomIdx = 0;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;
