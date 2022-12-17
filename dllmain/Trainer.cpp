@@ -1388,7 +1388,6 @@ void InvItemAdder_SetPopUp(const char* popupname)
 		ImGui::PopStyleVar();
 
 		static char searchText[256] = { 0 };
-		static bool alwaysShowInventory = true;
 		static int columns = 3;
 
 		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
@@ -1637,7 +1636,9 @@ void InvItemAdder_SetPopUp(const char* popupname)
 		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 		ImGui::BeginDisabled(!showsInInventory);
-		ImGui::Checkbox("Open inventory after adding", &alwaysShowInventory);
+		if (ImGui::Checkbox("Open inventory after adding", &re4t::cfg->bTrainerOpenInventoryOnItemAdd))
+			re4t::cfg->WriteSettings(true);
+
 		if (!showsInInventory && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 			ImGui::SetTooltip("The selected item will appear on treasure/file tab instead of inventory.");
 		ImGui::EndDisabled();
@@ -1658,7 +1659,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 				wepAdded_ID = ITEM_ID(itemId);
 			}
 
-			if (alwaysShowInventory)
+			if (re4t::cfg->bTrainerOpenInventoryOnItemAdd)
 			{
 				bCfgMenuOpen = false;
 			}
@@ -1668,7 +1669,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 
 			EItemId lambda_itemId = itemId;
 			int lambda_stackCount = stackCount;
-			bool lambda_alwaysShowInventory = alwaysShowInventory;
+			bool lambda_alwaysShowInventory = re4t::cfg->bTrainerOpenInventoryOnItemAdd;
 			Game_ScheduleInMainThread([lambda_itemId, lambda_stackCount, lambda_alwaysShowInventory]()
 			{
 				// Add the new item

@@ -402,6 +402,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
 	re4t::cfg->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
 	re4t::cfg->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+	re4t::cfg->bTrainerOpenInventoryOnItemAdd = iniReader.ReadBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
 
 	// ESP
 	re4t::cfg->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
@@ -592,6 +593,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
 		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
 		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+		iniReader.WriteBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
 
 		// ESP
 		iniReader.WriteBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);

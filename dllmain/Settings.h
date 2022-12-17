@@ -228,6 +228,7 @@ public:
 	bool bTrainerShowDebugTrgHintText = true;
 	bool bTrainerOverrideDynamicDifficulty = false;
 	int iTrainerDynamicDifficultyLevel = 5;
+	bool bTrainerOpenInventoryOnItemAdd = true;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;
