@@ -63,6 +63,7 @@ public:
 
 	// MOUSE
 	bool bCameraImprovements = true;
+	bool bResetCameraAfterUsingWeapons = true;
 	bool bResetCameraAfterUsingKnife = true;
 	bool bResetCameraWhenRunning = true;
 	float fCameraSensitivity = 1.0f;

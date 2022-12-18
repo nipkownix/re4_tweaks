@@ -775,6 +775,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::BeginDisabled(!re4t::cfg->bCameraImprovements);
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ResetCameraAfterUsingWeapons", &re4t::cfg->bResetCameraAfterUsingWeapons);
+						ImGui::TextWrapped("Center the camera after using weapons.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
 						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ResetCameraAfterUsingKnife", &re4t::cfg->bResetCameraAfterUsingKnife);
 						ImGui::TextWrapped("Center the camera after using the knife.");
 

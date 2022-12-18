@@ -236,6 +236,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// MOUSE
 	re4t::cfg->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	re4t::cfg->bResetCameraAfterUsingWeapons = iniReader.ReadBoolean("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
 	re4t::cfg->bResetCameraAfterUsingKnife = iniReader.ReadBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
 	re4t::cfg->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
 	re4t::cfg->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
@@ -747,6 +748,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	iniReader.WriteBoolean("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
 	iniReader.WriteBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
 	iniReader.WriteBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
 	iniReader.WriteFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
@@ -914,6 +916,7 @@ void re4t_cfg::LogSettings()
 	// MOUSE
 	spd::log()->info("+ MOUSE--------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraImprovements", re4t::cfg->bCameraImprovements ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
