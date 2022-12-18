@@ -1738,6 +1738,25 @@ void Trainer_RenderUI(int columnCount)
 
 	ImGui::BeginChild("right side", ImVec2(0, 0));
 
+	// Make sure to keep order of this in sync with flagCategoryInfo vector below
+	enum class CategoryInfoIdx
+	{
+		DEBUG,
+		STOP,
+		STATUS,
+		SYSTEM,
+		ITEM_SET,
+		SCENARIO,
+		KEY_LOCK,
+		DISP,
+		EXTRA,
+		CONFIG,
+		ROOM_SAVE,
+		ROOM
+	};
+	static int flagCategory = 0; // Flag editor category, matches with enum above
+	static char searchText[256] = { 0 }; // Flag editor search text
+
 	if (CurTrainerTab == TrainerTab::Patches)
 	{
 		if (ImGui::BeginTable("TrainerPatches", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
@@ -1814,6 +1833,14 @@ void Trainer_RenderUI(int columnCount)
 						if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
 							bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
 					});
+				}
+
+				// Easy way to let users jump to the EXTRA flags, since it might not be obvious they need to use flag editor for these
+				if (ImGui::Button("Edit unlockables"))
+				{
+					searchText[0] = '\0';
+					flagCategory = int(CategoryInfoIdx::EXTRA);
+					CurTrainerTab = TrainerTab::FlagEdit;
 				}
 			}
 
@@ -2392,7 +2419,7 @@ void Trainer_RenderUI(int columnCount)
 			int numValues;
 		};
 
-		// Make sure to keep order of this in sync with CategoryInfoIdx enum below
+		// Make sure to keep order of this in sync with CategoryInfoIdx enum above
 		std::vector<CategoryInfo> flagCategoryInfo = {
 			{ "DEBUG", GlobalPtr()->flags_DEBUG_0_60, Flags_DEBUG_Names, &Flags_DEBUG_Descriptions, 128 },
 			{ "STOP", GlobalPtr()->flags_STOP_0_170, Flags_STOP_Names, &Flags_STOP_Descriptions, 32 },
@@ -2423,28 +2450,8 @@ void Trainer_RenderUI(int columnCount)
 			}
 		}
 
-		// Make sure to keep order of this in sync with flagCategoryInfo vector above
-		enum class CategoryInfoIdx
-		{
-			DEBUG,
-			STOP,
-			STATUS,
-			SYSTEM,
-			ITEM_SET,
-			SCENARIO,
-			KEY_LOCK,
-			DISP,
-			EXTRA,
-			CONFIG,
-			ROOM_SAVE,
-			ROOM
-		};
-
 		static bool filter_descriptions_only = true;
-
-		static char searchText[256] = { 0 };
 		static int columns = 3;
-		static int flagCategory = 0;
 		CategoryInfo* curFlagCategory = nullptr;
 		bool curFlagCategoryIsExtra = false;
 
