@@ -4,61 +4,54 @@
  */
 
 #include "input.hpp"
-#include "dllmain.h"
-#include "Patches.h"
 #include <algorithm>
 #include <unordered_map>
-#include <Windows.h>
 #include <cassert>
-#include "../external/eHooking/Hook.h"
-#include "Settings.h"
-#include <iomanip>
-#include <array>
-#include "spdlog/fmt/bin_to_hex.h"
-#include "Utils.h"
-
-std::shared_ptr<class input> pInput;
+#include <Windows.h>
+#include <log.h>
+#include <eHooking/Hook.h>
+#include <injector/include/injector/assembly.hpp>
+#include <ModUtils/Patterns.h>
 
 static std::shared_mutex s_windows_mutex;
 static std::unordered_map<HWND, unsigned int> s_raw_input_windows;
-static std::unordered_map<HWND, std::weak_ptr<input>> s_windows;
+static std::unordered_map<HWND, std::weak_ptr<re4t::input>> s_windows;
 
 static std::unordered_map<unsigned int, std::string> _keyboardStringMap;
-
 static std::unordered_map<std::string, unsigned int> _keyboardVKMap;
 static std::unordered_map<std::string, unsigned int> _keyboardDIKMap;
 
 std::vector<Hotkey> m_Hotkeys;
 
-input::input(window_handle window)
+std::shared_ptr<class re4t::input> pInput;
+
+re4t::input::input(window_handle window)
 	: _window(window)
 {
 }
 
-void input::RegisterHotkey(Hotkey hotkey)
-{ 
-	m_Hotkeys.push_back(hotkey); 
-}
-
-void input::ClearHotkeys()
-{ 
-	m_Hotkeys.clear();
-}
-
-void input::register_window_with_raw_input(window_handle window, bool no_legacy_keyboard, bool no_legacy_mouse)
+void re4t::input::register_window_with_raw_input(window_handle window, unsigned int flags)
 {
 	assert(window != nullptr);
 
 	const std::unique_lock<std::shared_mutex> lock(s_windows_mutex);
 
-	const auto flags = (no_legacy_keyboard ? 0x1u : 0u) | (no_legacy_mouse ? 0x2u : 0u);
 	const auto insert = s_raw_input_windows.emplace(static_cast<HWND>(window), flags);
 
 	if (!insert.second) insert.first->second |= flags;
 }
-std::shared_ptr<input> input::register_window(window_handle window)
+std::shared_ptr<re4t::input> re4t::input::register_window(window_handle window)
 {
 	assert(window != nullptr);
+
+	DWORD process_id = 0;
+	GetWindowThreadProcessId(static_cast<HWND>(window), &process_id);
+	if (process_id != GetCurrentProcessId())
+	{
+		spd::log()->info("{0} -> Cannot capture input for window \"{1}\" created by a different process.", __FUNCTION__, window);
+
+		return nullptr;
+	}
 
 	const std::unique_lock<std::shared_mutex> lock(s_windows_mutex);
 
@@ -66,10 +59,9 @@ std::shared_ptr<input> input::register_window(window_handle window)
 
 	if (insert.second || insert.first->second.expired())
 	{
-		spd::log()->info("{0} -> Starting input capture for window {1}", __FUNCTION__, window);
+		spd::log()->info("{0} -> Starting input capture for window {1}.", __FUNCTION__, window);
 
 		const auto instance = std::make_shared<input>(window);
-
 		insert.first->second = instance;
 
 		return instance;
@@ -80,11 +72,11 @@ std::shared_ptr<input> input::register_window(window_handle window)
 	}
 }
 
-bool input::handle_window_message(const void *message_data)
+bool re4t::input::handle_window_message(const void* message_data)
 {
 	assert(message_data != nullptr);
 
-	MSG details = *static_cast<const MSG *>(message_data);
+	MSG details = *static_cast<const MSG*>(message_data);
 
 	bool is_mouse_message = details.message >= WM_MOUSEFIRST && details.message <= WM_MOUSELAST;
 	bool is_keyboard_message = details.message >= WM_KEYFIRST && details.message <= WM_KEYLAST;
@@ -111,10 +103,10 @@ bool input::handle_window_message(const void *message_data)
 	{
 		// Walk through the window chain and until an known window is found
 		EnumChildWindows(details.hwnd, [](HWND hwnd, LPARAM lparam) -> BOOL {
-			auto &input_window = *reinterpret_cast<decltype(s_windows)::iterator *>(lparam);
+			auto& input_window = *reinterpret_cast<decltype(s_windows)::iterator*>(lparam);
 			// Return true to continue enumeration
 			return (input_window = s_windows.find(hwnd)) == s_windows.end();
-		}, reinterpret_cast<LPARAM>(&input_window));
+			}, reinterpret_cast<LPARAM>(&input_window));
 	}
 	if (input_window == s_windows.end())
 	{
@@ -123,7 +115,8 @@ bool input::handle_window_message(const void *message_data)
 			input_window = s_windows.find(parent);
 	}
 
-	if (input_window == s_windows.end() && raw_input_window != s_raw_input_windows.end())
+	if (input_window == s_windows.end() && raw_input_window != s_raw_input_windows.end() &&
+		(raw_input_window->second & (RIDEV_INPUTSINK | RIDEV_EXINPUTSINK | RIDEV_CAPTUREMOUSE)) != 0)
 	{
 		// Reroute this raw input message to the window with the most rendering
 		input_window = std::max_element(s_windows.begin(), s_windows.end(),
@@ -145,7 +138,7 @@ bool input::handle_window_message(const void *message_data)
 	ScreenToClient(static_cast<HWND>(input->_window), &details.pt);
 
 	// Prevent input threads from modifying input while it is accessed elsewhere
-	const std::unique_lock<std::shared_mutex> input_lock = input->lock();
+	const std::unique_lock<std::shared_mutex> input_lock(input->_mutex);
 
 	input->_mouse_position[0] = details.pt.x;
 	input->_mouse_position[1] = details.pt.y;
@@ -163,36 +156,29 @@ bool input::handle_window_message(const void *message_data)
 		case RIM_TYPEMOUSE:
 			is_mouse_message = true;
 
-			++input->_mouseWriteCount;
-
-			if (raw_input_window == s_raw_input_windows.end() || (raw_input_window->second & 0x2) == 0)
+			if (raw_input_window == s_raw_input_windows.end() || (raw_input_window->second & RIDEV_NOLEGACY) == 0)
 				break; // Input is already handled (since legacy mouse messages are enabled), so nothing to do here
 
-			// Update raw mouse delta values
+			// Check if the input is an absolute mouse position event
 			if (raw_data.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)
 			{
-				bool isVirtualDesktop = (raw_data.data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP) == MOUSE_VIRTUAL_DESKTOP;
-				float xChange = (raw_data.data.mouse.lLastX / 65535.0f) * GetSystemMetrics(isVirtualDesktop ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
-				float yChange = (raw_data.data.mouse.lLastY / 65535.0f) * GetSystemMetrics(isVirtualDesktop ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
+				// Update the absolute mouse position
+				input->_raw_mouse_absolutePos[0] = raw_data.data.mouse.lLastX;
+				input->_raw_mouse_absolutePos[1] = raw_data.data.mouse.lLastY;
 
-				input->_raw_mouse_delta[0] = raw_data.data.mouse.lLastX - input->position.first;
-				input->_raw_mouse_delta[1] = raw_data.data.mouse.lLastY - input->position.second;
+				// Update the delta values based on the difference between the current and previous absolute positions
+				input->_raw_mouse_delta[0] += input->_raw_mouse_absolutePos[0] - input->_raw_mouse_prevAbsolutePos[0];
+				input->_raw_mouse_delta[1] += input->_raw_mouse_absolutePos[1] - input->_raw_mouse_prevAbsolutePos[1];
 
-				input->position.first += xChange;
-				input->position.second += yChange;
+				// Update the previous absolute position
+				input->_raw_mouse_prevAbsolutePos[0] = input->_raw_mouse_absolutePos[0];
+				input->_raw_mouse_prevAbsolutePos[1] = input->_raw_mouse_absolutePos[1];
 			}
 			else
 			{
-				if ((input->_mouseWriteCount - input->_mouseReadCount) <= 1)
-				{
-					input->_raw_mouse_delta[0] = float(raw_data.data.mouse.lLastX);
-					input->_raw_mouse_delta[1] = float(raw_data.data.mouse.lLastY);
-				}
-				else
-				{
-					input->_raw_mouse_delta[0] += float(raw_data.data.mouse.lLastX);
-					input->_raw_mouse_delta[1] += float(raw_data.data.mouse.lLastY);
-				}
+				// Update the delta values
+				input->_raw_mouse_delta[0] += raw_data.data.mouse.lLastX;
+				input->_raw_mouse_delta[1] += raw_data.data.mouse.lLastY;
 			}
 
 			if (raw_data.data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
@@ -303,20 +289,19 @@ bool input::handle_window_message(const void *message_data)
 	return (is_mouse_message && input->_block_mouse) || (is_keyboard_message && input->_block_keyboard);
 }
 
-bool input::is_key_down(unsigned int keycode) const
+bool re4t::input::is_key_down(unsigned int keycode) const
 {
 	assert(keycode < ARRAYSIZE(_keys));
 	return keycode < ARRAYSIZE(_keys) && (_keys[keycode] & 0x80) == 0x80;
 }
 
-bool input::is_key_pressed(unsigned int keycode) const
+bool re4t::input::is_key_pressed(unsigned int keycode) const
 {
 	assert(keycode < ARRAYSIZE(_keys));
-
 	return keycode > 0 && keycode < ARRAYSIZE(_keys) && (_keys[keycode] & 0x88) == 0x88;
 }
 
-bool input::is_key_pressed(unsigned int keycode, bool ctrl, bool shift, bool alt, bool force_modifiers) const
+bool re4t::input::is_key_pressed(unsigned int keycode, bool ctrl, bool shift, bool alt, bool force_modifiers) const
 {
 	if (keycode == 0)
 		return false;
@@ -328,14 +313,14 @@ bool input::is_key_pressed(unsigned int keycode, bool ctrl, bool shift, bool alt
 		return key_down && (!ctrl || ctrl_down) && (!shift || shift_down) && (!alt || alt_down);
 }
 
-bool input::is_key_released(unsigned int keycode) const
+bool re4t::input::is_key_released(unsigned int keycode) const
 {
 	assert(keycode < ARRAYSIZE(_keys));
 	return keycode > 0 && keycode < ARRAYSIZE(_keys) && (_keys[keycode] & 0x88) == 0x08;
 }
 
-bool bStateChanged;
-bool input::is_combo_pressed(std::vector<uint32_t>* KeyVector) const
+bool bStateChanged = false;
+bool re4t::input::is_combo_pressed(std::vector<uint32_t>* KeyVector) const
 {
 	if (KeyVector->size() < 1)
 		return false;
@@ -359,7 +344,7 @@ bool input::is_combo_pressed(std::vector<uint32_t>* KeyVector) const
 	return isComboPressed;
 }
 
-bool input::is_combo_down(std::vector<uint32_t>* KeyVector) const
+bool re4t::input::is_combo_down(std::vector<uint32_t>* KeyVector) const
 {
 	if (KeyVector->size() < 1)
 		return false;
@@ -377,7 +362,7 @@ bool input::is_combo_down(std::vector<uint32_t>* KeyVector) const
 	return isComboDown;
 }
 
-bool input::is_any_key_down() const
+bool re4t::input::is_any_key_down() const
 {
 	// Skip mouse buttons
 	for (unsigned int i = VK_XBUTTON2 + 1; i < ARRAYSIZE(_keys); i++)
@@ -385,23 +370,23 @@ bool input::is_any_key_down() const
 			return true;
 	return false;
 }
-bool input::is_any_key_pressed() const
+bool re4t::input::is_any_key_pressed() const
 {
 	return last_key_pressed() != 0;
 }
-bool input::is_any_key_released() const
+bool re4t::input::is_any_key_released() const
 {
 	return last_key_released() != 0;
 }
 
-unsigned int input::last_key_pressed() const
+unsigned int re4t::input::last_key_pressed() const
 {
 	for (unsigned int i = VK_XBUTTON2 + 1; i < ARRAYSIZE(_keys); i++)
 		if (is_key_pressed(i))
 			return i;
 	return 0;
 }
-unsigned int input::last_key_released() const
+unsigned int re4t::input::last_key_released() const
 {
 	for (unsigned int i = VK_XBUTTON2 + 1; i < ARRAYSIZE(_keys); i++)
 		if (is_key_released(i))
@@ -409,37 +394,37 @@ unsigned int input::last_key_released() const
 	return 0;
 }
 
-bool input::is_mouse_button_down(unsigned int button) const
+bool re4t::input::is_mouse_button_down(unsigned int button) const
 {
 	assert(button < 5);
 	return is_key_down(VK_LBUTTON + button + (button < 2 ? 0 : 1)); // VK_CANCEL is being ignored by runtime
 }
-bool input::is_mouse_button_pressed(unsigned int button) const
+bool re4t::input::is_mouse_button_pressed(unsigned int button) const
 {
 	assert(button < 5);
 	return is_key_pressed(VK_LBUTTON + button + (button < 2 ? 0 : 1)); // VK_CANCEL is being ignored by runtime
 }
-bool input::is_mouse_button_released(unsigned int button) const
+bool re4t::input::is_mouse_button_released(unsigned int button) const
 {
 	assert(button < 5);
 	return is_key_released(VK_LBUTTON + button + (button < 2 ? 0 : 1)); // VK_CANCEL is being ignored by runtime
 }
 
-bool input::is_any_mouse_button_down() const
+bool re4t::input::is_any_mouse_button_down() const
 {
 	for (unsigned int i = 0; i < 5; i++)
 		if (is_mouse_button_down(i))
 			return true;
 	return false;
 }
-bool input::is_any_mouse_button_pressed() const
+bool re4t::input::is_any_mouse_button_pressed() const
 {
 	for (unsigned int i = 0; i < 5; i++)
 		if (is_mouse_button_pressed(i))
 			return true;
 	return false;
 }
-bool input::is_any_mouse_button_released() const
+bool re4t::input::is_any_mouse_button_released() const
 {
 	for (unsigned int i = 0; i < 5; i++)
 		if (is_mouse_button_released(i))
@@ -447,162 +432,28 @@ bool input::is_any_mouse_button_released() const
 	return false;
 }
 
-std::string input::KeyMap_getSTR(int keyINT)
+void re4t::input::max_mouse_position(unsigned int position[2]) const
 {
-	assert(!_keyboardStringMap.empty());
-
-	if (!_keyboardStringMap.count(keyINT))
-		return std::string();
-
-	return _keyboardStringMap[keyINT];
+	RECT rect = {};
+	GetClientRect(static_cast<HWND>(_window), &rect);
+	position[0] = rect.right;
+	position[1] = rect.bottom;
 }
 
-int input::KeyMap_getVK(std::string keySTR)
+void re4t::input::next_frame()
 {
-	assert(!_keyboardVKMap.empty());
+	_frame_count++;
 
-	if (!_keyboardVKMap.count(keySTR))
-		return 0;
-
-	return _keyboardVKMap[keySTR];
-}
-
-int input::KeyMap_getDIK(std::string keySTR)
-{
-	assert(!_keyboardDIKMap.empty());
-
-	if (!_keyboardDIKMap.count(keySTR))
-		return 0;
-
-	return _keyboardDIKMap[keySTR];
-}
-
-void ClearKeyboardBuffer(int key_code, BYTE* keyboard_state)
-{
-	unsigned int scan_code = MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
-
-	wchar_t chars[5];
-	int code = 0;
-	do {
-		code = ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
-	} while (code < 0);
-}
-
-std::string get_str_from_VK(int key_code) {
-
-	unsigned int scan_code = MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
-
-	uint8_t keyStates[256];
-	memset(keyStates, 1, 256); // all pressed
-
-	wchar_t chars[5];
-	int code = ToUnicode(key_code, scan_code, keyStates, chars, 4, 0);
-
-	if (code == -1) {
-		// dead key
-		if (chars[0] == 0 || iswcntrl(chars[0])) {
-			return std::string();
-		}
-		code = 1;
-	}
-
-	// Avoid stuff like ´´ or ~~
-	ClearKeyboardBuffer(key_code, keyStates);
-
-	if (code <= 0 || (code == 1 && iswcntrl(chars[0]))) {
-		return std::string();
-	}
-
-	return WstrToStr(chars);
-}
-
-void input::set_hotkey(std::string* cfgHotkey, bool supportsCombo)
-{
-	int HotkeyVK1 = 0;
-	int HotkeyVK2 = 0;
-
-	std::string OrigHotkeyCombo = *cfgHotkey;
-	std::string FinalHotkeyCombo;
-
-	// Hacky way to change ImGui's current button label
-	*cfgHotkey = "Press any key...";
-
-	bool waitingforkey = true;
-
-	while (waitingforkey) {
-		for (unsigned int Key1 = 0; Key1 < ARRAYSIZE(_keys); Key1++)
-		{
-			while (pInput->is_key_down(Key1)) {
-				HotkeyVK1 = Key1;
-
-				if (supportsCombo)
-				{
-					for (unsigned int Key2 = 0; Key2 < ARRAYSIZE(_keys); Key2++)
-					{
-						if (pInput->is_key_down(Key2) && (Key2 != Key1))
-						{
-							HotkeyVK2 = Key2;
-						}
-					}
-				}
-				waitingforkey = false;
-			}
-		}
-	}
-
-	// Clear the second hotkey if they're the same.
-	// I've had that happen before due to deadkey weirdness.
-	if (HotkeyVK1 == HotkeyVK2)
-		HotkeyVK2 = 0;
-
-	#ifdef VERBOSE
-	con.AddConcatLog("HotkeyVK1 = ", HotkeyVK1);
-	con.AddConcatLog("HotkeyVK2 = ", HotkeyVK2);
-	#endif
-
-	// Check if our KeyMap function is able to identify the key names, restore the original combo if not.
-	// As of now, there's no popup informing the user that the key is unsupported. TODO: Add popup?
-	if (HotkeyVK2 > 0)
-	{
-		if (KeyMap_getSTR(HotkeyVK1).empty() || KeyMap_getSTR(HotkeyVK2).empty())
-		{
-			*cfgHotkey = OrigHotkeyCombo;
-			return;
-		}
-		else
-			FinalHotkeyCombo = KeyMap_getSTR(HotkeyVK1) + "+" + KeyMap_getSTR(HotkeyVK2);
-	}
-	else
-	{
-		if (KeyMap_getSTR(HotkeyVK1).empty())
-		{
-			*cfgHotkey = OrigHotkeyCombo;
-			return;
-		}
-		else
-			FinalHotkeyCombo = KeyMap_getSTR(HotkeyVK1);
-	}
-
-	#ifdef VERBOSE
-	con.AddConcatLog("FinalHotkeyCombo = ", FinalHotkeyCombo.c_str());
-	#endif
-
-	*cfgHotkey = FinalHotkeyCombo;
-}
-
-void input::next_frame()
-{
 	// Check hotkey status
 	for (const Hotkey& hotkey : m_Hotkeys) {
 		if (is_combo_pressed(hotkey.keyComboVector))
 		{
-			hotkey.func();
+			if (!bWaitingForHotkey)
+				hotkey.func();
 		}
 	}
 
-	_frame_count++;
-
-	for (auto &state : _keys)
+	for (auto& state : _keys)
 		state &= ~0x08;
 
 	// Reset any pressed down key states (apart from mouse buttons) that have not been updated for more than 5 seconds
@@ -618,12 +469,10 @@ void input::next_frame()
 
 	_text_input.clear();
 	_mouse_wheel_delta = 0;
-	_raw_mouse_delta[0] = 0;
-	_raw_mouse_delta[1] = 0;
 	_last_mouse_position[0] = _mouse_position[0];
 	_last_mouse_position[1] = _mouse_position[1];
-	_last_raw_mouse_delta[0] = _raw_mouse_delta[0];
-	_last_raw_mouse_delta[1] = _raw_mouse_delta[1];
+	//_raw_mouse_delta[0] = 0;
+	//_raw_mouse_delta[1] = 0;
 
 	// Update caps lock state
 	_keys[VK_CAPITAL] |= GetKeyState(VK_CAPITAL) & 0x1;
@@ -640,27 +489,120 @@ void input::next_frame()
 		(_keys_time[VK_SNAPSHOT] = time);
 }
 
-static inline bool is_blocking_mouse_input()
+std::string re4t::input::key_name_from_vk(unsigned int keycode)
+{
+	assert(!_keyboardStringMap.empty());
+
+	if (!_keyboardStringMap.count(keycode))
+		return std::string();
+
+	return _keyboardStringMap[keycode];
+}
+
+unsigned int re4t::input::vk_from_key_name(std::string key_name)
+{
+	assert(!_keyboardVKMap.empty());
+
+	if (!_keyboardVKMap.count(key_name))
+		return 0;
+
+	return _keyboardVKMap[key_name];
+}
+
+unsigned int re4t::input::dik_from_key_name(std::string key_name)
+{
+	assert(!_keyboardDIKMap.empty());
+
+	if (!_keyboardDIKMap.count(key_name))
+		return 0;
+
+	return _keyboardDIKMap[key_name];
+}
+
+void re4t::input::block_mouse_input(bool enable, bool releaseClipCursor)
+{
+	_block_mouse = enable;
+
+	// Some games setup ClipCursor with a tiny area which could make the cursor stay in that area instead of the whole window
+	if (enable && releaseClipCursor)
+		ClipCursor(nullptr);
+}
+void re4t::input::block_keyboard_input(bool enable)
+{
+	_block_keyboard = enable;
+}
+
+bool is_blocking_mouse_input()
 {
 	const std::shared_lock<std::shared_mutex> lock(s_windows_mutex);
 
-	const auto predicate = [](const auto &input_window) {
+	const auto predicate = [](const auto& input_window) {
 		return !input_window.second.expired() && input_window.second.lock()->is_blocking_mouse_input();
 	};
 	return std::any_of(s_windows.cbegin(), s_windows.cend(), predicate);
 }
-static inline bool is_blocking_keyboard_input()
+bool is_blocking_keyboard_input()
 {
 	const std::shared_lock<std::shared_mutex> lock(s_windows_mutex);
 
-	const auto predicate = [](const auto &input_window) {
+	const auto predicate = [](const auto& input_window) {
 		return !input_window.second.expired() && input_window.second.lock()->is_blocking_keyboard_input();
 	};
 	return std::any_of(s_windows.cbegin(), s_windows.cend(), predicate);
 }
 
+void re4t::input::register_hotkey(Hotkey hotkey)
+{
+	m_Hotkeys.push_back(hotkey);
+}
+
+void re4t::input::clear_hotkeys()
+{
+	m_Hotkeys.clear();
+}
+
+void ClearKeyboardBuffer(int keycode, BYTE* keyboard_state)
+{
+	unsigned int scan_code = MapVirtualKeyW(keycode, MAPVK_VK_TO_VSC);
+
+	wchar_t chars[5];
+	int code = 0;
+	do {
+		code = ToUnicode(keycode, scan_code, keyboard_state, chars, 4, 0);
+	} while (code < 0);
+}
+
+std::string GetStrFromVK(int keycode) 
+{
+	unsigned int scan_code = MapVirtualKeyW(keycode, MAPVK_VK_TO_VSC);
+
+	uint8_t keyStates[256];
+	memset(keyStates, 1, 256); // all pressed
+
+	wchar_t chars[5];
+	int code = ToUnicode(keycode, scan_code, keyStates, chars, 4, 0);
+
+	if (code == -1) {
+		// dead key
+		if (chars[0] == 0 || iswcntrl(chars[0])) {
+			return std::string();
+		}
+		code = 1;
+	}
+
+	// Avoid stuff like ´´ or ~~
+	ClearKeyboardBuffer(keycode, keyStates);
+
+	if (code <= 0 || (code == 1 && iswcntrl(chars[0]))) {
+		return std::string();
+	}
+
+	return WstrToStr(chars);
+}
+
+// Windows API hooks
 BOOL(WINAPI* GetMessageA_orig)(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax);
-BOOL WINAPI HookGetMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax)
+BOOL WINAPI GetMessageA_hook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax)
 {
 #if 1
 	// Implement 'GetMessage' with a timeout (see also DLL_PROCESS_DETACH in dllmain.cpp for more explanation)
@@ -676,7 +618,7 @@ BOOL WINAPI HookGetMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 
 	assert(lpMsg != nullptr);
 
-	if (lpMsg->hwnd != nullptr && input::handle_window_message(lpMsg))
+	if (lpMsg->hwnd != nullptr && re4t::input::handle_window_message(lpMsg))
 	{
 		// We still want 'WM_CHAR' messages, so translate message
 		TranslateMessage(lpMsg);
@@ -689,20 +631,8 @@ BOOL WINAPI HookGetMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 	return lpMsg->message != WM_QUIT;
 }
 
-FARPROC p_GetMessageA = nullptr;
-void InstallGetMessageA_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking GetMessageA...");
-		
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_GetMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageA"), "GetMessageA", HookGetMessageA));
-
-	GetMessageA_orig = (decltype(GetMessageA_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetMessageA, nullptr, nullptr);
-}
-
 BOOL(WINAPI* GetMessageW_orig)(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax);
-BOOL WINAPI HookGetMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax)
+BOOL WINAPI GetMessageW_hook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax)
 {
 #if 1
 	while (!PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, PM_REMOVE) && g_module_handle != nullptr)
@@ -717,7 +647,7 @@ BOOL WINAPI HookGetMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 
 	assert(lpMsg != nullptr);
 
-	if (lpMsg->hwnd != nullptr && input::handle_window_message(lpMsg))
+	if (lpMsg->hwnd != nullptr && re4t::input::handle_window_message(lpMsg))
 	{
 		// We still want 'WM_CHAR' messages, so translate message
 		TranslateMessage(lpMsg);
@@ -730,27 +660,15 @@ BOOL WINAPI HookGetMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMs
 	return lpMsg->message != WM_QUIT;
 }
 
-FARPROC p_GetMessageW = nullptr;
-void InstallGetMessageW_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking GetMessageW...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_GetMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageW"), "GetMessageW", HookGetMessageW));
-
-	GetMessageW_orig = (decltype(GetMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetMessageW, nullptr, nullptr);
-}
-
 BOOL(WINAPI* PeekMessageA_orig)(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
-BOOL WINAPI HookPeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
+BOOL WINAPI PeekMessageA_hook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
 {
 	if (!PeekMessageA_orig(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg))
 		return FALSE;
 
 	assert(lpMsg != nullptr);
 
-	if (lpMsg->hwnd != nullptr && (wRemoveMsg & PM_REMOVE) != 0 && input::handle_window_message(lpMsg))
+	if (lpMsg->hwnd != nullptr && (wRemoveMsg & PM_REMOVE) != 0 && re4t::input::handle_window_message(lpMsg))
 	{
 		// We still want 'WM_CHAR' messages, so translate message
 		TranslateMessage(lpMsg);
@@ -762,27 +680,15 @@ BOOL WINAPI HookPeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 	return TRUE;
 }
 
-FARPROC p_PeekMessageA = nullptr;
-void InstallPeekMessageA_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking PeekMessageA...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_PeekMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageA"), "PeekMessageA", HookPeekMessageA));
-
-	PeekMessageA_orig = (decltype(PeekMessageA_orig))InterlockedCompareExchangePointer((PVOID*)&p_PeekMessageA, nullptr, nullptr);
-}
-
 BOOL(WINAPI* PeekMessageW_orig)(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
-BOOL WINAPI HookPeekMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
+BOOL WINAPI PeekMessageW_hook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
 {
 	if (!PeekMessageW_orig(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg))
 		return FALSE;
 
 	assert(lpMsg != nullptr);
 
-	if (lpMsg->hwnd != nullptr && (wRemoveMsg & PM_REMOVE) != 0 && input::handle_window_message(lpMsg))
+	if (lpMsg->hwnd != nullptr && (wRemoveMsg & PM_REMOVE) != 0 && re4t::input::handle_window_message(lpMsg))
 	{
 		// We still want 'WM_CHAR' messages, so translate message
 		TranslateMessage(lpMsg);
@@ -794,20 +700,8 @@ BOOL WINAPI HookPeekMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wM
 	return TRUE;
 }
 
-FARPROC p_PeekMessageW = nullptr;
-void InstallPeekMessageW_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking PeekMessageW...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_PeekMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageW"), "PeekMessageW", HookPeekMessageW));
-
-	PeekMessageW_orig = (decltype(PeekMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_PeekMessageW, nullptr, nullptr);
-}
-
 BOOL(WINAPI* PostMessageA_orig)(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-BOOL WINAPI HookPostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI PostMessageA_hook(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	// Do not allow mouse movement simulation while we block input
 	if (is_blocking_mouse_input() && Msg == WM_MOUSEMOVE)
@@ -816,20 +710,8 @@ BOOL WINAPI HookPostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 	return PostMessageA_orig(hWnd, Msg, wParam, lParam);
 }
 
-FARPROC p_PostMessageA = nullptr;
-void InstallPostMessageA_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking PostMessageA...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_PostMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageA"), "PostMessageA", HookPostMessageA));
-
-	PostMessageA_orig = (decltype(PostMessageA_orig))InterlockedCompareExchangePointer((PVOID*)&p_PostMessageA, nullptr, nullptr);
-}
-
 BOOL(WINAPI* PostMessageW_orig)(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-BOOL WINAPI HookPostMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI PostMessageW_hook(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	if (is_blocking_mouse_input() && Msg == WM_MOUSEMOVE)
 		return TRUE;
@@ -837,20 +719,8 @@ BOOL WINAPI HookPostMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 	return PostMessageW_orig(hWnd, Msg, wParam, lParam);
 }
 
-FARPROC p_PostMessageW = nullptr;
-void InstallPostMessageW_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking PostMessageW...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_PostMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageW"), "PostMessageW", HookPostMessageW));
-
-	PostMessageW_orig = (decltype(PostMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_PostMessageW, nullptr, nullptr);
-}
-
 BOOL(WINAPI* RegisterRawInputDevices_orig)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
-BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
+BOOL WINAPI RegisterRawInputDevices_hook(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
 	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("{0} -> Redirecting RegisterRawInputDevices (pRawInputDevices = {1}, uiNumDevices = {2}, cbSize = {3})", __FUNCTION__, IntToHexStr(pRawInputDevices), uiNumDevices, cbSize);
@@ -875,7 +745,7 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 		if (device.usUsagePage != 1 || device.hwndTarget == nullptr)
 			continue;
 
-		input::register_window_with_raw_input(device.hwndTarget, device.usUsage == 0x06 && (device.dwFlags & RIDEV_NOLEGACY) != 0, device.usUsage == 0x02 && (device.dwFlags & RIDEV_NOLEGACY) != 0);
+		re4t::input::register_window_with_raw_input(device.hwndTarget, device.dwFlags);
 	}
 
 	if (!RegisterRawInputDevices_orig(pRawInputDevices, uiNumDevices, cbSize))
@@ -887,20 +757,8 @@ BOOL WINAPI HookRegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT 
 	return TRUE;
 }
 
-FARPROC p_RegisterRawInputDevices = nullptr;
-void InstallRegisterRawInputDevices_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking RegisterRawInputDevices...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_RegisterRawInputDevices, Hook::HotPatch(Hook::GetProcAddress(h_user32, "RegisterRawInputDevices"), "RegisterRawInputDevices", HookRegisterRawInputDevices));
-
-	RegisterRawInputDevices_orig = (decltype(RegisterRawInputDevices_orig))InterlockedCompareExchangePointer((PVOID*)&p_RegisterRawInputDevices, nullptr, nullptr);
-}
-
 BOOL(WINAPI* ClipCursor_orig)(const RECT* lpRect);
-BOOL WINAPI HookClipCursor(const RECT *lpRect)
+BOOL WINAPI ClipCursor_hook(const RECT *lpRect)
 {
 	if (is_blocking_mouse_input())
 		// Some applications clip the mouse cursor, so disable that while we want full control over mouse input
@@ -909,22 +767,9 @@ BOOL WINAPI HookClipCursor(const RECT *lpRect)
 	return ClipCursor_orig(lpRect);
 }
 
-FARPROC p_ClipCursor = nullptr;
-void InstallClipCursor_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking ClipCursor...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_ClipCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "ClipCursor"), "ClipCursor", HookClipCursor));
-
-	ClipCursor_orig = (decltype(ClipCursor_orig))InterlockedCompareExchangePointer((PVOID*)&p_ClipCursor, nullptr, nullptr);
-}
-
 static POINT s_last_cursor_position = {};
-
 BOOL(WINAPI* SetCursorPos_orig)(int X, int Y);
-BOOL WINAPI HookSetCursorPos(int X, int Y)
+BOOL WINAPI SetCursorPos_hook(int X, int Y)
 {
 	s_last_cursor_position.x = X;
 	s_last_cursor_position.y = Y;
@@ -935,20 +780,8 @@ BOOL WINAPI HookSetCursorPos(int X, int Y)
 	return SetCursorPos_orig(X, Y);
 }
 
-FARPROC p_SetCursorPos = nullptr;
-void InstallSetCursorPos_Hook()
-{
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking SetCursorPos...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_SetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "SetCursorPos"), "SetCursorPos", HookSetCursorPos));
-
-	SetCursorPos_orig = (decltype(SetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_SetCursorPos, nullptr, nullptr);
-}
-
 BOOL(WINAPI* GetCursorPos_orig)(LPPOINT lpPoint);
-BOOL WINAPI HookGetCursorPos(LPPOINT lpPoint)
+BOOL WINAPI GetCursorPos_hook(LPPOINT lpPoint)
 {
 	if (is_blocking_mouse_input())
 	{
@@ -959,148 +792,263 @@ BOOL WINAPI HookGetCursorPos(LPPOINT lpPoint)
 
 		return TRUE;
 	}
+
 	return GetCursorPos_orig(lpPoint);
 }
 
+FARPROC p_GetMessageA = nullptr;
+FARPROC p_GetMessageW = nullptr;
+FARPROC p_PeekMessageA = nullptr;
+FARPROC p_PeekMessageW = nullptr;
+FARPROC p_PostMessageA = nullptr;
+FARPROC p_PostMessageW = nullptr;
+FARPROC p_RegisterRawInputDevices = nullptr;
+FARPROC p_ClipCursor = nullptr;
+FARPROC p_SetCursorPos = nullptr;
 FARPROC p_GetCursorPos = nullptr;
-void InstallGetCursorPos_Hook()
+void re4t::input::init()
 {
-	if (re4t::cfg->bVerboseLog)
-		spd::log()->info("Hooking GetCursorPos...");
-
-	HMODULE h_user32 = GetModuleHandle(L"user32.dll");
-	InterlockedExchangePointer((PVOID*)&p_GetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetCursorPos"), "GetCursorPos", HookGetCursorPos));
-
-	GetCursorPos_orig = (decltype(GetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetCursorPos, nullptr, nullptr);
-}
-
-void input::PopulateKeymap()
-{
-	// Populate string map
-
-	spd::log()->info("Populating keymap");
-
-	std::string keystring;
-	for (int i = 0; i < 256; ++i)
+	// Reset raw mouse delta for the next frame. We orignally did this in pInput->next_frame() (inside a EndScene() hook), but the values would
+	// get messed up due to some form of V-Sync (tested on AMD, not sure on Nvidia/Intel). We now do it inside the game's main loop, after 
+	// everything has been rendered. This is currently replacing a call to "systemVSyncPost", but that is a nullsub in RE4 UHD. If we 
+	// ever restore that for some reason, we should move this somewhere else.
 	{
-		keystring = get_str_from_VK(i);
-
-		_keyboardStringMap.insert(_keyboardStringMap.end(), std::pair<unsigned int, std::string>(i, keystring));
-		keystring = "";
+		auto pattern = hook::pattern("E8 ? ? ? ? 6A ? 68 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 84 C0 74 ? DD 05");
+		struct MainLoop_InputNext_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Reset raw mouse delta
+				pInput->clear_mouse_delta();
+			}
+		}; injector::MakeInline<MainLoop_InputNext_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
 
-	_keyboardStringMap[0x1B] = "ESCAPE";
-	_keyboardStringMap[0x70] = "F1";
-	_keyboardStringMap[0x71] = "F2";
-	_keyboardStringMap[0x72] = "F3";
-	_keyboardStringMap[0x73] = "F4";
-	_keyboardStringMap[0x74] = "F5";
-	_keyboardStringMap[0x75] = "F6";
-	_keyboardStringMap[0x76] = "F7";
-	_keyboardStringMap[0x77] = "F8";
-	_keyboardStringMap[0x78] = "F9";
-	_keyboardStringMap[0x79] = "F10";
-	_keyboardStringMap[0x7A] = "F11";
-	_keyboardStringMap[0x7B] = "F12";
-	_keyboardStringMap[0x7C] = "F13";
-	_keyboardStringMap[0x7D] = "F14";
-	_keyboardStringMap[0x7E] = "F15";
-	_keyboardStringMap[0x08] = "BACKSPACE";
-	_keyboardStringMap[0x20] = "SPACE";
-	_keyboardStringMap[0x2D] = "INSERT";
-	_keyboardStringMap[0x23] = "END";
-	_keyboardStringMap[0x24] = "HOME";
-	_keyboardStringMap[0x22] = "PAGEDOWN";
-	_keyboardStringMap[0x21] = "PAGEUP";
-	_keyboardStringMap[0x2E] = "DELETE";
-	_keyboardStringMap[0x0D] = "ENTER";
-	_keyboardStringMap[0x09] = "TAB";
-	_keyboardStringMap[0x14] = "CAPSLOCK";
-	_keyboardStringMap[0x5D] = "APPS";
-	_keyboardStringMap[0x15] = "KANA";
-	_keyboardStringMap[0x19] = "KANJI";
-	_keyboardStringMap[0x1C] = "CONVERT";
-	_keyboardStringMap[0x1D] = "NONCONVERT";
-	_keyboardStringMap[0x2C] = "PRINTSCR";
-	_keyboardStringMap[0x91] = "SCROLL";
-	_keyboardStringMap[0x13] = "PAUSE";
-
-	// Numpad
-	_keyboardStringMap[0x90] = "NUMLOCK";
-	_keyboardStringMap[0x6F] = "NUMPAD_/";
-	_keyboardStringMap[0x6C] = "NUMPAD_ENTER";
-	_keyboardStringMap[0x6A] = "NUMPAD_*";
-	_keyboardStringMap[0x6D] = "NUMPAD_-";
-	_keyboardStringMap[0x6B] = "NUMPAD_+";
-	_keyboardStringMap[0x6E] = "NUMPAD_.";
-	_keyboardStringMap[0x60] = "NUMPAD_0";
-	_keyboardStringMap[0x61] = "NUMPAD_1";
-	_keyboardStringMap[0x62] = "NUMPAD_2";
-	_keyboardStringMap[0x63] = "NUMPAD_3";
-	_keyboardStringMap[0x64] = "NUMPAD_4";
-	_keyboardStringMap[0x65] = "NUMPAD_5";
-	_keyboardStringMap[0x66] = "NUMPAD_6";
-	_keyboardStringMap[0x67] = "NUMPAD_7";
-	_keyboardStringMap[0x68] = "NUMPAD_8";
-	_keyboardStringMap[0x68] = "NUMPAD_9";
-
-	// Arrow keys
-	_keyboardStringMap[0x26] = "UP";
-	_keyboardStringMap[0x28] = "DOWN";
-	_keyboardStringMap[0x25] = "LEFT";
-	_keyboardStringMap[0x27] = "RIGHT";
-
-	// Shift
-	_keyboardStringMap[0x10] = "SHIFT";
-	_keyboardStringMap[0xA0] = "LSHIFT";
-	_keyboardStringMap[0xA1] = "RSHIFT";
-
-	// Control
-	_keyboardStringMap[0x11] = "CTRL";
-	_keyboardStringMap[0xA2] = "LCTRL";
-	_keyboardStringMap[0xA3] = "RCTRL";
-
-	// Alt
-	_keyboardStringMap[0x12] = "ALT";
-	_keyboardStringMap[0xA4] = "LALT";
-	_keyboardStringMap[0xA5] = "RALT";
-
-	// Winkey
-	_keyboardStringMap[0x5B] = "LWIN";
-	_keyboardStringMap[0x5C] = "RWIN";
-
-	// Mouse
-	_keyboardStringMap[VK_LBUTTON] = "LMOUSE";
-	_keyboardStringMap[VK_RBUTTON] = "RMOUSE";
-	_keyboardStringMap[VK_MBUTTON] = "MMOUSE";
-	_keyboardStringMap[VK_XBUTTON1] = "MOUSE4";
-	_keyboardStringMap[VK_XBUTTON2] = "MOUSE5";
-
-	// Copy string map to vk map, inverting the items, so we can get VK from str
-	for (std::unordered_map<unsigned int, std::string>::iterator i = _keyboardStringMap.begin(); i != _keyboardStringMap.end(); ++i)
-		_keyboardVKMap[i->second] = i->first;
-
-	// Populate DIK map, so we can get DIK from str
-	for (int i = 0; i < 256; ++i)
+	// Hook Windows functions to intercept/manipulate input
 	{
-		unsigned int DIK = MapVirtualKeyEx(i, /*MAPVK_VK_TO_VSC*/0, GetKeyboardLayout(0)) & 0xFF;
+		spd::log()->info("Hooking input-related APIs...");
 
-		_keyboardDIKMap.insert(_keyboardDIKMap.end(), std::pair<std::string, unsigned int>(_keyboardStringMap[i], DIK));
+		// GetMessageA
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking GetMessageA...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_GetMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageA"), "GetMessageA", GetMessageA_hook));
+
+			GetMessageA_orig = (decltype(GetMessageA_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetMessageA, nullptr, nullptr);
+		}
+
+		// GetMessageW
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking GetMessageW...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_GetMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetMessageW"), "GetMessageW", GetMessageW_hook));
+
+			GetMessageW_orig = (decltype(GetMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetMessageW, nullptr, nullptr);
+		}
+
+		// PeekMessageA
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking PeekMessageA...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_PeekMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageA"), "PeekMessageA", PeekMessageA_hook));
+
+			PeekMessageA_orig = (decltype(PeekMessageA_orig))InterlockedCompareExchangePointer((PVOID*)&p_PeekMessageA, nullptr, nullptr);
+		}
+
+		// PeekMessageW
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking PeekMessageW...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_PeekMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PeekMessageW"), "PeekMessageW", PeekMessageW_hook));
+
+			PeekMessageW_orig = (decltype(PeekMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_PeekMessageW, nullptr, nullptr);
+		}
+
+		// PostMessageA
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking PostMessageA...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_PostMessageA, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageA"), "PostMessageA", PostMessageA_hook));
+
+			PostMessageA_orig = (decltype(PostMessageA_orig))InterlockedCompareExchangePointer((PVOID*)&p_PostMessageA, nullptr, nullptr);
+		}
+
+		// PostMessageW
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking PostMessageW...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_PostMessageW, Hook::HotPatch(Hook::GetProcAddress(h_user32, "PostMessageW"), "PostMessageW", PostMessageW_hook));
+
+			PostMessageW_orig = (decltype(PostMessageW_orig))InterlockedCompareExchangePointer((PVOID*)&p_PostMessageW, nullptr, nullptr);
+		}
+		
+		// RegisterRawInputDevices
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking RegisterRawInputDevices...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_RegisterRawInputDevices, Hook::HotPatch(Hook::GetProcAddress(h_user32, "RegisterRawInputDevices"), "RegisterRawInputDevices", RegisterRawInputDevices_hook));
+
+			RegisterRawInputDevices_orig = (decltype(RegisterRawInputDevices_orig))InterlockedCompareExchangePointer((PVOID*)&p_RegisterRawInputDevices, nullptr, nullptr);
+		}
+		
+		// ClipCursor
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking ClipCursor...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_ClipCursor, Hook::HotPatch(Hook::GetProcAddress(h_user32, "ClipCursor"), "ClipCursor", ClipCursor_hook));
+
+			ClipCursor_orig = (decltype(ClipCursor_orig))InterlockedCompareExchangePointer((PVOID*)&p_ClipCursor, nullptr, nullptr);
+		}
+		
+		// SetCursorPos
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking SetCursorPos...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_SetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "SetCursorPos"), "SetCursorPos", SetCursorPos_hook));
+
+			SetCursorPos_orig = (decltype(SetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_SetCursorPos, nullptr, nullptr);
+		}
+		
+		// GetCursorPos
+		{
+			if (re4t::cfg->bVerboseLog)
+				spd::log()->info("Hooking GetCursorPos...");
+
+			HMODULE h_user32 = GetModuleHandle(L"user32.dll");
+			InterlockedExchangePointer((PVOID*)&p_GetCursorPos, Hook::HotPatch(Hook::GetProcAddress(h_user32, "GetCursorPos"), "GetCursorPos", GetCursorPos_hook));
+
+			GetCursorPos_orig = (decltype(GetCursorPos_orig))InterlockedCompareExchangePointer((PVOID*)&p_GetCursorPos, nullptr, nullptr);
+		}
 	}
-}
 
-void input::InstallHooks()
-{
-	spd::log()->info("Hooking input-related APIs...");
-
-	InstallGetMessageA_Hook();
-	InstallGetMessageW_Hook();
-	InstallPeekMessageA_Hook();
-	InstallPeekMessageW_Hook();
-	InstallPostMessageA_Hook();
-	InstallPostMessageW_Hook();
-	InstallRegisterRawInputDevices_Hook();
-	InstallClipCursor_Hook();
-	InstallSetCursorPos_Hook();
-	InstallGetCursorPos_Hook();
+	// Populate our keymap
+	{
+		spd::log()->info("Populating keymap");
+	
+		std::string keystring;
+		for (int i = 0; i < 256; ++i)
+		{
+			keystring = GetStrFromVK(i);
+	
+			_keyboardStringMap.insert(_keyboardStringMap.end(), std::pair<unsigned int, std::string>(i, keystring));
+			keystring = "";
+		}
+	
+		_keyboardStringMap[0x1B] = "ESCAPE";
+		_keyboardStringMap[0x70] = "F1";
+		_keyboardStringMap[0x71] = "F2";
+		_keyboardStringMap[0x72] = "F3";
+		_keyboardStringMap[0x73] = "F4";
+		_keyboardStringMap[0x74] = "F5";
+		_keyboardStringMap[0x75] = "F6";
+		_keyboardStringMap[0x76] = "F7";
+		_keyboardStringMap[0x77] = "F8";
+		_keyboardStringMap[0x78] = "F9";
+		_keyboardStringMap[0x79] = "F10";
+		_keyboardStringMap[0x7A] = "F11";
+		_keyboardStringMap[0x7B] = "F12";
+		_keyboardStringMap[0x7C] = "F13";
+		_keyboardStringMap[0x7D] = "F14";
+		_keyboardStringMap[0x7E] = "F15";
+		_keyboardStringMap[0x08] = "BACKSPACE";
+		_keyboardStringMap[0x20] = "SPACE";
+		_keyboardStringMap[0x2D] = "INSERT";
+		_keyboardStringMap[0x23] = "END";
+		_keyboardStringMap[0x24] = "HOME";
+		_keyboardStringMap[0x22] = "PAGEDOWN";
+		_keyboardStringMap[0x21] = "PAGEUP";
+		_keyboardStringMap[0x2E] = "DELETE";
+		_keyboardStringMap[0x0D] = "ENTER";
+		_keyboardStringMap[0x09] = "TAB";
+		_keyboardStringMap[0x14] = "CAPSLOCK";
+		_keyboardStringMap[0x5D] = "APPS";
+		_keyboardStringMap[0x15] = "KANA";
+		_keyboardStringMap[0x19] = "KANJI";
+		_keyboardStringMap[0x1C] = "CONVERT";
+		_keyboardStringMap[0x1D] = "NONCONVERT";
+		_keyboardStringMap[0x2C] = "PRINTSCR";
+		_keyboardStringMap[0x91] = "SCROLL";
+		_keyboardStringMap[0x13] = "PAUSE";
+	
+		// Numpad
+		_keyboardStringMap[0x90] = "NUMLOCK";
+		_keyboardStringMap[0x6F] = "NUMPAD_/";
+		_keyboardStringMap[0x6C] = "NUMPAD_ENTER";
+		_keyboardStringMap[0x6A] = "NUMPAD_*";
+		_keyboardStringMap[0x6D] = "NUMPAD_-";
+		_keyboardStringMap[0x6B] = "NUMPAD_+";
+		_keyboardStringMap[0x6E] = "NUMPAD_.";
+		_keyboardStringMap[0x60] = "NUMPAD_0";
+		_keyboardStringMap[0x61] = "NUMPAD_1";
+		_keyboardStringMap[0x62] = "NUMPAD_2";
+		_keyboardStringMap[0x63] = "NUMPAD_3";
+		_keyboardStringMap[0x64] = "NUMPAD_4";
+		_keyboardStringMap[0x65] = "NUMPAD_5";
+		_keyboardStringMap[0x66] = "NUMPAD_6";
+		_keyboardStringMap[0x67] = "NUMPAD_7";
+		_keyboardStringMap[0x68] = "NUMPAD_8";
+		_keyboardStringMap[0x68] = "NUMPAD_9";
+	
+		// Arrow keys
+		_keyboardStringMap[0x26] = "UP";
+		_keyboardStringMap[0x28] = "DOWN";
+		_keyboardStringMap[0x25] = "LEFT";
+		_keyboardStringMap[0x27] = "RIGHT";
+	
+		// Shift
+		_keyboardStringMap[0x10] = "SHIFT";
+		_keyboardStringMap[0xA0] = "LSHIFT";
+		_keyboardStringMap[0xA1] = "RSHIFT";
+	
+		// Control
+		_keyboardStringMap[0x11] = "CTRL";
+		_keyboardStringMap[0xA2] = "LCTRL";
+		_keyboardStringMap[0xA3] = "RCTRL";
+	
+		// Alt
+		_keyboardStringMap[0x12] = "ALT";
+		_keyboardStringMap[0xA4] = "LALT";
+		_keyboardStringMap[0xA5] = "RALT";
+	
+		// Winkey
+		_keyboardStringMap[0x5B] = "LWIN";
+		_keyboardStringMap[0x5C] = "RWIN";
+	
+		// Mouse
+		_keyboardStringMap[VK_LBUTTON] = "LMOUSE";
+		_keyboardStringMap[VK_RBUTTON] = "RMOUSE";
+		_keyboardStringMap[VK_MBUTTON] = "MMOUSE";
+		_keyboardStringMap[VK_XBUTTON1] = "MOUSE4";
+		_keyboardStringMap[VK_XBUTTON2] = "MOUSE5";
+	
+		// Copy string map to vk map, inverting the items, so we can get VK from str
+		for (std::unordered_map<unsigned int, std::string>::iterator i = _keyboardStringMap.begin(); i != _keyboardStringMap.end(); ++i)
+			_keyboardVKMap[i->second] = i->first;
+	
+		// Populate DIK map, so we can get DIK from str
+		for (int i = 0; i < 256; ++i)
+		{
+			unsigned int DIK = MapVirtualKeyEx(i, /*MAPVK_VK_TO_VSC*/0, GetKeyboardLayout(0)) & 0xFF;
+	
+			_keyboardDIKMap.insert(_keyboardDIKMap.end(), std::pair<std::string, unsigned int>(_keyboardStringMap[i], DIK));
+		}
+	}
 }

@@ -183,7 +183,7 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	spd::log()->info("{} -> Window created; Registering for input", __FUNCTION__);
 
 	// Register hWnd for input processing
-	pInput = input::register_window(hWindow);
+	pInput = re4t::input::register_window(hWindow);
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);
 

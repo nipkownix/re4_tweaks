@@ -29,7 +29,7 @@ bool ParseConsoleKeyCombo(std::string_view in_combo)
     ConsoleCombo.clear();
     ConsoleCombo = re4t::cfg->ParseKeyCombo(in_combo);
 
-    pInput->RegisterHotkey({ []() {
+    pInput->register_hotkey({ []() {
         bConsoleOpen = !bConsoleOpen;
     }, &ConsoleCombo });
 

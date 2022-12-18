@@ -41,8 +41,8 @@ void ImGui_ColumnFinish();
 void ImGui_ItemBG(float RowSize, ImColor bgCol);
 extern ImColor itmbgColor;
 
-void SetHotkeyComboThread(std::string* cfgHotkey);
-void SetHotkeyThread(std::string* cfgHotkey);
+void ImGui_SetHotkeyComboThread(std::string* cfgHotkey);
+void ImGui_SetHotkeyThread(std::string* cfgHotkey);
 
 bool ImGui_ButtonSameLine(const char* label, bool samelinecheck = true, 
 	float offset = 0.0f, const ImVec2 size = ImVec2(0, 0));

@@ -175,10 +175,10 @@ void re4t::init::KeyboardMouseTweaks()
 		InstallShowCursor_hook();
 		InstallSetCursor_hook();
 	}
-	auto pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
+
 	// X mouse delta adjustments
 	{
-		pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
+		auto pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? D9 C9");
 		ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(1);
 		struct MouseDeltaX
 		{
@@ -186,7 +186,7 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				double deltaX = 0;
 				if (re4t::cfg->bUseRawMouseInput)
-					deltaX = (pInput->raw_mouse_delta_x() / 7.0f) * g_MOUSE_SENS();
+					deltaX = (pInput->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS();
 				else
 					deltaX = double(int(regs.eax));
 
@@ -199,7 +199,7 @@ void re4t::init::KeyboardMouseTweaks()
 
 	// Y mouse delta adjustments
 	{
-		pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? E8");
+		auto pattern = hook::pattern("A3 ? ? ? ? E8 ? ? ? ? A3 ? ? ? ? 8B 85 ? ? ? ? EB ? E8");
 		ptrMouseDeltaY = *pattern.count(1).get(0).get<uint32_t*>(1);
 		struct MouseDeltaY
 		{
@@ -207,7 +207,7 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				double deltaY = 0;
 				if (re4t::cfg->bUseRawMouseInput)
-					deltaY = -((pInput->raw_mouse_delta_y() / 4.0f) * g_MOUSE_SENS());
+					deltaY = -((pInput->raw_mouse_delta_y() / 7.0f) * g_MOUSE_SENS());
 				else
 					deltaY = double(int(regs.eax));
 
@@ -300,7 +300,7 @@ void re4t::init::KeyboardMouseTweaks()
 			}
 		};
 
-		pattern = hook::pattern("80 3D ? ? ? ? ? D9 41 ? D9 5D ? 74");
+		auto pattern = hook::pattern("80 3D ? ? ? ? ? D9 41 ? D9 5D ? 74");
 		injector::MakeInline<CameraLockCmp>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 		pattern = hook::pattern("80 3D ? ? ? ? ? 0F 84 ? ? ? ? A1 ? ? ? ? 85 C0 74");
@@ -325,10 +325,10 @@ void re4t::init::KeyboardMouseTweaks()
 				
 				// input::is_key_pressed doesn't seem work reliably here. Not sure why, but using GetAsyncKeyState is fine since this code only runs if 
 				// the player is moving something in the inventory.
-				if ((GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemLeft)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemRight)) & 1))
+				if ((GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemLeft)) & 1) || (GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemRight)) & 1))
 					regs.eax = 0x00300000;
 
-				else if ((GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemUp)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemDown)) & 1))
+				else if ((GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemUp)) & 1) || (GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemDown)) & 1))
 					regs.eax = 0x00C00000;
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -339,7 +339,7 @@ void re4t::init::KeyboardMouseTweaks()
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
 	{
 		// Get pointer for the state. Only reliable way I found to achieve this.
-		pattern = hook::pattern("C7 06 ? ? ? ? A1 ? ? ? ? F7 80 ? ? ? ? ? ? ? ? 74"); //0x48C1C0
+		auto pattern = hook::pattern("C7 06 ? ? ? ? A1 ? ? ? ? F7 80 ? ? ? ? ? ? ? ? 74"); //0x48C1C0
 		struct RLDLGState
 		{
 			void operator()(injector::reg_pack& regs)
@@ -393,7 +393,7 @@ void re4t::init::KeyboardMouseTweaks()
 	// Fix the "focus animation" not looking as strong as when triggered with a controller
 	if (re4t::cfg->bFixSniperFocus)
 	{
-		pattern = hook::pattern("8B F1 8B 4D ? 57 85 C9 74 ? D9 56 ? 88 56");
+		auto pattern = hook::pattern("8B F1 8B 4D ? 57 85 C9 74 ? D9 56 ? 88 56");
 		struct FixScopeZoomFocus
 		{
 			void operator()(injector::reg_pack& regs)
@@ -431,7 +431,7 @@ void re4t::init::KeyboardMouseTweaks()
 	// Hooks to allow toggling sprint instead of needing to hold it
 	{
 		// pl_R1_Run first KEY_RUN check
-		pattern = hook::pattern("83 E0 01 33 D2 0B C2 74 ? 8B C1 83 E0 40"); // 7639EB
+		auto pattern = hook::pattern("83 E0 01 33 D2 0B C2 74 ? 8B C1 83 E0 40"); // 7639EB
 		struct SprintToggleHook1
 		{
 			void operator()(injector::reg_pack& regs)
@@ -459,7 +459,7 @@ void re4t::init::KeyboardMouseTweaks()
 
 	// Hook pl0e_R1_Jump to allow jet-ski tricks to be performed with keyboard+mouse combos
 	{
-		pattern = hook::pattern("FE 86 0E 05 00 00 33 DB");
+		auto pattern = hook::pattern("FE 86 0E 05 00 00 33 DB");
 		struct JetSkiTrickHook1
 		{
 			void operator()(injector::reg_pack& regs)
@@ -482,7 +482,7 @@ void re4t::init::KeyboardMouseTweaks()
 	if (re4t::cfg->bFallbackToEnglishKeyIcons)
 	{
 		// Get pointer to key icon data buffer
-		pattern = hook::pattern("53 56 57 68 00 04 00 00 6A 00 68 ? ? ? ?");
+		auto pattern = hook::pattern("53 56 57 68 00 04 00 00 6A 00 68 ? ? ? ?");
 		g_KeyIconData = *pattern.count(1).get(0).get<uint8_t*>(0xB);
 
 		// Hook Init_KeyIconMapping so we can replace key data if needed

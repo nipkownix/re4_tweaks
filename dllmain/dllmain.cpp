@@ -43,17 +43,14 @@ void Init_Main()
 	spd::log()->info("Running from: \"{}\"", WstrToStr(rootPath));
 	spd::log()->info("Game version: {}", GameVersion());
 
-	// Populate keymap (needed before we ReadSettings(), otherwise, parsing hotkeys will fail)
-	pInput->PopulateKeymap();
+	// Init input-related hooks and populate keymap (needed before we ReadSettings(), otherwise, parsing hotkeys will fail)
+	pInput->init();
 
 	// Read re4_tweaks settings
 	re4t::cfg->ReadSettings();
 
 	// Log re4_tweaks settings
 	re4t::cfg->LogSettings();
-	
-	// Install input-related hooks
-	pInput->InstallHooks();
 
 	// Parse any special command-line options
 	re4t::init::CommandLine();

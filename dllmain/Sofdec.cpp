@@ -180,6 +180,7 @@ void re4t::init::Sofdec()
 						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_D) == (uint64_t)KEY_BTN::KEY_D) ||
 						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_A) == (uint64_t)KEY_BTN::KEY_A) ||
 						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_B) == (uint64_t)KEY_BTN::KEY_B);
+
 					if (pressedActiveKey || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
 						timer = defaultTime;
 
@@ -240,6 +241,7 @@ void re4t::init::Sofdec()
 						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_D) == (uint64_t)KEY_BTN::KEY_D) ||
 						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_A) == (uint64_t)KEY_BTN::KEY_A) ||
 						((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_B) == (uint64_t)KEY_BTN::KEY_B);
+
 					if (pressedActiveKey || pInput->raw_mouse_delta_x() || pInput->raw_mouse_delta_y())
 					{
 						timer = defaultTime;
