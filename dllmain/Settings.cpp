@@ -38,7 +38,7 @@ std::vector<uint32_t> re4t_cfg::ParseKeyCombo(std::string_view in_combo)
 
 			if (cur_token.length())
 			{
-				uint32_t token_num = pInput->KeyMap_getVK(cur_token);
+				uint32_t token_num = pInput->vk_from_key_name(cur_token);
 				if (!token_num)
 				{
 					// parse failed...
@@ -60,7 +60,7 @@ std::vector<uint32_t> re4t_cfg::ParseKeyCombo(std::string_view in_combo)
 	if (cur_token.length())
 	{
 		// Get VK for the current token and push it into the vector
-		uint32_t token_num = pInput->KeyMap_getVK(cur_token);
+		uint32_t token_num = pInput->vk_from_key_name(cur_token);
 		if (!token_num)
 		{
 			// parse failed...
@@ -123,7 +123,7 @@ void re4t_cfg::ReadSettings()
 
 void re4t_cfg::ParseHotkeys()
 {
-	pInput->ClearHotkeys();
+	pInput->clear_hotkeys();
 
 	ParseConfigMenuKeyCombo(re4t::cfg->sConfigMenuKeyCombo);
 	ParseConsoleKeyCombo(re4t::cfg->sConsoleKeyCombo);
@@ -368,11 +368,11 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	
 	// Check if the QTE bindings are valid for the current keyboard layout.
 	// Try to reset them using VK Hex Codes if they aren't.
-	if (pInput->KeyMap_getVK(re4t::cfg->sQTE_key_1) == 0)
-		re4t::cfg->sQTE_key_1 = pInput->KeyMap_getSTR(0x44); // Latin D
+	if (pInput->vk_from_key_name(re4t::cfg->sQTE_key_1) == 0)
+		re4t::cfg->sQTE_key_1 = pInput->key_name_from_vk(0x44); // Latin D
 
-	if (pInput->KeyMap_getVK(re4t::cfg->sQTE_key_2) == 0)
-		re4t::cfg->sQTE_key_2 = pInput->KeyMap_getSTR(0x41); // Latin A
+	if (pInput->vk_from_key_name(re4t::cfg->sQTE_key_2) == 0)
+		re4t::cfg->sQTE_key_2 = pInput->key_name_from_vk(0x41); // Latin A
 
 	re4t::cfg->sDebugMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "DebugMenu", re4t::cfg->sDebugMenuKeyCombo));
 	re4t::cfg->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", re4t::cfg->sMouseTurnModifierKeyCombo));

@@ -42,7 +42,7 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 	cfgMenuCombo.clear();
 	cfgMenuCombo = re4t::cfg->ParseKeyCombo(in_combo);
 
-	pInput->RegisterHotkey({ []() {
+	pInput->register_hotkey({ []() {
 		bCfgMenuOpen = !bCfgMenuOpen;
 	}, &cfgMenuCombo });
 
@@ -1642,7 +1642,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sConfigMenuKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sConfigMenuKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sConfigMenuKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1662,7 +1662,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sConsoleKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sConsoleKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sConsoleKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1694,7 +1694,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemUp.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemUp, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemUp, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1706,7 +1706,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemDown.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemDown, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemDown, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1718,7 +1718,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemLeft.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemLeft, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemLeft, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1730,7 +1730,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemRight.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemRight, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemRight, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1760,7 +1760,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sQTE_key_1.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sQTE_key_1, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sQTE_key_1, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1772,7 +1772,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sQTE_key_2.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sQTE_key_2, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sQTE_key_2, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1794,7 +1794,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sDebugMenuKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sDebugMenuKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sDebugMenuKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1817,7 +1817,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sMouseTurnModifierKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sMouseTurnModifierKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sMouseTurnModifierKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1837,7 +1837,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sJetSkiTrickCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sJetSkiTrickCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sJetSkiTrickCombo, 0, NULL);
 						}
 						ImGui::PopID();
 

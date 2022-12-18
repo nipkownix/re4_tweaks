@@ -342,8 +342,8 @@ void __cdecl titleLoop_hook(TITLE_WORK* pT)
 			// Using our own KB/M input here instead of the game's, since the game's function to handle input (PadRead) is a mess.
 			if (pInput->is_key_down(VK_CONTROL))
 			{
-				float fDeltaX = pInput->raw_mouse_delta_x();
-				float fDeltaY = pInput->raw_mouse_delta_y();
+				float fDeltaX = float(pInput->raw_mouse_delta_x());
+				float fDeltaY = float(pInput->raw_mouse_delta_y());
 
 				if (abs(fDeltaX) > 0)
 				{
@@ -357,7 +357,6 @@ void __cdecl titleLoop_hook(TITLE_WORK* pT)
 
 				if (abs(fDeltaY) > 0)
 				{
-
 					tex->pos0_94.z -= fDeltaY * 0.2f;
 					tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
 				}

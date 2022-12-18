@@ -34,7 +34,7 @@ bool ParseImGuiUIFocusCombo(std::string_view in_combo)
 	KeyImGuiUIFocus.clear();
 	KeyImGuiUIFocus = re4t::cfg->ParseKeyCombo(in_combo);
 
-	pInput->RegisterHotkey({ []() {
+	pInput->register_hotkey({ []() {
 		bImGuiUIFocus = !bImGuiUIFocus;
 	}, &KeyImGuiUIFocus });
 

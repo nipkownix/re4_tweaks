@@ -226,7 +226,7 @@ void Trainer_ParseKeyCombos()
 		KeyComboNoclipToggle.clear();
 		KeyComboNoclipToggle = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerNoclipKeyCombo);
 
-		pInput->RegisterHotkey({ []() {
+		pInput->register_hotkey({ []() {
 			bool playerCollisionDisabled = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT));
 			FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_PL_NOHIT), !playerCollisionDisabled);
 		}, &KeyComboNoclipToggle });
@@ -237,7 +237,7 @@ void Trainer_ParseKeyCombos()
 		KeyComboFreeCamToggle.clear();
 		KeyComboFreeCamToggle = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerFreeCamKeyCombo);
 
-		pInput->RegisterHotkey({ []() {
+		pInput->register_hotkey({ []() {
 			re4t::cfg->bTrainerEnableFreeCam = !re4t::cfg->bTrainerEnableFreeCam;
 		}, &KeyComboFreeCamToggle });
 	}
@@ -247,7 +247,7 @@ void Trainer_ParseKeyCombos()
 		KeyComboSpeedOverride.clear();
 		KeyComboSpeedOverride = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerSpeedOverrideKeyCombo);
 
-		pInput->RegisterHotkey({ []() {
+		pInput->register_hotkey({ []() {
 			re4t::cfg->bTrainerPlayerSpeedOverride = !re4t::cfg->bTrainerPlayerSpeedOverride;
 		}, &KeyComboSpeedOverride });
 	}
@@ -257,7 +257,7 @@ void Trainer_ParseKeyCombos()
 		KeyComboAshToPlayer.clear();
 		KeyComboAshToPlayer = re4t::cfg->ParseKeyCombo(re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
 
-		pInput->RegisterHotkey({ []() {
+		pInput->register_hotkey({ []() {
 			MoveAshleyToPlayer();
 		}, &KeyComboAshToPlayer });
 	}
@@ -283,13 +283,13 @@ void Trainer_ParseKeyCombos()
 
 		// TODO: make RegisterHotkey use std::function so that we could include `i` in the capture and handle this in the loop above...
 
-		pInput->RegisterHotkey({ []() { HotkeySlotPressed(0); }, &KeyComboWeaponHotkey[0] });
-		pInput->RegisterHotkey({ []() { HotkeySlotPressed(1); }, &KeyComboWeaponHotkey[1] });
-		pInput->RegisterHotkey({ []() { HotkeySlotPressed(2); }, &KeyComboWeaponHotkey[2] });
-		pInput->RegisterHotkey({ []() { HotkeySlotPressed(3); }, &KeyComboWeaponHotkey[3] });
-		pInput->RegisterHotkey({ []() { HotkeySlotPressed(4); }, &KeyComboWeaponHotkey[4] });
+		pInput->register_hotkey({ []() { HotkeySlotPressed(0); }, &KeyComboWeaponHotkey[0] });
+		pInput->register_hotkey({ []() { HotkeySlotPressed(1); }, &KeyComboWeaponHotkey[1] });
+		pInput->register_hotkey({ []() { HotkeySlotPressed(2); }, &KeyComboWeaponHotkey[2] });
+		pInput->register_hotkey({ []() { HotkeySlotPressed(3); }, &KeyComboWeaponHotkey[3] });
+		pInput->register_hotkey({ []() { HotkeySlotPressed(4); }, &KeyComboWeaponHotkey[4] });
 
-		pInput->RegisterHotkey({ []() { HotkeySlotPressed(last_weaponId, true); }, &KeyComboLastWeaponHotkey });
+		pInput->register_hotkey({ []() { HotkeySlotPressed(last_weaponId, true); }, &KeyComboLastWeaponHotkey });
 	}
 }
 
@@ -1773,7 +1773,7 @@ void Trainer_RenderUI(int columnCount)
 				if (ImGui::Button(re4t::cfg->sTrainerFocusUIKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					re4t::cfg->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerFocusUIKeyCombo, 0, NULL);
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sTrainerFocusUIKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1793,7 +1793,7 @@ void Trainer_RenderUI(int columnCount)
 				if (ImGui::Button(re4t::cfg->sTrainerNoclipKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					re4t::cfg->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerNoclipKeyCombo, 0, NULL);
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sTrainerNoclipKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1813,7 +1813,7 @@ void Trainer_RenderUI(int columnCount)
 				if (ImGui::Button(re4t::cfg->sTrainerFreeCamKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					re4t::cfg->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerFreeCamKeyCombo, 0, NULL);
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sTrainerFreeCamKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1834,7 +1834,7 @@ void Trainer_RenderUI(int columnCount)
 				if (ImGui::Button(re4t::cfg->sTrainerSpeedOverrideKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					re4t::cfg->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerSpeedOverrideKeyCombo, 0, NULL);
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sTrainerSpeedOverrideKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1866,7 +1866,7 @@ void Trainer_RenderUI(int columnCount)
 					if (ImGui::Button(re4t::cfg->sWeaponHotkeys[i].c_str(), ImVec2(btn_size_x, 0)))
 					{
 						re4t::cfg->HasUnsavedChanges = true;
-						CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sWeaponHotkeys[i], 0, NULL);
+						CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sWeaponHotkeys[i], 0, NULL);
 					}
 					ImGui::PopID();
 
@@ -1879,7 +1879,7 @@ void Trainer_RenderUI(int columnCount)
 				if (ImGui::Button(re4t::cfg->sLastWeaponHotkey.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					re4t::cfg->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sLastWeaponHotkey, 0, NULL);
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sLastWeaponHotkey, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1909,7 +1909,7 @@ void Trainer_RenderUI(int columnCount)
 				if (ImGui::Button(re4t::cfg->sTrainerMoveAshToPlayerKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					re4t::cfg->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerMoveAshToPlayerKeyCombo, 0, NULL);
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sTrainerMoveAshToPlayerKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 
@@ -1929,7 +1929,7 @@ void Trainer_RenderUI(int columnCount)
 				if (ImGui::Button(re4t::cfg->sTrainerDebugTrgKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 				{
 					re4t::cfg->HasUnsavedChanges = true;
-					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sTrainerDebugTrgKeyCombo, 0, NULL);
+					CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sTrainerDebugTrgKeyCombo, 0, NULL);
 				}
 				ImGui::PopID();
 

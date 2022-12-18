@@ -78,7 +78,7 @@ int* __cdecl KEY1prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_1);
+	int newKey = pInput->dik_from_key_name(re4t::cfg->sQTE_key_1);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -87,7 +87,7 @@ int* __cdecl KEY2prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_2);
+	int newKey = pInput->dik_from_key_name(re4t::cfg->sQTE_key_2);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -541,7 +541,7 @@ void re4t::init::QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.ebx = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_1);
+					regs.ebx = pInput->dik_from_key_name(re4t::cfg->sQTE_key_1);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -554,7 +554,7 @@ void re4t::init::QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.edx = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_2);
+					regs.edx = pInput->dik_from_key_name(re4t::cfg->sQTE_key_2);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));

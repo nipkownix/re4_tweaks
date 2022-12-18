@@ -325,10 +325,10 @@ void re4t::init::KeyboardMouseTweaks()
 				
 				// input::is_key_pressed doesn't seem work reliably here. Not sure why, but using GetAsyncKeyState is fine since this code only runs if 
 				// the player is moving something in the inventory.
-				if ((GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemLeft)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemRight)) & 1))
+				if ((GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemLeft)) & 1) || (GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemRight)) & 1))
 					regs.eax = 0x00300000;
 
-				else if ((GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemUp)) & 1) || (GetAsyncKeyState(pInput->KeyMap_getVK(re4t::cfg->sFlipItemDown)) & 1))
+				else if ((GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemUp)) & 1) || (GetAsyncKeyState(pInput->vk_from_key_name(re4t::cfg->sFlipItemDown)) & 1))
 					regs.eax = 0x00C00000;
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
