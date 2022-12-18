@@ -61,7 +61,7 @@ void __cdecl titleMain_Hook(TITLE_WORK* pT)
 
 					CRoomInfo* roomInfo = nullptr;
 					int roomInfoIdx = 0;
-					for (uint32_t i = 0; i < stage->nData_0; i++)
+					for (int i = 0; i < stage->nData_0; i++)
 					{
 						CRoomInfo* curRoomInfo = stage->GetRoom(i);
 						if (curRoomInfo->roomNo_2 == paramRoomValue)
