@@ -519,12 +519,12 @@ unsigned int re4t::input::dik_from_key_name(std::string key_name)
 	return _keyboardDIKMap[key_name];
 }
 
-void re4t::input::block_mouse_input(bool enable)
+void re4t::input::block_mouse_input(bool enable, bool releaseClipCursor)
 {
 	_block_mouse = enable;
 
 	// Some games setup ClipCursor with a tiny area which could make the cursor stay in that area instead of the whole window
-	if (enable)
+	if (enable && releaseClipCursor)
 		ClipCursor(nullptr);
 }
 void re4t::input::block_keyboard_input(bool enable)

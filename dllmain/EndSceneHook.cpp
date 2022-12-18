@@ -450,7 +450,7 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	pInput->block_mouse_input(ImGuiShouldAcceptInput());
+	pInput->block_mouse_input(ImGuiShouldAcceptInput(), false);
 	pInput->block_keyboard_input(ImGuiShouldAcceptInput());
 
 	// Update _last_frame_duration and _last_present_time
