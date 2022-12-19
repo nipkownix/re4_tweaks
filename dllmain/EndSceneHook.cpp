@@ -458,8 +458,8 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	esHook._last_frame_duration = current_time - esHook._last_present_time;
 	esHook._last_present_time = current_time;
 
-	// Reset input status
-	pInput->next_frame();
+	// Reset mouse wheel delta
+	pInput->clear_mouse_wheel_delta();
 
 	return;
 }

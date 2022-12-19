@@ -147,7 +147,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_KILLFOCUS:
 			// Clear the mouse delta value if we lose focus
 			*(int32_t*)(ptrMouseDeltaX) = 0;
-			pInput->clear_mouse_delta();
+			pInput->clear_raw_mouse_delta();
 
 			// Unlock cursor
 			DisableClipCursor(true);
@@ -163,7 +163,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		// Clear the mouse delta value if the cfg menu is open
 		*(int32_t*)(ptrMouseDeltaX) = 0;
-		pInput->clear_mouse_delta();
+		pInput->clear_raw_mouse_delta();
 	}
 
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
