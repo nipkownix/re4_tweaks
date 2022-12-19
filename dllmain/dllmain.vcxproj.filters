@@ -1605,6 +1605,9 @@
     <ClInclude Include="SDK\roomdata.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="..\dxvk\src\dxvk-cache.hpp">
+      <Filter>dxvk</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
