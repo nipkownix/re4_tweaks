@@ -86,10 +86,15 @@ namespace re4t
 		auto raw_mouse_delta_x() { auto delta = static_cast<int>(_raw_mouse_delta[0]); /*_raw_mouse_delta[0] = 0;*/ return delta; }
 		auto raw_mouse_delta_y() { auto delta = static_cast<int>(_raw_mouse_delta[1]); /*_raw_mouse_delta[1] = 0;*/ return delta; }
 
-		void clear_mouse_delta()
+		void clear_raw_mouse_delta()
 		{
 			_raw_mouse_delta[0] = 0;
 			_raw_mouse_delta[1] = 0;
+		}
+
+		void clear_mouse_wheel_delta()
+		{
+			_mouse_wheel_delta = 0;
 		}
 
 		/// <summary>
@@ -119,6 +124,7 @@ namespace re4t
 		/// This updates input state to e.g. track whether a key was pressed this frame or before.
 		/// </summary>
 		void next_frame();
+		void imgui_next_frame();
 
 		/// <summary>
 		/// Generates a human-friendly text representation of the specified <paramref name="keycode"/>.

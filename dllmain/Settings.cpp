@@ -4,7 +4,7 @@
 #include <mutex>
 #include "dllmain.h"
 #include "Settings.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "input.hpp"
 #include "Utils.h"
 #include "Trainer.h"
@@ -140,7 +140,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	CIniReader iniReader(WstrToStr(ini_path));
 
 	#ifdef VERBOSE
-	con.AddLogChar("Reading settings from: %s", WstrToStr(ini_path).data());
+	con.log("Reading settings from: %s", WstrToStr(ini_path).data());
 	#endif
 
 	spd::log()->info("Reading settings from: \"{}\"", WstrToStr(ini_path).data());
@@ -236,6 +236,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// MOUSE
 	re4t::cfg->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	re4t::cfg->bResetCameraAfterUsingWeapons = iniReader.ReadBoolean("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
 	re4t::cfg->bResetCameraAfterUsingKnife = iniReader.ReadBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
 	re4t::cfg->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
 	re4t::cfg->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
@@ -346,6 +347,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	re4t::cfg->bSkipMenuFades = iniReader.ReadBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
 	re4t::cfg->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
+	re4t::cfg->bShowGameOutput = iniReader.ReadBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
 	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
@@ -529,13 +531,13 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	CIniReader iniReader(WstrToStr(iniPath));
 
 	#ifdef VERBOSE
-	con.AddConcatLog("Writing settings to: ", WstrToStr(iniPath).data());
+	con.log("Writing settings to: %s", WstrToStr(iniPath));
 	#endif
 
 	// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
 	if (!std::filesystem::exists(iniPath)) {
 		#ifdef VERBOSE
-		con.AddLogChar("ini file doesn't exist in folder. Creating new one.");
+		con.log("ini file doesn't exist in folder. Creating new one.");
 		#endif
 
 		std::filesystem::create_directory(std::filesystem::path(iniPath).parent_path()); // Create the dir if it doesn't exist
@@ -562,7 +564,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		if (isReadOnly)
 		{
 			#ifdef VERBOSE
-			con.AddLogChar("Read-only ini file detected. Attempting to remove flag");
+			con.log("Read-only ini file detected. Attempting to remove flag");
 			#endif
 
 			spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
@@ -753,6 +755,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+	iniReader.WriteBoolean("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
 	iniReader.WriteBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
 	iniReader.WriteBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
 	iniReader.WriteFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
@@ -821,6 +824,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
 	iniReader.WriteBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
+	iniReader.WriteBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
 	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
 	// We don't have any UI options for those anyway, so pointless for us to write it back
 
@@ -926,6 +930,7 @@ void re4t_cfg::LogSettings()
 	// MOUSE
 	spd::log()->info("+ MOUSE--------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraImprovements", re4t::cfg->bCameraImprovements ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
@@ -1001,6 +1006,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SkipMenuFades", re4t::cfg->bSkipMenuFades ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowGameOutput", re4t::cfg->bShowGameOutput ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");

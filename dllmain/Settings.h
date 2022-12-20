@@ -63,6 +63,7 @@ public:
 
 	// MOUSE
 	bool bCameraImprovements = true;
+	bool bResetCameraAfterUsingWeapons = true;
 	bool bResetCameraAfterUsingKnife = true;
 	bool bResetCameraWhenRunning = true;
 	float fCameraSensitivity = 1.0f;
@@ -135,6 +136,7 @@ public:
 	bool bForceETSApplyScale = false;
 	bool bEnableNTSCMode = false;
 	bool bLimitMatildaBurst = false;
+	bool bShowGameOutput = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;

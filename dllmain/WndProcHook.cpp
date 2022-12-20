@@ -3,7 +3,7 @@
 #include "Settings.h"
 #include "input.hpp"
 #include "Game.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -48,13 +48,13 @@ void EnableClipCursor(HWND window)
 
 	if (!ClipCursor(&rect)) {
 		#ifdef VERBOSE
-		con.AddLogChar("Unable to lock cursor");
+		con.log("Unable to lock cursor");
 		#endif
 		return;
 	}
 
 	#ifdef VERBOSE
-	con.AddLogChar("Cursor locked");
+	con.log("Cursor locked");
 	#endif
 }
 
@@ -81,7 +81,7 @@ void DisableClipCursor(bool bCenterCursor)
 	}
 
 	#ifdef VERBOSE
-	con.AddLogChar("Cursor released");
+	con.log("Cursor released");
 	#endif
 }
 
@@ -93,7 +93,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			#ifdef VERBOSE
 			if (wParam == VK_NUMPAD3)
 			{
-				con.AddLogChar("Sono me... dare no me?");
+				con.log("Sono me... dare no me?");
 			}
 			#endif
 			break;
@@ -117,8 +117,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				// Write new window position
 				#ifdef VERBOSE
-				con.AddConcatLog("curPosX = ", curPosY);
-				con.AddConcatLog("curPosY = ", curPosX);
+				con.log("curPosX = %d", curPosY);
+				con.log("curPosY = %d", curPosX);
 				#endif
 
 				CIniReader iniReader("");
@@ -147,7 +147,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_KILLFOCUS:
 			// Clear the mouse delta value if we lose focus
 			*(int32_t*)(ptrMouseDeltaX) = 0;
-			pInput->clear_mouse_delta();
+			pInput->clear_raw_mouse_delta();
 
 			// Unlock cursor
 			DisableClipCursor(true);
@@ -163,7 +163,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		// Clear the mouse delta value if the cfg menu is open
 		*(int32_t*)(ptrMouseDeltaX) = 0;
-		pInput->clear_mouse_delta();
+		pInput->clear_raw_mouse_delta();
 	}
 
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);

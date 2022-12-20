@@ -1610,6 +1610,11 @@
     </ClInclude>
     <ClInclude Include="..\external\ImGuiFileDialog\ImGuiFileDialog.h">
       <Filter>external\ImGuiFileDialog</Filter>
+    <ClInclude Include="..\dxvk\src\dxvk-cache.hpp">
+      <Filter>dxvk</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleWnd.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

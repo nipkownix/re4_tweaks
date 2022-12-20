@@ -1,6 +1,6 @@
 #include <iostream>
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include "Game.h"
 #include "input.hpp"
@@ -514,12 +514,10 @@ void re4t::init::QTEfixes()
 
 					if (pressed)
 					{
-						con.AddLogInt(*(int32_t*)(regs.eax));
 						if (re4t::cfg->bFixQTE || re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 							*(int32_t*)(regs.eax) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 						else
 							*(int32_t*)(regs.eax) += 1;
-						con.AddLogInt(*(int32_t*)(regs.eax));
 					}
 				}
 			}; injector::MakeInline<KrauserQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));

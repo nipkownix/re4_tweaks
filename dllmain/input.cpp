@@ -467,12 +467,12 @@ void re4t::input::next_frame()
 			(GetAsyncKeyState(i) & 0x8000) == 0)
 			(_keys[i] = 0x08);
 
-	_text_input.clear();
-	_mouse_wheel_delta = 0;
+	//_text_input.clear();
+	//_mouse_wheel_delta = 0;
 	_last_mouse_position[0] = _mouse_position[0];
 	_last_mouse_position[1] = _mouse_position[1];
-	//_raw_mouse_delta[0] = 0;
-	//_raw_mouse_delta[1] = 0;
+	_raw_mouse_delta[0] = 0;
+	_raw_mouse_delta[1] = 0;
 
 	// Update caps lock state
 	_keys[VK_CAPITAL] |= GetKeyState(VK_CAPITAL) & 0x1;
@@ -487,6 +487,12 @@ void re4t::input::next_frame()
 		(GetAsyncKeyState(VK_SNAPSHOT) & 0x8000) != 0)
 		(_keys[VK_SNAPSHOT] = 0x88),
 		(_keys_time[VK_SNAPSHOT] = time);
+}
+
+void re4t::input::imgui_next_frame()
+{
+	_text_input.clear();
+	_mouse_wheel_delta = 0;
 }
 
 std::string re4t::input::key_name_from_vk(unsigned int keycode)
@@ -808,7 +814,7 @@ FARPROC p_SetCursorPos = nullptr;
 FARPROC p_GetCursorPos = nullptr;
 void re4t::input::init()
 {
-	// Reset raw mouse delta for the next frame. We orignally did this in pInput->next_frame() (inside a EndScene() hook), but the values would
+	// Reset input status for the next frame. We orignally did this in inside a EndScene() hook, but some values would
 	// get messed up due to some form of V-Sync (tested on AMD, not sure on Nvidia/Intel). We now do it inside the game's main loop, after 
 	// everything has been rendered. This is currently replacing a call to "systemVSyncPost", but that is a nullsub in RE4 UHD. If we 
 	// ever restore that for some reason, we should move this somewhere else.
@@ -818,8 +824,8 @@ void re4t::input::init()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				// Reset raw mouse delta
-				pInput->clear_mouse_delta();
+				// Reset input status
+				pInput->next_frame();
 			}
 		}; injector::MakeInline<MainLoop_InputNext_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
