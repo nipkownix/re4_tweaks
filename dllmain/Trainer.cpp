@@ -1714,8 +1714,8 @@ void Trainer_RenderUI(int columnCount)
 	// EmMgr
 	ImGui_TrainerTabButton("##emmgr", "Em Manager", active, inactive, TrainerTab::EmMgr, ICON_FA_SNOWMAN, icn_color, IM_COL32_WHITE, btn_size);
 	
-	// EmMgr
-	ImGui_TrainerTabButton("##esp", "ESP", active, inactive, TrainerTab::ESP, ICON_FA_SUITCASE, icn_color, IM_COL32_WHITE, btn_size);
+	// ESP
+	ImGui_TrainerTabButton("##esp", "ESP", active, inactive, TrainerTab::ESP, ICON_FA_EYE, icn_color, IM_COL32_WHITE, btn_size);
 
 	// DebugTools
 	ImGui_TrainerTabButton("##dbgtools", "Debug Tools", active, inactive, TrainerTab::DebugTools, ICON_FA_VIRUS, icn_color, IM_COL32_WHITE, btn_size);
