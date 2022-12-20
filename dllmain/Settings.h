@@ -136,6 +136,7 @@ public:
 	bool bForceETSApplyScale = false;
 	bool bEnableNTSCMode = false;
 	bool bLimitMatildaBurst = false;
+	bool bShowGameOutput = false;
 
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;

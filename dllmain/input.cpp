@@ -467,7 +467,7 @@ void re4t::input::next_frame()
 			(GetAsyncKeyState(i) & 0x8000) == 0)
 			(_keys[i] = 0x08);
 
-	_text_input.clear();
+	//_text_input.clear();
 	//_mouse_wheel_delta = 0;
 	_last_mouse_position[0] = _mouse_position[0];
 	_last_mouse_position[1] = _mouse_position[1];
@@ -487,6 +487,12 @@ void re4t::input::next_frame()
 		(GetAsyncKeyState(VK_SNAPSHOT) & 0x8000) != 0)
 		(_keys[VK_SNAPSHOT] = 0x88),
 		(_keys_time[VK_SNAPSHOT] = time);
+}
+
+void re4t::input::imgui_next_frame()
+{
+	_text_input.clear();
+	_mouse_wheel_delta = 0;
 }
 
 std::string re4t::input::key_name_from_vk(unsigned int keycode)

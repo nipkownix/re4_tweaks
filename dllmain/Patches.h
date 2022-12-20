@@ -19,6 +19,7 @@ namespace re4t
 		void CameraTweaks();
 		void CommandLine();
 		void ControllerTweaks();
+		void ConsoleWnd();
 		void D3D9Hook();
 		void DebugDisplay();
 		void DisplayTweaks();
@@ -83,25 +84,6 @@ extern int iGCBlurMode;
 extern int iCostumeComboLeon;
 extern int iCostumeComboAshley;
 extern int iCostumeComboAda;
-
-// ConsoleWnd
-struct ConsoleOutput
-{
-	std::string TitleKeyCombo;
-	void ShowConsoleOutput();
-	void AddLogChar(const char* fmt, ...);
-	void AddLogHex(int fmt, ...);
-	void AddLogInt(int fmt, ...);
-	void AddLogFloat(float fmt, ...);
-	void AddConcatLog(const char* fmt, int value, ...);
-	void AddConcatLog(const char* fmt, float value, ...);
-	void AddConcatLog(const char* fmt, double value, ...);
-	void AddConcatLog(const char* fmt, const char* value, ...);
-	void Clear();
-};
-
-extern ConsoleOutput con;
-extern bool bConsoleOpen;
 
 // LAApatch.cpp
 void LAACheck();

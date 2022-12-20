@@ -1,6 +1,6 @@
 #include <iostream>
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include "AutoUpdater.h"
 #include "imgui.h"
@@ -393,10 +393,16 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 		ShowDebugTrgHint = false; // always reset ShowDebugTrgHint regardless of ShowHintText value, otherwise it could appear next time user enables option...
 	}
 
+	// Show the console window
+	bool verbose = false;
 	#ifdef VERBOSE
-	// Show the console if in verbose
-	con.ShowConsoleOutput();
+	verbose = true;
 	#endif
+
+	if ((verbose || re4t::cfg->bShowGameOutput) && bConsoleOpen)
+	{
+		con.Render();
+	}
 
 	// Show the cfgMenu
 	if (bCfgMenuOpen)
@@ -458,8 +464,8 @@ void EndSceneHook::EndScene_hook(LPDIRECT3DDEVICE9 pDevice)
 	esHook._last_frame_duration = current_time - esHook._last_present_time;
 	esHook._last_present_time = current_time;
 
-	// Reset mouse wheel delta
-	pInput->clear_mouse_wheel_delta();
+	// Reset mouse wheel delta and _text_input
+	pInput->imgui_next_frame();
 
 	return;
 }

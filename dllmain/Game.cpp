@@ -1,6 +1,6 @@
 #include "dllmain.h"
 #include "Game.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "SDK/filter00.h"
 
 std::string gameVersion;
@@ -725,7 +725,7 @@ bool re4t::init::Game()
 	}
 
 	#ifdef VERBOSE
-	con.AddConcatLog("Game version = ", GameVersion().data());
+	con.log("Game version = %s", GameVersion().c_str());
 	#endif
 
 	// Pointer to users variableframerate setting value

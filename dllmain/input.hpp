@@ -124,6 +124,7 @@ namespace re4t
 		/// This updates input state to e.g. track whether a key was pressed this frame or before.
 		/// </summary>
 		void next_frame();
+		void imgui_next_frame();
 
 		/// <summary>
 		/// Generates a human-friendly text representation of the specified <paramref name="keycode"/>.

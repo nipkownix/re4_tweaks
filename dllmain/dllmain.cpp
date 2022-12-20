@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include "dllmain.h"
 #include "AutoUpdater.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include "Game.h"
 #include "input.hpp"
@@ -25,7 +25,7 @@ void HandleAppID()
 
 void Init_Main()
 {
-	con.AddLogChar("Big ironic thanks to QLOC S.A.");
+	con.log("Big ironic thanks to QLOC S.A.");
 
 	// Get game pointers and version info
 	if (!re4t::init::Game())
@@ -54,6 +54,9 @@ void Init_Main()
 
 	// Parse any special command-line options
 	re4t::init::CommandLine();
+
+	// Init game/re4t log window
+	re4t::init::ConsoleWnd();
 
 	// Check for re4_tweaks updates
 	CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&updateCheck, NULL, 0, NULL);

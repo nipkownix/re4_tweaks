@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "imgui\misc\cpp\imgui_stdlib.h"
 #include "input.hpp"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include <FAhashes.h>
 #include "Utils.h"
 #include "UI_DebugWindows.h"
@@ -1544,6 +1544,22 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
 					}
 
+					// ShowGameOutput
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("ShowGameOutput", &re4t::cfg->bShowGameOutput))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window.");					
+					}
+
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
@@ -1660,7 +1676,7 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnSwitch();
 
-						ImGui::TextWrapped("Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)");
+						ImGui::TextWrapped("Key combination to open the re4_tweaks debug console");
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::PushID(2);

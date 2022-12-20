@@ -1,6 +1,7 @@
 #include "dllmain.h"
 #include "UI_Utility.h"
 #include "input.hpp"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include <imgui/imgui_internal.h>
 
@@ -146,8 +147,8 @@ void ImGui_SetHotkey(std::string* cfgHotkey, bool supportsCombo)
 		HotkeyVK2 = 0;
 
 	#ifdef VERBOSE
-	con.AddConcatLog("HotkeyVK1 = ", std::to_string(HotkeyVK1).c_str());
-	con.AddConcatLog("HotkeyVK2 = ", std::to_string(HotkeyVK2).c_str());
+	con.log("HotkeyVK1 = %d", HotkeyVK1);
+	con.log("HotkeyVK2 = %d", HotkeyVK2);
 	#endif
 
 	// Check if our KeyMap function is able to identify the key names, restore the original combo if not.
@@ -174,7 +175,7 @@ void ImGui_SetHotkey(std::string* cfgHotkey, bool supportsCombo)
 	}
 
 	#ifdef VERBOSE
-	con.AddConcatLog("FinalHotkeyCombo = ", FinalHotkeyCombo.c_str());
+	con.log("FinalHotkeyCombo = %s", FinalHotkeyCombo.c_str());
 	#endif
 
 	*cfgHotkey = FinalHotkeyCombo;

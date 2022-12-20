@@ -1608,6 +1608,9 @@
     <ClInclude Include="..\dxvk\src\dxvk-cache.hpp">
       <Filter>dxvk</Filter>
     </ClInclude>
+    <ClInclude Include="ConsoleWnd.h">
+      <Filter>dllmain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

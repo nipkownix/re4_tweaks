@@ -1,6 +1,6 @@
 #include <iostream>
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "input.hpp"
 
 uintptr_t* ptrSFDMovAddr;
@@ -302,8 +302,8 @@ void re4t::init::Sofdec()
 			int MovResY = regs.eax;
 
 			#ifdef VERBOSE
-			con.AddConcatLog("MovResX = ", MovResX);
-			con.AddConcatLog("MovResY = ", MovResY);
+			con.log("MovResX = %d", MovResX);
+			con.log("MovResY = %d", MovResY);
 			#endif
 
 			// Calculate new position
@@ -314,11 +314,11 @@ void re4t::init::Sofdec()
 			newMovNegY = -newMovPosY;
 
 			#ifdef VERBOSE
-			con.AddConcatLog("newMovPosX = ", static_cast<int>(newMovPosX));
-			con.AddConcatLog("newMovNegX = ", static_cast<int>(newMovNegX));
+			con.log("newMovPosX = %d", static_cast<int>(newMovPosX));
+			con.log("newMovNegX = %d", static_cast<int>(newMovNegX));
 
-			con.AddConcatLog("newMovPosY = ", static_cast<int>(newMovPosY));
-			con.AddConcatLog("newMovNegY = ", static_cast<int>(newMovNegY));
+			con.log("newMovPosY = %d", static_cast<int>(newMovPosY));
+			con.log("newMovNegY = %d", static_cast<int>(newMovNegY));
 			#endif
 
 			* (int32_t*)(ptrSFDMovAddr) = regs.eax;
