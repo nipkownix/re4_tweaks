@@ -1486,8 +1486,6 @@ void InvItemAdder_SetPopUp(const char* popupname)
 				for (int item_id = 0; item_id < 272; item_id++)
 				{
 					auto size = badItems.size();
-					
-					con.AddLogInt(size);
 
 					if (std::find(badItems.begin(), badItems.end(), EItemId(item_id)) != badItems.end())
 						continue;
