@@ -1668,10 +1668,11 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			EItemId lambda_itemId = itemId;
 			int lambda_stackCount = stackCount;
 			bool lambda_alwaysShowInventory = re4t::cfg->bTrainerOpenInventoryOnItemAdd;
-			Game_ScheduleInMainThread([lambda_itemId, lambda_stackCount, lambda_alwaysShowInventory]()
+			bool lambda_handle_attache_case = true;
+			Game_ScheduleInMainThread([lambda_itemId, lambda_stackCount, lambda_alwaysShowInventory, lambda_handle_attache_case]()
 			{
 				// Add the new item
-				InventoryItemAdd(ITEM_ID(lambda_itemId), lambda_stackCount, lambda_alwaysShowInventory);
+				InventoryItemAdd(ITEM_ID(lambda_itemId), lambda_stackCount, lambda_alwaysShowInventory, lambda_handle_attache_case);
 
 				// Pause the game again if needed
 				PauseGame(bCfgMenuOpen && bPauseGameWhileInCfgMenu);
@@ -3383,9 +3384,9 @@ void Trainer_RenderUI(int columnCount)
 
 									// Use our cSceSys__scheduler_Hook for the Assault_Jacket, otherwise the game crashes
 									if (EItemId(itemId) == EItemId::Assault_Jacket)
-										Game_ScheduleInMainThread([itemId, itemNum]() { InventoryItemAdd(itemId, itemNum, false); });
+										Game_ScheduleInMainThread([itemId, itemNum]() { InventoryItemAdd(itemId, itemNum, false, false); });
 									else
-										InventoryItemAdd(itemId, itemNum, false);
+										InventoryItemAdd(itemId, itemNum, false, false);
 
 									// Loop through all the items to find the one we just added, excluding items that have already been modified by us before.
 									// We do this so we can restore the stats of all items, including ones that have the same ITEM_ID in the inventory 

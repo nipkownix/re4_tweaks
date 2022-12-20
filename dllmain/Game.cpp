@@ -639,7 +639,7 @@ void Game_ScheduleInMainThread(std::function<void()> function)
 	game_pendingMainThreadFuncs.emplace_back(std::move(function));
 }
 
-void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
+void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui, bool handle_attache_case)
 {
 	// TODO: `piece_info` array inside game defines the puzzle piece for items that can be stored in inventory
 	// not every ITEM_ID is defined there, some ITEM_IDs are for treasures etc which aren't part of inventory puzzle
@@ -668,22 +668,22 @@ void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui)
 				j_PlSetCostume_Hook();
 				bio4::PlChangeData();
 			}
-			else if (eid == EItemId::Attache_Case_S)
+			else if (eid == EItemId::Attache_Case_S && handle_attache_case)
 			{
 				SubScreenWk->board_size_2AA = 0; // update inventory attache case size
 				SubScreenWk->board_next_2AB = 0;
 			}
-			else if (eid == EItemId::Attache_Case_M)
+			else if (eid == EItemId::Attache_Case_M && handle_attache_case)
 			{
 				SubScreenWk->board_size_2AA = 1;
 				SubScreenWk->board_next_2AB = 1;
 			}
-			else if (eid == EItemId::Attache_Case_L)
+			else if (eid == EItemId::Attache_Case_L && handle_attache_case)
 			{
 				SubScreenWk->board_size_2AA = 2;
 				SubScreenWk->board_next_2AB = 2;
 			}
-			else if (eid == EItemId::Attache_Case_O)
+			else if (eid == EItemId::Attache_Case_O && handle_attache_case)
 			{
 				SubScreenWk->board_size_2AA = 3;
 				SubScreenWk->board_next_2AB = 3;
