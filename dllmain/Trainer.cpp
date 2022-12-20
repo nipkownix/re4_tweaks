@@ -2,6 +2,7 @@
 #include <optional>
 #include "dllmain.h"
 #include "Game.h"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include "input.hpp"
 #include "imgui.h"
@@ -3358,92 +3359,107 @@ void Trainer_RenderUI(int columnCount)
 							using json = nlohmann::json;
 
 							std::ifstream f(ImGuiFileDialog::Instance()->GetFilePathName());
-							json js = json::parse(f);
+							json js;
 
-							std::vector<int> editedItms;
-
-							// Clear inventory
-							ItemMgr->eraseAll();
-
-							// Disarm current wep
-							ItemMgr->arm(0);
-							Game_ScheduleInMainThread([]() { bio4::WeaponChange(); });
-
-							// Setup proper board size to fit everything from the json
-							SubScreenWk->board_size_2AA = js["AttacheCase"]["board_size"];
-							SubScreenWk->board_next_2AB = js["AttacheCase"]["board_size"];
-
-							// Add items from json
-							for (auto& types : js["items"].items())
+							try
 							{
-								for (const auto& items : types.value())
+								js = json::parse(f);
+
+								if (!js.is_null() && !js.empty())
 								{
-									// Add item to inventory
-									ITEM_ID itemId = ITEM_ID(items["id"]);
-									int itemNum = items["num"];
+									std::vector<int> editedItms;
 
-									// Use our cSceSys__scheduler_Hook for the Assault_Jacket, otherwise the game crashes
-									if (EItemId(itemId) == EItemId::Assault_Jacket)
-										Game_ScheduleInMainThread([itemId, itemNum]() { InventoryItemAdd(itemId, itemNum, false, false); });
-									else
-										InventoryItemAdd(itemId, itemNum, false, false);
+									// Clear inventory
+									ItemMgr->eraseAll();
 
-									// Loop through all the items to find the one we just added, excluding items that have already been modified by us before.
-									// We do this so we can restore the stats of all items, including ones that have the same ITEM_ID in the inventory 
-									// (such as multiple First-Aid sprays), which would fail with ItemMgr->search since that func only returns the first instance it finds.
-									// (Is there a less weird way to do this?)
-									cItem* itmPtr = ItemMgr->m_pItem_14;
+									// Disarm current wep
+									ItemMgr->arm(0);
+									Game_ScheduleInMainThread([]() { bio4::WeaponChange(); });
 
-									int m_array_num_1C = ItemMgr->m_array_num_1C;
-									for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
+									// Setup proper board size to fit everything from the json
+									SubScreenWk->board_size_2AA = js["AttacheCase"]["board_size"];
+									SubScreenWk->board_next_2AB = js["AttacheCase"]["board_size"];
+
+									// Add items from json
+									for (auto& types : js["items"].items())
 									{
-										itmPtr++;
-
-										if ((itmPtr->be_flag_4 & 1) == 0)
-											continue;
-
-										if (itmPtr->chr_5 != ItemMgr->m_char_13)
-											continue;
-
-										if (itmPtr->id_0 == itemId)
+										for (const auto& items : types.value())
 										{
-											if (std::find(editedItms.begin(), editedItms.end(), (int)itmPtr) != editedItms.end())
-												continue;
+											// Add item to inventory
+											ITEM_ID itemId = ITEM_ID(items["id"]);
+											int itemNum = items["num"];
+
+											// Use our cSceSys__scheduler_Hook for the Assault_Jacket, otherwise the game crashes
+											if (EItemId(itemId) == EItemId::Assault_Jacket)
+												Game_ScheduleInMainThread([itemId, itemNum]() { InventoryItemAdd(itemId, itemNum, false, false); });
 											else
-												break;
-										}
-									}
+												InventoryItemAdd(itemId, itemNum, false, false);
 
-									// Apply the stats from the json
-									if (itmPtr)
-									{
-										editedItms.push_back((int)itmPtr);
+											// Loop through all the items to find the one we just added, excluding items that have already been modified by us before.
+											// We do this so we can restore the stats of all items, including ones that have the same ITEM_ID in the inventory 
+											// (such as multiple First-Aid sprays), which would fail with ItemMgr->search since that func only returns the first instance it finds.
+											// (Is there a less weird way to do this?)
+											cItem* itmPtr = ItemMgr->m_pItem_14;
 
-										itmPtr->pos_x_A = items["pos_x"];
-										itmPtr->pos_y_B = items["pos_y"];
-										itmPtr->orientation_C = items["orientation"];
-										itmPtr->num_2 = items["num"];
-										itmPtr->be_flag_4 = items["be_flag"];
-										itmPtr->chr_5 = items["chr"];
+											int m_array_num_1C = ItemMgr->m_array_num_1C;
+											for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
+											{
+												itmPtr++;
 
-										ITEM_INFO curInfo;
-										curInfo.id_0 = ITEM_ID(itmPtr->id_0);
-										bio4::itemInfo(ITEM_ID(itmPtr->id_0), &curInfo);
+												if ((itmPtr->be_flag_4 & 1) == 0)
+													continue;
 
-										if (curInfo.type_2 == ITEM_TYPE_WEAPON)
-										{
-											itmPtr->setFirePower(items["weapon0"]["firePower"]);
-											itmPtr->setFiringSpeed(items["weapon0"]["firingSpeed"]);
-											itmPtr->setReloadSpeed(items["weapon0"]["reloadSpeed"]);
-											itmPtr->setCapacity(items["weapon0"]["Capacity"]);
+												if (itmPtr->chr_5 != ItemMgr->m_char_13)
+													continue;
 
-											itmPtr->setAmmo(items["weapon1"]["ammo"]);
+												if (itmPtr->id_0 == itemId)
+												{
+													if (std::find(editedItms.begin(), editedItms.end(), (int)itmPtr) != editedItms.end())
+														continue;
+													else
+														break;
+												}
+											}
+
+											// Apply the stats from the json
+											if (itmPtr)
+											{
+												editedItms.push_back((int)itmPtr);
+
+												itmPtr->pos_x_A = items["pos_x"];
+												itmPtr->pos_y_B = items["pos_y"];
+												itmPtr->orientation_C = items["orientation"];
+												itmPtr->num_2 = items["num"];
+												itmPtr->be_flag_4 = items["be_flag"];
+												itmPtr->chr_5 = items["chr"];
+
+												ITEM_INFO curInfo;
+												curInfo.id_0 = ITEM_ID(itmPtr->id_0);
+												bio4::itemInfo(ITEM_ID(itmPtr->id_0), &curInfo);
+
+												if (curInfo.type_2 == ITEM_TYPE_WEAPON)
+												{
+													itmPtr->setFirePower(items["weapon0"]["firePower"]);
+													itmPtr->setFiringSpeed(items["weapon0"]["firingSpeed"]);
+													itmPtr->setReloadSpeed(items["weapon0"]["reloadSpeed"]);
+													itmPtr->setCapacity(items["weapon0"]["Capacity"]);
+
+													itmPtr->setAmmo(items["weapon1"]["ammo"]);
+												}
+											}
 										}
 									}
 								}
 							}
-						}
+							catch (json::parse_error&)
+							{
+								#ifdef VERBOSE
+								con.log("Failed to parse iventory .json!");
+								#endif
 
+								spd::log()->info("{} -> Failed to parse iventory .json!", __FUNCTION__);
+							}
+						}
 						ImGuiFileDialog::Instance()->Close();
 					}
 					ImGui::PopStyleVar();
