@@ -3259,7 +3259,14 @@ void Trainer_RenderUI(int columnCount)
 				{
 					if (ImGui::Button("Save inventory to .json"))
 					{
-						ImGuiFileDialog::Instance()->OpenDialog("SaveJson", " Choose a File to Save", ".json", ".", "", 1, IGFDUserDatas("SaveFile"), ImGuiFileDialogFlags_ConfirmOverwrite);
+						char timestamp[256];
+						__time64_t time;
+						struct tm ltime;
+						_time64(&time);
+						_localtime64_s(&ltime, &time);
+						strftime(timestamp, _countof(timestamp), "inventory_%Y-%m-%d_%H-%M-%S", &ltime);
+
+						ImGuiFileDialog::Instance()->OpenDialog("SaveJson", " Choose a File to Save", ".json", ".", timestamp, 1, IGFDUserDatas("SaveFile"), ImGuiFileDialogFlags_ConfirmOverwrite);
 						ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".json", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
 					}
 
@@ -3466,10 +3473,10 @@ void Trainer_RenderUI(int columnCount)
 							catch (json::parse_error&)
 							{
 								#ifdef VERBOSE
-								con.log("Failed to parse iventory .json!");
+								con.log("Failed to parse inventory .json!");
 								#endif
 
-								spd::log()->info("{} -> Failed to parse iventory .json!", __FUNCTION__);
+								spd::log()->info("{} -> Failed to parse inventory .json!", __FUNCTION__);
 							}
 						}
 						ImGuiFileDialog::Instance()->Close();
