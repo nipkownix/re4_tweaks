@@ -3274,14 +3274,15 @@ void Trainer_RenderUI(int columnCount)
 						// If user pressed Ok
 						if (ImGuiFileDialog::Instance()->IsOk())
 						{
-							using json = nlohmann::json;
+							using json = nlohmann::ordered_json;
 							json js;
 
 							cItem* itmPtr = ItemMgr->m_pItem_14;
 
 							// Save the Attache Case regardless if the user has or not an attache case item in their inventory, as this is needed
 							// to make sure the items will fit when loaded later
-							js["AttacheCase"]["board_size"] = SubScreenWk->board_size_2AA;
+							js["player"]["attache_size"] = SubScreenWk->board_size_2AA;
+							js["player"]["equipped_wep_id"] = ItemMgr->m_pWep_C ? ItemMgr->m_pWep_C->id_0 : -1;
 
 							int m_array_num_1C = ItemMgr->m_array_num_1C;
 							for (int loopcnt = 0; loopcnt <= m_array_num_1C; loopcnt++)
@@ -3356,7 +3357,7 @@ void Trainer_RenderUI(int columnCount)
 						// If user pressed Ok
 						if (ImGuiFileDialog::Instance()->IsOk())
 						{
-							using json = nlohmann::json;
+							using json = nlohmann::ordered_json;
 
 							std::ifstream f(ImGuiFileDialog::Instance()->GetFilePathName());
 							json js;
@@ -3377,8 +3378,8 @@ void Trainer_RenderUI(int columnCount)
 									Game_ScheduleInMainThread([]() { bio4::WeaponChange(); });
 
 									// Setup proper board size to fit everything from the json
-									SubScreenWk->board_size_2AA = js["AttacheCase"]["board_size"];
-									SubScreenWk->board_next_2AB = js["AttacheCase"]["board_size"];
+									SubScreenWk->board_size_2AA = js["player"]["attache_size"];
+									SubScreenWk->board_next_2AB = js["player"]["attache_size"];
 
 									// Add items from json
 									for (auto& types : js["items"].items())
@@ -3447,6 +3448,17 @@ void Trainer_RenderUI(int columnCount)
 													itmPtr->setAmmo(items["weapon1"]["ammo"]);
 												}
 											}
+										}
+									}
+
+									// Try equipping weapon if set
+									int equipped_id = js["player"]["equipped_wep_id"];
+									if (equipped_id != -1)
+									{
+										cItem* item = ItemMgr->search(equipped_id);
+										if (ItemMgr->arm(item))
+										{
+											Game_ScheduleInMainThread([]() { bio4::WeaponChange(); });
 										}
 									}
 								}
