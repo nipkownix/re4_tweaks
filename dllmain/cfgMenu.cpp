@@ -1548,16 +1548,12 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnSwitch();
 
-						if (ImGui::Checkbox("ShowGameOutput", &re4t::cfg->bShowGameOutput))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ShowGameOutput", &re4t::cfg->bShowGameOutput);
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window.");					
+						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window. (F2 by default)");					
 					}
 
 					ImGui_ColumnFinish();
