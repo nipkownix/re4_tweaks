@@ -1556,7 +1556,7 @@ void re4t::init::FrameRateFixes()
 	{
 		static float fMercsDeltaTimer = 0.0F;
 
-		auto pattern = hook::pattern("A1 40 ? ? ? 80 ? ? 00 74 ? 6A 0E"); // R400Main());
+		auto pattern = hook::pattern("A1 ? ? ? ? 80 ? ? 00 74 ? 6A 0E"); // R400Main());
 		struct MercsModeFPSFix
 		{
 			void operator()(injector::reg_pack& regs)
