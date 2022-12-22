@@ -505,6 +505,12 @@ void Trainer_Init()
 		patch_em10FindCk.SetPatch((uint8_t*)em10FindCk.as_int(), { 0x31, 0xC0, 0xC3 });
 		flagPatches.push_back(patch_em10FindCk);
 
+		// Em36 checks pPL->pos_94 directly inside em36AtkRtnCk, workaround by patching	it to immediately return
+		pattern = hook::pattern("89 45 ? F6 86 08 04 00 00 04 53 0F 84");
+		FlagPatch patch_em36AtkRtnCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK));
+		patch_em36AtkRtnCk.SetPatch(pattern.count(1).get(0).get<uint8_t>(-0xD), { 0xC3 });
+		flagPatches.push_back(patch_em36AtkRtnCk);
+
 		// A ton of Ems use l_pl_378 to check distance from player & begin attacks
 		// This gets set inside emMove func, hook it so we can override it with a massive distance if flag set
 		pattern = hook::pattern("DE C1 D9 9E 78 03 00 00 D9 05");
@@ -522,7 +528,7 @@ void Trainer_Init()
 				if (FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK)))
 				{
 					cEm* pEm = (cEm*)orig_esi;
-					pEm->l_pl_378 = 1.0e16;
+					pEm->l_pl_378 = 100000000.0f;
 				}
 			}
 		};
@@ -530,12 +536,12 @@ void Trainer_Init()
 		injector::MakeInline<emMove_l_pl_hook>(pattern.count(3).get(1).get<uint32_t>(2), pattern.count(3).get(1).get<uint32_t>(8)); // EmSetFromList2
 		injector::MakeInline<emMove_l_pl_hook>(pattern.count(3).get(2).get<uint32_t>(2), pattern.count(3).get(2).get<uint32_t>(8)); // EmSetEvent
 
-		// Pretty much every Em uses RouteCkToPos to check if player can be routed to, hook it so we can change result if needed
+		// RouteCkToPos hook, almost every Em uses this to check if player can be routed to, hook it so we can change result if needed
 		pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 85 C0 74 ? 83 8E 08 04");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkToPos);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkToPos_Hook);
 
-		// Some Ems (eg. Saddler Em31) use RouteCkPosToPos instead, will need seperate hook...
+		// RouteCkPosToPos hook: some Ems (eg. Saddler Em31) use this instead, will need seperate hook...
 		pattern = hook::pattern("E8 ? ? ? ? 83 C4 18 85 C0 74 ? 83 8E 08 04");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkPosToPos);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkPosToPos_Hook);
