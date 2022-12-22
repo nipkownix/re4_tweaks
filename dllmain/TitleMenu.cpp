@@ -3,9 +3,112 @@
 #include "Patches.h"
 #include "Game.h"
 #include "Settings.h"
+#include "input.hpp"
+
+void __cdecl titleLoop_hook(TITLE_WORK* pT)
+{
+	bool UIPause = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_ID_SYSTEM));
+	if (UIPause)
+		return;
+
+	ID_UNIT* tex = IDSystemPtr()->unitPtr(0x6u, IDC_TITLE);
+
+	if (re4t::cfg->bRestoreAnalogTitleScroll)
+	{
+		if (isController())
+		{
+			// prefer to use fAnalogR over AnalogR here, because it lets us to make the deadzone smaller
+			const float fDeadZone = 0.30f;
+
+			if (abs(*fAnalogRX) >= fDeadZone)
+				pT->scroll_add_5C = *fAnalogRX * 3.0f;
+
+			if (abs(*fAnalogRY) >= fDeadZone)
+			{
+				if (*fAnalogRY < 0)
+					tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
+				else
+					tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
+
+				tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
+			}
+		}
+		else
+		{
+			// Using our own KB/M input here instead of the game's, since the game's function to handle input (PadRead) is a mess.
+			if (pInput->is_key_down(VK_CONTROL))
+			{
+				float fDeltaX = pInput->raw_mouse_delta_x();
+				float fDeltaY = pInput->raw_mouse_delta_y();
+
+				if (abs(fDeltaX) > 0)
+				{
+					tex->pos0_94.x -= fDeltaX * 0.2f;
+
+					if (fDeltaX < 0)
+						pT->scroll_add_5C = -(fabsf(pT->scroll_add_5C));
+					else
+						pT->scroll_add_5C = fabsf(pT->scroll_add_5C);
+				}
+
+				if (abs(fDeltaY) > 0)
+				{
+
+					tex->pos0_94.z -= fDeltaY * 0.2f;
+					tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
+				}
+			}
+		}
+	}
+
+	if (!re4t::cfg->bRestoreAnalogTitleScroll || !pInput->is_key_down(VK_CONTROL))
+		tex->pos0_94.x -= pT->scroll_add_5C * GlobalPtr()->deltaTime_70;
+	if (tex->pos0_94.x > 1800.0f)
+		tex->pos0_94.x -= 2700.0f;
+	else if (tex->pos0_94.x < -900.0f)
+		tex->pos0_94.x += 2700.0f;
+}
 
 void re4t::init::TitleMenu()
 {
+
+	// Restore Gamecube title menu pan and zoom controls
+	{
+		// hook the titleLoop call with our own reimplementation
+		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 33 DB 53");
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), titleLoop_hook, PATCH_JUMP);
+
+		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like 'Help & Options'
+		pattern = hook::pattern("D9 5E 5C C6 46 58 00 39");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7);
+
+		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries 
+		pattern = hook::pattern("C7 06 01 00 00 00 E8 ? ? ? ? 57");
+		struct titleSub_resetScrollAdd
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				TitleWorkPtr()->scroll_add_5C = 1.5f;
+
+				// Code we overwrote
+				__asm { mov dword ptr[esi], 0x1}
+			}
+		}; injector::MakeInline<titleSub_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// reset scroll_add_5C when leaving Separate Ways
+		pattern = hook::pattern("C7 45 F4 00 00 00 FF 8B ? ? 52 8B C8 51 50");
+		struct titleAda_resetScrollAdd
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				TitleWorkPtr()->scroll_add_5C = 1.5f;
+
+				// Code we overwrote
+				__asm { mov dword ptr[ebp - 0xC], 0xFF000000 }
+			}
+		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+	}
+
 	// Add Professional mode select to Separate Ways
 	// TODO: support Assignment Ada as well. Not possible with this method currently, as all the difficulty select textures get unloaded in titleSub.
 	{
@@ -68,7 +171,7 @@ void re4t::init::TitleMenu()
 				const int* texId = SystemSavePtr()->language_8 ? def_texId : jpn_texId;
 				const float* texW = getLangW();
 
-				for (int i = 0; i < 4; i++)
+				for (int i = 0; i < 4; ++i)
 				{
 					ID_UNIT* tex = IDSystemPtr()->unitPtr(i + 1, IDC_OPTION_BG);
 
@@ -95,7 +198,7 @@ void re4t::init::TitleMenu()
 
 				bio4::SndCall(0, 5u, 0, 0, 0, 0);
 
-				for (int i = 0; i < 4; i++)
+				for (int i = 0; i < 4; ++i)
 				{
 					ID_UNIT* tex = IDSystemPtr()->unitPtr(i + 1, IDC_OPTION_BG);
 
@@ -112,6 +215,7 @@ void re4t::init::TitleMenu()
 				IDSystemPtr()->setTime(IDSystemPtr()->unitPtr(0x6u, IDC_OPTION_BG), 0);
 			}
 
+			// replaces most of the input code in titleAda routine 5
 			void operator()(injector::reg_pack& regs)
 			{
 				TITLE_WORK* pT = TitleWorkPtr();
@@ -170,19 +274,19 @@ void re4t::init::TitleMenu()
 				{
 					int omk_menu_no_6C = pT->omk_menu_no_6C;
 					if ((Key_btn_trg() & (uint64_t)KEY_BTN::KEY_U) == (uint64_t)KEY_BTN::KEY_U)
-						omk_menu_no_6C -= 1;
+						omk_menu_no_6C--;
 					else
-						omk_menu_no_6C += 1;
+						omk_menu_no_6C++;
 
-					if (insideLevelMenu)
+					if (!insideLevelMenu)
+						omk_menu_no_6C = std::clamp(omk_menu_no_6C, 0, 2);
+					else
 					{
 						if (omk_menu_no_6C < 0)
 							omk_menu_no_6C = 1;
 						else if (omk_menu_no_6C > 1)
 							omk_menu_no_6C = 0;
 					}
-					else
-						omk_menu_no_6C = std::clamp(omk_menu_no_6C, 0, 2);
 
 					if (omk_menu_no_6C != pT->omk_menu_no_6C)
 					{

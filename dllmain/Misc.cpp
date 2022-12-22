@@ -309,70 +309,6 @@ void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void*
 	SsTermMain_files.clear();
 }
 
-void __cdecl titleLoop_hook(TITLE_WORK* pT)
-{
-	bool UIPause = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_ID_SYSTEM));
-	if (UIPause)
-		return;
-
-	ID_UNIT* tex = IDSystemPtr()->unitPtr(0x6u, IDC_TITLE);
-
-	if (re4t::cfg->bRestoreAnalogTitleScroll)
-	{
-		if (isController())
-		{
-			// prefer to use fAnalogR over AnalogR here, because it lets us to make the deadzone smaller
-			const float fDeadZone = 0.30f;
-
-			if (abs(*fAnalogRX) >= fDeadZone)
-				pT->scroll_add_5C = *fAnalogRX * 3.0f;
-
-			if (abs(*fAnalogRY) >= fDeadZone)
-			{
-				if (*fAnalogRY < 0)
-					tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
-				else
-					tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
-
-				tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
-			}
-		}
-		else
-		{
-			// Using our own KB/M input here instead of the game's, since the game's function to handle input (PadRead) is a mess.
-			if (pInput->is_key_down(VK_CONTROL))
-			{
-				float fDeltaX = pInput->raw_mouse_delta_x();
-				float fDeltaY = pInput->raw_mouse_delta_y();
-
-				if (abs(fDeltaX) > 0)
-				{
-					tex->pos0_94.x -= fDeltaX * 0.2f;
-
-					if (fDeltaX < 0)
-						pT->scroll_add_5C = -(fabsf(pT->scroll_add_5C));
-					else
-						pT->scroll_add_5C = fabsf(pT->scroll_add_5C);
-				}
-
-				if (abs(fDeltaY) > 0)
-				{
-
-					tex->pos0_94.z -= fDeltaY * 0.2f;
-					tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
-				}
-			}
-		}
-	}
-
-	if (!re4t::cfg->bRestoreAnalogTitleScroll || !pInput->is_key_down(VK_CONTROL))
-		tex->pos0_94.x -= pT->scroll_add_5C * GlobalPtr()->deltaTime_70;
-	if (tex->pos0_94.x > 1800.0f)
-		tex->pos0_94.x -= 2700.0f;
-	else if (tex->pos0_94.x < -900.0f)
-		tex->pos0_94.x += 2700.0f;
-}
-
 BYTE(__cdecl *j_PlSetCostume_Orig)();
 BYTE __cdecl j_PlSetCostume_Hook()
 {
@@ -1335,43 +1271,6 @@ void re4t::init::Misc()
 				regs.edx = *(uint32_t*)(regs.esi + 0x7D8);
 			}
 		}; injector::MakeInline<RifleScreenShake>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-	}
-
-	// Restore Gamecube title menu pan and zoom controls
-	{
-		// hook the titleLoop call with our own reimplementation
-		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 33 DB 53");
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), titleLoop_hook, PATCH_JUMP);
-
-		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like 'Help & Options'
-		pattern = hook::pattern("D9 5E 5C C6 46 58 00 39");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7);
-
-		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries 
-		pattern = hook::pattern("C7 06 01 00 00 00 E8 ? ? ? ? 57");
-		struct titleSub_resetScrollAdd
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				TitleWorkPtr()->scroll_add_5C = 1.5f;
-
-				// Code we overwrote
-				__asm { mov dword ptr[esi], 0x1}
-			}
-		}; injector::MakeInline<titleSub_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		// reset scroll_add_5C when leaving Separate Ways
-		pattern = hook::pattern("C7 45 F4 00 00 00 FF 8B ? ? 52 8B C8 51 50");
-		struct titleAda_resetScrollAdd
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				TitleWorkPtr()->scroll_add_5C = 1.5f;
-
-				// Code we overwrote
-				__asm { mov dword ptr[ebp - 0xC], 0xFF000000 }
-			}
-		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
 	// Limit the Matilda to one three round burst per trigger pull
