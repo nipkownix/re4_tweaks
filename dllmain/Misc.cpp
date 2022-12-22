@@ -1127,134 +1127,129 @@ void re4t::init::Misc()
 
 	// NTSC mode
 	// Enables difficulty modifiers previously exclusive to the NTSC console versions of RE4.
-	// These were locked behind checks for pSys->language_8 == 1 (NTSC English). Since RE4 UHD uses PAL English (language_8 == 2), Steam players never saw these.
+	// These were locked behind checks for pSys->language_8 == 1 (NTSC English). Since RE4 UHD uses PAL English (language_8 == 2), PC players never saw these.
+	if (re4t::cfg->bEnableNTSCMode)
 	{
-		if (re4t::cfg->bEnableNTSCMode)
+		// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
+		auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
+		Patch(pattern.count(1).get(0).get<uint32_t>(0), { 0xB2, 0x01, 0x90 }); // GamePointInit, { mov dl, 1 }
+
+		// Assignment Ada: increased difficulty (4500->6500)
+		pattern = hook::pattern("66 39 B1 ? ? 00 00 75 10");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // GameAddPoint
+
+		// Shooting range: increased bottle cap score requirements (1000->3000)
+		pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
+		Patch(pattern.count(1).get(0).get<uint32_t>(2), { 0xB1, 0x01, 0x90 }); // cCap::check, { mov cl, 1 }
+
+		// Shooting range: use NTSC strings for the game rules note
+		// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
+		pattern = hook::pattern("? 00 01 00 46 00 01 00");
+		file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
+		// update the note's message index whenever we load into r22c
+		pattern = hook::pattern("89 41 78 83 C1 7C E8");
+		struct R22cInit_UpdateMsgIdx
 		{
-			// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
-			auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
-			Patch(pattern.count(1).get(0).get<uint32_t>(0), { 0xB2, 0x01, 0x90 }); // GamePointInit, { mov dl, 1 }
-
-			// Assignment Ada: increased difficulty (4500->6500)
-			pattern = hook::pattern("66 39 B1 ? ? 00 00 75 10");
-			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // GameAddPoint
-
-			// Shooting range: increased bottle cap score requirements (1000->3000)
-			pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
-			Patch(pattern.count(1).get(0).get<uint32_t>(2), { 0xB1, 0x01, 0x90 }); // cCap::check, { mov cl, 1 }
-
-			// Shooting range: use NTSC strings for the game rules note
-			// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
-			pattern = hook::pattern("3F 00 01 00 46 00 01 00");
-			file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
-			// update the note's message index whenever we load into r22c
-			pattern = hook::pattern("89 41 78 83 C1 7C E8");
-			struct R22cInit_UpdateMsgIdx
+			void operator()(injector::reg_pack& regs)
 			{
-				void operator()(injector::reg_pack& regs)
-				{
-					file_msg_tbl_35[0].top_0 = SystemSavePtr()->language_8 == 2 ? 0x9D : 0x3F;
+				file_msg_tbl_35[0].top_0 = SystemSavePtr()->language_8 == 2 ? 0x9D : 0x3F;
 
-					// code we overwrote
-					*(uint32_t*)(regs.ecx + 0x78) = regs.eax;
-					regs.ecx += 0x7C;
-				}
-			}; injector::MakeInline<R22cInit_UpdateMsgIdx>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+				// code we overwrote
+				*(uint32_t*)(regs.ecx + 0x78) = regs.eax;
+				regs.ecx += 0x7C;
+			}
+		}; injector::MakeInline<R22cInit_UpdateMsgIdx>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-			// Shooting range: only check for bottle cap reward once per results screen
-			pattern = hook::pattern("8B 15 ? ? ? ? 80 7A ? 01 74");
-			Patch(pattern.count(2).get(1).get<uint32_t>(10), { 0xEB }); // shootResult, jz -> jmp
+		// Shooting range: only check for bottle cap reward once per results screen
+		pattern = hook::pattern("8B 15 ? ? ? ? 80 7A ? 01 74");
+		Patch(pattern.count(2).get(1).get<uint32_t>(10), { 0xEB }); // shootResult, jz -> jmp
 
-			// Mercenaries: unlock village stage difficulty, requires 60fps fix
-			Patch(pattern.count(2).get(0).get<uint32_t>(10), { 0xEB }); // GameAddPoint, jz -> jmp
+		// Mercenaries: unlock village stage difficulty, requires 60fps fix
+		Patch(pattern.count(2).get(0).get<uint32_t>(10), { 0xEB }); // GameAddPoint, jz -> jmp
 
-			// remove Easy mode from the difficulty menu
-			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 75");
-			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(9), 2); // titleLevelInit
+		// remove Easy mode from the difficulty menu
+		pattern = hook::pattern("A1 ? ? ? ? 80 78 ? 01 75");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(9), 2); // titleLevelInit
 
-			// skip difficulty select on a fresh system save
-			pattern = hook::pattern("B8 04 00 00 00 5B 8B E5");
-			struct SkipLevelSelect
+		// skip difficulty select on a fresh system save
+		pattern = hook::pattern("B8 04 00 00 00 5B 8B E5");
+		struct SkipLevelSelect
+		{
+			void operator()(injector::reg_pack& regs)
 			{
-				void operator()(injector::reg_pack& regs)
-				{
-					bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
-					regs.eax = newSystemSave ? TTL_CMD_START : TTL_CMD_LEVEL;
-				}
-			}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+				bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
+				regs.eax = newSystemSave ? TTL_CMD_START : TTL_CMD_LEVEL;
+			}
+		}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-			// Swap NEW GAME texture for START on a fresh system save
-			pattern = hook::pattern("89 51 68 8B 57 68 8B");
-			struct titleMenuInit_StartTex
+		// Swap NEW GAME texture for START on a fresh system save
+		pattern = hook::pattern("89 51 68 8B 57 68 8B");
+		struct titleMenuInit_StartTex
+		{
+			void operator()(injector::reg_pack& regs)
 			{
-				void operator()(injector::reg_pack& regs)
+				bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
+				if (newSystemSave)
 				{
-					bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
-					if (newSystemSave)
+					float texW;
+
+					// texW = aspect ratio of image file * size0_H_E0 (14)
+					switch (SystemSavePtr()->language_8)
 					{
-						float texW;
-
-						// texW = aspect ratio of image file * size0_H_E0 (14)
-						switch (SystemSavePtr()->language_8)
-						{
-						case 4: // French
-							texW = 131.0f;
-							break;
-						case 5: // Spanish
-							texW = 70.0f;
-							break;
-						case 6: // Traditional Chinese / Italian
-							texW = GameVersion() == "1.1.0" ? 66.0f : 68.0f;
-							break;
-						case 8: // Italian
-							texW = 68.0f;
-							break;
-						default: // English, German, Japanese, Simplified Chinese
-							texW = 66.0f;
-							break;
-						}
-
-						IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->texId_78 = 164;
-						IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
-						IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->texId_78 = 164;
-						IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
+					case 4: // French
+						texW = 131.0f;
+						break;
+					case 5: // Spanish
+						texW = 70.0f;
+						break;
+					case 6: // Traditional Chinese / Italian
+						texW = GameVersion() == "1.1.0" ? 66.0f : 68.0f;
+						break;
+					case 8: // Italian
+						texW = 68.0f;
+						break;
+					default: // English, German, Japanese, Simplified Chinese
+						texW = 66.0f;
+						break;
 					}
 
-					// Code we overwrote
-					*(uint32_t*)(regs.ecx + 0x68) = regs.edx;
-					regs.edx = *(uint32_t*)(regs.edi + 0x68);
+					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->texId_78 = 164;
+					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
+					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->texId_78 = 164;
+					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
 				}
-			}; injector::MakeInline<titleMenuInit_StartTex>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-			// special handling for the JP exe
-			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 74");
-			if (pattern.empty())
-			{
-				// ignore language_8 check when skipping the difficulty menu
-				pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
-				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
-
-				// repurpose the hide Professional mode block to hide Amateur mode instead
-				pattern = hook::pattern("C7 46 30 01 00 00 00");
-				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // titleLevelInit
-				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(16), 2);
-				Patch(pattern.count(1).get(0).get<uint32_t>(21), { 0x09 });
-				Patch(pattern.count(1).get(0).get<uint32_t>(38), { 0x0A });
-				// erase the rest of the block
-				pattern = hook::pattern("C7 46 ? 03 00 00 00 85 DB");
-				injector::MakeNOP(pattern.get_first(0), 37);
-
-				// disable JP difficulty select confirmation prompts
-				pattern = hook::pattern("A1 40 ? ? ? 38 58 08 75");
-				Patch(pattern.count(1).get(0).get<uint32_t>(8), { 0xEB }); // titleMain, jnz -> jmp
-
-				// remove JP only 20% damage armor from Mercenaries mode
-				pattern = hook::pattern("F7 46 54 00 00 00 40");
-				Patch(pattern.count(1).get(0).get<uint32_t>(7), { 0xEB }); // LifeDownSet2, jz -> jmp
+				// Code we overwrote
+				*(uint32_t*)(regs.ecx + 0x68) = regs.edx;
+				regs.edx = *(uint32_t*)(regs.edi + 0x68);
 			}
+		}; injector::MakeInline<titleMenuInit_StartTex>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-			spd::log()->info("NTSC mode enabled");
-		}
+		// Patches for Japanese language support (language_8 == 0):
+
+		// ignore language_8 check when skipping the difficulty menu
+		pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
+
+		// repurpose the hide Professional mode block to hide Amateur mode instead
+		pattern = hook::pattern("C7 46 30 01 00 00 00");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // titleLevelInit
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(16), 2);
+		Patch(pattern.count(1).get(0).get<uint32_t>(21), { 0x09 });
+		Patch(pattern.count(1).get(0).get<uint32_t>(38), { 0x0A });
+		// erase the rest of the block
+		pattern = hook::pattern("C7 46 ? 03 00 00 00 85 DB");
+		injector::MakeNOP(pattern.get_first(0), 37);
+
+		// disable JP difficulty select confirmation prompts
+		pattern = hook::pattern("A1 ? ? ? ? 38 58 08 75");
+		Patch(pattern.count(1).get(0).get<uint32_t>(8), { 0xEB }); // titleMain, jnz -> jmp
+
+		// remove JP only 20% damage armor from Mercenaries mode
+		pattern = hook::pattern("F7 46 54 00 00 00 40");
+		Patch(pattern.count(1).get(0).get<uint32_t>(7), { 0xEB }); // LifeDownSet2, jz -> jmp
+
+		spd::log()->info("NTSC mode enabled");
 	}
 
 	// Add screenshake effect to scoped rifle shots

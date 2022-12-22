@@ -131,7 +131,7 @@ void re4t::init::TitleMenu()
 		static uint32_t* snd_id_1654 = *hook::pattern("A3 ? ? ? ? 5F 5E 8B E5 5D").count(1).get(0).get<uint32_t*>(1);
 
 		auto pattern_begin = hook::pattern("8B ? ? ? ? ? 8B ? ? ? ? ? 8B C1 25 00 00 00 40 81 E7 00 20 00 00 0B C7 74 ? 33");
-		auto pattern_end = hook::pattern("33 FF EB ? 8D 49 00 0F");
+		auto pattern_end = hook::pattern("C6 86 80 00 00 00 08 88 4E 03");
 		struct titleAda_levelMenu
 		{
 			enum TitleAda
@@ -163,7 +163,7 @@ void re4t::init::TitleMenu()
 			static void enterLevelMenu()
 			{
 				insideLevelMenu = true;
-				injector::WriteMemory(mouseMenuNum, uint8_t(2), true); // disable mouse interaction with the MenuExit texture
+				injector::WriteMemory(mouseMenuNum, uint8_t(0x02), true); // disable mouse interaction with the MenuExit texture
 				TitleWorkPtr()->omk_menu_no_6C = 1;
 
 				bio4::SndCall(0, 4u, 0, 0, 0, 0);
@@ -193,7 +193,7 @@ void re4t::init::TitleMenu()
 			static void exitLevelMenu()
 			{
 				insideLevelMenu = false;
-				injector::WriteMemory(mouseMenuNum, uint8_t(3), true);
+				injector::WriteMemory(mouseMenuNum, uint8_t(0x03), true);
 				TitleWorkPtr()->omk_menu_no_6C = 0;
 
 				bio4::SndCall(0, 5u, 0, 0, 0, 0);
@@ -248,7 +248,7 @@ void re4t::init::TitleMenu()
 							pT->Rno1_1 = TitleAda::GameStart;
 							GlobalPtr()->gameDifficulty_847C = GameDifficulty::Pro;
 							insideLevelMenu = false;
-							injector::WriteMemory(mouseMenuNum, uint8_t(3), true);
+							injector::WriteMemory(mouseMenuNum, uint8_t(0x03), true);
 						}
 						break;
 					case 1:
@@ -258,7 +258,7 @@ void re4t::init::TitleMenu()
 						{
 							pT->Rno1_1 = TitleAda::GameStart;
 							insideLevelMenu = false;
-							injector::WriteMemory(mouseMenuNum, uint8_t(3), true);
+							injector::WriteMemory(mouseMenuNum, uint8_t(0x03), true);
 						}
 						break;
 					case 2:
@@ -295,9 +295,8 @@ void re4t::init::TitleMenu()
 					}
 				}
 			}
-		}; injector::MakeInline<titleAda_levelMenu>(pattern_begin.count(1).get(0).get<uint32_t>(0), pattern_end.count(1).get(0).get<uint32_t>(0));
+		}; injector::MakeInline<titleAda_levelMenu>(pattern_begin.count(1).get(0).get<uint32_t>(0), pattern_end.count(1).get(0).get<uint32_t>(14));
 
-		// gameInit: don't overwrite Professional mode difficulty for Separate Ways or Assignment Ada
 		auto pattern = hook::pattern("F7 40 54 00 10 00 C0 74 ? C6 80 7C 84 00 00 05 A1");
 		struct gameInit_AdaPro
 		{
