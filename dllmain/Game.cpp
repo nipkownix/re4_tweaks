@@ -11,9 +11,7 @@ SUB_SCREEN* SubScreenWk = nullptr; // extern inside sscrn.h
 pzlPlayer__ptrPiece_Fn pzlPlayer__ptrPiece = nullptr; // extern inside puzzle.h
 CameraControl* CamCtrl = nullptr; // extern inside cam_ctrl.h
 cPlayer__subScrCheck_Fn cPlayer__subScrCheck = nullptr; // extern inside player.h
-
-// fade.h externs
-j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr;
+j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr; // extern inside fade.h
 
 // light.h externs
 cLightMgr* LightMgr = nullptr;

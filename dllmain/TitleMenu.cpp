@@ -163,7 +163,7 @@ void re4t::init::TitleMenu()
 			static void enterLevelMenu()
 			{
 				insideLevelMenu = true;
-				injector::WriteMemory(mouseMenuNum, uint8_t(0x02), true); // disable mouse interaction with the MenuExit texture
+				injector::WriteMemory(mouseMenuNum, uint8_t(0x2), true); // disable mouse interaction with the MenuExit texture
 				TitleWorkPtr()->omk_menu_no_6C = 1;
 
 				bio4::SndCall(0, 4u, 0, 0, 0, 0);
@@ -193,7 +193,7 @@ void re4t::init::TitleMenu()
 			static void exitLevelMenu()
 			{
 				insideLevelMenu = false;
-				injector::WriteMemory(mouseMenuNum, uint8_t(0x03), true);
+				injector::WriteMemory(mouseMenuNum, uint8_t(0x3), true);
 				TitleWorkPtr()->omk_menu_no_6C = 0;
 
 				bio4::SndCall(0, 5u, 0, 0, 0, 0);
@@ -248,7 +248,7 @@ void re4t::init::TitleMenu()
 							pT->Rno1_1 = TitleAda::GameStart;
 							GlobalPtr()->gameDifficulty_847C = GameDifficulty::Pro;
 							insideLevelMenu = false;
-							injector::WriteMemory(mouseMenuNum, uint8_t(0x03), true);
+							injector::WriteMemory(mouseMenuNum, uint8_t(0x3), true);
 						}
 						break;
 					case 1:
@@ -258,7 +258,7 @@ void re4t::init::TitleMenu()
 						{
 							pT->Rno1_1 = TitleAda::GameStart;
 							insideLevelMenu = false;
-							injector::WriteMemory(mouseMenuNum, uint8_t(0x03), true);
+							injector::WriteMemory(mouseMenuNum, uint8_t(0x3), true);
 						}
 						break;
 					case 2:
