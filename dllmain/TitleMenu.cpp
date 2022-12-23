@@ -297,6 +297,7 @@ void re4t::init::TitleMenu()
 			}
 		}; injector::MakeInline<titleAda_levelMenu>(pattern_begin.count(1).get(0).get<uint32_t>(0), pattern_end.count(1).get(0).get<uint32_t>(14));
 
+		// gameInit: don't overwrite Professional mode difficulty for Separate Ways or Assignment Ada
 		auto pattern = hook::pattern("F7 40 54 00 10 00 C0 74 ? C6 80 7C 84 00 00 05 A1");
 		struct gameInit_AdaPro
 		{
@@ -304,7 +305,7 @@ void re4t::init::TitleMenu()
 			{
 				bool isSeparateWays = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_PS2_ADA_GAME));
 				bool isAssignmentAda = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ADA_GAME));
-				bool isMercenaries = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ADA_GAME));
+				bool isMercenaries = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ETC_GAME));
 
 				if (isMercenaries ||
 					((isSeparateWays || isAssignmentAda) && GlobalPtr()->gameDifficulty_847C != GameDifficulty::Pro))
