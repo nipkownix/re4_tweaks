@@ -137,6 +137,7 @@ public:
 	bool bEnableNTSCMode = false;
 	bool bLimitMatildaBurst = false;
 	bool bSeparateWaysDifficultyMenu = false;
+	bool bAlwaysShowOriginalTitleBackground = false;
 	bool bShowGameOutput = false;
   
 	// MEMORY

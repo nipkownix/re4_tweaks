@@ -1372,6 +1372,18 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Choose between Professional and Normal difficulty modes when starting a new game of Separate Ways.");
 					}
 
+					// AlwaysShowOriginalTitleBackground
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AlwaysShowOriginalTitleBackground", &re4t::cfg->bAlwaysShowOriginalTitleBackground);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
+					}
+
 					// RestoreAnalogTitleScroll
 					{
 						ImGui_ColumnSwitch();

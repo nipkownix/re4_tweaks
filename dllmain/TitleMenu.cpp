@@ -38,8 +38,8 @@ void __cdecl titleLoop_hook(TITLE_WORK* pT)
 			// Using our own KB/M input here instead of the game's, since the game's function to handle input (PadRead) is a mess.
 			if (pInput->is_key_down(VK_CONTROL))
 			{
-				float fDeltaX = pInput->raw_mouse_delta_x();
-				float fDeltaY = pInput->raw_mouse_delta_y();
+				float fDeltaX = float(pInput->raw_mouse_delta_x());
+				float fDeltaY = float(pInput->raw_mouse_delta_y());
 
 				if (abs(fDeltaX) > 0)
 				{
@@ -71,7 +71,6 @@ void __cdecl titleLoop_hook(TITLE_WORK* pT)
 
 void re4t::init::TitleMenu()
 {
-
 	// Restore Gamecube title menu pan and zoom controls
 	{
 		// hook the titleLoop call with our own reimplementation
@@ -107,6 +106,23 @@ void re4t::init::TitleMenu()
 				__asm { mov dword ptr[ebp - 0xC], 0xFF000000 }
 			}
 		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+	}
+
+	// Force the original title menu background on completed saves
+	{
+		auto pattern = hook::pattern("F7 41 ? ? ? ? ? 6A ? 6A ? 6A ? 0F 85 ? ? ? ? 8B 46");
+		struct titleSet_bgCheckHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				bool hasFinishedGame = FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_COSTUME));
+
+				if (!hasFinishedGame || re4t::cfg->bAlwaysShowOriginalTitleBackground)
+					regs.ef |= (1 << regs.zero_flag);
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<titleSet_bgCheckHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
 	// Add Professional mode select to Separate Ways
