@@ -1,6 +1,6 @@
 #include <iostream>
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include "Game.h"
 #include "input.hpp"
@@ -78,7 +78,7 @@ int* __cdecl KEY1prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_1);
+	int newKey = pInput->dik_from_key_name(re4t::cfg->sQTE_key_1);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -87,7 +87,7 @@ int* __cdecl KEY2prompt_hook(int* a1, __int64 a2)
 {
 	UNREFERENCED_PARAMETER(a2);
 
-	int newKey = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_2);
+	int newKey = pInput->dik_from_key_name(re4t::cfg->sQTE_key_2);
 
 	return sub_41E600_orig(a1, newKey);
 }
@@ -514,12 +514,10 @@ void re4t::init::QTEfixes()
 
 					if (pressed)
 					{
-						con.AddLogInt(*(int32_t*)(regs.eax));
 						if (re4t::cfg->bFixQTE || re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 							*(int32_t*)(regs.eax) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
 						else
 							*(int32_t*)(regs.eax) += 1;
-						con.AddLogInt(*(int32_t*)(regs.eax));
 					}
 				}
 			}; injector::MakeInline<KrauserQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
@@ -541,7 +539,7 @@ void re4t::init::QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.ebx = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_1);
+					regs.ebx = pInput->dik_from_key_name(re4t::cfg->sQTE_key_1);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
@@ -554,7 +552,7 @@ void re4t::init::QTEfixes()
 			{
 				void operator()(injector::reg_pack& regs)
 				{
-					regs.edx = pInput->KeyMap_getDIK(re4t::cfg->sQTE_key_2);
+					regs.edx = pInput->dik_from_key_name(re4t::cfg->sQTE_key_2);
 					regs.eax = *(int32_t*)(regs.eax + 0x1C);
 				}
 			}; injector::MakeInline<QTEkey2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));

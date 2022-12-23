@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "imgui\misc\cpp\imgui_stdlib.h"
 #include "input.hpp"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include <FAhashes.h>
 #include "Utils.h"
 #include "UI_DebugWindows.h"
@@ -42,7 +42,7 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 	cfgMenuCombo.clear();
 	cfgMenuCombo = re4t::cfg->ParseKeyCombo(in_combo);
 
-	pInput->RegisterHotkey({ []() {
+	pInput->register_hotkey({ []() {
 		bCfgMenuOpen = !bCfgMenuOpen;
 	}, &cfgMenuCombo });
 
@@ -775,6 +775,11 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::BeginDisabled(!re4t::cfg->bCameraImprovements);
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ResetCameraAfterUsingWeapons", &re4t::cfg->bResetCameraAfterUsingWeapons);
+						ImGui::TextWrapped("Center the camera after using weapons.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
 						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ResetCameraAfterUsingKnife", &re4t::cfg->bResetCameraAfterUsingKnife);
 						ImGui::TextWrapped("Center the camera after using the knife.");
 
@@ -1551,6 +1556,18 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(may have a rare chance to cause a heap corruption crash when loading a save, but if the game loads fine then there shouldn't be any chance of crashing)");
 					}
 
+					// ShowGameOutput
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("ShowGameOutput", &re4t::cfg->bShowGameOutput);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window. (F2 by default)");					
+					}
+
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
@@ -1654,7 +1671,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sConfigMenuKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sConfigMenuKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sConfigMenuKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1667,14 +1684,14 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnSwitch();
 
-						ImGui::TextWrapped("Key combination to open the re4_tweaks debug console (only in certain re4_tweaks builds)");
+						ImGui::TextWrapped("Key combination to open the re4_tweaks debug console");
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::PushID(2);
 						if (ImGui::Button(re4t::cfg->sConsoleKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sConsoleKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sConsoleKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1706,7 +1723,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemUp.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemUp, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemUp, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1718,7 +1735,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemDown.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemDown, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemDown, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1730,7 +1747,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemLeft.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemLeft, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemLeft, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1742,7 +1759,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sFlipItemRight.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sFlipItemRight, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sFlipItemRight, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1772,7 +1789,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sQTE_key_1.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sQTE_key_1, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sQTE_key_1, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1784,7 +1801,7 @@ void cfgMenuRender()
 							if (ImGui::Button(re4t::cfg->sQTE_key_2.c_str(), ImVec2(btn_size_x, 0)))
 							{
 								re4t::cfg->HasUnsavedChanges = true;
-								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyThread, &re4t::cfg->sQTE_key_2, 0, NULL);
+								CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sQTE_key_2, 0, NULL);
 							}
 							ImGui::PopID();
 
@@ -1806,7 +1823,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sDebugMenuKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sDebugMenuKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sDebugMenuKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1829,7 +1846,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sMouseTurnModifierKeyCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sMouseTurnModifierKeyCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sMouseTurnModifierKeyCombo, 0, NULL);
 						}
 						ImGui::PopID();
 
@@ -1849,7 +1866,7 @@ void cfgMenuRender()
 						if (ImGui::Button(re4t::cfg->sJetSkiTrickCombo.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&SetHotkeyComboThread, &re4t::cfg->sJetSkiTrickCombo, 0, NULL);
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyComboThread, &re4t::cfg->sJetSkiTrickCombo, 0, NULL);
 						}
 						ImGui::PopID();
 

@@ -3,7 +3,7 @@
 #include "Settings.h"
 #include "input.hpp"
 #include "Game.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -25,6 +25,9 @@ void EnableClipCursor(HWND window)
 
 	if (bIsMoving)
 		return;
+
+	// Gotta set this to false so our hooks allow ClipCursor to go through if the UI is open...
+	pInput->block_mouse_input(false, false);
 
 	RECT rect;
 	GetClientRect(window, &rect);
@@ -48,13 +51,13 @@ void EnableClipCursor(HWND window)
 
 	if (!ClipCursor(&rect)) {
 		#ifdef VERBOSE
-		con.AddLogChar("Unable to lock cursor");
+		con.log("Unable to lock cursor");
 		#endif
 		return;
 	}
 
 	#ifdef VERBOSE
-	con.AddLogChar("Cursor locked");
+	con.log("Cursor locked");
 	#endif
 }
 
@@ -81,7 +84,7 @@ void DisableClipCursor(bool bCenterCursor)
 	}
 
 	#ifdef VERBOSE
-	con.AddLogChar("Cursor released");
+	con.log("Cursor released");
 	#endif
 }
 
@@ -93,7 +96,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			#ifdef VERBOSE
 			if (wParam == VK_NUMPAD3)
 			{
-				con.AddLogChar("Sono me... dare no me?");
+				con.log("Sono me... dare no me?");
 			}
 			#endif
 			break;
@@ -117,8 +120,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				// Write new window position
 				#ifdef VERBOSE
-				con.AddConcatLog("curPosX = ", curPosY);
-				con.AddConcatLog("curPosY = ", curPosX);
+				con.log("curPosX = %d", curPosY);
+				con.log("curPosY = %d", curPosX);
 				#endif
 
 				CIniReader iniReader("");
@@ -147,7 +150,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_KILLFOCUS:
 			// Clear the mouse delta value if we lose focus
 			*(int32_t*)(ptrMouseDeltaX) = 0;
-			pInput->clear_mouse_delta();
+			pInput->clear_raw_mouse_delta();
 
 			// Unlock cursor
 			DisableClipCursor(true);
@@ -163,7 +166,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		// Clear the mouse delta value if the cfg menu is open
 		*(int32_t*)(ptrMouseDeltaX) = 0;
-		pInput->clear_mouse_delta();
+		pInput->clear_raw_mouse_delta();
 	}
 
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
@@ -183,7 +186,7 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	spd::log()->info("{} -> Window created; Registering for input", __FUNCTION__);
 
 	// Register hWnd for input processing
-	pInput = input::register_window(hWindow);
+	pInput = re4t::input::register_window(hWindow);
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);
 

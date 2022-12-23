@@ -1,7 +1,7 @@
 #include <iostream>
 #include <mutex>
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Game.h"
 #include "Settings.h"
 #include <timeapi.h>
@@ -363,7 +363,7 @@ void re4t::init::DisplayTweaks()
 				EnumDisplaySettings(device.DeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode) == false)
 			{
 				#ifdef VERBOSE
-				con.AddLogChar("Couldn't read the display refresh rate. Using fallback value.");
+				con.log("Couldn't read the display refresh rate. Using fallback value.");
 				#endif
 
 				spd::log()->info("FixDisplayMode -> Couldn't read the display refresh rate. Using fallback value.");
@@ -373,7 +373,7 @@ void re4t::init::DisplayTweaks()
 			else
 			{
 				#ifdef VERBOSE
-				con.AddLogChar("Device 0 name: %s", device.DeviceName);
+				con.log("Device 0 name: %s", device.DeviceName);
 				#endif
 				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
 
@@ -395,7 +395,7 @@ void re4t::init::DisplayTweaks()
 		}
 
 		#ifdef VERBOSE
-		con.AddConcatLog("New refresh rate = ", g_UserRefreshRate);
+		con.log("New refresh rate = %d", g_UserRefreshRate);
 		#endif
 
 		spd::log()->info("FixDisplayMode -> New refresh rate = {}", g_UserRefreshRate);

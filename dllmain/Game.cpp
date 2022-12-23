@@ -1,6 +1,6 @@
 #include "dllmain.h"
 #include "Game.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "SDK/filter00.h"
 
 std::string gameVersion;
@@ -11,7 +11,10 @@ SUB_SCREEN* SubScreenWk = nullptr; // extern inside sscrn.h
 pzlPlayer__ptrPiece_Fn pzlPlayer__ptrPiece = nullptr; // extern inside puzzle.h
 CameraControl* CamCtrl = nullptr; // extern inside cam_ctrl.h
 cPlayer__subScrCheck_Fn cPlayer__subScrCheck = nullptr; // extern inside player.h
-j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr; // extern inside fade.h
+uint32_t* cSofdec = nullptr;
+
+// fade.h externs
+j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr;
 
 // light.h externs
 cLightMgr* LightMgr = nullptr;
@@ -660,7 +663,7 @@ bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
 
 	// roomJumpExec begin
 	// pG->flags_STOP_0_170[0] = 0xFFFFFFFF;
-	pG->flags_DEBUG_2_68 |= 0x80000000;
+	FlagSet(pG->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_ROOMJMP), true);
 
 	// copy what CRoomInfo::setNextPos does
 	pG->nextRoomPosition_2C = position;
@@ -687,6 +690,9 @@ bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
 	pG->playerHpCur_4FB4 = pG->playerHpMax_4FB6;
 	pG->r_continue_cnt_4FA0 = 0;
 
+	// End any active Sofdec movie, else Title_task code will be stuck paused until movie ends
+	*cSofdec |= 0x20; // adds flag to m_be_flag_0, same as what cSofdec::PlayCancel does
+
 	// roomJumpExit
 	pG->SetRoutine(GLOBAL_WK::Routine0::Doordemo, 0, 0, 0);
 
@@ -696,7 +702,7 @@ bool AreaJump(uint16_t roomNo, Vec& position, float rotation)
 		titleWork->SetRoutine(TITLE_WORK::Routine0::Exit, 0, 0, 0);
 
 	pG->Flags_SYSTEM_0_54[0] &= 0x40;
-	pG->flags_DEBUG_0_60[0] &= ~0x80000000;
+	FlagSet(pG->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_TEST_MODE), false);
 
 	return true;
 }
@@ -727,7 +733,7 @@ bool re4t::init::Game()
 	}
 
 	#ifdef VERBOSE
-	con.AddConcatLog("Game version = ", GameVersion().data());
+	con.log("Game version = %s", GameVersion().c_str());
 	#endif
 
 	// Pointer to users variableframerate setting value
@@ -928,6 +934,10 @@ bool re4t::init::Game()
 	// CamCtrl ptr
 	pattern = hook::pattern("D9 EE B9 ? ? ? ? D9 9E A4 00 00 00 E8 ? ? ? ? D9 EE");
 	CamCtrl = *pattern.count(1).get(0).get<CameraControl*>(3);
+
+	// Sofdec ptr
+	pattern = hook::pattern("B9 ? ? ? ? C6 86 1F 05 00 00 01");
+	cSofdec = *pattern.count(1).get(0).get<uint32_t*>(1);
 
 	// SatMgr/EatMgr ptrs
 	pattern = hook::pattern("8D 8E B4 02 00 00 E8 ? ? ? ? 6A 00 56 B9");

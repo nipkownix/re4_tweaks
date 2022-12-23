@@ -1,7 +1,7 @@
 #include <iostream>
 #include <optional>
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Game.h"
 #include "Settings.h"
 #include "input.hpp"
@@ -338,9 +338,9 @@ BYTE __cdecl j_PlSetCostume_Hook()
 	}
 
 	#ifdef VERBOSE
-	con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
-	con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Leon));
-	con.AddConcatLog("Subchar costume: ", int(GlobalPtr()->subCostume_4FCB));
+	con.log("Player type: %d", int(GlobalPtr()->pl_type_4FC8));
+	con.log("Player costume: %d", int(GlobalPtr()->plCostume_4FC9.Leon));
+	con.log("Subchar costume: %d", int(GlobalPtr()->subCostume_4FCB));
 	#endif
 
 	return val;
@@ -428,7 +428,7 @@ void Install_LangLogHook()
 			}
 
 			#ifdef VERBOSE
-			con.AddConcatLog("Game language: ", game_lang);
+			con.log("Game language: %s", game_lang);
 			#endif
 
 			spd::log()->info("Game language: {}", game_lang);
@@ -439,7 +439,7 @@ void Install_LangLogHook()
 	if (pattern.size() != 1)
 	{
 		#ifdef VERBOSE
-		con.AddLogChar("Game language: Japanese");
+		con.log("Game language: Japanese");
 		#endif
 
 		spd::log()->info("Game language: Japanese");
@@ -755,7 +755,7 @@ void re4t::init::Misc()
 				}
 
 				#ifdef VERBOSE
-				con.AddConcatLog("Game language: ", game_lang);
+				con.log("Game language: %s", game_lang);
 				#endif
 
 				spd::log()->info("Game language: {}", game_lang);
@@ -766,7 +766,7 @@ void re4t::init::Misc()
 		if (pattern.size() != 1)
 		{
 			#ifdef VERBOSE
-			con.AddLogChar("Game language: Japanese");
+			con.log("Game language: Japanese");
 			#endif
 
 			spd::log()->info("Game language: Japanese");
@@ -795,8 +795,8 @@ void re4t::init::Misc()
 					GlobalPtr()->plCostume_4FC9.Ada = re4t::cfg->CostumeOverride.Ada;
 
 					#ifdef VERBOSE
-					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
-					con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Ada));
+					con.log("Player type: %d", int(GlobalPtr()->pl_type_4FC8));
+					con.log("Player costume: %d", int(GlobalPtr()->plCostume_4FC9.Ada));
 					#endif
 				}
 			}
@@ -815,8 +815,8 @@ void re4t::init::Misc()
 					GlobalPtr()->plCostume_4FC9.Ada = re4t::cfg->CostumeOverride.Ada;
 
 					#ifdef VERBOSE
-					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
-					con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Ada));
+					con.log("Player type: %d", int(GlobalPtr()->pl_type_4FC8));
+					con.log("Player costume: %d", int(GlobalPtr()->plCostume_4FC9.Ada));
 					#endif
 				}
 			}
@@ -856,8 +856,8 @@ void re4t::init::Misc()
 					}
 
 					#ifdef VERBOSE
-					con.AddConcatLog("Player type: ", int(GlobalPtr()->pl_type_4FC8));
-					con.AddConcatLog("Player costume: ", int(GlobalPtr()->plCostume_4FC9.Leon));
+					con.log("Player type: %d", int(GlobalPtr()->pl_type_4FC8));
+					con.log("Player costume: %d", int(GlobalPtr()->plCostume_4FC9.Leon));
 					#endif
 				}
 			}
@@ -1066,7 +1066,7 @@ void re4t::init::Misc()
 				int intNewFPS;
 
 				#ifdef VERBOSE
-				con.AddConcatLog("Config.ini frame rate = ", intIniFPS);
+				con.log("Config.ini frame rate = %d", intIniFPS);
 				#endif
 
 				if (intIniFPS != 30 && intIniFPS != 60) {

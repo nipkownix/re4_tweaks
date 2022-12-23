@@ -1,5 +1,5 @@
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include <shellapi.h>
 #include <atlbase.h>
@@ -40,7 +40,7 @@ void updateCheck()
 		spd::log()->info("{} -> Failed to connect to GitHub!", __FUNCTION__);
 
 		#ifdef VERBOSE
-		con.AddLogChar("AutoUpdate: Failed to connect to GitHub!");
+		con.log("AutoUpdate: Failed to connect to GitHub!");
 		#endif 
 
 		updt.UpdateStatus = UpdateStatus::Finished;
@@ -70,7 +70,7 @@ void updateCheck()
 		spd::log()->info("{} -> Failed to get json from GitHub!", __FUNCTION__);
 
 		#ifdef VERBOSE
-		con.AddLogChar("AutoUpdate: Failed to download json from GitHub!");
+		con.log("AutoUpdate: Failed to download json from GitHub!");
 		#endif 
 
 		updt.UpdateStatus = UpdateStatus::Finished;
@@ -85,7 +85,7 @@ void updateCheck()
 		spd::log()->info("{} -> Invalid json!", __FUNCTION__);
 
 		#ifdef VERBOSE
-		con.AddLogChar("AutoUpdate: Invalid json!");
+		con.log("AutoUpdate: Invalid json!");
 		#endif 
 
 		updt.UpdateStatus = UpdateStatus::Finished;
@@ -167,7 +167,7 @@ void updateDownloadApply()
 		spd::log()->info("{} -> Update download failed!", __FUNCTION__);
 
 		#ifdef VERBOSE
-		con.AddLogChar("AutoUpdate: Update download failed!");
+		con.log("AutoUpdate: Update download failed!");
 		#endif 
 
 		fail_msg = "Error when downloading new files.\n\nPlease try to manually update on:\nhttps://github.com/nipkownix/re4_tweaks";
@@ -180,7 +180,7 @@ void updateDownloadApply()
 			spd::log()->info("{} -> Zip file missing!", __FUNCTION__);
 
 			#ifdef VERBOSE
-			con.AddLogChar("AutoUpdate: zip file missing!");
+			con.log("AutoUpdate: zip file missing!");
 			#endif 
 
 			fail_msg = "Updated files are missing.\n\nPlease try to manually update on:\nhttps://github.com/nipkownix/re4_tweaks";
@@ -242,7 +242,7 @@ void updateDownloadApply()
 					spd::log()->info("{} -> Failed to copy new files!", __FUNCTION__);
 
 					#ifdef VERBOSE
-					con.AddLogChar("AutoUpdate: Failed to copy new files!");
+					con.log("AutoUpdate: Failed to copy new files!");
 					#endif 
 
 					fail_msg = "Error when copying updated files to the game's directory.\n\nPlease try to manually update on:\nhttps://github.com/nipkownix/re4_tweaks";
