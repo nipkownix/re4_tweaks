@@ -17,6 +17,8 @@ const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
 const char* sAdaCostumeNames[] = {"RE2", "Spy", "Normal"};
 
+const char* sGameDifficultyNames[] = { "Unk0", "Amateur", "Unk2", "Easy", "Unk4", "Normal", "Professional" };
+
 std::vector<uint32_t> re4t_cfg::ParseKeyCombo(std::string_view in_combo)
 {
 	// Convert combo to uppercase to match Settings::key_map
@@ -290,8 +292,8 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// MISC
 	re4t::cfg->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
 
+	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
 	if (!buf.empty())
 	{
@@ -326,6 +328,16 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 		// Normal is id 3, but we're lying to ImGui by pretending Normal is id 2 instead.
 		if (re4t::cfg->CostumeOverride.Ada == AdaCostume::Normal)
 			iCostumeComboAda--;
+	}
+
+	re4t::cfg->bOverrideDifficulty = iniReader.ReadBoolean("MISC", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+	buf = iniReader.ReadString("MISC", "NewDifficulty", "");
+	if (!buf.empty())
+	{
+		if (buf == "Amateur") re4t::cfg->NewDifficulty = GameDifficulty::VeryEasy;
+		if (buf == "Easy") re4t::cfg->NewDifficulty = GameDifficulty::Easy;
+		if (buf == "Normal") re4t::cfg->NewDifficulty = GameDifficulty::Medium;
+		if (buf == "Professional") re4t::cfg->NewDifficulty = GameDifficulty::Pro;
 	}
 
 	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
@@ -801,6 +813,8 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[iCostumeComboLeon]));
 	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[iCostumeComboAshley]));
 	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[iCostumeComboAda]));
+	iniReader.WriteBoolean("MISC", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+	iniReader.WriteString("MISC", "NewDifficulty", " " + std::string(sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]));
 	iniReader.WriteBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
@@ -981,6 +995,8 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[iCostumeComboLeon]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[iCostumeComboAshley]);
 	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[iCostumeComboAda]);
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "NewDifficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll ? "true" : "false");

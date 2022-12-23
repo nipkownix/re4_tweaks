@@ -319,14 +319,19 @@ void re4t::init::TitleMenu()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				bool isSeparateWays = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_PS2_ADA_GAME));
-				bool isAssignmentAda = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ADA_GAME));
-				bool isMercenaries = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ETC_GAME));
-
-				if (isMercenaries ||
-					((isSeparateWays || isAssignmentAda) && GlobalPtr()->gameDifficulty_847C != GameDifficulty::Pro))
+				// Don't do anything here if OverrideDifficulty is enabled. OverrideDifficulty uses another hook earlier in gameInit,
+				// so there's no need to do anything here if that is enabled.
+				if (!re4t::cfg->bOverrideDifficulty)
 				{
-					GlobalPtr()->gameDifficulty_847C = GameDifficulty::Medium;
+					bool isSeparateWays = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_PS2_ADA_GAME));
+					bool isAssignmentAda = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ADA_GAME));
+					bool isMercenaries = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_OMAKE_ETC_GAME));
+
+					if (isMercenaries ||
+						((isSeparateWays || isAssignmentAda) && GlobalPtr()->gameDifficulty_847C != GameDifficulty::Pro))
+					{
+						GlobalPtr()->gameDifficulty_847C = GameDifficulty::Medium;
+					}
 				}
 			}
 		}; injector::MakeInline<gameInit_AdaPro>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(21));

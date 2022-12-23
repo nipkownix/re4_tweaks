@@ -1268,6 +1268,36 @@ void cfgMenuRender()
 						ImGui::EndDisabled();
 					}
 
+					// OverrideDifficulty
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("OverrideDifficulty", &re4t::cfg->bOverrideDifficulty);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Overrides the game's difficulty when starting a new game (Main game & Separate Ways), starting an Assignment Ada playthrough, or starting a The Mercenaries run.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::BeginDisabled(!re4t::cfg->bOverrideDifficulty);
+						if (ImGui::BeginCombo("Difficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]))
+						{
+							for (int i = 0; i < IM_ARRAYSIZE(sGameDifficultyNames); i++) 
+							{
+								// Ignore uknown difficulties
+								if (strstr(sGameDifficultyNames[i], "Unk") != NULL) continue;
+								if (ImGui::Selectable(sGameDifficultyNames[i])) 
+								{
+									re4t::cfg->NewDifficulty = GameDifficulty(i);
+								}
+							}
+							ImGui::EndCombo();
+						}
+						ImGui::EndDisabled();
+					}
+
 					// EnableNTSCMode
 					{
 						ImGui_ColumnSwitch();

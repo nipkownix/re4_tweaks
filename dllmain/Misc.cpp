@@ -775,6 +775,31 @@ void re4t::init::Misc()
 			injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
 	}
 
+	// Hook gameInit to allow difficulty overrides
+	{
+		auto pattern = hook::pattern("A1 ? ? ? ? 83 C4 08 80 B8 ? ? ? ? ? 75 06 83 48 54 20 EB 04 83 60 54");
+		struct gameInit_DifficultyOverride
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				regs.eax = uint32_t(GlobalPtr());
+
+				// Don't do anything on existing saves. (Doesn't seem to work correctly on existing saves even without this check anyway...)
+				bool isLoadingSave = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_LOAD_GAME));
+				if (re4t::cfg->bOverrideDifficulty && !isLoadingSave)
+				{
+					#ifdef VERBOSE
+					con.log("Current difficulty: %s", sGameDifficultyNames[int(GlobalPtr()->gameDifficulty_847C)]);
+					con.log("Overriding difficulty to: %s", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]);
+					#endif
+
+					GlobalPtr()->gameDifficulty_847C = re4t::cfg->NewDifficulty;
+				}
+			}
+		}; injector::MakeInline<gameInit_DifficultyOverride>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
+
 	// Hook PlSetCostume to allow custom costume combos
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 66 83 88 ? ? ? ? ? 5B");
@@ -828,7 +853,7 @@ void re4t::init::Misc()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-
+				// Code we replaced
 				*(uint8_t*)(regs.esi + 0x01) = 0x0A;
 				*(uint8_t*)(regs.esi + 0x6E) = (uint8_t)regs.ecx & 0xFF;
 

@@ -115,6 +115,8 @@ public:
 		AdaCostume Ada;
 	} CostumeOverride;
 
+	bool bOverrideDifficulty = false;
+	GameDifficulty NewDifficulty = GameDifficulty::Medium;
 	bool bAshleyJPCameraAngles = false;
 	bool bRestoreDemoVideos = true;
 	bool bRestoreAnalogTitleScroll = true;
@@ -272,3 +274,5 @@ namespace re4t
 extern const char* sLeonCostumeNames[5];
 extern const char* sAshleyCostumeNames[3];
 extern const char* sAdaCostumeNames[3];
+
+extern const char* sGameDifficultyNames[7];
