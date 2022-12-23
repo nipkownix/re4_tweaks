@@ -125,6 +125,22 @@ void re4t::init::TitleMenu()
 		}; injector::MakeInline<titleSet_bgCheckHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 	}
 
+	// Skip difficulty select on a fresh system save while in NTSC mode, or when OverrideDifficulty is enabled
+	{
+		auto pattern = hook::pattern("B8 04 00 00 00 5B 8B E5");
+		struct titleMenuSelect_SkipLevelSelect
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
+				if ((re4t::cfg->bEnableNTSCMode && newSystemSave) || re4t::cfg->bOverrideDifficulty)
+					regs.eax = TTL_CMD_START;
+				else
+					regs.eax = TTL_CMD_LEVEL;
+			}
+		}; injector::MakeInline<titleMenuSelect_SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
+
 	// Add Professional mode select to Separate Ways
 	// TODO: support Assignment Ada as well. Not possible with this method currently, as all the difficulty select textures get unloaded in titleSub.
 	{
@@ -255,7 +271,7 @@ void re4t::init::TitleMenu()
 					switch (pT->omk_menu_no_6C)
 					{
 					case 0:
-						if (!re4t::cfg->bSeparateWaysDifficultyMenu)
+						if (!re4t::cfg->bSeparateWaysDifficultyMenu || re4t::cfg->bOverrideDifficulty)
 							pT->Rno1_1 = TitleAda::GameStart;
 						else if (!insideLevelMenu)
 							enterLevelMenu();

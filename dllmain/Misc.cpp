@@ -1196,17 +1196,6 @@ void re4t::init::Misc()
 		pattern = hook::pattern("A1 ? ? ? ? 80 78 ? 01 75");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(9), 2); // titleLevelInit
 
-		// skip difficulty select on a fresh system save
-		pattern = hook::pattern("B8 04 00 00 00 5B 8B E5");
-		struct SkipLevelSelect
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
-				regs.eax = newSystemSave ? TTL_CMD_START : TTL_CMD_LEVEL;
-			}
-		}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
 		// Swap NEW GAME texture for START on a fresh system save
 		pattern = hook::pattern("89 51 68 8B 57 68 8B");
 		struct titleMenuInit_StartTex
