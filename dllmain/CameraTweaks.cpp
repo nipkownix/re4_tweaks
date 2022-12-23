@@ -277,7 +277,12 @@ void re4t::init::CameraTweaks()
 			*(float*)(regs.esi + 0x204) = tmp;
 
 			if (re4t::cfg->bCameraImprovements && isKeyboardMouse())
+			{
 				*fMousePosX = 0.0f;
+
+				if (re4t::cfg->bResetCameraAfterUsingWeapons)
+					*fMousePosY = 0.0f;
+			}
 		}
 	}; injector::MakeInline<calcDepressionRatioKeepXYZero>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 

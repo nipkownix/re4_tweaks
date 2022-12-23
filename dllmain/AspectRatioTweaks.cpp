@@ -1,6 +1,6 @@
 #include <iostream>
 #include "dllmain.h"
-#include "Patches.h"
+#include "ConsoleWnd.h"
 #include "Game.h"
 #include "Settings.h"
 
@@ -180,9 +180,9 @@ void re4t::init::AspectRatioTweaks()
 			spd::log()->info("Changing game resolution to: {0}x{1} {2}Hz", (int)regs.eax, (int)regs.ecx, (int)regs.esi);
 
 			#ifdef VERBOSE
-			con.AddConcatLog("ResX = ", (int)regs.eax);
-			con.AddConcatLog("ResY = ", (int)regs.ecx);
-			con.AddConcatLog("Refrash rate = ", (int)regs.esi);
+			con.log("ResX = %d", (int)regs.eax);
+			con.log("ResY = %d", (int)regs.ecx);
+			con.log("Refrash rate = %d", (int)regs.esi);
 			#endif
 
 			fGameWidth = (float)regs.eax;
@@ -206,11 +206,11 @@ void re4t::init::AspectRatioTweaks()
 				bIs16by10 = fGameDisplayAspectRatio == 1.6f;
 
 				#ifdef VERBOSE
-				con.AddConcatLog("fNewEngineWidthScale = ", fNewEngineWidthScale);
-				con.AddConcatLog("fNewAspectRatio = ", fNewAspectRatio);
-				con.AddConcatLog("fNewEsp18Height = ", fNewEsp18Height);
-				con.AddConcatLog("fMapIconsPosOffset = ", fMapIconsPosOffset);
-				con.AddConcatLog("fNewMapIconsPos = ", fNewMapIconsPos);
+				con.log("fNewEngineWidthScale = %f", fNewEngineWidthScale);
+				con.log("fNewAspectRatio = %f", fNewAspectRatio);
+				con.log("fNewEsp18Height = %f", fNewEsp18Height);
+				con.log("fMapIconsPosOffset = %f", fMapIconsPosOffset);
+				con.log("fNewMapIconsPos = %f", fNewMapIconsPos);
 				#endif
 
 				injector::WriteMemory(ptrMapIconsPos, &fNewMapIconsPos, true);
@@ -224,7 +224,7 @@ void re4t::init::AspectRatioTweaks()
 				bIs16by10 = false;
 
 				#ifdef VERBOSE
-				con.AddLogChar("Wrote default aspect ratio values");
+				con.log("Wrote default aspect ratio values");
 				#endif
 
 				injector::WriteMemory(ptrMapIconsPos, &fDefaultMapIconsPos, true);

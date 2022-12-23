@@ -1,6 +1,7 @@
 #include "dllmain.h"
 #include "UI_Utility.h"
 #include "input.hpp"
+#include "ConsoleWnd.h"
 #include "Settings.h"
 #include <imgui/imgui_internal.h>
 
@@ -106,22 +107,96 @@ void ImGui_ItemBG(float RowSize, ImColor bgCol)
 	drawList->AddRectFilled(ImVec2(p0.x - 10, p0.y - 10), ImVec2(p0.x + 10 + ImGui::GetContentRegionAvail().x, p0.y + RowSize - top + 7), bgCol, 5.f);
 }
 
+void ImGui_SetHotkey(std::string* cfgHotkey, bool supportsCombo)
+{
+	unsigned int HotkeyVK1 = 0;
+	unsigned int HotkeyVK2 = 0;
+
+	std::string OrigHotkeyCombo = *cfgHotkey;
+	std::string FinalHotkeyCombo;
+
+	// Hacky way to change ImGui's current button label
+	*cfgHotkey = "Press any key...";
+
+	bool waitingforkey = true;
+
+	while (waitingforkey) {
+		for (unsigned int Key1 = 0; Key1 < 256; Key1++)
+		{
+			while (pInput->is_key_down(Key1)) {
+				HotkeyVK1 = Key1;
+
+				if (supportsCombo)
+				{
+					for (unsigned int Key2 = 0; Key2 < 256; Key2++)
+					{
+						if (pInput->is_key_down(Key2) && (Key2 != Key1))
+						{
+							HotkeyVK2 = Key2;
+						}
+					}
+				}
+				waitingforkey = false;
+			}
+		}
+	}
+
+	// Clear the second hotkey if they're the same.
+	// I've had that happen before due to deadkey weirdness.
+	if (HotkeyVK1 == HotkeyVK2)
+		HotkeyVK2 = 0;
+
+	#ifdef VERBOSE
+	con.log("HotkeyVK1 = %d", HotkeyVK1);
+	con.log("HotkeyVK2 = %d", HotkeyVK2);
+	#endif
+
+	// Check if our KeyMap function is able to identify the key names, restore the original combo if not.
+	// As of now, there's no popup informing the user that the key is unsupported. TODO: Add popup?
+	if (HotkeyVK2 > 0)
+	{
+		if (pInput->key_name_from_vk(HotkeyVK1).empty() || pInput->key_name_from_vk(HotkeyVK2).empty())
+		{
+			*cfgHotkey = OrigHotkeyCombo;
+			return;
+		}
+		else
+			FinalHotkeyCombo = pInput->key_name_from_vk(HotkeyVK1) + "+" + pInput->key_name_from_vk(HotkeyVK2);
+	}
+	else
+	{
+		if (pInput->key_name_from_vk(HotkeyVK1).empty())
+		{
+			*cfgHotkey = OrigHotkeyCombo;
+			return;
+		}
+		else
+			FinalHotkeyCombo = pInput->key_name_from_vk(HotkeyVK1);
+	}
+
+	#ifdef VERBOSE
+	con.log("FinalHotkeyCombo = %s", FinalHotkeyCombo.c_str());
+	#endif
+
+	*cfgHotkey = FinalHotkeyCombo;
+}
+
 // If we don't run these in another thread, we end up locking the rendering
-void SetHotkeyComboThread(std::string* cfgHotkey)
+void ImGui_SetHotkeyComboThread(std::string* cfgHotkey)
 {
 	bWaitingForHotkey = true;
 
-	pInput->set_hotkey(cfgHotkey, true);
+	ImGui_SetHotkey(cfgHotkey, true);
 
 	bWaitingForHotkey = false;
 	return;
 }
 
-void SetHotkeyThread(std::string* cfgHotkey)
+void ImGui_SetHotkeyThread(std::string* cfgHotkey)
 {
 	bWaitingForHotkey = true;
 
-	pInput->set_hotkey(cfgHotkey, false);
+	ImGui_SetHotkey(cfgHotkey, false);
 
 	bWaitingForHotkey = false;
 	return;

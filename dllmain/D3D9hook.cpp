@@ -4,6 +4,7 @@
 #include <imgui_impl_dx9.h>
 #include "Patches.h"
 #include "Settings.h"
+#include "../dxvk/src/dxvk-cache.hpp"
 
 #pragma warning(push, 0)
 #include "../dxvk/src/d3d9/d3d9_main.h"
@@ -25,6 +26,22 @@ static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 		if (vulkanDll)
 		{
 			FreeLibrary(vulkanDll);
+
+			// Make sure a cache file exists in re4_tweaks/state_cache, otherwise copy our own pre-baked one
+			std::filesystem::path cachePath = rootPath + L"re4_tweaks\\state_cache\\bio4.dxvk-cache";
+
+			if (!std::filesystem::exists(cachePath))
+			{
+				spd::log()->info("{} -> Cache file missing, creating new one...", __FUNCTION__);
+
+				// Create directory if it doesn't exist
+				std::filesystem::create_directories(cachePath.parent_path());
+
+				// Save cache
+				std::ofstream out(cachePath, std::ios::binary);
+				out.write(reinterpret_cast<char*>(&dxvk_cache_data[0]), dxvk_cache_size);
+				out.close();
+			}
 
 			IDirect3D9Ex* pDirect3D = nullptr;
 			dxvk::CreateD3D9(false, &pDirect3D);
