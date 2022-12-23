@@ -90,7 +90,7 @@ void re4t::init::TitleMenu()
 				TitleWorkPtr()->scroll_add_5C = 1.5f;
 
 				// Code we overwrote
-				__asm { mov dword ptr[esi], 0x1}
+				__asm { mov dword ptr[esi], 0x1 }
 			}
 		}; injector::MakeInline<titleSub_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
@@ -132,8 +132,9 @@ void re4t::init::TitleMenu()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
-				if ((re4t::cfg->bEnableNTSCMode && newSystemSave) || re4t::cfg->bOverrideDifficulty)
+				bool hasFinishedGame = FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_COSTUME));
+
+				if ((re4t::cfg->bEnableNTSCMode && !hasFinishedGame) || re4t::cfg->bOverrideDifficulty)
 					regs.eax = TTL_CMD_START;
 				else
 					regs.eax = TTL_CMD_LEVEL;
