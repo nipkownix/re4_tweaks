@@ -273,6 +273,6 @@ namespace re4t
 
 extern const char* sLeonCostumeNames[5];
 extern const char* sAshleyCostumeNames[3];
-extern const char* sAdaCostumeNames[3];
+extern const char* sAdaCostumeNames[4];
 
 extern const char* sGameDifficultyNames[7];

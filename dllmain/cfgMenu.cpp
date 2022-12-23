@@ -19,9 +19,6 @@ bool NeedsToRestart;
 bool bWaitingForHotkey;
 
 int iGCBlurMode = 0;
-int iCostumeComboLeon;
-int iCostumeComboAshley;
-int iCostumeComboAda;
 
 float fLaserColorPicker[3]{ 0.0f, 0.0f, 0.0f };
 
@@ -1239,31 +1236,42 @@ void cfgMenuRender()
 
 						ImGui::BeginDisabled(!re4t::cfg->bOverrideCostumes);
 						ImGui::PushItemWidth(150 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-						ImGui::Combo("Leon", &iCostumeComboLeon, sLeonCostumeNames, IM_ARRAYSIZE(sLeonCostumeNames));
-						if (ImGui::IsItemEdited())
+
+						if (ImGui::BeginCombo("Leon", sLeonCostumeNames[(int)re4t::cfg->CostumeOverride.Leon]))
 						{
-							re4t::cfg->HasUnsavedChanges = true;
-							re4t::cfg->CostumeOverride.Leon = (LeonCostume)iCostumeComboLeon;
+							for (int i = 0; i < IM_ARRAYSIZE(sLeonCostumeNames); i++) {
+								if (ImGui::Selectable(sLeonCostumeNames[i])) {
+									re4t::cfg->HasUnsavedChanges = true;
+									re4t::cfg->CostumeOverride.Leon = LeonCostume(i);
+								}
+							}
+							ImGui::EndCombo();
 						}
 
-						ImGui::Combo("Ashley", &iCostumeComboAshley, sAshleyCostumeNames, IM_ARRAYSIZE(sAshleyCostumeNames));
-						if (ImGui::IsItemEdited())
+						if (ImGui::BeginCombo("Ashley", sAshleyCostumeNames[(int)re4t::cfg->CostumeOverride.Ashley]))
 						{
-							re4t::cfg->HasUnsavedChanges = true;
-							re4t::cfg->CostumeOverride.Ashley = (AshleyCostume)iCostumeComboAshley;
+							for (int i = 0; i < IM_ARRAYSIZE(sAshleyCostumeNames); i++) {
+								if (ImGui::Selectable(sAshleyCostumeNames[i])) {
+									re4t::cfg->HasUnsavedChanges = true;
+									re4t::cfg->CostumeOverride.Ashley = AshleyCostume(i);
+								}
+							}
+							ImGui::EndCombo();
 						}
 
-						ImGui::Combo("Ada", &iCostumeComboAda, sAdaCostumeNames, IM_ARRAYSIZE(sAdaCostumeNames));
-						if (ImGui::IsItemEdited())
+						if (ImGui::BeginCombo("Ada", sAdaCostumeNames[(int)re4t::cfg->CostumeOverride.Ada]))
 						{
-							re4t::cfg->HasUnsavedChanges = true;
-
-							// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-							if (iCostumeComboAda == 2)
-								re4t::cfg->CostumeOverride.Ada = (AdaCostume)(iCostumeComboAda + 1);
-							else
-								re4t::cfg->CostumeOverride.Ada = (AdaCostume)iCostumeComboAda;
+							for (int i = 0; i < IM_ARRAYSIZE(sAdaCostumeNames); i++) {
+								std::string costumeName = sAdaCostumeNames[i];
+								if (costumeName == "RE2_d") continue; // Ignore duplicate
+								if (ImGui::Selectable(sAdaCostumeNames[i])) {
+									re4t::cfg->HasUnsavedChanges = true;
+									re4t::cfg->CostumeOverride.Ada = AdaCostume(i);
+								}
+							}
+							ImGui::EndCombo();
 						}
+
 						ImGui::PopItemWidth();
 						ImGui::EndDisabled();
 					}
