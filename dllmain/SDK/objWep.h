@@ -59,3 +59,8 @@ public:
 	virtual void beginReload() = 0;
 };
 assert_size(cObjWep, 0x76C);
+
+namespace bio4
+{
+	extern void(__cdecl* WeaponChange)(); // TODO: maybe should be in a different header...
+};

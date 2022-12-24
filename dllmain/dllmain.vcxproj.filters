@@ -562,6 +562,9 @@
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipecompiler.cpp">
       <Filter>dxvk\dxvk</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\ImGuiFileDialog\ImGuiFileDialog.cpp">
+      <Filter>external\ImGuiFileDialog</Filter>
+    </ClCompile>
     <ClCompile Include="TitleMenu.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
@@ -1608,6 +1611,9 @@
     <ClInclude Include="SDK\roomdata.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\ImGuiFileDialog\ImGuiFileDialog.h">
+      <Filter>external\ImGuiFileDialog</Filter>
+	</ClInclude>
     <ClInclude Include="..\dxvk\src\dxvk-cache.hpp">
       <Filter>dxvk</Filter>
     </ClInclude>
@@ -1723,6 +1729,9 @@
     </Filter>
     <Filter Include="dxvk\dxvk\platform">
       <UniqueIdentifier>{ec8ec119-b61c-40c6-9ab6-339817cc72c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\ImGuiFileDialog">
+      <UniqueIdentifier>{6a90538b-9818-4c37-9150-0996803386ce}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

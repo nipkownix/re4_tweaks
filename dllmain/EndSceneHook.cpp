@@ -108,9 +108,9 @@ void ApplyImGuiTheme()
 	colors[ImGuiCol_FrameBg] = ImColor(25, 25, 33, 255);
 	colors[ImGuiCol_FrameBgActive] = ImColor(25, 25, 33, 255);
 	colors[ImGuiCol_FrameBgHovered] = ImColor(25, 25, 33, 255);
-	colors[ImGuiCol_Header] = ImVec4(0.10f, 0.10f, 0.13f, 1.00f);
-	colors[ImGuiCol_HeaderHovered] = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
-	colors[ImGuiCol_HeaderActive] = ImVec4(0.11f, 0.11f, 0.14f, 1.00f);
+	colors[ImGuiCol_Header] = ImVec4(0.52f, 0.05f, 0.12f, 1.00f);
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.68f, 0.08f, 0.23f, 1.00f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.80f, 0.00f, 0.10f, 1.00f);
 	colors[ImGuiCol_PopupBg] = ImVec4(0.05f, 0.03f, 0.04f, 0.94f);
 	colors[ImGuiCol_Border] = ImVec4(0.17f, 0.17f, 0.20f, 0.20f);
 	colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);

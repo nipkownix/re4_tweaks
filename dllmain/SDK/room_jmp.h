@@ -55,22 +55,26 @@ struct CRoomInfo
 
 struct cRoomJmp_stage
 {
-	uint32_t nData_0;
+	int nData_0;
 	CRoomInfo pData[1];
 
 	CRoomInfo* GetRoom(int idx)
 	{
+		if (idx >= nData_0)
+			return nullptr;
 		return &pData[idx];
 	}
 };
 
 struct cRoomJmp_data
 {
-	uint32_t nData_0;
+	int nData_0;
 	uint32_t pData_4[1]; // [nData]
 
 	cRoomJmp_stage* GetStage(int stageNo)
 	{
+		if (stageNo >= nData_0)
+			return nullptr;
 		return (cRoomJmp_stage*)(((uintptr_t)this) + pData_4[stageNo]);
 	}
 

@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "ConsoleWnd.h"
 #include "SDK/filter00.h"
+#include <deque>
 
 std::string gameVersion;
 bool gameIsDebugBuild = false;
@@ -27,6 +28,9 @@ cFilter00Params2* Filter00Params2 = nullptr;
 cItemMgr* ItemMgr = nullptr;
 cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
+cItemMgr__get_Fn cItemMgr__get = nullptr;
+cItemMgr__erase_Fn cItemMgr__erase = nullptr;
+WeaponId2ChargeNum_Fn WeaponId2ChargeNum = nullptr;
 
 // event.h externs
 EventMgr* EvtMgr = nullptr;
@@ -48,6 +52,13 @@ cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
 
 // Original game funcs
 namespace bio4 {
+	bool(__cdecl* PutInCase)(ITEM_ID item_id, uint16_t item_num, uint32_t size);
+	void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
+	uint8_t(__cdecl* WeaponId2MaxLevel)(ITEM_ID item_id, int type);
+
+	void(__cdecl* WeaponChange)();
+	void(__cdecl* PlChangeData)();
+
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
 	bool(__cdecl* SndStrReq_0)(uint32_t snd_id, int flg, int time, int vol);
 
@@ -514,7 +525,6 @@ bool IsGanado(int id) // same as games IsGanado func
 	return id <= 0x20;
 }
 
-
 bool IsEnemy(int id) // Since the game's IsGanado doesn't account for some enemies, we have this as an alternative
 {
 	bool blacklist = false;
@@ -528,6 +538,12 @@ bool IsEnemy(int id) // Since the game's IsGanado doesn't account for some enemi
 		return false;
 
 	return (id > 0x10 && id < 0x4F);
+}
+
+bool* OptionOpenFlag_ptr;
+bool OptionOpenFlag() // True if the options screen is open
+{
+	return *OptionOpenFlag_ptr;
 }
 
 const char* emlist_name[] = {
@@ -605,46 +621,135 @@ void __cdecl Mem_free_TITLE_WORK_hook(void* mem)
 	Mem_free(mem);
 }
 
-bool WeaponChangeRequested = false;
-void RequestWeaponChange()
+DWORD game_mainThreadID = 0;
+bool Game_IsRunningInMainThread()
 {
-	WeaponChangeRequested = true; // signal main thread
+	return game_mainThreadID == GetCurrentThreadId();
 }
 
-bool SaveGameRequested = false;
-void RequestSaveGame()
+std::mutex game_pendingMainThreadFuncsMutex;
+std::deque<std::function<void()>> game_pendingMainThreadFuncs;
+
+void Game_ScheduleInMainThread(std::function<void()> function)
 {
-	SaveGameRequested = true; // signal main thread
+	if (Game_IsRunningInMainThread())
+	{
+		// Caller is already running in the main thread, so we can just run the function right now
+		function();
+		return;
+	}
+
+	std::unique_lock<std::mutex> pending_functions_lock(game_pendingMainThreadFuncsMutex);
+	game_pendingMainThreadFuncs.emplace_back(std::move(function));
 }
 
-bool MerchantRequested = false;
-void RequestMerchant()
+void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui, bool handle_attache_case)
 {
-	MerchantRequested = true; // signal main thread
+	// TODO: `piece_info` array inside game defines the puzzle piece for items that can be stored in inventory
+	// not every ITEM_ID is defined there, some ITEM_IDs are for treasures etc which aren't part of inventory puzzle
+	// for items that aren't defined, pzlPlayer::appendExtraPiece will fail to setup pzlPlayer->m_extra_14, causing crash when those items are added...
+	// need to either add code to search piece_info for ITEM_ID first, or copy the piece_info data into our DLL
+	// or we could create a new enum with just the item ids that have valid pieces, hmm...
+
+	ITEM_INFO info;
+	bio4::itemInfo(id, &info);
+
+	bool playSndEffect = true;
+
+	if (!bio4::itemShowsInInventory(info.type_2))
+	{
+		// If itemShowsInInventory returned false it likely isn't stored in puzzle inventory
+		// Add it via ItemMgr instead of using PutInCase funcs
+		if (!ItemMgr->get(id, count))
+			playSndEffect = false;
+		else
+		{
+			// Special handling for certain items
+			EItemId eid = EItemId(id);
+			if (eid == EItemId::Assault_Jacket)
+			{
+				extern BYTE __cdecl j_PlSetCostume_Hook(); // Misc.cpp
+				j_PlSetCostume_Hook();
+				bio4::PlChangeData();
+			}
+			else if (eid == EItemId::Attache_Case_S && handle_attache_case)
+			{
+				SubScreenWk->board_size_2AA = 0; // update inventory attache case size
+				SubScreenWk->board_next_2AB = 0;
+			}
+			else if (eid == EItemId::Attache_Case_M && handle_attache_case)
+			{
+				SubScreenWk->board_size_2AA = 1;
+				SubScreenWk->board_next_2AB = 1;
+			}
+			else if (eid == EItemId::Attache_Case_L && handle_attache_case)
+			{
+				SubScreenWk->board_size_2AA = 2;
+				SubScreenWk->board_next_2AB = 2;
+			}
+			else if (eid == EItemId::Attache_Case_O && handle_attache_case)
+			{
+				SubScreenWk->board_size_2AA = 3;
+				SubScreenWk->board_next_2AB = 3;
+			}
+		}
+	}
+	else
+	{
+		// PutInCase tries adding the item to inventory, even rotating item to fit if necessary
+		// If not enough space it'll return false
+		if (always_show_inv_ui || !bio4::PutInCase(id, count, SubScreenWk->board_size_2AA))
+		{
+			// PutInCase returned false, not enough space for item
+			// Setup subscreen fields with the item info, for it to show the item-adding UI
+			// (if puzzle screen is already open this will have no effect until screen is closed, seems to then open puzzle screen again to handle adding the item)
+			// (maybe that seems a bit janky though, might be better to add some checks to only allow this func to work when subscr is closed...)
+			playSndEffect = false;
+			SubScreenWk->get_item_id_2F6 = id;
+			SubScreenWk->get_item_num_2F8 = count;
+			bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_PZZL, SS_ATTR_NULL);
+
+			// Close cfgMenu
+			bCfgMenuOpen = false;
+		}
+	}
+
+	if (playSndEffect)
+	{
+		// Play sound effect to signal to player that item was added
+
+		if (info.type_2 == ITEM_TYPE_WEAPON || info.type_2 == ITEM_TYPE_GRENADE)
+			bio4::SndCall(0, 0x0F, 0, 0, 0, 0); // weapon found sfx
+		else if (info.type_2 == ITEM_TYPE_AMMO)
+			bio4::SndCall(0, 0x11, 0, 0, 0, 0); // ammo found sfx
+		else if (info.type_2 == ITEM_TYPE_KEY_ITEM)
+			bio4::SndCall(0, 0x00, 0, 0, 0, 0); // key-item-found sfx
+		else
+			bio4::SndCall(0, 0x13, 0, 0, 0, 0); // item added sfx
+
+		//	bio4::SndCall(0, 0x10u, 0, 0, 0, 0); // money/coin found sfx
+	}
 }
 
-void(__cdecl* WeaponChange)();
 void(__fastcall* cSceSys__scheduler)(void* thisptr, void* unused);
 void __fastcall cSceSys__scheduler_Hook(void* thisptr, void* unused)
 {
-	if (WeaponChangeRequested)
-	{
-		WeaponChangeRequested = false;
-		WeaponChange();
-	}
+	// cSceSys::scheduler is always running in main game thread, save the ID of it:
+	// TODO: find a better place for us to grab this, cSceSys::scheduler only runs once game is actually running (ie. not on main menu)
+	game_mainThreadID = GetCurrentThreadId();
 
-	if (SaveGameRequested)
+	// Call any functions we have scheduled to run on the main game thread...
 	{
-		SaveGameRequested = false;
-		bio4::CardSave(0, 1);
-	}
+		std::unique_lock<std::mutex> pending_functions_lock(game_pendingMainThreadFuncsMutex);
+		while (!game_pendingMainThreadFuncs.empty())
+		{
+			std::function<void()> function = std::move(game_pendingMainThreadFuncs.front());
+			game_pendingMainThreadFuncs.pop_front();
 
-	if (MerchantRequested)
-	{
-		MerchantRequested = false;
-		// If SubScreen is closed and game status is "playing"
-		if (!SubScreenWk->open_flag_2C && GlobalPtr()->Rno0_20 == 0x3)
-			bio4::SubScreenOpen(SS_OPEN_FLAG::SS_OPEN_SHOP, SS_ATTR_NULL);
+			pending_functions_lock.unlock();
+			function();
+			pending_functions_lock.lock();
+		}
 	}
 
 	cSceSys__scheduler(thisptr, unused);
@@ -866,6 +971,10 @@ bool re4t::init::Game()
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(9), cItemMgr__search);
 	pattern = hook::pattern("8B 0D ? ? ? ? 51 B9 ? ? ? ? E8 ? ? ? ? 5F 5E 5B 8B E5");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(12), cItemMgr__arm);
+	pattern = hook::pattern("56 50 B9 ? ? ? ? E8 ? ? ? ? A1");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(7), cItemMgr__get);
+	pattern = hook::pattern("E8 ? ? ? ? 8A 45 ? 8B 4D ? 24 ? 66 0F ? ? 8D 04 FD ? ? ? ? 66 0B ? 66 89 53");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), cItemMgr__erase);
 
 	// EvtMgr
 	pattern = hook::pattern("75 ? 6A 00 6A 00 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 84 C0");
@@ -884,7 +993,7 @@ bool re4t::init::Game()
 
 	// WeaponChange funcptr
 	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), WeaponChange);
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xA), bio4::WeaponChange);
 
 	// Card related funcptrs
 	pattern = hook::pattern("E8 ? ? ? ? 3C 01 75 ? 8B 4D ? 8B 55");
@@ -905,6 +1014,30 @@ bool re4t::init::Game()
 	// QuakeExec ptr
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 8B E5 5D");
 	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::QuakeExec);
+	
+	// PutInCase funcptr
+	pattern = hook::pattern("0F B7 4E 1C 52 50 51 E8");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::PutInCase);
+
+	// itemInfo funcptr
+	pattern = hook::pattern("8D 45 ? 50 51 E8 ? ? ? ? 8A 45 ? 83 C4 08");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), bio4::itemInfo);
+
+	// WeaponId2MaxLevel funcptr
+	pattern = hook::pattern("E8 ? ? ? ? 0F B6 D0 0F BE C3 83 C4 08 3B C2 75 70");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::WeaponId2MaxLevel);
+
+	// WeaponId2ChargeNum funcptr
+	pattern = hook::pattern("E8 ? ? ? ? 66 8B 56 08 66 C1 EA 03 83 C4 08 66 3B D0 73 67 0F B6");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), WeaponId2ChargeNum);
+
+	// OptionOpenFlag <- Maybe should be somewhere else in the SDK/Game.cpp?
+	pattern = hook::pattern("A2 ? ? ? ? A2 ? ? ? ? A1 ? ? ? ? 81 48 ? ? ? ? ? E9");
+	OptionOpenFlag_ptr = (bool*)*pattern.count(1).get(0).get<uint32_t>(1);
+
+	// PlChangeData funcptr
+	pattern = hook::pattern("75 ? E8 ? ? ? ? E8 ? ? ? ? 38 1D ? ? ? ?");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::PlChangeData);
 
 	// joyFireOn ptr
 	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");

@@ -25,6 +25,7 @@ enum class TrainerTab
 	EmMgr,
 	ESP,
 	DebugTools,
+	ItemMgr,
 	NumTabs
 };
 extern TrainerTab CurTrainerTab; // UI_Utility.cpp

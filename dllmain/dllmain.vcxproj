@@ -56,7 +56,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\ImGuiFileDialog;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -85,7 +85,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\ImGuiFileDialog;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -646,6 +646,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="..\external\eHooking\Hook.cpp" />
     <ClCompile Include="..\external\eHooking\HotPatch.cpp" />
     <ClCompile Include="..\external\eHooking\IATPatch.cpp" />
+    <ClCompile Include="..\external\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\external\imgui\imgui.cpp" />
     <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
@@ -950,6 +951,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\dxvk\src\vulkan\vulkan_presenter.h" />
     <ClInclude Include="..\dxvk\src\vulkan\vulkan_util.h" />
     <ClInclude Include="..\external\eHooking\Hook.h" />
+    <ClInclude Include="..\external\ImGuiFileDialog\ImGuiFileDialog.h" />
     <ClInclude Include="..\external\imgui\imconfig.h" />
     <ClInclude Include="..\external\imgui\imgui.h" />
     <ClInclude Include="..\external\imgui\imgui_impl_dx9.h" />

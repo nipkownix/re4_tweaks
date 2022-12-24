@@ -16,7 +16,7 @@ public:
 	// Funcs
 	void ReadSettings();
 	void ReadSettings(std::wstring ini_path);
-	void WriteSettings();
+	void WriteSettings(bool trainerOnly);
 	void LogSettings();
 
 	void ParseHotkeys();
@@ -234,6 +234,9 @@ public:
 	bool bTrainerShowDebugTrgHintText = true;
 	bool bTrainerOverrideDynamicDifficulty = false;
 	int iTrainerDynamicDifficultyLevel = 5;
+	bool bTrainerOpenInventoryOnItemAdd = true;
+	int iTrainerLastAreaJumpStage = 1;
+	int iTrainerLastAreaJumpRoomIdx = 0;
 
 	// WARNING
 	bool bIgnoreFPSWarning = false;

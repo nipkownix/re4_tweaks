@@ -66,13 +66,14 @@ IDSystem* IDSystemPtr();
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 
-void RequestWeaponChange();
-void RequestSaveGame();
-void RequestMerchant();
+void Game_ScheduleInMainThread(std::function<void()> function);
 bool AreaJump(uint16_t roomNo, Vec& position, float rotation);
+
+void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui, bool handle_attache_case);
 
 bool IsGanado(int id);
 bool IsEnemy(int id);
+bool OptionOpenFlag();
 const char* GetEmListName(int emListNumber);
 const char* GetEmListEnumName(int emListNumber);
 
@@ -83,5 +84,6 @@ const char* GetEmListEnumName(int emListNumber);
 namespace bio4
 {
 	extern void(__cdecl* C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
+	extern uint8_t(__cdecl* WeaponId2MaxLevel)(ITEM_ID item_id, int type);
 	extern void(__cdecl* SceSleep)(uint32_t ctr);
 }

@@ -408,6 +408,9 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
 	re4t::cfg->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
 	re4t::cfg->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+	re4t::cfg->bTrainerOpenInventoryOnItemAdd = iniReader.ReadBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+	re4t::cfg->iTrainerLastAreaJumpStage = iniReader.ReadInteger("TRAINER", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+	re4t::cfg->iTrainerLastAreaJumpRoomIdx = iniReader.ReadInteger("TRAINER", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
 
 	// ESP
 	re4t::cfg->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
@@ -598,6 +601,9 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
 		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
 		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+		iniReader.WriteBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+		iniReader.WriteInteger("TRAINER", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+		iniReader.WriteInteger("TRAINER", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
 
 		// ESP
 		iniReader.WriteBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
@@ -854,22 +860,28 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 
 DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 {
+	bool writeTrainerOnly = bool(lpParameter);
+
 	std::wstring iniPathMain = rootPath + wrapperName + L".ini";
 	std::wstring iniPathTrainer = rootPath + L"\\re4_tweaks\\trainer.ini";
-	WriteSettings(iniPathMain, false);
+
 	WriteSettings(iniPathTrainer, true);
 
-	re4t::cfg->HasUnsavedChanges = false;
+	if (!writeTrainerOnly)
+	{
+		WriteSettings(iniPathMain, false);
+		re4t::cfg->HasUnsavedChanges = false;
+	}
 
 	return 0;
 }
 
-void re4t_cfg::WriteSettings()
+void re4t_cfg::WriteSettings(bool trainerOnly)
 {
 	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // if thread is already running, wait for it to finish
 
 	// Spawn a new thread to handle writing settings, as INI writing funcs that get used are pretty slow
-	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, NULL, 0, NULL);
+	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, (LPVOID)trainerOnly, 0, NULL);
 }
 
 void re4t_cfg::LogSettings()

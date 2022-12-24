@@ -14,9 +14,10 @@
 #include "AudioTweaks.h"
 #include "../dxvk/src/config.h"
 
-bool bCfgMenuOpen;
-bool NeedsToRestart;
-bool bWaitingForHotkey;
+bool bCfgMenuOpen = false;
+bool NeedsToRestart = false;
+bool bWaitingForHotkey = false;
+bool bPauseGameWhileInCfgMenu = true;
 
 int iGCBlurMode = 0;
 
@@ -31,6 +32,35 @@ std::string cfgMenuTitle = "re4_tweaks";
 
 std::vector<uint32_t> cfgMenuCombo;
 
+void PauseGame(bool setPaused)
+{
+	static bool stopFlagsBackedUp = false;
+	static int stopFlagsBackup = -1;
+
+	// Disable pausing when not needed or when pausing would casue issues
+	bool disable =
+		!PlayerPtr() ||
+		SubScreenWk->open_flag_2C != 0 ||
+		OptionOpenFlag() ||
+		GlobalPtr()->playerHpCur_4FB4 == 0 ||
+		GlobalPtr()->subHpCur_4FB8 == 0;
+
+	if (disable)
+		return;
+
+	if (setPaused && !stopFlagsBackedUp)
+	{
+		stopFlagsBackup = GlobalPtr()->flags_STOP_0_170[0];
+		stopFlagsBackedUp = true;
+		GlobalPtr()->flags_STOP_0_170[0] = 0xBFFFFF3F; // Same flags the game sets during its pause screen minus SPF_ID_SYSTEM 
+	}
+	else if (!setPaused && stopFlagsBackedUp)
+	{
+		GlobalPtr()->flags_STOP_0_170[0] = stopFlagsBackup;
+		stopFlagsBackedUp = false;
+	}
+}
+
 bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 {
 	if (in_combo.empty())
@@ -41,6 +71,9 @@ bool ParseConfigMenuKeyCombo(std::string_view in_combo)
 
 	pInput->register_hotkey({ []() {
 		bCfgMenuOpen = !bCfgMenuOpen;
+
+		// Pause game while cfgMenu is open
+		PauseGame(bCfgMenuOpen && bPauseGameWhileInCfgMenu);
 	}, &cfgMenuCombo });
 
 	return cfgMenuCombo.size() > 0;
@@ -161,7 +194,7 @@ void cfgMenuRender()
 					if (ImGui::Button("Yes", ImVec2(120, 0)))
 					{
 						re4t::cfg->bTrainerEnable = true;
-						re4t::cfg->WriteSettings();
+						re4t::cfg->WriteSettings(true);
 						ImGui::CloseCurrentPopup();
 					}
 
@@ -216,7 +249,7 @@ void cfgMenuRender()
 				// Update console title
 				con.TitleKeyCombo = re4t::cfg->sConsoleKeyCombo;
 
-				re4t::cfg->WriteSettings();
+				re4t::cfg->WriteSettings(false);
 			}
 
 			ImGui::PopStyleColor();
@@ -261,7 +294,7 @@ void cfgMenuRender()
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Font Size");
 
-			ImGui::SameLine();
+			
 
 			// Tips
 			float tip_offset = 45.0f;
@@ -270,18 +303,29 @@ void cfgMenuRender()
 
 			if (re4t::cfg->HasUnsavedChanges)
 			{
-				const char *txt = "You have unsaved changes!";
+				ImGui::SameLine();
 
-				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y / 2));
+				const char* txt = "You have unsaved changes!";
+
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y / 3.0f));
 				ImGui::SameLine();
 				ImGui::BulletText(txt);
 			}
 
+			if (ImGui::Checkbox("Pause game", &bPauseGameWhileInCfgMenu))
+			{
+				PauseGame(bCfgMenuOpen&& bPauseGameWhileInCfgMenu);
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Keep the game frozen while the config menu is open");
+
 			if (NeedsToRestart)
 			{
+				ImGui::SameLine();
+
 				const char* txt = "Changes that have been made require the game to be restarted!";
 
-				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y / 6));
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(txt).x - tip_offset, ImGui::GetContentRegionAvail().y));
 				ImGui::SameLine();
 				ImGui::BulletText(txt);
 			}

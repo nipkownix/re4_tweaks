@@ -690,6 +690,8 @@ void UI_AreaJump::UpdateRoomInfo()
 		curRoomPosition = { 0 };
 		curRoomRotation = 0;
 	};
+
+	roomPosRotNeedsUpdate = false;
 }
 
 bool UI_AreaJump::Init()
@@ -702,6 +704,13 @@ bool UI_AreaJump::Init()
 		// ...but don't let us init it to the boring 0 stage
 		if (curStage <= 0)
 			curStage = 1;
+
+		if (pG->curRoomId_4FAC == 0x120)
+		{
+			// On main menu or the boring r120 intro stage, try using their previous area jump indexes
+			curStage = re4t::cfg->iTrainerLastAreaJumpStage;
+			curRoomIdx = re4t::cfg->iTrainerLastAreaJumpRoomIdx;
+		}
 	}
 	return true;
 }
@@ -760,17 +769,19 @@ bool UI_AreaJump::Render(bool WindowMode)
 				curStage = 0;
 
 			curRoomIdx = 0;
-			UpdateRoomInfo();
+			roomPosRotNeedsUpdate = true;
 		}
 
 		cRoomJmp_stage* stage = roomJmpData->GetStage(curStage);
-		if (stage)
+		if (!stage)
+			curStage = 1;
+		else
 		{
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Room").x - 10.0f);
 			std::string curRoomStr = RoomDisplayString(curStage, curRoomIdx);
 			if (ImGui::BeginCombo("Room", curRoomStr.c_str()))
 			{
-				for (uint32_t i = 0; i < stage->nData_0; i++)
+				for (int i = 0; i < stage->nData_0; i++)
 				{
 					std::string roomStr = RoomDisplayString(curStage, i);
 
@@ -778,7 +789,7 @@ bool UI_AreaJump::Render(bool WindowMode)
 					if (ImGui::Selectable(roomStr.c_str(), is_selected))
 					{
 						curRoomIdx = i;
-						UpdateRoomInfo();
+						roomPosRotNeedsUpdate = true;
 					}
 
 					if (is_selected)
@@ -789,8 +800,13 @@ bool UI_AreaJump::Render(bool WindowMode)
 			ImGui::PopItemWidth();
 
 			CRoomInfo* roomData = stage->GetRoom(curRoomIdx);
-			if(roomData)
+			if (!roomData)
+				curRoomIdx = 0;
+			else
 			{
+				if (roomPosRotNeedsUpdate)
+					UpdateRoomInfo();
+
 				char* person1 = roomData->getPerson();
 				char* person2 = roomData->getPerson2();
 
@@ -822,6 +838,11 @@ bool UI_AreaJump::Render(bool WindowMode)
 				ImGui::BeginDisabled(!bio4::CardCheckDone());
 				if (ImGui::Button("Jump!"))
 				{
+					// Save users "last area jump stage/room" settings to INI
+					re4t::cfg->iTrainerLastAreaJumpStage = curStage;
+					re4t::cfg->iTrainerLastAreaJumpRoomIdx = curRoomIdx;
+					re4t::cfg->WriteSettings(true);
+
 					GlobalPtr()->JumpPoint_4FAF = curRoomIdx;
 					AreaJump(roomData->roomNo_2, curRoomPosition, curRoomRotation);
 				}

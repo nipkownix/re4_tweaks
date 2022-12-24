@@ -115,3 +115,9 @@ enum LVADD
 	LVADD_TIMECOUNT = 0xE,
 	LVADD_NUM = 0xF
 };
+
+namespace bio4
+{
+	extern void(__cdecl* PlChangeData)();
+};
+

@@ -78,9 +78,11 @@ void updateCheck()
 		return;
 	}
 
-	json_obj = json::parse(json_str);
-
-	if (json_obj.empty())
+	try
+	{
+		json_obj = json::parse(json_str);
+	}
+	catch (json::parse_error&)
 	{
 		spd::log()->info("{} -> Invalid json!", __FUNCTION__);
 
@@ -94,7 +96,7 @@ void updateCheck()
 	}
 
 	// Get info from json
-	if (json_obj.is_structured() && json_obj.is_array())
+	if (!json_obj.is_null() && !json_obj.empty())
 	{
 		for (auto& json : json_obj)
 		{
@@ -104,7 +106,31 @@ void updateCheck()
 				json.at("assets").at(0).at("browser_download_url").get_to(updt.url);
 				json.at("body").get_to(updt.description);
 			}
+			else
+			{
+				spd::log()->info("{} -> Invalid json!", __FUNCTION__);
+
+				#ifdef VERBOSE
+				con.log("AutoUpdate: Invalid json!");
+				#endif 
+
+				updt.UpdateStatus = UpdateStatus::Finished;
+
+				return;
+			}
 		}
+	}
+	else
+	{
+		spd::log()->info("{} -> Invalid json!", __FUNCTION__);
+
+		#ifdef VERBOSE
+		con.log("AutoUpdate: Invalid json!");
+		#endif 
+
+		updt.UpdateStatus = UpdateStatus::Finished;
+
+		return;
 	}
 
 	if (APP_VERSION < updt.version)
@@ -232,7 +258,7 @@ void updateDownloadApply()
 					std::filesystem::copy(target, rootPath, copyOptions);
 
 					// Save current settings on new .ini files
-					re4t::cfg->WriteSettings();
+					re4t::cfg->WriteSettings(false);
 
 					// Done
 					updt.UpdateStatus = UpdateStatus::Success;
@@ -327,7 +353,7 @@ void AutoUpdate::RenderUI()
 			if (ImGui::Button("Never ask again", btn_size))
 			{
 				re4t::cfg->bNeverCheckForUpdates = true;
-				re4t::cfg->WriteSettings();
+				re4t::cfg->WriteSettings(false);
 				updt.UpdateStatus = UpdateStatus::Finished;
 			}
 

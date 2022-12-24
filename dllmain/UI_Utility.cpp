@@ -269,7 +269,7 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	float textHeight = ImGui::CalcTextSize(text).y;
 	float iconWidth = ImGui::CalcTextSize(icon).x;
 
-	float x_text_offset = ((p1.x - p0.x) / 2) - textWidth / 3.0f;
+	float x_text_offset = (((p1.x - p0.x) - textWidth + iconWidth + 7.0f) * 0.5f);
 	float y_text_offset = ((p1.y - p0.y) - textHeight) * 0.5f;
 
 	float x_icon_offset = x_text_offset - iconWidth - 7.0f;
