@@ -108,7 +108,7 @@ public:
 
 	// GAMEPLAY
 	bool bAshleyJPCameraAngles = false;
-	bool bSeparateWaysDifficultyMenu = true;
+	bool bSeparateWaysProfessional = true;
 	bool bEnableNTSCMode = false;
 	bool bAllowAshleySuplex = false;
 	bool bFixDitmanGlitch = false;

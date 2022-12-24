@@ -1291,16 +1291,16 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
 					}
 
-					// SeparateWaysDifficultyMenu
+					// SeparateWaysProfessional
 					{
 						ImGui_ColumnSwitch();
 
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysDifficultySelect", &re4t::cfg->bSeparateWaysDifficultyMenu);
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysProfessional", &re4t::cfg->bSeparateWaysProfessional);
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Choose between Professional and Normal difficulty modes when starting a new game of Separate Ways.");
+						ImGui::TextWrapped("Adds a menu to choose between Normal and Professional difficulty modes when starting a new game of Separate Ways.");
 					}
 
 					// EnableNTSCMode

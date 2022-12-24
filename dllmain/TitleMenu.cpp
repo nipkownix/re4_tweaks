@@ -276,7 +276,7 @@ void re4t::init::TitleMenu()
 					switch (pT->omk_menu_no_6C)
 					{
 					case 0:
-						if (!re4t::cfg->bSeparateWaysDifficultyMenu || re4t::cfg->bOverrideDifficulty)
+						if (!re4t::cfg->bSeparateWaysProfessional || re4t::cfg->bOverrideDifficulty)
 							pT->Rno1_1 = TitleAda::GameStart;
 						else if (!insideLevelMenu)
 							enterLevelMenu();

@@ -293,7 +293,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// GAMEPLAY
 	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
-	re4t::cfg->bSeparateWaysDifficultyMenu = iniReader.ReadBoolean("GAMEPLAY", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
+	re4t::cfg->bSeparateWaysProfessional = iniReader.ReadBoolean("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
 	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
 	re4t::cfg->bFixDitmanGlitch = iniReader.ReadBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
@@ -821,7 +821,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	
 	// GAMEPLAY
 	iniReader.WriteBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
-	iniReader.WriteBoolean("GAMEPLAY", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
+	iniReader.WriteBoolean("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
 	iniReader.WriteBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	iniReader.WriteBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
 	iniReader.WriteBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
@@ -1004,7 +1004,7 @@ void re4t_cfg::LogSettings()
 	// GAMEPLAY
 	spd::log()->info("+ GAMEPLAY-----------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch ? "true" : "false");
