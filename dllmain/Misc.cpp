@@ -1241,10 +1241,6 @@ void re4t::init::Misc()
 
 		// Patches for Japanese language support (language_8 == 0):
 
-		// ignore language_8 check when skipping the difficulty menu
-		pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
-
 		// repurpose the hide Professional mode block to hide Amateur mode instead
 		pattern = hook::pattern("C7 46 30 01 00 00 00");
 		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // titleLevelInit
