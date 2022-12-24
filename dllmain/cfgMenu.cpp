@@ -563,8 +563,7 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Overrides the color of the laser sights.");
-						ImGui::TextWrapped("Note: The game's vanilla config.ini contains a setting to change the");
-						ImGui::TextWrapped("alpha/opacity of the laser, but since it doesn't work, we don't include it here.");
+						ImGui::TextWrapped("Note: The game's vanilla config.ini contains a setting to change the alpha/opacity of the laser, but since it doesn't work, we don't include it here.");
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::BeginDisabled(!re4t::cfg->bOverrideLaserColor || re4t::cfg->bRainbowLaser);
@@ -1263,92 +1262,6 @@ void cfgMenuRender()
 				if (ImGui::BeginTable("Misc", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
-
-					// OverrideCostumes
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &re4t::cfg->bOverrideCostumes);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.");
-						ImGui::TextWrapped("May cause weird visuals in cutscenes.");
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-						ImGui::BeginDisabled(!re4t::cfg->bOverrideCostumes);
-						ImGui::PushItemWidth(150 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-
-						if (ImGui::BeginCombo("Leon", sLeonCostumeNames[(int)re4t::cfg->CostumeOverride.Leon]))
-						{
-							for (int i = 0; i < IM_ARRAYSIZE(sLeonCostumeNames); i++) {
-								if (ImGui::Selectable(sLeonCostumeNames[i])) {
-									re4t::cfg->HasUnsavedChanges = true;
-									re4t::cfg->CostumeOverride.Leon = LeonCostume(i);
-								}
-							}
-							ImGui::EndCombo();
-						}
-
-						if (ImGui::BeginCombo("Ashley", sAshleyCostumeNames[(int)re4t::cfg->CostumeOverride.Ashley]))
-						{
-							for (int i = 0; i < IM_ARRAYSIZE(sAshleyCostumeNames); i++) {
-								if (ImGui::Selectable(sAshleyCostumeNames[i])) {
-									re4t::cfg->HasUnsavedChanges = true;
-									re4t::cfg->CostumeOverride.Ashley = AshleyCostume(i);
-								}
-							}
-							ImGui::EndCombo();
-						}
-
-						if (ImGui::BeginCombo("Ada", sAdaCostumeNames[(int)re4t::cfg->CostumeOverride.Ada]))
-						{
-							for (int i = 0; i < IM_ARRAYSIZE(sAdaCostumeNames); i++) {
-								std::string costumeName = sAdaCostumeNames[i];
-								if (costumeName == "RE2_d") continue; // Ignore duplicate
-								if (ImGui::Selectable(sAdaCostumeNames[i])) {
-									re4t::cfg->HasUnsavedChanges = true;
-									re4t::cfg->CostumeOverride.Ada = AdaCostume(i);
-								}
-							}
-							ImGui::EndCombo();
-						}
-
-						ImGui::PopItemWidth();
-						ImGui::EndDisabled();
-					}
-
-					// OverrideDifficulty
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("OverrideDifficulty", &re4t::cfg->bOverrideDifficulty);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Overrides the game's difficulty when starting a new game (Main game & Separate Ways), starting an Assignment Ada playthrough, or starting a The Mercenaries run.");
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-						ImGui::BeginDisabled(!re4t::cfg->bOverrideDifficulty);
-						if (ImGui::BeginCombo("Difficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]))
-						{
-							for (int i = 0; i < IM_ARRAYSIZE(sGameDifficultyNames); i++) 
-							{
-								// Ignore uknown difficulties
-								if (strstr(sGameDifficultyNames[i], "Unk") != NULL) continue;
-								if (ImGui::Selectable(sGameDifficultyNames[i])) 
-								{
-									re4t::cfg->NewDifficulty = GameDifficulty(i);
-								}
-							}
-							ImGui::EndCombo();
-						}
-						ImGui::EndDisabled();
-					}
 
 					// EnableNTSCMode
 					{

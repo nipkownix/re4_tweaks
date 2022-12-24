@@ -22,6 +22,8 @@ public:
 	void ParseHotkeys();
 	std::vector<uint32_t> ParseKeyCombo(std::string_view in_combo); // Parses an key combination string into a vector of VKs
 
+	bool HasUnsavedChanges = false;
+
 	// Vars
 	//=//=//
 	// DISPLAY
@@ -106,17 +108,6 @@ public:
 	// MISC
 	std::string sWrappedDllPath = "";
 	bool bNeverCheckForUpdates = false;
-	bool bOverrideCostumes = false;
-
-	struct CostumeOverrideList
-	{
-		LeonCostume Leon;
-		AshleyCostume Ashley;
-		AdaCostume Ada;
-	} CostumeOverride;
-
-	bool bOverrideDifficulty = false;
-	GameDifficulty NewDifficulty = GameDifficulty::Medium;
 	bool bAshleyJPCameraAngles = false;
 	bool bRestoreDemoVideos = true;
 	bool bRestoreAnalogTitleScroll = true;
@@ -160,6 +151,74 @@ public:
 	std::string sMouseTurnModifierKeyCombo = "ALT";
 	std::string sJetSkiTrickCombo = "LMOUSE+RMOUSE";
 
+	// WARNING
+	bool bIgnoreFPSWarning = false;
+
+	// IMGUI
+	float fFontSizeScale = 1.0f;
+	bool bEnableDPIScale = true;
+	bool bDisableMenuTip = false;
+	
+	// DEBUG
+	bool bVerboseLog = false;
+	bool bNeverHideCursor = false;
+	bool bUseDynamicFrametime = false;
+	bool bDisableFramelimiting = false;
+
+	float fdbg1 = 1.0f;
+	float fdbg2 = 1.0f;
+	float fdbg3 = 1.0f;
+	float fdbg4 = 1.0f;
+	float fdbg5 = 1.0f;
+	float fdbg6 = 1.0f;
+	bool bdbg1 = false;
+	bool bdbg2 = false;
+	bool bdbg3 = false;
+	bool bdbg4 = false;
+
+	// HD Project
+	bool bIsUsingHDProject = false;
+
+	// TRAINER
+	bool bTrainerEnable = false;
+
+	// PATCHES
+	bool bTrainerUseNumpadMovement = true;
+	float fTrainerNumMoveSpeed = 1.0f;
+	bool bTrainerUseMouseWheelUpDown = true;
+	bool bTrainerEnableFreeCam = false;
+	float fTrainerFreeCamSpeed = 1.0f;
+	bool bTrainerDisableEnemySpawn = false;
+	bool bTrainerDeadBodiesNeverDisappear = false;
+	bool bTrainerAllowEnterDoorsWithoutAsh = false;
+	bool bTrainerEnableDebugTrg = false;
+	bool bTrainerShowDebugTrgHintText = true;
+	bool bTrainerOpenInventoryOnItemAdd = true;
+	int iTrainerLastAreaJumpStage = 1;
+	int iTrainerLastAreaJumpRoomIdx = 0;
+
+	// OVERRIDES
+	bool bOverrideCostumes = false;
+
+	struct CostumeOverrideList
+	{
+		LeonCostume Leon = LeonCostume::Jacket;
+		AshleyCostume Ashley = AshleyCostume::Normal;
+		AdaCostume Ada = AdaCostume::Normal;
+	} CostumeOverride;
+
+	bool bOverrideDifficulty = false;
+	GameDifficulty NewDifficulty = GameDifficulty::Medium;
+	bool bTrainerOverrideDynamicDifficulty = false;
+	int iTrainerDynamicDifficultyLevel = 5;
+	bool bTrainerPlayerSpeedOverride = false;
+	float fTrainerPlayerSpeedOverride = 1.0f;
+	bool bTrainerEnemyHPMultiplier = false;
+	float fTrainerEnemyHPMultiplier = 1.0f;
+	bool bTrainerRandomHPMultiplier = false;
+	float fTrainerRandomHPMultiMin = 0.3f;
+	float fTrainerRandomHPMultiMax = 7.0f;
+
 	// TRAINER_HOTKEYS
 	std::string sTrainerFocusUIKeyCombo = "F5";
 	std::string sTrainerNoclipKeyCombo = "";
@@ -167,6 +226,26 @@ public:
 	std::string sTrainerSpeedOverrideKeyCombo = "";
 	std::string sTrainerMoveAshToPlayerKeyCombo = "";
 	std::string sTrainerDebugTrgKeyCombo = "SHIFT+ALT";
+
+	// WEAPON_HOTKEYS
+	bool bWeaponHotkeysEnable = false;
+	std::string sWeaponHotkeys[5] = { "1", "2", "3", "4", "5" };
+	int iWeaponHotkeyWepIds[5] = { 0,0,0,0,0 };
+	std::vector<int> iWeaponHotkeyCycle[5] = {
+		{ 35,37,33,39,3,41,42,55 }, // pistols
+		{ 44,45,71,148 }, // shotguns
+		{ 16,46,47,48,52,83 }, // rifle/machine guns
+		{ 53,109,54 }, // rocket/mine launchers
+		{ 1,2,14,8,9,10 }, // throwables
+	};
+	std::string iWeaponHotkeyCycleString[5] = {
+		"35,37,33,39,3,41,42,55",
+		"44,45,71,148",
+		"16,46,47,48,52,83",
+		"53,109,54",
+		"1,2,14,8,9,10"
+	};
+	std::string sLastWeaponHotkey = "C";
 
 	// ESP
 	bool bShowESP = false;
@@ -192,81 +271,6 @@ public:
 	int iSideClosestEmsAmount = 5;
 	float fSideMaxEmDistance = 30000.0f;
 	int iSideEmHPMode = 1;
-
-	// WEAPON_HOTKEYS
-	bool bWeaponHotkeysEnable = false;
-	std::string sWeaponHotkeys[5] = { "1", "2", "3", "4", "5" };
-	int iWeaponHotkeyWepIds[5] = { 0,0,0,0,0 };
-	std::vector<int> iWeaponHotkeyCycle[5] = { 
-		{ 35,37,33,39,3,41,42,55 }, // pistols
-		{ 44,45,71,148 }, // shotguns
-		{ 16,46,47,48,52,83 }, // rifle/machine guns
-		{ 53,109,54 }, // rocket/mine launchers
-		{ 1,2,14,8,9,10 }, // throwables
-	};
-	std::string iWeaponHotkeyCycleString[5] = {
-		"35,37,33,39,3,41,42,55",
-		"44,45,71,148",
-		"16,46,47,48,52,83",
-		"53,109,54",
-		"1,2,14,8,9,10"
-	};
-	std::string sLastWeaponHotkey = "C";
-
-	// TRAINER
-	bool bTrainerEnable = false;
-	bool bTrainerPlayerSpeedOverride = false;
-	float fTrainerPlayerSpeedOverride = 1.0f;
-	bool bTrainerUseNumpadMovement = true;
-	float fTrainerNumMoveSpeed = 1.0f;
-	bool bTrainerUseMouseWheelUpDown = true;
-	bool bTrainerEnableFreeCam = false;
-	float fTrainerFreeCamSpeed = 1.0f;
-	bool bTrainerEnemyHPMultiplier = false;
-	float fTrainerEnemyHPMultiplier = 1.0f;
-	bool bTrainerRandomHPMultiplier = false;
-	float fTrainerRandomHPMultiMin = 0.3f;
-	float fTrainerRandomHPMultiMax = 7.0f;
-	bool bTrainerDisableEnemySpawn = false;
-	bool bTrainerDeadBodiesNeverDisappear = false;
-	bool bTrainerAllowEnterDoorsWithoutAsh = false;
-	bool bTrainerEnableDebugTrg = false;
-	bool bTrainerShowDebugTrgHintText = true;
-	bool bTrainerOverrideDynamicDifficulty = false;
-	int iTrainerDynamicDifficultyLevel = 5;
-	bool bTrainerOpenInventoryOnItemAdd = true;
-	int iTrainerLastAreaJumpStage = 1;
-	int iTrainerLastAreaJumpRoomIdx = 0;
-
-	// WARNING
-	bool bIgnoreFPSWarning = false;
-
-	// IMGUI
-	float fFontSizeScale = 1.0f;
-	bool bEnableDPIScale = true;
-	bool bDisableMenuTip = false;
-	
-	// DEBUG
-	bool bVerboseLog = false;
-	bool bNeverHideCursor = false;
-	bool bUseDynamicFrametime = false;
-	bool bDisableFramelimiting = false;
-
-	bool HasUnsavedChanges = false;
-
-	float fdbg1 = 1.0f;
-	float fdbg2 = 1.0f;
-	float fdbg3 = 1.0f;
-	float fdbg4 = 1.0f;
-	float fdbg5 = 1.0f;
-	float fdbg6 = 1.0f;
-	bool bdbg1;
-	bool bdbg2;
-	bool bdbg3;
-	bool bdbg4;
-
-	// HD Project
-	bool bIsUsingHDProject = false;
 };
 
 namespace re4t

@@ -292,44 +292,6 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// MISC
 	re4t::cfg->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-
-	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
-	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
-	if (!buf.empty())
-	{
-		if (buf == "Jacket") re4t::cfg->CostumeOverride.Leon = LeonCostume::Jacket;
-		if (buf == "Normal") re4t::cfg->CostumeOverride.Leon = LeonCostume::Normal;
-		if (buf == "Vest") re4t::cfg->CostumeOverride.Leon = LeonCostume::Vest;
-		if (buf == "RPD") re4t::cfg->CostumeOverride.Leon = LeonCostume::RPD;
-		if (buf == "Mafia") re4t::cfg->CostumeOverride.Leon = LeonCostume::Mafia;
-	}
-
-	buf = iniReader.ReadString("MISC", "AshleyCostume", "");
-	if (!buf.empty())
-	{
-		if (buf == "Normal") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Normal;
-		if (buf == "Popstar") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Popstar;
-		if (buf == "Armor") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Armor;
-	}
-
-	buf = iniReader.ReadString("MISC", "AdaCostume", "");
-	if (!buf.empty())
-	{
-		if (buf == "Resident Evil 2") re4t::cfg->CostumeOverride.Ada = AdaCostume::RE2;
-		if (buf == "Spy") re4t::cfg->CostumeOverride.Ada = AdaCostume::Spy;
-		if (buf == "Normal") re4t::cfg->CostumeOverride.Ada = AdaCostume::Normal;
-	}
-
-	re4t::cfg->bOverrideDifficulty = iniReader.ReadBoolean("MISC", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
-	buf = iniReader.ReadString("MISC", "NewDifficulty", "");
-	if (!buf.empty())
-	{
-		if (buf == "Amateur") re4t::cfg->NewDifficulty = GameDifficulty::VeryEasy;
-		if (buf == "Easy") re4t::cfg->NewDifficulty = GameDifficulty::Easy;
-		if (buf == "Normal") re4t::cfg->NewDifficulty = GameDifficulty::Medium;
-		if (buf == "Professional") re4t::cfg->NewDifficulty = GameDifficulty::Pro;
-	}
-
 	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	re4t::cfg->bRestoreDemoVideos = iniReader.ReadBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
@@ -386,31 +348,72 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// TRAINER
 	re4t::cfg->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
-	re4t::cfg->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("TRAINER", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
-	re4t::cfg->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("TRAINER", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
-	re4t::cfg->bTrainerUseNumpadMovement = iniReader.ReadBoolean("TRAINER", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
-	re4t::cfg->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("TRAINER", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
-	re4t::cfg->fTrainerNumMoveSpeed = iniReader.ReadFloat("TRAINER", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
+
+	// PATCHES
+	re4t::cfg->bTrainerUseNumpadMovement = iniReader.ReadBoolean("PATCHES", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
+	re4t::cfg->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("PATCHES", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
+	re4t::cfg->fTrainerNumMoveSpeed = iniReader.ReadFloat("PATCHES", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
 	re4t::cfg->fTrainerNumMoveSpeed = fmin(fmax(re4t::cfg->fTrainerNumMoveSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
-	re4t::cfg->bTrainerEnableFreeCam = iniReader.ReadBoolean("TRAINER", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
-	re4t::cfg->fTrainerFreeCamSpeed = iniReader.ReadFloat("TRAINER", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
+	re4t::cfg->bTrainerEnableFreeCam = iniReader.ReadBoolean("PATCHES", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
+	re4t::cfg->fTrainerFreeCamSpeed = iniReader.ReadFloat("PATCHES", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
 	re4t::cfg->fTrainerFreeCamSpeed = fmin(fmax(re4t::cfg->fTrainerFreeCamSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
-	re4t::cfg->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("TRAINER", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
-	re4t::cfg->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("TRAINER", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
+	re4t::cfg->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("PATCHES", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
+	re4t::cfg->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("PATCHES", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
+	re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("PATCHES", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
+	re4t::cfg->bTrainerEnableDebugTrg = iniReader.ReadBoolean("PATCHES", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
+	re4t::cfg->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("PATCHES", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+	re4t::cfg->bTrainerOpenInventoryOnItemAdd = iniReader.ReadBoolean("PATCHES", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+	re4t::cfg->iTrainerLastAreaJumpStage = iniReader.ReadInteger("PATCHES", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+	re4t::cfg->iTrainerLastAreaJumpRoomIdx = iniReader.ReadInteger("PATCHES", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
+
+	// OVERRIDES
+	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("OVERRIDES", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
+	std::string buf = iniReader.ReadString("OVERRIDES", "LeonCostume", "");
+	if (!buf.empty())
+	{
+		if (buf == "Jacket") re4t::cfg->CostumeOverride.Leon = LeonCostume::Jacket;
+		if (buf == "Normal") re4t::cfg->CostumeOverride.Leon = LeonCostume::Normal;
+		if (buf == "Vest") re4t::cfg->CostumeOverride.Leon = LeonCostume::Vest;
+		if (buf == "RPD") re4t::cfg->CostumeOverride.Leon = LeonCostume::RPD;
+		if (buf == "Mafia") re4t::cfg->CostumeOverride.Leon = LeonCostume::Mafia;
+	}
+
+	buf = iniReader.ReadString("OVERRIDES", "AshleyCostume", "");
+	if (!buf.empty())
+	{
+		if (buf == "Normal") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Normal;
+		if (buf == "Popstar") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Popstar;
+		if (buf == "Armor") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Armor;
+	}
+
+	buf = iniReader.ReadString("OVERRIDES", "AdaCostume", "");
+	if (!buf.empty())
+	{
+		if (buf == "Resident Evil 2") re4t::cfg->CostumeOverride.Ada = AdaCostume::RE2;
+		if (buf == "Spy") re4t::cfg->CostumeOverride.Ada = AdaCostume::Spy;
+		if (buf == "Normal") re4t::cfg->CostumeOverride.Ada = AdaCostume::Normal;
+	}
+
+	re4t::cfg->bOverrideDifficulty = iniReader.ReadBoolean("OVERRIDES", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+	buf = iniReader.ReadString("OVERRIDES", "NewDifficulty", "");
+	if (!buf.empty())
+	{
+		if (buf == "Amateur") re4t::cfg->NewDifficulty = GameDifficulty::VeryEasy;
+		if (buf == "Easy") re4t::cfg->NewDifficulty = GameDifficulty::Easy;
+		if (buf == "Normal") re4t::cfg->NewDifficulty = GameDifficulty::Medium;
+		if (buf == "Professional") re4t::cfg->NewDifficulty = GameDifficulty::Pro;
+	}
+
+	re4t::cfg->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("OVERRIDES", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
+	re4t::cfg->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("OVERRIDES", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
+	re4t::cfg->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("OVERRIDES", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
+	re4t::cfg->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("OVERRIDES", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
 	re4t::cfg->fTrainerEnemyHPMultiplier = fmin(fmax(re4t::cfg->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
-	re4t::cfg->bTrainerRandomHPMultiplier = iniReader.ReadBoolean("TRAINER", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
-	re4t::cfg->fTrainerRandomHPMultiMin = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
+	re4t::cfg->bTrainerRandomHPMultiplier = iniReader.ReadBoolean("OVERRIDES", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
+	re4t::cfg->fTrainerRandomHPMultiMin = iniReader.ReadFloat("OVERRIDES", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
 	re4t::cfg->fTrainerRandomHPMultiMin = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
-	re4t::cfg->fTrainerRandomHPMultiMax = iniReader.ReadFloat("TRAINER", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
+	re4t::cfg->fTrainerRandomHPMultiMax = iniReader.ReadFloat("OVERRIDES", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
 	re4t::cfg->fTrainerRandomHPMultiMax = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMax, fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
-	re4t::cfg->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("TRAINER", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
-	re4t::cfg->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("TRAINER", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
-	re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
-	re4t::cfg->bTrainerEnableDebugTrg = iniReader.ReadBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
-	re4t::cfg->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
-	re4t::cfg->bTrainerOpenInventoryOnItemAdd = iniReader.ReadBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
-	re4t::cfg->iTrainerLastAreaJumpStage = iniReader.ReadInteger("TRAINER", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
-	re4t::cfg->iTrainerLastAreaJumpRoomIdx = iniReader.ReadInteger("TRAINER", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
 
 	// ESP
 	re4t::cfg->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
@@ -582,28 +585,38 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		// trainer.ini-only settings
 		iniReader = CIniReader(WstrToStr(iniPath));
 
-		// TRAINER
+		// Trainer
 		iniReader.WriteBoolean("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
-		iniReader.WriteBoolean("TRAINER", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
-		iniReader.WriteFloat("TRAINER", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
-		iniReader.WriteBoolean("TRAINER", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
-		iniReader.WriteBoolean("TRAINER", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
-		iniReader.WriteFloat("TRAINER", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
-		iniReader.WriteBoolean("TRAINER", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
-		iniReader.WriteFloat("TRAINER", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
-		iniReader.WriteBoolean("TRAINER", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
-		iniReader.WriteFloat("TRAINER", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
-		iniReader.WriteBoolean("TRAINER", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
-		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
-		iniReader.WriteFloat("TRAINER", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
-		iniReader.WriteBoolean("TRAINER", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
-		iniReader.WriteBoolean("TRAINER", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
-		iniReader.WriteBoolean("TRAINER", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
-		iniReader.WriteBoolean("TRAINER", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
-		iniReader.WriteBoolean("TRAINER", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
-		iniReader.WriteBoolean("TRAINER", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
-		iniReader.WriteInteger("TRAINER", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
-		iniReader.WriteInteger("TRAINER", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
+
+		// PATCHES
+		iniReader.WriteBoolean("PATCHES", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
+		iniReader.WriteBoolean("PATCHES", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
+		iniReader.WriteFloat("PATCHES", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
+		iniReader.WriteBoolean("PATCHES", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
+		iniReader.WriteFloat("PATCHES", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
+		iniReader.WriteBoolean("PATCHES", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
+		iniReader.WriteBoolean("PATCHES", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
+		iniReader.WriteBoolean("PATCHES", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
+		iniReader.WriteBoolean("PATCHES", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
+		iniReader.WriteBoolean("PATCHES", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+		iniReader.WriteBoolean("PATCHES", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+		iniReader.WriteInteger("PATCHES", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+		iniReader.WriteInteger("PATCHES", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
+
+		// OVERRIDES
+		iniReader.WriteBoolean("OVERRIDES", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
+		iniReader.WriteFloat("OVERRIDES", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
+		iniReader.WriteBoolean("OVERRIDES", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
+		iniReader.WriteString("OVERRIDES", "LeonCostume", " " + std::string(sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]));
+		iniReader.WriteString("OVERRIDES", "AshleyCostume", " " + std::string(sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]));
+		iniReader.WriteString("OVERRIDES", "AdaCostume", " " + std::string(sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]));
+		iniReader.WriteBoolean("OVERRIDES", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+		iniReader.WriteString("OVERRIDES", "NewDifficulty", " " + std::string(sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]));
+		iniReader.WriteBoolean("OVERRIDES", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
+		iniReader.WriteFloat("OVERRIDES", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
+		iniReader.WriteBoolean("OVERRIDES", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
+		iniReader.WriteFloat("OVERRIDES", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
+		iniReader.WriteFloat("OVERRIDES", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
 
 		// ESP
 		iniReader.WriteBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
@@ -805,12 +818,6 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 
 	// MISC
 	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-	iniReader.WriteBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
-	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]));
-	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]));
-	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]));
-	iniReader.WriteBoolean("MISC", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
-	iniReader.WriteString("MISC", "NewDifficulty", " " + std::string(sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]));
 	iniReader.WriteBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
@@ -863,7 +870,7 @@ DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
 	bool writeTrainerOnly = bool(lpParameter);
 
 	std::wstring iniPathMain = rootPath + wrapperName + L".ini";
-	std::wstring iniPathTrainer = rootPath + L"\\re4_tweaks\\trainer.ini";
+	std::wstring iniPathTrainer = rootPath + L"re4_tweaks\\trainer.ini";
 
 	WriteSettings(iniPathTrainer, true);
 
@@ -993,12 +1000,6 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("+ MISC---------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", re4t::cfg->sWrappedDllPath.data());
 	spd::log()->info("| {:<30} | {:>15} |", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", re4t::cfg->bOverrideCostumes ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]);
-	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]);
-	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]);
-	spd::log()->info("| {:<30} | {:>15} |", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "NewDifficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll ? "true" : "false");
@@ -1022,7 +1023,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AlwaysShowOriginalTitleBg", re4t::cfg->bAlwaysShowOriginalTitleBackground ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY
@@ -1072,7 +1073,88 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// HDPROJECT
-	spd::log()->info("+ HDPROJECT--------------------------+-------------+");
+	spd::log()->info("+ HDPROJECT----------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "IsUsingHDProject", bIsUsingHDProject ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// TRAINER
+	spd::log()->info("+ TRAINER------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "TrainerEnable", re4t::cfg->bTrainerEnable ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// PATCHES
+	spd::log()->info("| {:<30} | {:>15} |", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
+	spd::log()->info("| {:<30} | {:>15} |", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
+	spd::log()->info("| {:<30} | {:>15} |", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+	spd::log()->info("| {:<30} | {:>15} |", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
+
+	// OVERRIDES
+	spd::log()->info("+ OVERRIDES----------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", re4t::cfg->bOverrideCostumes ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]);
+	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]);
+	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]);
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "NewDifficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]);
+	spd::log()->info("| {:<30} | {:>15} |", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
+	spd::log()->info("| {:<30} | {:>15} |", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
+	spd::log()->info("| {:<30} | {:>15} |", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
+	spd::log()->info("| {:<30} | {:>15} |", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// WEAPON_HOTKEYS
+	spd::log()->info("+ WEAPON_HOTKEYS-----------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "Enable", re4t::cfg->bWeaponHotkeysEnable ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// TRAINER_HOTKEYS
+	spd::log()->info("+ TRAINER_HOTKEYS----------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "FocusUI", re4t::cfg->sTrainerFocusUIKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "NoclipToggle", re4t::cfg->sTrainerNoclipKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "FreeCamToggle", re4t::cfg->sTrainerFreeCamKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "SpeedOverrideToggle", re4t::cfg->sTrainerSpeedOverrideKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "MoveAshleyToPlayer", re4t::cfg->sTrainerMoveAshToPlayerKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "DebugTrg", re4t::cfg->sTrainerDebugTrgKeyCombo.data());
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// ESP
+	spd::log()->info("+ ESP----------------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowESP", re4t::cfg->bShowESP ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowInfoOnTop", re4t::cfg->bEspShowInfoOnTop ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowEnemies", re4t::cfg->bEspOnlyShowEnemies ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowValidEms", re4t::cfg->bEspOnlyShowValidEms ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowESLSpawned", re4t::cfg->bEspOnlyShowESLSpawned ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowAlive", re4t::cfg->bEspOnlyShowAlive ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "MaxEmDistance", re4t::cfg->fEspMaxEmDistance);
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowClosestEms", re4t::cfg->bEspOnlyShowClosestEms ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ClosestEmsAmount", re4t::cfg->iEspClosestEmsAmount);
+	spd::log()->info("| {:<30} | {:>15} |", "DrawLines", re4t::cfg->bEspDrawLines ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EmNameMode", re4t::cfg->iEspEmNameMode);
+	spd::log()->info("| {:<30} | {:>15} |", "EmHPMode", re4t::cfg->iEspEmHPMode);
+	spd::log()->info("| {:<30} | {:>15} |", "DrawDebugInfo", re4t::cfg->bEspDrawDebugInfo ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
+	// SIDEINFO
+	spd::log()->info("+ SIDEINFO-----------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowSideInfo", re4t::cfg->bShowSideInfo ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowEmCount", re4t::cfg->bSideShowEmCount ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowEmList", re4t::cfg->bSideShowEmList ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowESLSpawned", re4t::cfg->bSideOnlyShowESLSpawned ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ShowSimpleNames", re4t::cfg->bSideShowSimpleNames ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "ClosestEmsAmount", re4t::cfg->iSideClosestEmsAmount);
+	spd::log()->info("| {:<30} | {:>15} |", "MaxEmDistance", re4t::cfg->fSideMaxEmDistance);
+	spd::log()->info("| {:<30} | {:>15} |", "EmHPMode", re4t::cfg->iSideEmHPMode);
 	spd::log()->info("+--------------------------------+-----------------+");
 }

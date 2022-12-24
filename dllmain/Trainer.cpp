@@ -1770,6 +1770,9 @@ void Trainer_RenderUI(int columnCount)
 	// Patches
 	ImGui_TrainerTabButton("##patches", "Patches", active, inactive, TrainerTab::Patches, ICON_FA_DESKTOP, icn_color, IM_COL32_WHITE, btn_size);
 
+	// Overrides
+	ImGui_TrainerTabButton("##overrides", "Overrides", active, inactive, TrainerTab::Overrides, ICON_FA_SWATCHBOOK, icn_color, IM_COL32_WHITE, btn_size);
+
 	// Hotkeys
 	ImGui_TrainerTabButton("##hotkeys", "Hotkeys", active, inactive, TrainerTab::Hotkeys, ICON_FA_LAMBDA, icn_color, IM_COL32_WHITE, btn_size);
 
@@ -2065,6 +2068,169 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::EndDisabled();
 			}
 
+			// DisableEnemySpawn
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Disable enemy spawn", &re4t::cfg->bTrainerDisableEnemySpawn))
+					re4t::cfg->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::TextWrapped("Make it so enemies don't spawn.");
+				ImGui::TextWrapped("May cause crashes during events/cutscenes that expect enemies to be present! Use with caution!");
+			}
+
+			// Dead bodies never disappear
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Dead bodies never disappear", &re4t::cfg->bTrainerDeadBodiesNeverDisappear))
+					re4t::cfg->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::TextWrapped("Make it so enemies never disappear/despawn when killed.");
+			}
+
+			// AllowEnterDoorsWithoutAsh
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Allow entering doors without Ashley", &re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh))
+					re4t::cfg->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::TextWrapped("Allows the player to go through doors even if Ashley is far away.");
+			}
+
+			// EnableDebugTrg
+			{
+				ImGui_ColumnSwitch();
+
+				if (ImGui::Checkbox("Enable DebugTrg function", &re4t::cfg->bTrainerEnableDebugTrg))
+					re4t::cfg->HasUnsavedChanges = true;
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::TextWrapped("Reimplements the games DebugTrg function, usually allowing certain sections of rooms/events to be skipped.");
+				ImGui::TextWrapped("Can be triggered by pressing LB + X + B together on controller, a hotkey can also be bound in the hotkeys page.");
+
+				ImGui::BeginDisabled(!re4t::cfg->bTrainerEnableDebugTrg);
+				if (ImGui::Checkbox("Show DebugTrg hint on screen", &re4t::cfg->bTrainerShowDebugTrgHintText))
+					re4t::cfg->HasUnsavedChanges = true;
+				ImGui::TextWrapped("Will display \"DebugTrg available!\" text on top-left whenever DebugTrg is being actively checked by the game.");
+				ImGui::EndDisabled();
+			}
+
+			ImGui_ColumnFinish();
+			ImGui::EndTable();
+		}
+	}
+
+	if (CurTrainerTab == TrainerTab::Overrides)
+	{
+		if (ImGui::BeginTable("TrainerOverrides", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+		{
+			ImGui_ColumnInit();
+
+			// OverrideCostumes
+			{
+				ImGui_ColumnSwitch();
+
+				re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("OverrideCostumes", &re4t::cfg->bOverrideCostumes);
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+				ImGui::TextWrapped("Allows overriding the costumes, making it possible to combine Normal/Special 1/Special 2 costumes.");
+				ImGui::TextWrapped("May cause weird visuals in cutscenes.");
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::BeginDisabled(!re4t::cfg->bOverrideCostumes);
+				ImGui::PushItemWidth(150 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+
+				if (ImGui::BeginCombo("Leon", sLeonCostumeNames[(int)re4t::cfg->CostumeOverride.Leon]))
+				{
+					for (int i = 0; i < IM_ARRAYSIZE(sLeonCostumeNames); i++) {
+						if (ImGui::Selectable(sLeonCostumeNames[i])) {
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::cfg->CostumeOverride.Leon = LeonCostume(i);
+						}
+					}
+					ImGui::EndCombo();
+				}
+
+				if (ImGui::BeginCombo("Ashley", sAshleyCostumeNames[(int)re4t::cfg->CostumeOverride.Ashley]))
+				{
+					for (int i = 0; i < IM_ARRAYSIZE(sAshleyCostumeNames); i++) {
+						if (ImGui::Selectable(sAshleyCostumeNames[i])) {
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::cfg->CostumeOverride.Ashley = AshleyCostume(i);
+						}
+					}
+					ImGui::EndCombo();
+				}
+
+				if (ImGui::BeginCombo("Ada", sAdaCostumeNames[(int)re4t::cfg->CostumeOverride.Ada]))
+				{
+					for (int i = 0; i < IM_ARRAYSIZE(sAdaCostumeNames); i++) {
+						std::string costumeName = sAdaCostumeNames[i];
+						if (costumeName == "RE2_d") continue; // Ignore duplicate
+						if (ImGui::Selectable(sAdaCostumeNames[i])) {
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::cfg->CostumeOverride.Ada = AdaCostume(i);
+						}
+					}
+					ImGui::EndCombo();
+				}
+
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+			}
+
+			// OverrideDifficulty
+			{
+				ImGui_ColumnSwitch();
+
+				re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("OverrideDifficulty", &re4t::cfg->bOverrideDifficulty);
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+				ImGui::TextWrapped("Overrides the game's difficulty when starting a new game (Main game & Separate Ways), starting an Assignment Ada playthrough, or starting a The Mercenaries run.");
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::BeginDisabled(!re4t::cfg->bOverrideDifficulty);
+				ImGui::PushItemWidth(150 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+				if (ImGui::BeginCombo("Difficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]))
+				{
+					for (int i = 0; i < IM_ARRAYSIZE(sGameDifficultyNames); i++)
+					{
+						// Ignore uknown difficulties
+						if (strstr(sGameDifficultyNames[i], "Unk") != NULL) continue;
+						if (ImGui::Selectable(sGameDifficultyNames[i]))
+						{
+							re4t::cfg->NewDifficulty = GameDifficulty(i);
+						}
+					}
+					ImGui::EndCombo();
+				}
+				ImGui::PopItemWidth();
+				ImGui::EndDisabled();
+			}
+
 			// Speed override
 			{
 				ImGui_ColumnSwitch();
@@ -2097,13 +2263,13 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				ImGui::Checkbox("Enable Difficulty Level Override", &re4t::cfg->bTrainerOverrideDynamicDifficulty);
+				ImGui::Checkbox("Enable Dynamic Difficulty Level Override", &re4t::cfg->bTrainerOverrideDynamicDifficulty);
 
 				ImGui_ItemSeparator();
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::TextWrapped("Allows overriding the dynamic difficulty level.");
+				ImGui::TextWrapped("Allows overriding the game's \"dynamic\" difficulty level.");
 				ImGui::TextWrapped("(Affects enemy health, damage, speed, and aggression)");
 
 				ImGui::Spacing();
@@ -2193,70 +2359,6 @@ void Trainer_RenderUI(int columnCount)
 					re4t::cfg->HasUnsavedChanges = true;
 				}
 
-				ImGui::EndDisabled();
-			}
-
-			// DisableEnemySpawn
-			{
-				ImGui_ColumnSwitch();
-
-				if (ImGui::Checkbox("Disable enemy spawn", &re4t::cfg->bTrainerDisableEnemySpawn))
-					re4t::cfg->HasUnsavedChanges = true;
-
-				ImGui_ItemSeparator();
-
-				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-				ImGui::TextWrapped("Make it so enemies don't spawn.");
-				ImGui::TextWrapped("May cause crashes during events/cutscenes that expect enemies to be present! Use with caution!");
-			}
-
-			// Dead bodies never disappear
-			{
-				ImGui_ColumnSwitch();
-
-				if (ImGui::Checkbox("Dead bodies never disappear", &re4t::cfg->bTrainerDeadBodiesNeverDisappear))
-					re4t::cfg->HasUnsavedChanges = true;
-
-				ImGui_ItemSeparator();
-
-				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-				ImGui::TextWrapped("Make it so enemies never disappear/despawn when killed.");
-			}
-
-			// AllowEnterDoorsWithoutAsh
-			{
-				ImGui_ColumnSwitch();
-
-				if (ImGui::Checkbox("Allow entering doors without Ashley", &re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh))
-					re4t::cfg->HasUnsavedChanges = true;
-
-				ImGui_ItemSeparator();
-
-				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-				ImGui::TextWrapped("Allows the player to go through doors even if Ashley is far away.");
-			}
-
-			// EnableDebugTrg
-			{
-				ImGui_ColumnSwitch();
-
-				if (ImGui::Checkbox("Enable DebugTrg function", &re4t::cfg->bTrainerEnableDebugTrg))
-					re4t::cfg->HasUnsavedChanges = true;
-
-				ImGui_ItemSeparator();
-
-				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-				ImGui::TextWrapped("Reimplements the games DebugTrg function, usually allowing certain sections of rooms/events to be skipped.");
-				ImGui::TextWrapped("Can be triggered by pressing LB + X + B together on controller, a hotkey can also be bound in the hotkeys page.");
-
-				ImGui::BeginDisabled(!re4t::cfg->bTrainerEnableDebugTrg);
-				if (ImGui::Checkbox("Show DebugTrg hint on screen", &re4t::cfg->bTrainerShowDebugTrgHintText))
-					re4t::cfg->HasUnsavedChanges = true;
-				ImGui::TextWrapped("Will display \"DebugTrg available!\" text on top-left whenever DebugTrg is being actively checked by the game.");
 				ImGui::EndDisabled();
 			}
 

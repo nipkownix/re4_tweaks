@@ -20,6 +20,7 @@ extern MenuTab Tab;
 enum class TrainerTab
 {
 	Patches,
+	Overrides,
 	Hotkeys,
 	FlagEdit,
 	EmMgr,
