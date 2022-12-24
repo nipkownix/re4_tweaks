@@ -61,6 +61,7 @@ public:
 	int iVolumeBGM = 100;
 	int iVolumeSE = 100;
 	int iVolumeCutscene = 100;
+	bool bSilenceArmoredAshley = false;
 	bool bRestoreGCSoundEffects = false;
 
 	// MOUSE
@@ -107,7 +108,6 @@ public:
 
 	// GAMEPLAY
 	bool bAshleyJPCameraAngles = false;
-	bool bSilenceArmoredAshley = false;
 	bool bSeparateWaysDifficultyMenu = true;
 	bool bEnableNTSCMode = false;
 	bool bAllowAshleySuplex = false;

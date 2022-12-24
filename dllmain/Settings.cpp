@@ -235,6 +235,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->iVolumeCutscene = std::min(std::max(re4t::cfg->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
 	re4t::cfg->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
+	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
 
 	// MOUSE
 	re4t::cfg->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
@@ -292,7 +293,6 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// GAMEPLAY
 	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
-	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("GAMEPLAY", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
 	re4t::cfg->bSeparateWaysDifficultyMenu = iniReader.ReadBoolean("GAMEPLAY", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
@@ -771,6 +771,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteInteger("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
 	iniReader.WriteInteger("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
 	iniReader.WriteBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
+	iniReader.WriteBoolean("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
@@ -820,7 +821,6 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	
 	// GAMEPLAY
 	iniReader.WriteBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
-	iniReader.WriteBoolean("GAMEPLAY", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
 	iniReader.WriteBoolean("GAMEPLAY", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 	iniReader.WriteBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	iniReader.WriteBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
@@ -944,6 +944,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeSE", re4t::cfg->iVolumeSE);
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MOUSE
@@ -1003,7 +1004,6 @@ void re4t_cfg::LogSettings()
 	// GAMEPLAY
 	spd::log()->info("+ GAMEPLAY-----------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
