@@ -17,6 +17,8 @@ float download_progress = 0.0f;
 
 std::string fail_msg;
 
+ImGuiTextBuffer long_desc;
+
 void updateCheck()
 {
 	// Delete old dll file if it is present
@@ -298,14 +300,17 @@ void AutoUpdate::RenderUI()
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Min/Max window sizes
-	const float max_x = 415.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
-	const float max_y = 360.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+	const float min_x = 515.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+	const float min_y = 460.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+
+	const float max_x = 1280.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
+	const float max_y = 720.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale;
 
 	if (updt.UpdateStatus == UpdateStatus::Available)
 	{
-		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-		ImGui::SetNextWindowSize(ImVec2(max_x, max_y), ImGuiCond_Appearing);
-		ImGui::SetNextWindowSizeConstraints(ImVec2(max_x, max_y), ImVec2(max_x, max_y));
+		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		ImGui::SetNextWindowSize(ImVec2(min_x, min_y), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
 
 		if (ImGui::Begin("re4_tweaks Update Available", nullptr, ImGuiWindowFlags_NoCollapse))
 		{
@@ -319,8 +324,9 @@ void AutoUpdate::RenderUI()
 			ImGui::Text("Changelog:");
 
 			ImGui::Separator();
-			ImGui::BeginChild("chnglog", ImVec2(0, 130 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
-			ImGui::TextWrapped(updt.description.c_str());
+			ImGui::BeginChild("chnglog", ImVec2(0, ImGui::GetContentRegionAvail().y - (90.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale)), false, ImGuiWindowFlags_HorizontalScrollbar);
+			ImGui::TextUnformatted(long_desc.begin(), long_desc.end());
+			// ImGui::TextWrapped("%s", long_desc.c_str()); <- Looks too.. messy?
 			ImGui::EndChild();
 			ImGui::Separator();
 			
