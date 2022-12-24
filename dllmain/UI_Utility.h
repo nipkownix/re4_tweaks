@@ -9,6 +9,7 @@ enum class MenuTab
 	Keyboard,
 	Controller,
 	Framerate,
+	Gameplay,
 	Misc,
 	Memory,
 	Hotkeys,

@@ -84,6 +84,8 @@ void Init_Main()
 	// Fixes FPS-related issues
 	re4t::init::FrameRateFixes();
 
+	re4t::init::Gameplay();
+
 	re4t::init::Misc();
 
 	if (re4t::cfg->bEnableModExpansion)

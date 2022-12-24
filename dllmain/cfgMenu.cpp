@@ -159,6 +159,11 @@ void cfgMenuRender()
 			ImGui_TabButton("##framerate", "Frame rate", active, inactive, MenuTab::Framerate, ICON_FA_CHESS_CLOCK, icn_color, IM_COL32_WHITE, btn_size);
 			ImGui::Spacing();
 
+			// Gameplay
+			ImGui::Dummy(ImVec2(0, 13 * esHook._cur_monitor_dpi)); ImGui::SameLine();
+			ImGui_TabButton("##gameplay", "Gameplay", active, inactive, MenuTab::Gameplay, ICON_FA_BIOHAZARD, icn_color, IM_COL32_WHITE, btn_size);
+			ImGui::Spacing();
+			
 			// Misc
 			ImGui::Dummy(ImVec2(0, 13 * esHook._cur_monitor_dpi)); ImGui::SameLine();
 			ImGui_TabButton("##misc", "Misc", active, inactive, MenuTab::Misc, ICON_FA_COG, icn_color, IM_COL32_WHITE, btn_size);
@@ -293,8 +298,6 @@ void cfgMenuRender()
 			ImGui::SameLine();
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Font Size");
-
-			
 
 			// Tips
 			float tip_offset = 45.0f;
@@ -785,6 +788,19 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(currently only changes sound of the knife)");
 					}
 
+					// SilenceArmoredAshley
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &re4t::cfg->bSilenceArmoredAshley);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
+						ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
+					}
+
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
@@ -1257,17 +1273,41 @@ void cfgMenuRender()
 				}
 			}
 
-			if (Tab == MenuTab::Misc)
+			if (Tab == MenuTab::Gameplay)
 			{
-				if (ImGui::BeginTable("Misc", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Gameplay", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
+
+					// AshleyJPCameraAngles
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &re4t::cfg->bAshleyJPCameraAngles);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
+					}
+
+					// SeparateWaysProfessional
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysProfessional", &re4t::cfg->bSeparateWaysProfessional);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Adds a menu to choose between Normal and Professional difficulty modes when starting a new game of Separate Ways.");
+					}
 
 					// EnableNTSCMode
 					{
 						ImGui_ColumnSwitch();
 
-						if(ImGui::Checkbox("EnableNTSCMode", &re4t::cfg->bEnableNTSCMode))
+						if (ImGui::Checkbox("EnableNTSCMode", &re4t::cfg->bEnableNTSCMode))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;
@@ -1281,17 +1321,130 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Bottle caps require 3000 points in the shooting gallery, and Easy difficulty is removed from the title menu.");
 					}
 
-					// AshleyJPCameraAngles
+					// AllowAshleySuplex
 					{
 						ImGui_ColumnSwitch();
 
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AshleyJPCameraAngles", &re4t::cfg->bAshleyJPCameraAngles);
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &re4t::cfg->bAllowAshleySuplex);
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
+						ImGui::TextWrapped("Allows Ashley to Suplex enemies in very specific situations.");
+						ImGui::TextWrapped("(previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)");
 					}
+
+					// AllowSellingHandgunSilencer
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("AllowSellingHandgunSilencer", &re4t::cfg->bAllowSellingHandgunSilencer))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
+					}
+
+					// FixDitmanGlitch
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &re4t::cfg->bFixDitmanGlitch);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Fixes the Ditman glitch, which would allow players to increase their walk speed.");
+					}
+
+					// UseSprintToggle
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &re4t::cfg->bUseSprintToggle);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
+					}
+
+					// RifleScreenShake
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("RifleScreenShake", &re4t::cfg->bRifleScreenShake))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::TextWrapped("Adds a screen shake effect when firing a rifle.");
+					}
+
+					// QTE options
+					{
+						// DisableQTE
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &re4t::cfg->bDisableQTE);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
+
+						// AutomaticMashingQTE
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &re4t::cfg->bAutomaticMashingQTE);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
+					}
+
+					// Matilda options
+					{
+						// AllowMatildaQuickturn
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &re4t::cfg->bAllowMatildaQuickturn);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
+						ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
+
+						// LimitMatildaBurst
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Limit the Matilda to one three round burst per trigger pull.");
+					}
+
+					ImGui_ColumnFinish();
+					ImGui::EndTable();
+				}
+			}
+
+			if (Tab == MenuTab::Misc)
+			{
+				if (ImGui::BeginTable("Misc", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				{
+					ImGui_ColumnInit();
 
 					// RestoreDemoVideos
 					{
@@ -1309,6 +1462,19 @@ void cfgMenuRender()
 						ImGui::BulletText("demo0_gc.sfd");
 						ImGui::BulletText("demo1_gc.sfd");
 						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("demo0.sfd/demo0eng.sfd (included in the vanilla game, and also present in the Wii version as \"demo2.sfd\")");
+					}
+
+					// RestoreAnalogTitleScroll
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreAnalogTitleScroll", &re4t::cfg->bRestoreAnalogTitleScroll);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
+						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
 					}
 
 					// ViolenceLevelOverride
@@ -1339,75 +1505,6 @@ void cfgMenuRender()
 						ImGui::PopItemWidth();
 					}
 
-					// RifleScreenShake
-					{
-						ImGui_ColumnSwitch();
-
-						if (ImGui::Checkbox("RifleScreenShake", &re4t::cfg->bRifleScreenShake))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-						}
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-						ImGui::TextWrapped("Adds a screen shake effect when firing a rifle.");
-					}
-
-					// SeparateWaysDifficultyMenu
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysDifficultySelect", &re4t::cfg->bSeparateWaysDifficultyMenu);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Choose between Professional and Normal difficulty modes when starting a new game of Separate Ways.");
-					}
-
-					// AlwaysShowOriginalTitleBackground
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AlwaysShowOriginalTitleBackground", &re4t::cfg->bAlwaysShowOriginalTitleBackground);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
-					}
-
-					// RestoreAnalogTitleScroll
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreAnalogTitleScroll", &re4t::cfg->bRestoreAnalogTitleScroll);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
-						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
-					}
-
-					// AllowSellingHandgunSilencer
-					{
-						ImGui_ColumnSwitch();
-
-						if (ImGui::Checkbox("AllowSellingHandgunSilencer", &re4t::cfg->bAllowSellingHandgunSilencer))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
-					}
-
 					// AllowMafiaLeonCutscenes
 					{
 						ImGui_ColumnSwitch();
@@ -1422,93 +1519,6 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Allows the game to display Leon's mafia outfit (\"Special 2\") on cutscenes.");
-					}
-
-					// SilenceArmoredAshley
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &re4t::cfg->bSilenceArmoredAshley);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
-						ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
-					}
-
-					// AllowAshleySuplex
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &re4t::cfg->bAllowAshleySuplex);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows Ashley to Suplex enemies in very specific situations.");
-						ImGui::TextWrapped("(previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)");
-					}
-
-					// AllowMatildaQuickturn
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &re4t::cfg->bAllowMatildaQuickturn);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
-						ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
-					}
-
-					// FixDitmanGlitch
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &re4t::cfg->bFixDitmanGlitch);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Fixes the Ditman glitch, which would allow players to increase their walk speed.");
-					}
-
-					// UseSprintToggle
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &re4t::cfg->bUseSprintToggle);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
-					}
-
-					// DisableQTE
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &re4t::cfg->bDisableQTE);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
-					}
-
-					// AutomaticMashingQTE
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &re4t::cfg->bAutomaticMashingQTE);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
 					}
 
 					// SkipIntroLogos
@@ -1530,18 +1540,6 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Reduces the length of menu fades/messages (eg. 'Save/Load successful!') and skips the initial \"Resident Evil 4\" logo / \"PRESS ANY KEY\" screen.");
 						ImGui::TextWrapped("(will only take effect when SkipIntroLogos is also set to true)");
-					}
-
-					// LimitMatildaBurst
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Limit the Matilda to one three round burst per trigger pull.");
 					}
 
 					// EnableDebugMenu
@@ -1573,6 +1571,18 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window. (F2 by default)");					
+					}
+
+					// AlwaysShowOriginalTitleBackground
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AlwaysShowOriginalTitleBackground", &re4t::cfg->bAlwaysShowOriginalTitleBackground);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
 					}
 
 					ImGui_ColumnFinish();

@@ -28,6 +28,7 @@ namespace re4t
 		void FilterXXFixes();
 		void FrameRateFixes();
 		bool Game();
+		void Gameplay();
 		void HandleLimits();
 		void HDProject();
 		void KeyboardMouseTweaks();

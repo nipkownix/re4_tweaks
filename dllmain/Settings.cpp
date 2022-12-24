@@ -235,6 +235,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->iVolumeCutscene = std::min(std::max(re4t::cfg->iVolumeCutscene, 0), 100); // limit between 0 - 100
 
 	re4t::cfg->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
+	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
 
 	// MOUSE
 	re4t::cfg->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
@@ -290,32 +291,33 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bMultithreadFix = iniReader.ReadBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
 	re4t::cfg->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
 
+	// GAMEPLAY
+	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
+	re4t::cfg->bSeparateWaysProfessional = iniReader.ReadBoolean("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
+	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
+	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
+	re4t::cfg->bFixDitmanGlitch = iniReader.ReadBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
+	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+	re4t::cfg->bUseSprintToggle = iniReader.ReadBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+	re4t::cfg->bRifleScreenShake = iniReader.ReadBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
+	re4t::cfg->bDisableQTE = iniReader.ReadBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
+	re4t::cfg->bAutomaticMashingQTE = iniReader.ReadBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+	re4t::cfg->bAllowMatildaQuickturn = iniReader.ReadBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
+	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
+
 	// MISC
 	re4t::cfg->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
-	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	re4t::cfg->bRestoreDemoVideos = iniReader.ReadBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
 	re4t::cfg->bRestoreAnalogTitleScroll = iniReader.ReadBoolean("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
 	re4t::cfg->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
 	re4t::cfg->iViolenceLevelOverride = std::min(std::max(re4t::cfg->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
-	re4t::cfg->bRifleScreenShake = iniReader.ReadBoolean("MISC", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
-	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("MISC", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	re4t::cfg->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
-	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("MISC", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
-	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("MISC", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
-	re4t::cfg->bAllowMatildaQuickturn = iniReader.ReadBoolean("MISC", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
-	re4t::cfg->bFixDitmanGlitch = iniReader.ReadBoolean("MISC", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
-	re4t::cfg->bUseSprintToggle = iniReader.ReadBoolean("MISC", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
-	re4t::cfg->bDisableQTE = iniReader.ReadBoolean("MISC", "DisableQTE", re4t::cfg->bDisableQTE);
-	re4t::cfg->bAutomaticMashingQTE = iniReader.ReadBoolean("MISC", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
 	re4t::cfg->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	re4t::cfg->bSkipMenuFades = iniReader.ReadBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
 	re4t::cfg->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	re4t::cfg->bShowGameOutput = iniReader.ReadBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
 	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
-	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
-	re4t::cfg->bSeparateWaysDifficultyMenu = iniReader.ReadBoolean("MISC", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 	re4t::cfg->bAlwaysShowOriginalTitleBackground = iniReader.ReadBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 
 	// MEMORY
@@ -769,6 +771,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteInteger("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
 	iniReader.WriteInteger("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
 	iniReader.WriteBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
+	iniReader.WriteBoolean("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
 
 	// MOUSE
 	iniReader.WriteBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
@@ -815,28 +818,29 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
 	iniReader.WriteBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
 	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
+	
+	// GAMEPLAY
+	iniReader.WriteBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
+	iniReader.WriteBoolean("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
+	iniReader.WriteBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
+	iniReader.WriteBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
+	iniReader.WriteBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
+	iniReader.WriteBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+	iniReader.WriteBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+	iniReader.WriteBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
+	iniReader.WriteBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
+	iniReader.WriteBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+	iniReader.WriteBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
+	iniReader.WriteBoolean("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
 
 	// MISC
 	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-	iniReader.WriteBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
-	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
 	iniReader.WriteBoolean("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
 	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
-	iniReader.WriteBoolean("MISC", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
-	iniReader.WriteBoolean("MISC", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
-	iniReader.WriteBoolean("MISC", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
-	iniReader.WriteBoolean("MISC", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
-	iniReader.WriteBoolean("MISC", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
-	iniReader.WriteBoolean("MISC", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
-	iniReader.WriteBoolean("MISC", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
-	iniReader.WriteBoolean("MISC", "DisableQTE", re4t::cfg->bDisableQTE);
-	iniReader.WriteBoolean("MISC", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
-	iniReader.WriteBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
-	iniReader.WriteBoolean("MISC", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 	iniReader.WriteBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	iniReader.WriteBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
@@ -940,6 +944,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeSE", re4t::cfg->iVolumeSE);
 	spd::log()->info("| {:<30} | {:>15} |", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MOUSE
@@ -996,33 +1001,36 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "PrecacheModels", re4t::cfg->bPrecacheModels ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
+	// GAMEPLAY
+	spd::log()->info("+ GAMEPLAY-----------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
+	spd::log()->info("+--------------------------------+-----------------+");
+
 	// MISC
 	spd::log()->info("+ MISC---------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", re4t::cfg->sWrappedDllPath.data());
 	spd::log()->info("| {:<30} | {:>15} |", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
-	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SkipMenuFades", re4t::cfg->bSkipMenuFades ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ShowGameOutput", re4t::cfg->bShowGameOutput ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AlwaysShowOriginalTitleBg", re4t::cfg->bAlwaysShowOriginalTitleBackground ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
