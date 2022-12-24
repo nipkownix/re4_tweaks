@@ -127,4 +127,45 @@ void re4t::init::AudioTweaks()
 	// Hook SndCall call inside knife_r3_fire10 to allow restoring original GC knife sound effect
 	pattern = hook::pattern("83 C0 ? 50 6A 03 6A 01 E8");
 	InjectHook(pattern.count(1).get(0).get<uint32_t>(8), knife_r3_fire10_SndCall_Hook, PATCH_CALL);
+
+	// Silence armored Ashley
+	{
+		auto pattern = hook::pattern("83 C4 ? 80 BA ? ? ? ? 02 75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85 ? ? ? ? BE");
+		struct ClankClanklHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				int AshleyCostumeID = int(GlobalPtr()->subCostume_4FCB);
+
+				// Mimic what CMP does, since we're overwriting it.
+				if (AshleyCostumeID > 2)
+				{
+					// Clear both flags
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+				else if (AshleyCostumeID < 2)
+				{
+					// ZF = 0, CF = 1
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.carry_flag);
+				}
+				else if (AshleyCostumeID == 2)
+				{
+					// ZF = 1, CF = 0
+					regs.ef |= (1 << regs.zero_flag);
+					regs.ef &= ~(1 << regs.carry_flag);
+				}
+
+				if (re4t::cfg->bSilenceArmoredAshley)
+				{
+					// Make the game think Ashley isn't using the clanky costume
+					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.carry_flag);
+				}
+			}
+		}; injector::MakeInline<ClankClanklHook>(pattern.count(1).get(0).get<uint32_t>(3), pattern.count(1).get(0).get<uint32_t>(10));
+
+		spd::log()->info("SilenceArmoredAshley applied");
+	}
 }

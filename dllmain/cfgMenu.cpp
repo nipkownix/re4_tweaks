@@ -788,6 +788,19 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(currently only changes sound of the knife)");
 					}
 
+					// SilenceArmoredAshley
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &re4t::cfg->bSilenceArmoredAshley);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
+						ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
+					}
+
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}
@@ -1276,19 +1289,6 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
-					}
-
-					// SilenceArmoredAshley
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SilenceArmoredAshley", &re4t::cfg->bSilenceArmoredAshley);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Silence Ashley's armored outfit (\"Special 2\").");
-						ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
 					}
 
 					// SeparateWaysDifficultyMenu

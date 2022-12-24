@@ -84,47 +84,6 @@ void re4t::init::Gameplay()
 			spd::log()->info("AshleyJPCameraAngles enabled");
 	}
 
-	// Silence armored Ashley
-	{
-		auto pattern = hook::pattern("83 C4 ? 80 BA ? ? ? ? 02 75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85 ? ? ? ? BE");
-		struct ClankClanklHook
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				int AshleyCostumeID = int(GlobalPtr()->subCostume_4FCB);
-
-				// Mimic what CMP does, since we're overwriting it.
-				if (AshleyCostumeID > 2)
-				{
-					// Clear both flags
-					regs.ef &= ~(1 << regs.zero_flag);
-					regs.ef &= ~(1 << regs.carry_flag);
-				}
-				else if (AshleyCostumeID < 2)
-				{
-					// ZF = 0, CF = 1
-					regs.ef &= ~(1 << regs.zero_flag);
-					regs.ef |= (1 << regs.carry_flag);
-				}
-				else if (AshleyCostumeID == 2)
-				{
-					// ZF = 1, CF = 0
-					regs.ef |= (1 << regs.zero_flag);
-					regs.ef &= ~(1 << regs.carry_flag);
-				}
-
-				if (re4t::cfg->bSilenceArmoredAshley)
-				{
-					// Make the game think Ashley isn't using the clanky costume
-					regs.ef &= ~(1 << regs.zero_flag);
-					regs.ef |= (1 << regs.carry_flag);
-				}
-			}
-		}; injector::MakeInline<ClankClanklHook>(pattern.count(1).get(0).get<uint32_t>(3), pattern.count(1).get(0).get<uint32_t>(10));
-
-		spd::log()->info("SilenceArmoredAshley applied");
-	}
-
 	// NTSC mode
 	// Enables difficulty modifiers previously exclusive to the NTSC console versions of RE4.
 	// These were locked behind checks for pSys->language_8 == 1 (NTSC English). Since RE4 UHD uses PAL English (language_8 == 2), PC players never saw these.
