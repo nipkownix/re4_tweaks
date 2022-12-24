@@ -138,7 +138,7 @@ public:
 	bool bForceETSApplyScale = false;
 	bool bEnableNTSCMode = false;
 	bool bLimitMatildaBurst = false;
-	bool bSeparateWaysDifficultyMenu = false;
+	bool bSeparateWaysDifficultyMenu = true;
 	bool bAlwaysShowOriginalTitleBackground = false;
 	bool bShowGameOutput = false;
   
