@@ -17,7 +17,7 @@ float download_progress = 0.0f;
 
 std::string fail_msg;
 
-ImGuiTextBuffer long_desc;
+std::vector<std::string> description_lines;
 
 void updateCheck()
 {
@@ -108,7 +108,15 @@ void updateCheck()
 				json.at("assets").at(0).at("browser_download_url").get_to(updt.url);
 				json.at("body").get_to(updt.description);
 
-				long_desc.append(updt.description.c_str());
+				size_t start = 0;
+				size_t end = updt.description.find('\n');
+				while (end != std::string::npos)
+				{
+					description_lines.push_back(updt.description.substr(start, end - start));
+					start = end + 1;
+					end = updt.description.find('\n', start);
+				}
+				description_lines.push_back(updt.description.substr(start));
 			}
 			else
 			{
@@ -327,8 +335,41 @@ void AutoUpdate::RenderUI()
 
 			ImGui::Separator();
 			ImGui::BeginChild("chnglog", ImVec2(0, ImGui::GetContentRegionAvail().y - (90.0f * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale)), false, ImGuiWindowFlags_HorizontalScrollbar);
-			ImGui::TextUnformatted(long_desc.begin(), long_desc.end());
-			// ImGui::TextWrapped("%s", long_desc.c_str()); <- Looks too.. messy?
+
+			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(16.0f, 13.0f));
+			if (ImGui::BeginTable("chnglogtbl", 1, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+			{
+				for (unsigned int i = 0; i < description_lines.size(); i++)
+				{
+					ImGui::TableNextColumn();
+
+					// Don't add a bg for empty lines
+					if (description_lines[i].empty() || (description_lines[i].size() == 1 && description_lines[i][0] == '\n'))
+					{
+						continue;
+					}
+
+					// Only add bg for lines starting with a dash
+					if (description_lines[i][0] != '-')
+					{
+						ImGui::TextWrapped(description_lines[i].c_str());
+						continue;
+					}
+
+					static std::vector<float> bgHeights;
+					bgHeights.resize(description_lines.size());
+
+					ImGui_ItemBG(bgHeights[i], ImColor(38, 38, 46, 166));
+
+					ImGui::TextWrapped(description_lines[i].c_str());
+
+					bgHeights[i] = ImGui::GetCursorPos().y;
+				}
+
+				ImGui::EndTable();
+			}
+			ImGui::PopStyleVar();
+
 			ImGui::EndChild();
 			ImGui::Separator();
 			
