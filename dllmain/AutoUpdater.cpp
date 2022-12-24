@@ -107,6 +107,8 @@ void updateCheck()
 				json.at("tag_name").get_to(updt.version);
 				json.at("assets").at(0).at("browser_download_url").get_to(updt.url);
 				json.at("body").get_to(updt.description);
+
+				long_desc.append(updt.description.c_str());
 			}
 			else
 			{
