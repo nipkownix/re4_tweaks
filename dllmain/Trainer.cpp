@@ -373,6 +373,29 @@ bool __cdecl DebugTrg_hook(uint32_t flag)
 	return ((Joy[0].trg_18 & JOY_X) != 0); // return true if X was newly pressed
 }
 
+// RouteCkToPos / RouteCkPosToPos hooks: called by enemy pathfinding code, returning false should prevent enemies from targetting the player
+// TODO: should we also set the pDest vec to some value too?
+BOOL(__cdecl* RouteCkToPos)(cEm* pMy, Vec* pPos, Vec* pDest, uint32_t mode, float* pMax);
+BOOL __cdecl RouteCkToPos_Hook(cEm* pMy, Vec* pPos, Vec* pDest, uint32_t mode, float* pMax)
+{
+	// cSubChar/Ashley seems to use this func too, hopefully this check can keep her working
+	// TODO: cRoutine/cRoutineLeon classes also use it, and pl03, not sure if this might break them...
+	if (pMy != AshleyPtr() && pMy != PlayerPtr())
+		if (FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK)))
+			return FALSE;
+
+	return RouteCkToPos(pMy, pPos, pDest, mode, pMax);
+}
+
+BOOL(__cdecl* RouteCkPosToPos)(Vec* pPos1, Vec* pPos2, Vec* pDest);
+BOOL __cdecl RouteCkPosToPos_Hook(Vec* pPos1, Vec* pPos2, Vec* pDest)
+{
+	if (FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK)))
+		return FALSE;
+
+	return RouteCkPosToPos(pPos1, pPos2, pDest);
+}
+
 void Trainer_DrawDebugTrgHint()
 {
 	if (!bCfgMenuOpen)
@@ -494,6 +517,47 @@ void Trainer_Init()
 		FlagPatch patch_em10FindCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK));
 		patch_em10FindCk.SetPatch((uint8_t*)em10FindCk.as_int(), { 0x31, 0xC0, 0xC3 });
 		flagPatches.push_back(patch_em10FindCk);
+
+		// Em36 checks pPL->pos_94 directly inside em36AtkRtnCk, workaround by patching	it to immediately return
+		pattern = hook::pattern("89 45 ? F6 86 08 04 00 00 04 53 0F 84");
+		FlagPatch patch_em36AtkRtnCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK));
+		patch_em36AtkRtnCk.SetPatch(pattern.count(1).get(0).get<uint8_t>(-0xD), { 0xC3 });
+		flagPatches.push_back(patch_em36AtkRtnCk);
+
+		// A ton of Ems use l_pl_378 to check distance from player & begin attacks
+		// This gets set inside emMove func, hook it so we can override it with a massive distance if flag set
+		pattern = hook::pattern("DE C1 D9 9E 78 03 00 00 D9 05");
+		struct emMove_l_pl_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				uint32_t orig_esi = regs.esi;
+				__asm {
+					mov eax, [orig_esi]
+					fstp dword ptr[eax + 0x378]
+				}
+
+				if (FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_EM_NO_ATK)))
+				{
+					cEm* pEm = (cEm*)orig_esi;
+					pEm->l_pl_378 = 100000000.0f;
+				}
+			}
+		};
+		injector::MakeInline<emMove_l_pl_hook>(pattern.count(3).get(0).get<uint32_t>(2), pattern.count(3).get(0).get<uint32_t>(8)); // emMove
+		injector::MakeInline<emMove_l_pl_hook>(pattern.count(3).get(1).get<uint32_t>(2), pattern.count(3).get(1).get<uint32_t>(8)); // EmSetFromList2
+		injector::MakeInline<emMove_l_pl_hook>(pattern.count(3).get(2).get<uint32_t>(2), pattern.count(3).get(2).get<uint32_t>(8)); // EmSetEvent
+
+		// RouteCkToPos hook, almost every Em uses this to check if player can be routed to, hook it so we can change result if needed
+		pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 85 C0 74 ? 83 8E 08 04");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkToPos);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkToPos_Hook);
+
+		// RouteCkPosToPos hook: some Ems (eg. Saddler Em31) use this instead, will need seperate hook...
+		pattern = hook::pattern("E8 ? ? ? ? 83 C4 18 85 C0 74 ? 83 8E 08 04");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkPosToPos);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), RouteCkPosToPos_Hook);
 	}
 
 	// Ashley presence

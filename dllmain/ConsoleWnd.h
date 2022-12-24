@@ -33,8 +33,14 @@ struct ConsoleOutput
     }
 
     // Add a game log message to the console
-    void gameLog(const char* buffer)
+    void gameLog(const char* fmt, ...)
     {
+        va_list args;
+        va_start(args, fmt);
+        char buffer[1024];
+        vsnprintf(buffer, sizeof(buffer), fmt, args);
+        va_end(args);
+        buffer[sizeof(buffer) - 1] = 0;
         textBuffer_game.append(buffer);
         textBuffer_game.append("\n");
         lineOffsets_game.push_back(textBuffer_game.size());

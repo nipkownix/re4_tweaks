@@ -565,6 +565,9 @@
     <ClCompile Include="..\external\ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>external\ImGuiFileDialog</Filter>
     </ClCompile>
+    <ClCompile Include="TitleMenu.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">

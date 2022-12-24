@@ -33,9 +33,17 @@ bool ParseConsoleKeyCombo(std::string_view in_combo)
 
 void ConsoleOutput::Render()
 {
+    // Min/Max window sizes
+    const float min_x = 500.0f * esHook._cur_monitor_dpi;
+    const float min_y = 400.0f * esHook._cur_monitor_dpi;
+
+    const float max_x = 1920.0f * esHook._cur_monitor_dpi;
+    const float max_y = 1080.0f * esHook._cur_monitor_dpi;
+
+    ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
+
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - (550 * esHook._cur_monitor_dpi), viewport->Pos.y + (20 * esHook._cur_monitor_dpi)), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(500 * esHook._cur_monitor_dpi, 400 * esHook._cur_monitor_dpi), ImGuiCond_FirstUseEver);
 
     std::string name = std::string("Console Output - ") + con.TitleKeyCombo + std::string(" to Show/Hide") + " - " + re4t::cfg->sTrainerFocusUIKeyCombo + " to Focus/Unfocus";
 
@@ -96,27 +104,19 @@ void ConsoleOutput::Render()
                     ImGui::LogToClipboard();
 
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-                if (Filter.IsActive())
+                for (unsigned int i = 0; i < lineOffsets.size(); i++)
                 {
-                    for (unsigned int i = 0; i < lineOffsets.size(); i++)
+                    const char* lineStart = textBuffer.begin() + (i > 0 ? lineOffsets[i - 1] : 0);
+                    const char* lineEnd = textBuffer.begin() + lineOffsets[i];
+
+                    if (Filter_game.IsActive())
                     {
-                        const char* lineStart = textBuffer.begin() + (i > 0 ? lineOffsets[i - 1] : 0);
-                        const char* lineEnd = textBuffer.begin() + lineOffsets[i];
-                        if (Filter.PassFilter(lineStart, lineEnd))
+                        if (Filter_game.PassFilter(lineStart, lineEnd))
                             ImGui::TextUnformatted(lineStart, lineEnd);
                     }
-                }
-                else
-                {
-                    ImGuiListClipper clipper(lineOffsets.size());
-                    while (clipper.Step())
+                    else
                     {
-                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
-                        {
-                            const char* lineStart = textBuffer.begin() + (i > 0 ? lineOffsets[i - 1] : 0);
-                            const char* lineEnd = textBuffer.begin() + lineOffsets[i];
-                            ImGui::TextUnformatted(lineStart, lineEnd);
-                        }
+                        ImGui::TextUnformatted(lineStart, lineEnd);
                     }
                 }
                 ImGui::PopStyleVar();
@@ -161,33 +161,25 @@ void ConsoleOutput::Render()
                     ImGui::LogToClipboard();
 
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-                if (Filter_game.IsActive())
+                for (unsigned int i = 0; i < lineOffsets_game.size(); i++)
                 {
-                    for (unsigned int i = 0; i < lineOffsets_game.size(); i++)
+                    const char* lineStart = textBuffer_game.begin() + (i > 0 ? lineOffsets_game[i - 1] : 0);
+                    const char* lineEnd = textBuffer_game.begin() + lineOffsets_game[i];
+
+                    if (Filter_game.IsActive())
                     {
-                        const char* lineStart = textBuffer_game.begin() + (i > 0 ? lineOffsets_game[i - 1] : 0);
-                        const char* lineEnd = textBuffer_game.begin() + lineOffsets_game[i];
                         if (Filter_game.PassFilter(lineStart, lineEnd))
                             ImGui::TextUnformatted(lineStart, lineEnd);
                     }
-                }
-                else
-                {
-                    ImGuiListClipper clipper(lineOffsets_game.size());
-                    while (clipper.Step())
+                    else
                     {
-                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
-                        {
-                            const char* lineStart = textBuffer_game.begin() + (i > 0 ? lineOffsets_game[i - 1] : 0);
-                            const char* lineEnd = textBuffer_game.begin() + lineOffsets_game[i];
-                            ImGui::TextUnformatted(lineStart, lineEnd);
-                        }
+                        ImGui::TextUnformatted(lineStart, lineEnd);
                     }
                 }
                 ImGui::PopStyleVar();
 
                 if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-                    ImGui::SetScrollHereY(0.90f);
+                    ImGui::SetScrollHereY(1.0f);
 
                 ImGui::EndChild();
 
@@ -201,48 +193,90 @@ void ConsoleOutput::Render()
 
 void __cdecl OSReport_hook(const char* msg, ...)
 {
+    if (!re4t::cfg->bShowGameOutput)
+        return;
+
     va_list args;
-    va_start(args, msg);
     char buffer[1024];
+
+    va_start(args, msg);
     vsnprintf(buffer, sizeof(buffer), msg, args);
     va_end(args);
 
-    // Append "cLog: " at the start of the buffer
-    char OSReportBuffer[1024];
-    strcpy(OSReportBuffer, "OSReport: ");
-    strcat(OSReportBuffer, buffer);
-
     // Check if the last character in the buffer is a newline
-    if (OSReportBuffer[strlen(OSReportBuffer) - 1] == '\n')
+    if (buffer[strlen(buffer) - 1] == '\n')
     {
         // If it is, remove it by overwriting it with a null terminator
-        OSReportBuffer[strlen(OSReportBuffer) - 1] = '\0';
+        buffer[strlen(buffer) - 1] = '\0';
     }
 
-    con.gameLog(OSReportBuffer);
+    con.gameLog("OSReport: %s", buffer);
+}
+
+void OSPanic_nullsub_hook(const char* file, int line, const char* message, ...)
+{
+    if (!re4t::cfg->bShowGameOutput)
+        return;
+
+    va_list args;
+    char buffer[1024];
+
+    va_start(args, message);
+    vsnprintf(buffer, sizeof(buffer), message, args);
+    va_end(args);
+
+    // Check if the last character in the buffer is a newline
+    if (buffer[strlen(buffer) - 1] == '\n')
+    {
+        // If it is, remove it by overwriting it with a null terminator
+        buffer[strlen(buffer) - 1] = '\0';
+    }
+
+    con.gameLog("OSPanic: File: %s, Line: %d, Message: %s", file, line, buffer);
 }
 
 void cLog__err_nullsubver_hook(uint32_t flag, uint32_t errId, char* mes, ...)
 {
+    if (!re4t::cfg->bShowGameOutput)
+        return;
+
     va_list args;
-    va_start(args, mes);
     char buffer[1024];
+
+    va_start(args, mes);
     vsnprintf(buffer, sizeof(buffer), mes, args);
     va_end(args);
 
-    // Append "cLog: " at the start of the buffer
-    char cLogBuffer[1024];
-    strcpy(cLogBuffer, "cLog: ");
-    strcat(cLogBuffer, buffer);
-
     // Check if the last character in the buffer is a newline
-    if (cLogBuffer[strlen(cLogBuffer) - 1] == '\n')
+    if (buffer[strlen(buffer) - 1] == '\n')
     {
         // If it is, remove it by overwriting it with a null terminator
-        cLogBuffer[strlen(cLogBuffer) - 1] = '\0';
+        buffer[strlen(buffer) - 1] = '\0';
     }
 
-    con.gameLog(cLogBuffer);
+    con.gameLog("cLog::err: Flag: %d, errId: %d, Message: %s", flag, errId, buffer);
+}
+
+void cLog__err_1_hook(int a1, int a2, const char* message, ...)
+{
+    if (!re4t::cfg->bShowGameOutput)
+        return;
+
+    va_list args;
+    char buffer[1024];
+
+    va_start(args, message);
+    vsnprintf(buffer, sizeof(buffer), message, args);
+    va_end(args);
+
+    // Check if the last character in the buffer is a newline
+    if (buffer[strlen(buffer) - 1] == '\n')
+    {
+        // If it is, remove it by overwriting it with a null terminator
+        buffer[strlen(buffer) - 1] = '\0';
+    }
+
+    con.gameLog("cLog::err_1: %s", buffer);
 }
 
 void re4t::init::ConsoleWnd()
@@ -253,12 +287,15 @@ void re4t::init::ConsoleWnd()
 
     // Redirect some unused logging functions to output to our console window instead.
     // May be useful for modders, or just interesting for people like me.
-    if (re4t::cfg->bShowGameOutput)
-    {
-        auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C A1 ? ? ? ? F7 40 ? ? ? ? ? 74 2D");
-        InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OSReport_hook, PATCH_JUMP);
+    auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C A1 ? ? ? ? F7 40 ? ? ? ? ? 74 2D");
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OSReport_hook, PATCH_JUMP);
 
-        pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C 5F 5E 5B 5D C2 04 00 B8 ? ? ? ? 66");
-        InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cLog__err_nullsubver_hook, PATCH_JUMP);
-    }
+    pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C 5F 5E 33 C0 5B 5D C3 68 ? ? ? ? E8");
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OSPanic_nullsub_hook, PATCH_JUMP);
+
+    pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C 5F 5E 5B 5D C2 04 00 B8 ? ? ? ? 66");
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cLog__err_nullsubver_hook, PATCH_JUMP);
+
+    pattern = hook::pattern("E8 ? ? ? ? 83 C4 10 8B 75 F8 33 DB 39 5E 48 7E 39 81");
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cLog__err_1_hook, PATCH_JUMP);
 }

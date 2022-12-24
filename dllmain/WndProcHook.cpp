@@ -26,6 +26,9 @@ void EnableClipCursor(HWND window)
 	if (bIsMoving)
 		return;
 
+	// Gotta set this to false so our hooks allow ClipCursor to go through if the UI is open...
+	pInput->block_mouse_input(false, false);
+
 	RECT rect;
 	GetClientRect(window, &rect);
 

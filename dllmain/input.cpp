@@ -819,7 +819,7 @@ void re4t::input::init()
 	// everything has been rendered. This is currently replacing a call to "systemVSyncPost", but that is a nullsub in RE4 UHD. If we 
 	// ever restore that for some reason, we should move this somewhere else.
 	{
-		auto pattern = hook::pattern("E8 ? ? ? ? 6A ? 68 ? ? ? ? 6A ? E8 ? ? ? ? 83 C4 ? 84 C0 74 ? DD 05");
+		auto pattern = hook::pattern("81 60 54 FF FF FF EF E8 ? ? ? ? E8");
 		struct MainLoop_InputNext_hook
 		{
 			void operator()(injector::reg_pack& regs)
@@ -827,7 +827,7 @@ void re4t::input::init()
 				// Reset input status
 				pInput->next_frame();
 			}
-		}; injector::MakeInline<MainLoop_InputNext_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+		}; injector::MakeInline<MainLoop_InputNext_hook>(pattern.count(1).get(0).get<uint32_t>(0xC), pattern.count(1).get(0).get<uint32_t>(0x11));
 	}
 
 	// Hook Windows functions to intercept/manipulate input
