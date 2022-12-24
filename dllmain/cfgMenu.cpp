@@ -1406,28 +1406,23 @@ void cfgMenuRender()
 					// QTE options
 					{
 						// DisableQTE
-						{
-							ImGui_ColumnSwitch();
+						ImGui_ColumnSwitch();
 
-							re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &re4t::cfg->bDisableQTE);
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &re4t::cfg->bDisableQTE);
 
-							ImGui_ItemSeparator();
+						ImGui_ItemSeparator();
 
-							ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-							ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
-						}
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
 
 						// AutomaticMashingQTE
-						{
-							ImGui_ColumnSwitch();
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &re4t::cfg->bAutomaticMashingQTE);
 
-							re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &re4t::cfg->bAutomaticMashingQTE);
+						ImGui_ItemSeparator();
 
-							ImGui_ItemSeparator();
-
-							ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-							ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
-						}
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
 					}
 
 					// LimitMatildaBurst
