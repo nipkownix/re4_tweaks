@@ -159,6 +159,10 @@ void cfgMenuRender()
 			ImGui_TabButton("##framerate", "Frame rate", active, inactive, MenuTab::Framerate, ICON_FA_CHESS_CLOCK, icn_color, IM_COL32_WHITE, btn_size);
 			ImGui::Spacing();
 
+			// Gameplay
+			ImGui::Dummy(ImVec2(0, 13 * esHook._cur_monitor_dpi)); ImGui::SameLine();
+			ImGui_TabButton("##gameplay", "Gameplay", active, inactive, MenuTab::Gameplay, ICON_FA_RAYGUN, icn_color, IM_COL32_WHITE, btn_size);
+
 			// Misc
 			ImGui::Dummy(ImVec2(0, 13 * esHook._cur_monitor_dpi)); ImGui::SameLine();
 			ImGui_TabButton("##misc", "Misc", active, inactive, MenuTab::Misc, ICON_FA_COG, icn_color, IM_COL32_WHITE, btn_size);
@@ -1257,9 +1261,9 @@ void cfgMenuRender()
 				}
 			}
 
-			if (Tab == MenuTab::Misc)
+			if (Tab == MenuTab::Gameplay)
 			{
-				if (ImGui::BeginTable("Misc", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Gameplay", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
@@ -1267,7 +1271,7 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnSwitch();
 
-						if(ImGui::Checkbox("EnableNTSCMode", &re4t::cfg->bEnableNTSCMode))
+						if (ImGui::Checkbox("EnableNTSCMode", &re4t::cfg->bEnableNTSCMode))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;
@@ -1276,9 +1280,21 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Unlocks minor difficulty boosts previously exclusive to the North American console versions of RE4.");
+						ImGui::TextWrapped("Unlocks minor difficulty boosts previously exclusive to all North American console versions of RE4.");
 						ImGui::TextWrapped("Higher starting adaptive difficulty, more difficult Ada missions, and a more difficult Mercenaries village stage.");
 						ImGui::TextWrapped("Bottle caps require 3000 points in the shooting gallery, and Easy difficulty is removed from the title menu.");
+					}
+
+					// SeparateWaysDifficultyMenu
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysDifficultySelect", &re4t::cfg->bSeparateWaysDifficultyMenu);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Choose between Professional and Normal difficulty modes when starting a new game of Separate Ways.");
 					}
 
 					// AshleyJPCameraAngles
@@ -1293,23 +1309,113 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Unlocks the JP-only classic camera angles during Ashley segment.");
 					}
 
-					// RestoreDemoVideos
+					// QTE options
 					{
+						// AutomaticMashingQTE
 						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreDemoVideos", &re4t::cfg->bRestoreDemoVideos);
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &re4t::cfg->bAutomaticMashingQTE);
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Restores the playback of demo videos that play when the game is idle at the main menu or the \"press any key\" screen for about 20 seconds.");
-						ImGui::TextWrapped("By default, the PC port only includes a single demo video (demo0.sfd/demo0eng.sfd).");
-						ImGui::TextWrapped("However, if present in the BIO4/movie folder, re4_tweaks also supports playing the original GameCube videos.");
-						ImGui::TextWrapped("Supported demo videos:");
-						ImGui::BulletText("demo0_gc.sfd");
-						ImGui::BulletText("demo1_gc.sfd");
-						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("demo0.sfd/demo0eng.sfd (included in the vanilla game, and also present in the Wii version as \"demo2.sfd\")");
+						ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
+
+						// DisableQTE
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &re4t::cfg->bDisableQTE);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
 					}
+
+					// UseSprintToggle
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &re4t::cfg->bUseSprintToggle);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
+					}
+
+					// Matilda options
+					{
+						// AllowMatildaQuickturn
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &re4t::cfg->bAllowMatildaQuickturn);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
+						ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
+
+						// LimitMatildaBurst
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Limit the Matilda to one three round burst per trigger pull.");
+					}
+
+					// AllowAshleySuplex
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &re4t::cfg->bAllowAshleySuplex);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Allows Ashley to Suplex enemies in very specific situations.");
+						ImGui::TextWrapped("(previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)");
+					}
+
+					// FixDitmanGlitch
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &re4t::cfg->bFixDitmanGlitch);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Fixes the Ditman glitch, which would allow players to increase their walk speed.");
+					}
+
+					// AllowSellingHandgunSilencer
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("AllowSellingHandgunSilencer", &re4t::cfg->bAllowSellingHandgunSilencer))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
+					}
+
+					ImGui_ColumnFinish();
+					ImGui::EndTable();
+				}
+			}
+
+			if (Tab == MenuTab::Misc)
+			{
+				if (ImGui::BeginTable("Misc", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				{
+					ImGui_ColumnInit();
 
 					// ViolenceLevelOverride
 					{
@@ -1339,6 +1445,24 @@ void cfgMenuRender()
 						ImGui::PopItemWidth();
 					}
 
+					// RestoreDemoVideos
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreDemoVideos", &re4t::cfg->bRestoreDemoVideos);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Restores the playback of demo videos that play when the game is idle at the main menu or the \"press any key\" screen for about 20 seconds.");
+						ImGui::TextWrapped("By default, the PC port only includes a single demo video (demo0.sfd/demo0eng.sfd).");
+						ImGui::TextWrapped("However, if present in the BIO4/movie folder, re4_tweaks also supports playing the original GameCube videos.");
+						ImGui::TextWrapped("Supported demo videos:");
+						ImGui::BulletText("demo0_gc.sfd");
+						ImGui::BulletText("demo1_gc.sfd");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("demo0.sfd/demo0eng.sfd (included in the vanilla game, and also present in the Wii version as \"demo2.sfd\")");
+					}
+
 					// RifleScreenShake
 					{
 						ImGui_ColumnSwitch();
@@ -1353,18 +1477,6 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::TextWrapped("Adds a screen shake effect when firing a rifle.");
-					}
-
-					// SeparateWaysDifficultyMenu
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysDifficultySelect", &re4t::cfg->bSeparateWaysDifficultyMenu);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Choose between Professional and Normal difficulty modes when starting a new game of Separate Ways.");
 					}
 
 					// AlwaysShowOriginalTitleBackground
@@ -1390,22 +1502,6 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
 						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
-					}
-
-					// AllowSellingHandgunSilencer
-					{
-						ImGui_ColumnSwitch();
-
-						if (ImGui::Checkbox("AllowSellingHandgunSilencer", &re4t::cfg->bAllowSellingHandgunSilencer))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
 					}
 
 					// AllowMafiaLeonCutscenes
@@ -1437,80 +1533,6 @@ void cfgMenuRender()
 						ImGui::TextWrapped("For those who also hate the constant \"Clank Clank Clank\".");
 					}
 
-					// AllowAshleySuplex
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowAshleySuplex", &re4t::cfg->bAllowAshleySuplex);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows Ashley to Suplex enemies in very specific situations.");
-						ImGui::TextWrapped("(previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)");
-					}
-
-					// AllowMatildaQuickturn
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &re4t::cfg->bAllowMatildaQuickturn);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
-						ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
-					}
-
-					// FixDitmanGlitch
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixDitmanGlitch", &re4t::cfg->bFixDitmanGlitch);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Fixes the Ditman glitch, which would allow players to increase their walk speed.");
-					}
-
-					// UseSprintToggle
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("UseSprintToggle", &re4t::cfg->bUseSprintToggle);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
-					}
-
-					// DisableQTE
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableQTE", &re4t::cfg->bDisableQTE);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Disables most of the QTEs, making them pass automatically.");
-					}
-
-					// AutomaticMashingQTE
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AutomaticMashingQTE", &re4t::cfg->bAutomaticMashingQTE);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
-					}
-
 					// SkipIntroLogos
 					{
 						ImGui_ColumnSwitch();
@@ -1530,18 +1552,6 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Reduces the length of menu fades/messages (eg. 'Save/Load successful!') and skips the initial \"Resident Evil 4\" logo / \"PRESS ANY KEY\" screen.");
 						ImGui::TextWrapped("(will only take effect when SkipIntroLogos is also set to true)");
-					}
-
-					// LimitMatildaBurst
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Limit the Matilda to one three round burst per trigger pull.");
 					}
 
 					// EnableDebugMenu
