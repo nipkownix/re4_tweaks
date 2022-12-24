@@ -341,20 +341,22 @@ void AutoUpdate::RenderUI()
 			{
 				for (unsigned int i = 0; i < description_lines.size(); i++)
 				{
-					ImGui::TableNextColumn();
-
-					// Don't add a bg for empty lines
+					// Don't add a bg for empty lines, add Dummy instead
 					if (description_lines[i].empty() || (description_lines[i].size() == 1 && description_lines[i][0] == '\n'))
 					{
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 						continue;
 					}
 
 					// Only add bg for lines starting with a dash
 					if (description_lines[i][0] != '-')
 					{
+						ImGui::TableNextColumn();
 						ImGui::TextWrapped(description_lines[i].c_str());
 						continue;
 					}
+
+					ImGui::TableNextColumn();
 
 					static std::vector<float> bgHeights;
 					bgHeights.resize(description_lines.size());
