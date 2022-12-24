@@ -111,13 +111,13 @@ public:
 	bool bSeparateWaysDifficultyMenu = true;
 	bool bEnableNTSCMode = false;
 	bool bAllowAshleySuplex = false;
-	bool bAllowMatildaQuickturn = false;
 	bool bFixDitmanGlitch = false;
 	bool bAllowSellingHandgunSilencer = true;
 	bool bUseSprintToggle = false;
 	bool bRifleScreenShake = false;
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
+	bool bAllowMatildaQuickturn = false;
 	bool bLimitMatildaBurst = false;
 
 	// MISC

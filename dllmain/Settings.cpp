@@ -296,13 +296,13 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bSeparateWaysDifficultyMenu = iniReader.ReadBoolean("GAMEPLAY", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
-	re4t::cfg->bAllowMatildaQuickturn = iniReader.ReadBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
 	re4t::cfg->bFixDitmanGlitch = iniReader.ReadBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
 	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	re4t::cfg->bUseSprintToggle = iniReader.ReadBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 	re4t::cfg->bRifleScreenShake = iniReader.ReadBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 	re4t::cfg->bDisableQTE = iniReader.ReadBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 	re4t::cfg->bAutomaticMashingQTE = iniReader.ReadBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+	re4t::cfg->bAllowMatildaQuickturn = iniReader.ReadBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
 	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
 
 	// MISC
@@ -824,13 +824,13 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("GAMEPLAY", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
 	iniReader.WriteBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	iniReader.WriteBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
-	iniReader.WriteBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
 	iniReader.WriteBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
 	iniReader.WriteBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	iniReader.WriteBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 	iniReader.WriteBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 	iniReader.WriteBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 	iniReader.WriteBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+	iniReader.WriteBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
 	iniReader.WriteBoolean("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
 
 	// MISC
@@ -1007,13 +1007,13 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 

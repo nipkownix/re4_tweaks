@@ -1334,19 +1334,6 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(previously was only possible in the initial NTSC GameCube ver., was patched out in all later ports.)");
 					}
 
-					// AllowMatildaQuickturn
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &re4t::cfg->bAllowMatildaQuickturn);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
-						ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
-					}
-
 					// AllowSellingHandgunSilencer
 					{
 						ImGui_ColumnSwitch();
@@ -1425,10 +1412,21 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Unlike the previous option, this only automates the \"mashing\" QTEs, making them pass automatically. Prompts are still shown!");
 					}
 
-					// LimitMatildaBurst
+					// Matilda options
 					{
+						// AllowMatildaQuickturn
 						ImGui_ColumnSwitch();
 
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AllowMatildaQuickturn", &re4t::cfg->bAllowMatildaQuickturn);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Allows quickturning character to camera direction when wielding Matilda.");
+						ImGui::TextWrapped("(only effective if MouseTurning is disabled)");
+
+						// LimitMatildaBurst
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("LimitMatildaBurst", &re4t::cfg->bLimitMatildaBurst);
 
 						ImGui_ItemSeparator();
