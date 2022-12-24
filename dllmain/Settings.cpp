@@ -755,9 +755,9 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
 
 	if (re4t::cfg->bUseEnhancedGCBlur)
-		iniReader.WriteString("DISPLAY", "GCBlurType", "Enhanced");
+		iniReader.WriteString("DISPLAY", "GCBlurType", " Enhanced");
 	else
-		iniReader.WriteString("DISPLAY", "GCBlurType", "Classic");
+		iniReader.WriteString("DISPLAY", "GCBlurType", " Classic");
 
 	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
 	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
@@ -782,9 +782,9 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
 
 	if (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)
-		iniReader.WriteString("MOUSE", "MouseTurnType", "TypeA");
+		iniReader.WriteString("MOUSE", "MouseTurnType", " TypeA");
 	else
-		iniReader.WriteString("MOUSE", "MouseTurnType", "TypeB");
+		iniReader.WriteString("MOUSE", "MouseTurnType", " TypeB");
 
 	iniReader.WriteFloat("MOUSE", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
 	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput);
