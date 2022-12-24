@@ -14,6 +14,7 @@ cPlayer__subScrCheck_Fn cPlayer__subScrCheck = nullptr; // extern inside player.
 j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr; // extern inside fade.h
 uint32_t* cSofdec = nullptr;
 
+
 // light.h externs
 cLightMgr* LightMgr = nullptr;
 cLightMgr__setEnv_Fn cLightMgr__setEnv = nullptr;
@@ -36,7 +37,10 @@ cSatMgr* SatMgr = nullptr;
 cSatMgr* EatMgr = nullptr;
 
 // ID.h externs
+IDSystem__set_Fn IDSystem__set = nullptr;
 IDSystem__unitPtr_Fn IDSystem__unitPtr = nullptr;
+IDSystem__kill_Fn IDSystem__kill = nullptr;
+IDSystem__setTime_Fn IDSystem__setTime = nullptr;
 
 // roomdata.h externs
 cRoomData* RoomData = nullptr;
@@ -45,6 +49,7 @@ cRoomData__getRoomSavePtr_Fn cRoomData__getRoomSavePtr = nullptr;
 // Original game funcs
 namespace bio4 {
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
+	bool(__cdecl* SndStrReq_0)(uint32_t snd_id, int flg, int time, int vol);
 
 	bool(__cdecl* SubScreenOpen)(SS_OPEN_FLAG open_flag, SS_ATTR_FLAG attr_flag);
 	bool(__cdecl* CardCheckDone)();
@@ -93,8 +98,6 @@ namespace bio4 {
 	void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
   
 	bool(__cdecl* joyFireOn)();
-  
-	ID_UNIT* (__thiscall* IDSystem__unitPtr)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
 };
 
 // Current play time (H, M, S)
@@ -805,9 +808,21 @@ bool re4t::init::Game()
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
 	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
 
+	// pointer to IDSystem::set
+	pattern = hook::pattern("E8 ? ? ? ? 6A 29 68 FE 00 00 00 B9");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__set);
+
 	// pointer to IDSystem::unitPtr
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), IDSystem__unitPtr);
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__unitPtr);
+
+	// pointer to IDSystem::kill
+	pattern = hook::pattern("E8 ? ? ? ? 68 99 00 00 00 68 FF 00 00 00 B9 ? ? ? ? E8 ? ? ? ? 8B 46 20 8B");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__kill);
+
+	// pointer to IDSystem::setTime
+	pattern = hook::pattern("E8 ? ? ? ? FE 46 01 5F 5E 8B E5 ");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__setTime);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
@@ -883,13 +898,17 @@ bool re4t::init::Game()
 	pattern = hook::pattern("05 94 00 00 00 50 6A 0C 6A 01 E8");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xA)).as_int(), bio4::SndCall);
 
+	// SndStrReq_0 funcptr
+	pattern = hook::pattern("E8 ? ? ? ? 83 C4 10 5F B0 01 5E 8B");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::SndStrReq_0);
+
 	// QuakeExec ptr
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 14 8B E5 5D");
 	ReadCall(injector::GetBranchDestination(pattern.get_first()).as_int(), bio4::QuakeExec);
 
 	// joyFireOn ptr
 	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
-	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), bio4::joyFireOn);
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), bio4::joyFireOn);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");

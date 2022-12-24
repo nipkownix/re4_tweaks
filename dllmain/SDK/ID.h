@@ -3,7 +3,7 @@
 
 struct ID_UNIT
 {
-	uint8_t be_flag_0; // VISIBILITY = 0x8
+	uint8_t be_flag_0;
 	uint8_t unitNo_1;
 	uint8_t classNo_2;
 	uint8_t markNo_3;
@@ -74,10 +74,30 @@ struct ID_UNIT
 };
 assert_size(ID_UNIT, 0x144);
 
+enum ID_BE_FLAG
+{
+	ID_BE_FLAG_VISIBLE = 0x8
+};
+
+struct ID_FILE_HEADER
+{
+	char Version_0[4];
+	uint8_t GroupNo_4;
+	uint8_t UnitNum_5;
+	uint8_t dummy_6[2];
+};
+assert_size(ID_FILE_HEADER, 0x8);
+
 class IDSystem;
 enum ID_CLASS;
+typedef void(__thiscall* IDSystem__set_Fn)(IDSystem* thisptr, ID_FILE_HEADER* pData, uint8_t markNo, ID_CLASS classNo, uint8_t otType, uint8_t otNo, uint32_t Attr);
 typedef ID_UNIT* (__thiscall* IDSystem__unitPtr_Fn)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
+typedef void (__thiscall* IDSystem__kill_Fn)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
+typedef void(__thiscall* IDSystem__setTime_Fn)(IDSystem* thisptr, ID_UNIT* pParent, __int16 time);
+extern IDSystem__set_Fn IDSystem__set;
 extern IDSystem__unitPtr_Fn IDSystem__unitPtr;
+extern IDSystem__kill_Fn IDSystem__kill;
+extern IDSystem__setTime_Fn IDSystem__setTime;
 
 class IDSystem
 {
@@ -91,9 +111,24 @@ public:
 	ID_UNIT* m_IdUnit_50;
 	void* ptr_54;
 
+	inline void set(ID_FILE_HEADER* pData, uint8_t markNo, ID_CLASS classNo, uint8_t otType, uint8_t otNo, uint32_t Attr)
+	{
+		return IDSystem__set(this, pData, markNo, classNo, otType, otNo, Attr);
+	}
+
 	inline ID_UNIT* unitPtr(uint8_t markNo, ID_CLASS classNo)
 	{
 		return IDSystem__unitPtr(this, markNo, classNo);
+	}
+
+	inline void kill(uint8_t markNo, ID_CLASS classNo)
+	{
+		return IDSystem__kill(this, markNo, classNo);
+	}
+
+	inline void setTime(ID_UNIT* pParent, __int16 time)
+	{
+		return IDSystem__setTime(this, pParent, time);
 	}
 };
 assert_size(IDSystem, 0x58);

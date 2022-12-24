@@ -309,69 +309,6 @@ void SsTermMain__quit_SndCall_hook(void* a1, void* a2, void* a3, void* a4, void*
 	SsTermMain_files.clear();
 }
 
-void __cdecl titleLoop_hook(TITLE_WORK* pT)
-{
-	bool UIPause = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_ID_SYSTEM));
-	if (UIPause)
-		return;
-
-	ID_UNIT* tex = IDSystemPtr()->unitPtr(0x6u, IDC_TITLE);
-
-	if (re4t::cfg->bRestoreAnalogTitleScroll)
-	{
-		if (isController())
-		{
-			// prefer to use fAnalogR over AnalogR here, because it lets us to make the deadzone smaller
-			const float fDeadZone = 0.30f;
-
-			if (abs(*fAnalogRX) >= fDeadZone)
-				pT->scroll_add_5C = *fAnalogRX * 3.0f;
-
-			if (abs(*fAnalogRY) >= fDeadZone)
-			{
-				if (*fAnalogRY < 0)
-					tex->pos0_94.z -= 5.0f * GlobalPtr()->deltaTime_70;
-				else
-					tex->pos0_94.z += 5.0f * GlobalPtr()->deltaTime_70;
-
-				tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
-			}
-		}
-		else
-		{
-			// Using our own KB/M input here instead of the game's, since the game's function to handle input (PadRead) is a mess.
-			if (pInput->is_key_down(VK_CONTROL))
-			{
-				float fDeltaX = float(pInput->raw_mouse_delta_x());
-				float fDeltaY = float(pInput->raw_mouse_delta_y());
-
-				if (abs(fDeltaX) > 0)
-				{
-					tex->pos0_94.x -= fDeltaX * 0.2f;
-
-					if (fDeltaX < 0)
-						pT->scroll_add_5C = -(fabsf(pT->scroll_add_5C));
-					else
-						pT->scroll_add_5C = fabsf(pT->scroll_add_5C);
-				}
-
-				if (abs(fDeltaY) > 0)
-				{
-					tex->pos0_94.z -= fDeltaY * 0.2f;
-					tex->pos0_94.z = std::clamp(tex->pos0_94.z, 0.0f, 170.0f);
-				}
-			}
-		}
-	}
-
-	if (!re4t::cfg->bRestoreAnalogTitleScroll || !pInput->is_key_down(VK_CONTROL))
-		tex->pos0_94.x -= pT->scroll_add_5C * GlobalPtr()->deltaTime_70;
-	if (tex->pos0_94.x > 1800.0f)
-		tex->pos0_94.x -= 2700.0f;
-	else if (tex->pos0_94.x < -900.0f)
-		tex->pos0_94.x += 2700.0f;
-}
-
 BYTE(__cdecl *j_PlSetCostume_Orig)();
 BYTE __cdecl j_PlSetCostume_Hook()
 {
@@ -838,6 +775,31 @@ void re4t::init::Misc()
 			injector::MakeInline<GameLangLog>(pattern.count(1).get(0).get<uint32_t>(9), pattern.count(1).get(0).get<uint32_t>(15));
 	}
 
+	// Hook gameInit to allow difficulty overrides
+	{
+		auto pattern = hook::pattern("A1 ? ? ? ? 83 C4 08 80 B8 ? ? ? ? ? 75 06 83 48 54 20 EB 04 83 60 54");
+		struct gameInit_DifficultyOverride
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Code we replaced
+				regs.eax = uint32_t(GlobalPtr());
+
+				// Don't do anything on existing saves. (Doesn't seem to work correctly on existing saves even without this check anyway...)
+				bool isLoadingSave = FlagIsSet(GlobalPtr()->Flags_SYSTEM_0_54, uint32_t(Flags_SYSTEM::SYS_LOAD_GAME));
+				if (re4t::cfg->bOverrideDifficulty && !isLoadingSave)
+				{
+					#ifdef VERBOSE
+					con.log("Current difficulty: %s", sGameDifficultyNames[int(GlobalPtr()->gameDifficulty_847C)]);
+					con.log("Overriding difficulty to: %s", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]);
+					#endif
+
+					GlobalPtr()->gameDifficulty_847C = re4t::cfg->NewDifficulty;
+				}
+			}
+		}; injector::MakeInline<gameInit_DifficultyOverride>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+	}
+
 	// Hook PlSetCostume to allow custom costume combos
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 66 83 88 ? ? ? ? ? 5B");
@@ -891,7 +853,7 @@ void re4t::init::Misc()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-
+				// Code we replaced
 				*(uint8_t*)(regs.esi + 0x01) = 0x0A;
 				*(uint8_t*)(regs.esi + 0x6E) = (uint8_t)regs.ecx & 0xFF;
 
@@ -1190,134 +1152,118 @@ void re4t::init::Misc()
 
 	// NTSC mode
 	// Enables difficulty modifiers previously exclusive to the NTSC console versions of RE4.
-	// These were locked behind checks for pSys->language_8 == 1 (NTSC English). Since RE4 UHD uses PAL English (language_8 == 2), Steam players never saw these.
+	// These were locked behind checks for pSys->language_8 == 1 (NTSC English). Since RE4 UHD uses PAL English (language_8 == 2), PC players never saw these.
+	if (re4t::cfg->bEnableNTSCMode)
 	{
-		if (re4t::cfg->bEnableNTSCMode)
+		// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
+		auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
+		Patch(pattern.count(1).get(0).get<uint32_t>(0), { 0xB2, 0x01, 0x90 }); // GamePointInit, { mov dl, 1 }
+
+		// Assignment Ada: increased difficulty (4500->6500)
+		pattern = hook::pattern("66 39 B1 ? ? 00 00 75 10");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // GameAddPoint
+
+		// Shooting range: increased bottle cap score requirements (1000->3000)
+		pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
+		Patch(pattern.count(1).get(0).get<uint32_t>(2), { 0xB1, 0x01, 0x90 }); // cCap::check, { mov cl, 1 }
+
+		// Shooting range: use NTSC strings for the game rules note
+		// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
+		pattern = hook::pattern("? 00 01 00 46 00 01 00");
+		file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
+		// update the note's message index whenever we load into r22c
+		pattern = hook::pattern("89 41 78 83 C1 7C E8");
+		struct R22cInit_UpdateMsgIdx
 		{
-			// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
-			auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
-			Patch(pattern.count(1).get(0).get<uint32_t>(0), { 0xB2, 0x01, 0x90 }); // GamePointInit, { mov dl, 1 }
-
-			// Assignment Ada: increased difficulty (4500->6500)
-			pattern = hook::pattern("66 39 B1 ? ? 00 00 75 10");
-			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // GameAddPoint
-
-			// Shooting range: increased bottle cap score requirements (1000->3000)
-			pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
-			Patch(pattern.count(1).get(0).get<uint32_t>(2), { 0xB1, 0x01, 0x90 }); // cCap::check, { mov cl, 1 }
-
-			// Shooting range: use NTSC strings for the game rules note
-			// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
-			pattern = hook::pattern("3F 00 01 00 46 00 01 00");
-			file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
-			// update the note's message index whenever we load into r22c
-			pattern = hook::pattern("89 41 78 83 C1 7C E8");
-			struct R22cInit_UpdateMsgIdx
+			void operator()(injector::reg_pack& regs)
 			{
-				void operator()(injector::reg_pack& regs)
-				{
-					file_msg_tbl_35[0].top_0 = SystemSavePtr()->language_8 == 2 ? 0x9D : 0x3F;
+				file_msg_tbl_35[0].top_0 = SystemSavePtr()->language_8 == 2 ? 0x9D : 0x3F;
 
-					// code we overwrote
-					*(uint32_t*)(regs.ecx + 0x78) = regs.eax;
-					regs.ecx += 0x7C;
-				}
-			}; injector::MakeInline<R22cInit_UpdateMsgIdx>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+				// code we overwrote
+				*(uint32_t*)(regs.ecx + 0x78) = regs.eax;
+				regs.ecx += 0x7C;
+			}
+		}; injector::MakeInline<R22cInit_UpdateMsgIdx>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-			// Shooting range: only check for bottle cap reward once per results screen
-			pattern = hook::pattern("8B 15 ? ? ? ? 80 7A ? 01 74");
-			Patch(pattern.count(2).get(1).get<uint32_t>(10), { 0xEB }); // shootResult, jz -> jmp
+		// Shooting range: only check for bottle cap reward once per results screen
+		pattern = hook::pattern("8B 15 ? ? ? ? 80 7A ? 01 74");
+		Patch(pattern.count(2).get(1).get<uint32_t>(10), { 0xEB }); // shootResult, jz -> jmp
 
-			// Mercenaries: unlock village stage difficulty, requires 60fps fix
-			Patch(pattern.count(2).get(0).get<uint32_t>(10), { 0xEB }); // GameAddPoint, jz -> jmp
+		// Mercenaries: unlock village stage difficulty, requires 60fps fix
+		Patch(pattern.count(2).get(0).get<uint32_t>(10), { 0xEB }); // GameAddPoint, jz -> jmp
 
-			// remove Easy mode from the difficulty menu
-			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 75");
-			injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(9), 2); // titleLevelInit
+		// remove Easy mode from the difficulty menu
+		pattern = hook::pattern("A1 ? ? ? ? 80 78 ? 01 75");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(9), 2); // titleLevelInit
 
-			// skip difficulty select on a fresh system save
-			pattern = hook::pattern("B8 04 00 00 00 5B 8B E5");
-			struct SkipLevelSelect
+		// Swap NEW GAME texture for START on a fresh system save
+		pattern = hook::pattern("89 51 68 8B 57 68 8B");
+		struct titleMenuInit_StartTex
+		{
+			void operator()(injector::reg_pack& regs)
 			{
-				void operator()(injector::reg_pack& regs)
+				bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
+				if (newSystemSave)
 				{
-					bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
-					regs.eax = newSystemSave ? TTL_CMD_START : TTL_CMD_LEVEL;
-				}
-			}; injector::MakeInline<SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+					float texW;
 
-			// Swap NEW GAME texture for START on a fresh system save
-			pattern = hook::pattern("89 51 68 8B 57 68 8B");
-			struct titleMenuInit_StartTex
-			{
-				void operator()(injector::reg_pack& regs)
-				{
-					bool newSystemSave = !FlagIsSet(SystemSavePtr()->flags_EXTRA_4, uint32_t(Flags_EXTRA::EXT_HARD_MODE));
-					if (newSystemSave)
+					// texW = aspect ratio of image file * size0_H_E0 (14)
+					switch (SystemSavePtr()->language_8)
 					{
-						float texW;
-
-						// texW = aspect ratio of image file * size0_H_E0 (14)
-						switch (SystemSavePtr()->language_8)
-						{
-						case 4: // French
-							texW = 131.0f;
-							break;
-						case 5: // Spanish
-							texW = 70.0f;
-							break;
-						case 6: // Traditional Chinese / Italian
-							texW = GameVersion() == "1.1.0" ? 66.0f : 68.0f;
-							break;
-						case 8: // Italian
-							texW = 68.0f;
-							break;
-						default: // English, German, Japanese, Simplified Chinese
-							texW = 66.0f;
-							break;
-						}
-
-						IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->texId_78 = 164;
-						IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
-						IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->texId_78 = 164;
-						IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
+					case 4: // French
+						texW = 131.0f;
+						break;
+					case 5: // Spanish
+						texW = 70.0f;
+						break;
+					case 6: // Traditional Chinese / Italian
+						texW = GameVersion() == "1.1.0" ? 66.0f : 68.0f;
+						break;
+					case 8: // Italian
+						texW = 68.0f;
+						break;
+					default: // English, German, Japanese, Simplified Chinese
+						texW = 66.0f;
+						break;
 					}
 
-					// Code we overwrote
-					*(uint32_t*)(regs.ecx + 0x68) = regs.edx;
-					regs.edx = *(uint32_t*)(regs.edi + 0x68);
+					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->texId_78 = 164;
+					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
+					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->texId_78 = 164;
+					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
 				}
-			}; injector::MakeInline<titleMenuInit_StartTex>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-			// special handling for the JP exe
-			pattern = hook::pattern("A1 40 ? ? ? 80 78 ? 01 74");
-			if (pattern.empty())
-			{
-				// ignore language_8 check when skipping the difficulty menu
-				pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
-				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
-
-				// repurpose the hide Professional mode block to hide Amateur mode instead
-				pattern = hook::pattern("C7 46 30 01 00 00 00");
-				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // titleLevelInit
-				injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(16), 2);
-				Patch(pattern.count(1).get(0).get<uint32_t>(21), { 0x09 });
-				Patch(pattern.count(1).get(0).get<uint32_t>(38), { 0x0A });
-				// erase the rest of the block
-				pattern = hook::pattern("C7 46 ? 03 00 00 00 85 DB");
-				injector::MakeNOP(pattern.get_first(0), 37);
-
-				// disable JP difficulty select confirmation prompts
-				pattern = hook::pattern("A1 40 ? ? ? 38 58 08 75");
-				Patch(pattern.count(1).get(0).get<uint32_t>(8), { 0xEB }); // titleMain, jnz -> jmp
-
-				// remove JP only 20% damage armor from Mercenaries mode
-				pattern = hook::pattern("F7 46 54 00 00 00 40");
-				Patch(pattern.count(1).get(0).get<uint32_t>(7), { 0xEB }); // LifeDownSet2, jz -> jmp
+				// Code we overwrote
+				*(uint32_t*)(regs.ecx + 0x68) = regs.edx;
+				regs.edx = *(uint32_t*)(regs.edi + 0x68);
 			}
+		}; injector::MakeInline<titleMenuInit_StartTex>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 
-			spd::log()->info("NTSC mode enabled");
-		}
+		// Patches for Japanese language support (language_8 == 0):
+
+		// ignore language_8 check when skipping the difficulty menu
+		pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
+
+		// repurpose the hide Professional mode block to hide Amateur mode instead
+		pattern = hook::pattern("C7 46 30 01 00 00 00");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // titleLevelInit
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(16), 2);
+		Patch(pattern.count(1).get(0).get<uint32_t>(21), { 0x09 });
+		Patch(pattern.count(1).get(0).get<uint32_t>(38), { 0x0A });
+		// erase the rest of the block
+		pattern = hook::pattern("C7 46 ? 03 00 00 00 85 DB");
+		injector::MakeNOP(pattern.get_first(0), 37);
+
+		// disable JP difficulty select confirmation prompts
+		pattern = hook::pattern("A1 ? ? ? ? 38 58 08 75");
+		Patch(pattern.count(1).get(0).get<uint32_t>(8), { 0xEB }); // titleMain, jnz -> jmp
+
+		// remove JP only 20% damage armor from Mercenaries mode
+		pattern = hook::pattern("F7 46 54 00 00 00 40");
+		Patch(pattern.count(1).get(0).get<uint32_t>(7), { 0xEB }); // LifeDownSet2, jz -> jmp
+
+		spd::log()->info("NTSC mode enabled");
 	}
 
 	// Add screenshake effect to scoped rifle shots
@@ -1336,44 +1282,7 @@ void re4t::init::Misc()
 		}; injector::MakeInline<RifleScreenShake>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
-	// Restore Gamecube title menu pan and zoom controls
-	{
-		// hook the titleLoop call with our own reimplementation
-		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? 33 DB 53");
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), titleLoop_hook, PATCH_JUMP);
-
-		// don't reset scroll_add_5C in titleMenuInit, otherwise scrolling will reset when leaving submenus like 'Help & Options'
-		pattern = hook::pattern("D9 5E 5C C6 46 58 00 39");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint8_t>(0), 7);
-    
-		// reset scroll_add_5C when leaving Assignment Ada & Mercenaries 
-		pattern = hook::pattern("C7 06 01 00 00 00 E8 ? ? ? ? 57");
-		struct titleSub_resetScrollAdd
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				TitleWorkPtr()->scroll_add_5C = 1.5f;
-        
-				// Code we overwrote
-				__asm { mov dword ptr[esi], 0x1}
-			}
-		}; injector::MakeInline<titleSub_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-    
-		// reset scroll_add_5C when leaving Separate Ways
-		pattern = hook::pattern("C7 45 F4 00 00 00 FF 8B ? ? 52 8B C8 51 50");
-		struct titleAda_resetScrollAdd
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				TitleWorkPtr()->scroll_add_5C = 1.5f;
-        
-				// Code we overwrote
-				__asm { mov dword ptr[ebp - 0xC], 0xFF000000 }
-			}
-		}; injector::MakeInline<titleAda_resetScrollAdd>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
-	}
-
-	// Limit Matilda to three round bursts once per trigger pull
+	// Limit the Matilda to one three round burst per trigger pull
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
 		struct wep17_r2_set_LimitMatildaBurst

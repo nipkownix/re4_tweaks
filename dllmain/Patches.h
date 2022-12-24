@@ -38,6 +38,7 @@ namespace re4t
 		void MultithreadFix();
 		void QTEfixes();
 		void Sofdec();
+		void TitleMenu();
 		void ToolMenu();
 		void ToolMenuDebug();
 		void WndProcHook();
@@ -81,9 +82,6 @@ extern bool bWaitingForHotkey;
 extern float fLaserColorPicker[3];
 
 extern int iGCBlurMode;
-extern int iCostumeComboLeon;
-extern int iCostumeComboAshley;
-extern int iCostumeComboAda;
 
 // LAApatch.cpp
 void LAACheck();

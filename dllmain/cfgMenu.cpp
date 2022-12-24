@@ -19,9 +19,6 @@ bool NeedsToRestart;
 bool bWaitingForHotkey;
 
 int iGCBlurMode = 0;
-int iCostumeComboLeon;
-int iCostumeComboAshley;
-int iCostumeComboAda;
 
 float fLaserColorPicker[3]{ 0.0f, 0.0f, 0.0f };
 
@@ -1239,32 +1236,73 @@ void cfgMenuRender()
 
 						ImGui::BeginDisabled(!re4t::cfg->bOverrideCostumes);
 						ImGui::PushItemWidth(150 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-						ImGui::Combo("Leon", &iCostumeComboLeon, sLeonCostumeNames, IM_ARRAYSIZE(sLeonCostumeNames));
-						if (ImGui::IsItemEdited())
+
+						if (ImGui::BeginCombo("Leon", sLeonCostumeNames[(int)re4t::cfg->CostumeOverride.Leon]))
 						{
-							re4t::cfg->HasUnsavedChanges = true;
-							re4t::cfg->CostumeOverride.Leon = (LeonCostume)iCostumeComboLeon;
+							for (int i = 0; i < IM_ARRAYSIZE(sLeonCostumeNames); i++) {
+								if (ImGui::Selectable(sLeonCostumeNames[i])) {
+									re4t::cfg->HasUnsavedChanges = true;
+									re4t::cfg->CostumeOverride.Leon = LeonCostume(i);
+								}
+							}
+							ImGui::EndCombo();
 						}
 
-						ImGui::Combo("Ashley", &iCostumeComboAshley, sAshleyCostumeNames, IM_ARRAYSIZE(sAshleyCostumeNames));
-						if (ImGui::IsItemEdited())
+						if (ImGui::BeginCombo("Ashley", sAshleyCostumeNames[(int)re4t::cfg->CostumeOverride.Ashley]))
 						{
-							re4t::cfg->HasUnsavedChanges = true;
-							re4t::cfg->CostumeOverride.Ashley = (AshleyCostume)iCostumeComboAshley;
+							for (int i = 0; i < IM_ARRAYSIZE(sAshleyCostumeNames); i++) {
+								if (ImGui::Selectable(sAshleyCostumeNames[i])) {
+									re4t::cfg->HasUnsavedChanges = true;
+									re4t::cfg->CostumeOverride.Ashley = AshleyCostume(i);
+								}
+							}
+							ImGui::EndCombo();
 						}
 
-						ImGui::Combo("Ada", &iCostumeComboAda, sAdaCostumeNames, IM_ARRAYSIZE(sAdaCostumeNames));
-						if (ImGui::IsItemEdited())
+						if (ImGui::BeginCombo("Ada", sAdaCostumeNames[(int)re4t::cfg->CostumeOverride.Ada]))
 						{
-							re4t::cfg->HasUnsavedChanges = true;
-
-							// ID number 2 seems to be the exact same outfit as ID number 0, for some reason, so we increase the ID here to use the actual next costume
-							if (iCostumeComboAda == 2)
-								re4t::cfg->CostumeOverride.Ada = (AdaCostume)(iCostumeComboAda + 1);
-							else
-								re4t::cfg->CostumeOverride.Ada = (AdaCostume)iCostumeComboAda;
+							for (int i = 0; i < IM_ARRAYSIZE(sAdaCostumeNames); i++) {
+								std::string costumeName = sAdaCostumeNames[i];
+								if (costumeName == "RE2_d") continue; // Ignore duplicate
+								if (ImGui::Selectable(sAdaCostumeNames[i])) {
+									re4t::cfg->HasUnsavedChanges = true;
+									re4t::cfg->CostumeOverride.Ada = AdaCostume(i);
+								}
+							}
+							ImGui::EndCombo();
 						}
+
 						ImGui::PopItemWidth();
+						ImGui::EndDisabled();
+					}
+
+					// OverrideDifficulty
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("OverrideDifficulty", &re4t::cfg->bOverrideDifficulty);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Overrides the game's difficulty when starting a new game (Main game & Separate Ways), starting an Assignment Ada playthrough, or starting a The Mercenaries run.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::BeginDisabled(!re4t::cfg->bOverrideDifficulty);
+						if (ImGui::BeginCombo("Difficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]))
+						{
+							for (int i = 0; i < IM_ARRAYSIZE(sGameDifficultyNames); i++) 
+							{
+								// Ignore uknown difficulties
+								if (strstr(sGameDifficultyNames[i], "Unk") != NULL) continue;
+								if (ImGui::Selectable(sGameDifficultyNames[i])) 
+								{
+									re4t::cfg->NewDifficulty = GameDifficulty(i);
+								}
+							}
+							ImGui::EndCombo();
+						}
 						ImGui::EndDisabled();
 					}
 
@@ -1360,6 +1398,43 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Adds a screen shake effect when firing a rifle.");
 					}
 
+					// SeparateWaysDifficultyMenu
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SeparateWaysDifficultySelect", &re4t::cfg->bSeparateWaysDifficultyMenu);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Choose between Professional and Normal difficulty modes when starting a new game of Separate Ways.");
+					}
+
+					// AlwaysShowOriginalTitleBackground
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AlwaysShowOriginalTitleBackground", &re4t::cfg->bAlwaysShowOriginalTitleBackground);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
+					}
+
+					// RestoreAnalogTitleScroll
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreAnalogTitleScroll", &re4t::cfg->bRestoreAnalogTitleScroll);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
+						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
+					}
+
 					// AllowSellingHandgunSilencer
 					{
 						ImGui_ColumnSwitch();
@@ -1374,19 +1449,6 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
-					}
-
-					// RestoreAnalogTitleScroll
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RestoreAnalogTitleScroll", &re4t::cfg->bRestoreAnalogTitleScroll);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Restores the ability to manipulate the background scroll of the post-new game title menu with the right analog stick or mouse movement.");
-						ImGui::TextWrapped("For keyboard and mouse: Move the mouse while holding CTRL.");
 					}
 
 					// AllowMafiaLeonCutscenes

@@ -62,6 +62,7 @@ cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
 IDSystem* IDSystemPtr();
 FADE_WORK* FadeWorkPtr(FADE_NO no);
+IDSystem* IDSystemPtr();
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 

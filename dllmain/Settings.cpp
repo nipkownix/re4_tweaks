@@ -15,7 +15,9 @@ const std::wstring sHDProjectOverrideName = L"HDProject.ini";
 
 const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
-const char* sAdaCostumeNames[] = {"RE2", "Spy", "Normal"};
+const char* sAdaCostumeNames[] = {"Resident Evil 2", "Spy", "RE2_d" , "Normal"};
+
+const char* sGameDifficultyNames[] = { "Unk0", "Amateur", "Unk2", "Easy", "Unk4", "Normal", "Professional" };
 
 std::vector<uint32_t> re4t_cfg::ParseKeyCombo(std::string_view in_combo)
 {
@@ -290,8 +292,8 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 
 	// MISC
 	re4t::cfg->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
 
+	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
 	std::string buf = iniReader.ReadString("MISC", "LeonCostume", "");
 	if (!buf.empty())
 	{
@@ -300,8 +302,6 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 		if (buf == "Vest") re4t::cfg->CostumeOverride.Leon = LeonCostume::Vest;
 		if (buf == "RPD") re4t::cfg->CostumeOverride.Leon = LeonCostume::RPD;
 		if (buf == "Mafia") re4t::cfg->CostumeOverride.Leon = LeonCostume::Mafia;
-
-		iCostumeComboLeon = (int)re4t::cfg->CostumeOverride.Leon;
 	}
 
 	buf = iniReader.ReadString("MISC", "AshleyCostume", "");
@@ -310,22 +310,24 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 		if (buf == "Normal") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Normal;
 		if (buf == "Popstar") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Popstar;
 		if (buf == "Armor") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Armor;
-
-		iCostumeComboAshley = (int)re4t::cfg->CostumeOverride.Ashley;
 	}
 
 	buf = iniReader.ReadString("MISC", "AdaCostume", "");
 	if (!buf.empty())
 	{
-		if (buf == "RE2") re4t::cfg->CostumeOverride.Ada = AdaCostume::RE2;
+		if (buf == "Resident Evil 2") re4t::cfg->CostumeOverride.Ada = AdaCostume::RE2;
 		if (buf == "Spy") re4t::cfg->CostumeOverride.Ada = AdaCostume::Spy;
 		if (buf == "Normal") re4t::cfg->CostumeOverride.Ada = AdaCostume::Normal;
+	}
 
-		iCostumeComboAda = (int)re4t::cfg->CostumeOverride.Ada;
-
-		// Normal is id 3, but we're lying to ImGui by pretending Normal is id 2 instead.
-		if (re4t::cfg->CostumeOverride.Ada == AdaCostume::Normal)
-			iCostumeComboAda--;
+	re4t::cfg->bOverrideDifficulty = iniReader.ReadBoolean("MISC", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+	buf = iniReader.ReadString("MISC", "NewDifficulty", "");
+	if (!buf.empty())
+	{
+		if (buf == "Amateur") re4t::cfg->NewDifficulty = GameDifficulty::VeryEasy;
+		if (buf == "Easy") re4t::cfg->NewDifficulty = GameDifficulty::Easy;
+		if (buf == "Normal") re4t::cfg->NewDifficulty = GameDifficulty::Medium;
+		if (buf == "Professional") re4t::cfg->NewDifficulty = GameDifficulty::Pro;
 	}
 
 	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
@@ -351,6 +353,8 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
+	re4t::cfg->bSeparateWaysDifficultyMenu = iniReader.ReadBoolean("MISC", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
+	re4t::cfg->bAlwaysShowOriginalTitleBackground = iniReader.ReadBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 
 	// MEMORY
 	re4t::cfg->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
@@ -796,9 +800,11 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	// MISC
 	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
 	iniReader.WriteBoolean("MISC", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
-	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[iCostumeComboLeon]));
-	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[iCostumeComboAshley]));
-	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[iCostumeComboAda]));
+	iniReader.WriteString("MISC", "LeonCostume", " " + std::string(sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]));
+	iniReader.WriteString("MISC", "AshleyCostume", " " + std::string(sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]));
+	iniReader.WriteString("MISC", "AdaCostume", " " + std::string(sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]));
+	iniReader.WriteBoolean("MISC", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+	iniReader.WriteString("MISC", "NewDifficulty", " " + std::string(sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]));
 	iniReader.WriteBoolean("MISC", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
 	iniReader.WriteBoolean("MISC", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
 	iniReader.WriteBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
@@ -817,6 +823,8 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
 	iniReader.WriteBoolean("MISC", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
+	iniReader.WriteBoolean("MISC", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu);
+	iniReader.WriteBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	iniReader.WriteBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
 	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
@@ -974,9 +982,11 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "WrappedDllPath", re4t::cfg->sWrappedDllPath.data());
 	spd::log()->info("| {:<30} | {:>15} |", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideCostumes", re4t::cfg->bOverrideCostumes ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[iCostumeComboLeon]);
-	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[iCostumeComboAshley]);
-	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[iCostumeComboAda]);
+	spd::log()->info("| {:<30} | {:>15} |", "LeonCostume", sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]);
+	spd::log()->info("| {:<30} | {:>15} |", "AshleyCostume", sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]);
+	spd::log()->info("| {:<30} | {:>15} |", "AdaCostume", sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]);
+	spd::log()->info("| {:<30} | {:>15} |", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "NewDifficulty", sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]);
 	spd::log()->info("| {:<30} | {:>15} |", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll ? "true" : "false");
@@ -999,6 +1009,8 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SeparateWaysDifficultyMenu", re4t::cfg->bSeparateWaysDifficultyMenu ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY

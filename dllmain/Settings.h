@@ -115,6 +115,8 @@ public:
 		AdaCostume Ada;
 	} CostumeOverride;
 
+	bool bOverrideDifficulty = false;
+	GameDifficulty NewDifficulty = GameDifficulty::Medium;
 	bool bAshleyJPCameraAngles = false;
 	bool bRestoreDemoVideos = true;
 	bool bRestoreAnalogTitleScroll = true;
@@ -136,8 +138,10 @@ public:
 	bool bForceETSApplyScale = false;
 	bool bEnableNTSCMode = false;
 	bool bLimitMatildaBurst = false;
+	bool bSeparateWaysDifficultyMenu = true;
+	bool bAlwaysShowOriginalTitleBackground = false;
 	bool bShowGameOutput = false;
-
+  
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;
 	bool bRaiseVertexAlloc = true;
@@ -269,4 +273,6 @@ namespace re4t
 
 extern const char* sLeonCostumeNames[5];
 extern const char* sAshleyCostumeNames[3];
-extern const char* sAdaCostumeNames[3];
+extern const char* sAdaCostumeNames[4];
+
+extern const char* sGameDifficultyNames[7];
