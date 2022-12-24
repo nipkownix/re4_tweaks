@@ -105,33 +105,35 @@ public:
 	bool bMultithreadFix = true;
 	bool bPrecacheModels = false;
 
-	// MISC
-	std::string sWrappedDllPath = "";
-	bool bNeverCheckForUpdates = false;
+	// GAMEPLAY
 	bool bAshleyJPCameraAngles = false;
-	bool bRestoreDemoVideos = true;
-	bool bRestoreAnalogTitleScroll = true;
-	int iViolenceLevelOverride = -1;
-	bool bRifleScreenShake = false;
-	bool bAllowSellingHandgunSilencer = true;
-	bool bAllowMafiaLeonCutscenes = true;
 	bool bSilenceArmoredAshley = false;
+	bool bSeparateWaysDifficultyMenu = true;
+	bool bEnableNTSCMode = false;
 	bool bAllowAshleySuplex = false;
 	bool bAllowMatildaQuickturn = false;
 	bool bFixDitmanGlitch = false;
+	bool bAllowSellingHandgunSilencer = true;
 	bool bUseSprintToggle = false;
+	bool bRifleScreenShake = false;
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
+	bool bLimitMatildaBurst = false;
+
+	// MISC
+	std::string sWrappedDllPath = "";
+	bool bNeverCheckForUpdates = false;
+	bool bRestoreDemoVideos = true;
+	bool bRestoreAnalogTitleScroll = true;
+	int iViolenceLevelOverride = -1;
+	bool bAllowMafiaLeonCutscenes = true;
 	bool bSkipIntroLogos = false;
 	bool bSkipMenuFades = false;
 	bool bEnableDebugMenu = false;
+	bool bShowGameOutput = false;
 	bool bEnableModExpansion = false;
 	bool bForceETSApplyScale = false;
-	bool bEnableNTSCMode = false;
-	bool bLimitMatildaBurst = false;
-	bool bSeparateWaysDifficultyMenu = true;
 	bool bAlwaysShowOriginalTitleBackground = false;
-	bool bShowGameOutput = false;
   
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;
