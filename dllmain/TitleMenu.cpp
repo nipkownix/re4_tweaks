@@ -140,6 +140,10 @@ void re4t::init::TitleMenu()
 					regs.eax = TTL_CMD_LEVEL;
 			}
 		}; injector::MakeInline<titleMenuSelect_SkipLevelSelect>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
+		// Japanese: ignore language_8 check in the TTL_CMD_START case
+		pattern = hook::pattern("38 59 08 0F 84 09 0B 00 00");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(3), 6); // titleMain
 	}
 
 	// Add Professional mode select to Separate Ways
