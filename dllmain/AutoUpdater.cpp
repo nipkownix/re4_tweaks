@@ -339,19 +339,19 @@ void AutoUpdate::RenderUI()
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(16.0f, 13.0f));
 			if (ImGui::BeginTable("chnglogtbl", 1, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 			{
+				ImGui::TableNextColumn();
+
 				for (unsigned int i = 0; i < description_lines.size(); i++)
 				{
-					// Don't add a bg for empty lines, add Dummy instead
+					// Don't add a bg for empty lines
 					if (description_lines[i].empty() || (description_lines[i].size() == 1 && description_lines[i][0] == '\n'))
 					{
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi * re4t::cfg->fFontSizeScale));
 						continue;
 					}
 
 					// Only add bg for lines starting with a dash
 					if (description_lines[i][0] != '-')
 					{
-						ImGui::TableNextColumn();
 						ImGui::TextWrapped(description_lines[i].c_str());
 						continue;
 					}
