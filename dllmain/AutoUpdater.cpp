@@ -8,8 +8,9 @@
 #include "resource.h"
 #include <miniz/miniz.h>
 #include "UI_Utility.h"
-#pragma comment(lib, "urlmon.lib")
-using json = nlohmann::json;
+#include <wininet.h>
+
+using json = nlohmann::ordered_json;
 
 AutoUpdate updt;
 
@@ -33,53 +34,52 @@ void updateCheck()
 		return;
 	}
 
-	// Check for update using GH API
-	CComPtr<IStream> pStream;
-	HRESULT hr = URLOpenBlockingStreamW(nullptr, L"https://api.github.com/repos/nipkownix/re4_tweaks/releases?per_page=1", &pStream, 0, nullptr);
+	// Check for updates using GitHub's API
+	HINTERNET hInternet = InternetOpenW(L"re4t", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	if (!hInternet)
+	{
+		spd::log()->info("{} -> Failed to initialize WinInet!", __FUNCTION__);
+		
+		#ifdef VERBOSE
+		con.log("AutoUpdate: Failed to initialize WinInet!");
+		#endif 
+		
+		updt.UpdateStatus = UpdateStatus::Finished;
 
-	if (FAILED(hr))
+		return;
+	}
+
+	HINTERNET hUrl = InternetOpenUrlW(hInternet, L"https://api.github.com/repos/nipkownix/re4_tweaks/releases?per_page=1", NULL, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE, 0);
+	if (!hUrl)
 	{
 		spd::log()->info("{} -> Failed to connect to GitHub!", __FUNCTION__);
-
+		
 		#ifdef VERBOSE
 		con.log("AutoUpdate: Failed to connect to GitHub!");
 		#endif 
 
 		updt.UpdateStatus = UpdateStatus::Finished;
 
+		InternetCloseHandle(hInternet);
 		return;
 	}
 
-	// Download json from API
-	char buffer[4096];
+	// Read the data from the stream into json_str
+	const int BUFFER_SIZE = 4096;
+	char buffer[BUFFER_SIZE];
 	std::string json_str;
-	json json_obj;
-
-	do
+	DWORD bytesRead;
+	while (InternetReadFile(hUrl, buffer, BUFFER_SIZE, &bytesRead) && bytesRead > 0)
 	{
-		DWORD bytesRead = 0;
-		hr = pStream->Read(buffer, sizeof(buffer), &bytesRead);
-		buffer[bytesRead] = 0;
-
-		if (bytesRead > 0)
-		{
-			json_str.append(buffer, bytesRead);
-		}
-	} while (SUCCEEDED(hr) && hr != S_FALSE);
-
-	if (FAILED(hr))
-	{
-		spd::log()->info("{} -> Failed to get json from GitHub!", __FUNCTION__);
-
-		#ifdef VERBOSE
-		con.log("AutoUpdate: Failed to download json from GitHub!");
-		#endif 
-
-		updt.UpdateStatus = UpdateStatus::Finished;
-
-		return;
+		json_str.append(buffer, bytesRead);
 	}
 
+	// Close the handles
+	InternetCloseHandle(hUrl);
+	InternetCloseHandle(hInternet);
+
+	// Parse JSON
+	json json_obj;
 	try
 	{
 		json_obj = json::parse(json_str);

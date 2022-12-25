@@ -67,7 +67,7 @@
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>..\external\freetype\lib\debug_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>freetype.lib;wininet.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
@@ -99,7 +99,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>..\external\freetype\lib\release_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>freetype.lib;wininet.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(TargetFileName)" "%BIO4_BIN%\$(TargetFileName)"</Command>
