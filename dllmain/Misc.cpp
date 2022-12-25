@@ -400,6 +400,7 @@ void Install_LangLogHook()
 }
 
 bool bShouldReload = false;
+bool* ActBtn_m_active_flag_42;
 BOOL (*joyKamae_orig)();
 BOOL joyKamae_Hook()
 {
@@ -417,7 +418,9 @@ BOOL joyKamae_Hook()
 	}
 	else if (re4t::cfg->bAllowReloadWithoutAiming_controller && isController())
 	{
-		reloadKeyCheck = true;
+		// Don't check for the reload key press if there's an active on-screen prompt
+		if (!*ActBtn_m_active_flag_42)
+			reloadKeyCheck = true;
 
 		// Change controller reload key, since the default is also used for sprinting when not aiming
 		switch (SystemSavePtr()->pad_type_B) {
@@ -549,6 +552,10 @@ void re4t::init::Misc()
 		// PlReloadDirect is used to skip the camera change when you press the aim button (checked in cPlayer::isKamae)
 		pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? 3C ? 74 ? 3C ? 74 ? B8 ? ? ? ? C3");
 		PlReloadDirect = (bool*)*pattern.count(1).get(0).get<uint32_t*>(2);
+
+		// Grab a pointer to cActionButton's "m_active_flag".
+		pattern = hook::pattern("80 3D ? ? ? ? ? 75 ? 6A ? E8 ? ? ? ? 83 C4 ? EB");
+		ActBtn_m_active_flag_42 = (bool*)*pattern.count(1).get(0).get<uint32_t*>(2);
 	}
 
 	// Hook SsTermMain MDT reading functions so we can load loose file instead
