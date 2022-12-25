@@ -41,6 +41,16 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **Raw mouse input** - Makes the game use Raw Input for aiming and turning. Greatly improves mouse input by removing negative/positive accelerations that were being applied both by the game and by Direct Input.
 
+* **Replace framelimiter** - Implements a new reduced-CPU-usage FPS limiter.
+
+* **Vulkan renderer** - Enables the use of the DXVK-based vulkan renderer, which provides better performance on newer hardware.
+
+* **Multithread Fix** - Enables fixes for multithreaded DirectX9, giving a slight performance boost.
+
+* **Restore demo videos** - Restores the playback of demo videos that play when the game is idle at the main menu or the "press any key" screen for about 20 seconds. More info in the config menu/.ini file.
+
+* **NTSC Mode** - Unlocks minor difficulty boosts previously exclusive to the NTSC console versions of RE4.
+
  * **DetachCameraFromAim** - When using the "Modern" mouse setting, the game locks the camera position to the aiming position, making both move together. Although this is the expected behavior in most games, some people might prefer to keep the original camera behavior while also having the benefits from "Modern" aiming. Enabling this will also restore the horizontal aiming sway that was lost when the devs implemented "Modern" aiming.
 
  * **Fix sniper zoom** - When playing with keyboard and mouse, this fixes an annoying bug which would cause your camera to be off-center after you zoomed in with a sniper rifle.
@@ -74,6 +84,8 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
 
  * **60 FPS fixes** - Tries to fix some issues left by the people who created the 60 FPS mode in this port. Currently, it changes the following:
     * Fixes the speed of falling items, making them not fall at double speed. This issue was one of the first issues people noticed (when this port was still being teased in trailers), but Q-LOC never fixed it, even after releasing 6 patches.
+    * Fixes the speed of opening compartments such as drawers, cabinets, chests, boxes, shelves, etc.
+    * Fixes the speed of moving geometry such as: doors, passages, gates, ceilings, etc.
 	* When running in 60 FPS, some QTEs require extremely fast button presses to work. This gets even worse in Professional difficulty, making it seem almost impossible to survive the minecart and the statue bridge QTEs. This fix makes QTEs that involve rapid button presses much more forgiving.
 	* Makes Ashley's bust physics consistent between 30 and 60FPS
 	* Makes backwards-turn speed consistent between 30 and 60FPS
@@ -113,9 +125,16 @@ More info in the .ini file.
  
  * **RaiseInventoryAlloc** - Allocate more memory for the inventory screen, preventing crashes with high-poly models inside ss_pzzl.dat.
 
+ * **ModExpansion** - Enables patches/hooks for expanded modding capabilities, such as allowing enemy speed & scale to be defined when spawning. (See https://github.com/nipkownix/re4_tweaks/wiki/Modding-Enhancements#mod-expansion for more info)
+
+* **Command-line params support** - See https://github.com/nipkownix/re4_tweaks/wiki/Modding-Enhancements#command-line-parameters for more info
+
+* **(Optional) Trainer section** - Allows you to modify various aspects of the game during gameplay.
+
+
 ### Installation
 
-Extract dinput8.dll and dinput8.ini to "Steam\steamapps\common\Resident Evil 4\Bin32".
+Extract the "re4_tweaks" folder, dinput8.dll and dinput8.ini to "Steam\steamapps\common\Resident Evil 4\Bin32".
 Options can be configured either by manually editing dinput8.ini, or by pressing F1 to bring up the [in-game configuration menu](https://raw.githubusercontent.com/nipkownix/nipkownix.github.io/master/assets/img/RE4T/cfgMenu.png).
 
 **Linux** users need to add **WINEDLLOVERRIDES="dinput8=n,b" %command%** into Resident Evil 4’s Steam's launch options.
