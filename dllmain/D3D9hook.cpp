@@ -44,19 +44,29 @@ static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 			}
 
 			IDirect3D9Ex* pDirect3D = nullptr;
-			dxvk::CreateD3D9(false, &pDirect3D);
 
-			if (pDirect3D->GetAdapterCount() < 1)
+			// Try to create DXVK instance, fallback to native d3d9 if any problem occurs
+			try
 			{
-				spd::log()->info("{} -> Failed to get Vulkan adapter! Falling back to D3D9", __FUNCTION__);
+				dxvk::CreateD3D9(false, &pDirect3D);
 
-				// Cleanup
-				pDirect3D->Release();
-				pDirect3D = nullptr;
+				if (pDirect3D->GetAdapterCount() < 1)
+				{
+					spd::log()->info("{} -> Failed to get Vulkan adapter! Falling back to D3D9", __FUNCTION__);
+
+					// Cleanup
+					pDirect3D->Release();
+					pDirect3D = nullptr;
+				}
+				else
+				{
+					return new hook_Direct3D9(pDirect3D);
+				}
 			}
-			else
+			catch (const dxvk::DxvkError& e) 
 			{
-				return new hook_Direct3D9(pDirect3D);
+				spd::log()->info("{} -> DXVK error: {}", __FUNCTION__, e.message());
+				spd::log()->info("{} -> Falling back to D3D9", __FUNCTION__);
 			}
 		}
 		else
