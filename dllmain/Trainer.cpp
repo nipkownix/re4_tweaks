@@ -3190,6 +3190,10 @@ void Trainer_RenderUI(int columnCount)
 												itmPtr->setReloadSpeed(customReloadSpeed);
 												itmPtr->setCapacity(customCapacity);
 
+												// update weapon power globals if this is the currently equipped weapon
+												if (itmPtr == ItemMgr->m_pWep_C)
+													ItemMgr->arm(itmPtr);
+
 												ImGui::CloseCurrentPopup();
 											}
 
