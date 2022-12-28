@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 #include <map>
-#include "ConsoleWnd.h"
+#include "../dllmain/ConsoleWnd.h"
 #include "log.h"
 #include <shellapi.h>
 

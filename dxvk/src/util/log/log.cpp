@@ -2,7 +2,6 @@
 
 #include "../util_env.h"
 #include "../../../../dllmain/Settings.h"
-#include <inireader/IniReader.h>
 
 namespace dxvk {
   
@@ -82,13 +81,13 @@ namespace dxvk {
       { "none",  LogLevel::None  },
     }};
 
-    CIniReader iniReader;
-    const std::string logLevelStr = iniReader.ReadString("VULKAN", "DXVK_LOG_LEVEL", "none");
-    
-    for (const auto& pair : logLevels) {
-      if (logLevelStr == pair.first)
-        return pair.second;
-    }
+   // iniReader ini;
+   // const std::string logLevelStr = ini.getString("VULKAN", "DXVK_LOG_LEVEL", "none");
+   //
+   // for (const auto& pair : logLevels) {
+   //   if (logLevelStr == pair.first)
+   //     return pair.second;
+   // }
 
     return LogLevel::Info;
   }
