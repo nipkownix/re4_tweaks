@@ -4,6 +4,7 @@
 #include "input.hpp"
 #include "Game.h"
 #include "ConsoleWnd.h"
+#include <iniReader.h>
 
 WNDPROC oWndProc;
 HWND hWindow;
@@ -124,13 +125,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				con.log("curPosY = %d", curPosX);
 				#endif
 
-				CIniReader iniReader("");
+				iniReader iniReader("");
 
 				re4t::cfg->iWindowPositionX = curPosX;
 				re4t::cfg->iWindowPositionY = curPosY;
 
-				iniReader.WriteInteger("DISPLAY", "WindowPositionX", curPosX);
-				iniReader.WriteInteger("DISPLAY", "WindowPositionY", curPosY);
+				iniReader.writeInt("DISPLAY", "WindowPositionX", curPosX);
+				iniReader.writeInt("DISPLAY", "WindowPositionY", curPosY);
 			}
 			break;
 

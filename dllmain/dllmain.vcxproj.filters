@@ -1632,6 +1632,9 @@
     <ClInclude Include="SDK\message.h">
       <Filter>dllmain\SDK</Filter>
     </ClInclude>
+    <ClInclude Include="..\includes\iniReader.h">
+      <Filter>includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

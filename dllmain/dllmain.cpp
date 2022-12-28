@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <fstream>
 #include "dllmain.h"
 #include "AutoUpdater.h"
 #include "ConsoleWnd.h"
@@ -13,16 +14,6 @@
 
 HMODULE g_module_handle = nullptr;
 
-void HandleAppID()
-{
-	//Create missing steam_appid file
-	if (!std::filesystem::exists("steam_appid.txt") && std::filesystem::exists("bio4.exe")) {
-		std::ofstream appid("steam_appid.txt");
-		appid << "254700";
-		appid.close();
-	}
-}
-
 void Init_Main()
 {
 	con.log("Big ironic thanks to QLOC S.A.");
@@ -32,7 +23,12 @@ void Init_Main()
 		return;
 	
 	// Make sure steam_appid.txt exists
-	HandleAppID();
+	if (!std::filesystem::exists("steam_appid.txt") && std::filesystem::exists("bio4.exe"))
+	{
+		std::ofstream appid("steam_appid.txt");
+		appid << "254700";
+		appid.close();
+	}
 
 	// Initial logging
 	std::string commit = GIT_CUR_COMMIT;

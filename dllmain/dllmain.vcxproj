@@ -56,7 +56,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\ImGuiFileDialog;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\imgui;..\external\ImGuiFileDialog;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -85,7 +85,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\inireader;..\external\imgui;..\external\ImGuiFileDialog;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\settings;..\includes;..\dxvk\include;..\external;..\external\freetype\include;..\external\ModUtils;..\external\injector\include;..\external\spdlog\include;..\external\imgui;..\external\ImGuiFileDialog;..\external\DirectXMath\Inc;..\external\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -981,6 +981,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="..\includes\FAhashes.h" />
     <ClInclude Include="..\includes\FAprolight.hpp" />
     <ClInclude Include="..\includes\IBMPlexSansJP_M.hpp" />
+    <ClInclude Include="..\includes\iniReader.h" />
     <ClInclude Include="..\includes\log.h" />
     <ClInclude Include="..\includes\ModuleList.hpp" />
     <ClInclude Include="..\settings\settings.ini">
