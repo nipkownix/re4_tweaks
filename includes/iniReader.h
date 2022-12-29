@@ -14,52 +14,38 @@
 class iniReader
 {
 public:
+    // Use .ini path/filename from parameter
     iniReader(const std::string& filename)
     {
         // Store the filename
         filename_ = filename;
 
-        // Open the file for reading
-        std::ifstream file(filename);
-
-        // Read the file line by line
-        std::string line;
-        std::string section;
-        while (std::getline(file, line))
-        {
-            // Skip comments
-            if (line[0] == '#' || line[0] == ';')
-                continue;
-
-            // Check if this is a section header
-            size_t separator_pos = line.find('=');
-            if (line[0] == '[')
-            {
-                // Get section name
-                size_t closing_bracket_pos = line.find(']');
-                if (closing_bracket_pos != std::string::npos)
-                    section = line.substr(1, closing_bracket_pos - 1);
-            }
-            else if (separator_pos != std::string::npos) // Should be key-value pair then
-            {
-                // Extract the key and value strings
-                std::string key = line.substr(0, separator_pos);
-                std::string value = line.substr(separator_pos + 1);
-
-                // Remove leading and trailing white spaces from key and value
-                while (!key.empty() && key.back() == ' ')
-                    key.pop_back();
-                while (!value.empty() && (value.back() == ' ' || value.back() == '\t'))
-                    value.pop_back();
-                while (!value.empty() && (value.front() == ' ' || value.front() == '\t'))
-                    value.erase(0, 1);
-
-                // Store the pair in our values map
-                values_[section + "." + key] = value;
-            }
-        }
+        // Read and parse the INI file
+        parseIniFile();
     }
 
+    // Find the .ini path/filename using the module path
+    iniReader()
+    {
+        // Get module handle
+        HMODULE hModule = nullptr;
+        GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, reinterpret_cast<LPCWSTR>(&StrToUpper), &hModule);
+
+        // Get the full module path
+        wchar_t pathBuf[MAX_PATH];
+        GetModuleFileNameW(hModule, pathBuf, MAX_PATH);
+
+        // wstring -> string
+        std::string modulePath = WstrToStr(pathBuf);
+
+        // Store the filename
+        filename_ = modulePath.substr(0, modulePath.find_last_of('.')) + ".ini";
+
+        // Read and parse the INI file
+        parseIniFile();
+    }
+
+    // Destructor
     ~iniReader()
     {
         if (argv)
@@ -218,6 +204,49 @@ public:
 private:
     std::string filename_;
     std::map<std::string, std::string> values_;
+
+    void parseIniFile()
+    {
+        // Open the file for reading
+        std::ifstream file(filename_);
+
+        // Read the file line by line
+        std::string line;
+        std::string section;
+        while (std::getline(file, line))
+        {
+            // Skip comments
+            if (line[0] == '#' || line[0] == ';')
+                continue;
+
+            // Check if this is a section header
+            size_t separator_pos = line.find('=');
+            if (line[0] == '[')
+            {
+                // Get section name
+                size_t closing_bracket_pos = line.find(']');
+                if (closing_bracket_pos != std::string::npos)
+                    section = line.substr(1, closing_bracket_pos - 1);
+            }
+            else if (separator_pos != std::string::npos) // Should be key-value pair then
+            {
+                // Extract the key and value strings
+                std::string key = line.substr(0, separator_pos);
+                std::string value = line.substr(separator_pos + 1);
+
+                // Remove leading and trailing white spaces from key and value
+                while (!key.empty() && key.back() == ' ')
+                    key.pop_back();
+                while (!value.empty() && (value.back() == ' ' || value.back() == '\t'))
+                    value.pop_back();
+                while (!value.empty() && (value.front() == ' ' || value.front() == '\t'))
+                    value.erase(0, 1);
+
+                // Store the pair in our values map
+                values_[section + "." + key] = value;
+            }
+        }
+    }
 
     // CommandLine overrides
     LPWSTR* argv = nullptr;

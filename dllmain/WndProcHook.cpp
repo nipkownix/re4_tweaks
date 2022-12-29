@@ -125,13 +125,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				con.log("curPosY = %d", curPosX);
 				#endif
 
-				iniReader iniReader("");
+				iniReader ini;
 
 				re4t::cfg->iWindowPositionX = curPosX;
 				re4t::cfg->iWindowPositionY = curPosY;
 
-				iniReader.writeInt("DISPLAY", "WindowPositionX", curPosX);
-				iniReader.writeInt("DISPLAY", "WindowPositionY", curPosY);
+				ini.writeInt("DISPLAY", "WindowPositionX", curPosX);
+				ini.writeInt("DISPLAY", "WindowPositionY", curPosY);
 			}
 			break;
 
