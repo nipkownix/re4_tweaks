@@ -118,7 +118,6 @@ void re4t_cfg::ReadSettings()
 	auto hdproject_path = override_path + sHDProjectOverrideName;
 	if (std::filesystem::exists(hdproject_path))
 	{
-		re4t::cfg->bIsUsingHDProject = true;
 		ReadSettings(hdproject_path);
 	}
 }

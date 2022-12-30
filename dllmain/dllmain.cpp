@@ -43,6 +43,23 @@ void Init_Main()
 	spd::log()->info("Running from: \"{}\"", WstrToStr(rootPath));
 	spd::log()->info("Game version: {}", GameVersion());
 
+	// Detected if the HD Project is being used and apply changes needed by it
+	const std::string bio4Path = std::filesystem::canonical(rootPath).parent_path().string() + "\\BIO4\\";
+	const std::string doorse012_xsb_path = bio4Path + "snd\\doorse012.xsb";
+	const std::string doorse012_xwb_path = bio4Path + "snd\\doorse012.xwb";
+
+	if (std::filesystem::exists(doorse012_xsb_path) && std::filesystem::exists(doorse012_xwb_path))
+	{
+		#ifdef VERBOSE
+		con.log("RE4 HD Project detected");
+		#endif
+
+		spd::log()->info("RE4 HD Project detected");
+
+		re4t::cfg->bIsUsingHDProject = true;
+		re4t::init::HDProject();
+	}
+
 	// Init input-related hooks and populate keymap (needed before we ReadSettings(), otherwise, parsing hotkeys will fail)
 	pInput->init();
 
@@ -98,10 +115,6 @@ void Init_Main()
 	re4t::init::TitleMenu();
 
 	Trainer_Init();
-
-	// Apply changes needed by the HD Project
-	if (re4t::cfg->bIsUsingHDProject)
-		re4t::init::HDProject();
 }
 
 // Dll main function
