@@ -1028,7 +1028,7 @@ bool re4t::init::Game()
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::WeaponId2MaxLevel);
 
 	// WeaponId2ChargeNum funcptr
-	pattern = hook::pattern("E8 ? ? ? ? 66 8B 56 08 66 C1 EA 03 83 C4 08 66 3B D0 73 67 0F B6");
+	pattern = hook::pattern("E8 ? ? ? ? B9 ? ? ? ? 83 C4 ? 66 3B ? 0F 84");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), WeaponId2ChargeNum);
 
 	// OptionOpenFlag <- Maybe should be somewhere else in the SDK/Game.cpp?
