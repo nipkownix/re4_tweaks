@@ -1542,6 +1542,22 @@ void cfgMenuRender()
 						ImGui::TextWrapped("(will only take effect when SkipIntroLogos is also set to true)");
 					}
 
+					// SpeedUpQuitGame
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("SpeedUpQuitGame", &re4t::cfg->bSpeedUpQuitGame))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Speeds up the unnecessarily slow screen fade that takes place after you press \"Quit\" in the game's main menu.");
+					}
+
 					// EnableDebugMenu
 					{
 						ImGui_ColumnSwitch();

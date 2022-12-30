@@ -314,6 +314,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
 	re4t::cfg->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	re4t::cfg->bSkipMenuFades = iniReader.ReadBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+	re4t::cfg->bSpeedUpQuitGame = iniReader.ReadBoolean("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
 	re4t::cfg->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	re4t::cfg->bShowGameOutput = iniReader.ReadBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
 	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
@@ -841,6 +842,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
 	iniReader.WriteBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+	iniReader.WriteBoolean("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
 	iniReader.WriteBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	iniReader.WriteBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
@@ -1027,6 +1029,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SkipMenuFades", re4t::cfg->bSkipMenuFades ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ShowGameOutput", re4t::cfg->bShowGameOutput ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");

@@ -129,6 +129,7 @@ public:
 	bool bAllowMafiaLeonCutscenes = true;
 	bool bSkipIntroLogos = false;
 	bool bSkipMenuFades = false;
+	bool bSpeedUpQuitGame = true;
 	bool bEnableDebugMenu = false;
 	bool bShowGameOutput = false;
 	bool bEnableModExpansion = false;

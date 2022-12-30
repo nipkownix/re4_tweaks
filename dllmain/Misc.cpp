@@ -1179,6 +1179,15 @@ void re4t::init::Misc()
 		spd::log()->info("SkipIntroLogos enabled");
 	}
 
+	// Speed up "quit game" fade
+	if (re4t::cfg->bSpeedUpQuitGame)
+	{
+		auto pattern = hook::pattern("6A ? 53 E8 ? ? ? ? 53 53 53 53 6A ? 53 E8");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(1), (uint8_t)0x0A, true); // push 5A -> push 0A
+
+		spd::log()->info("SpeedUpQuitGame enabled");
+	}
+
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
 	re4t::init::ToolMenu();
 	if (re4t::cfg->bEnableDebugMenu)
