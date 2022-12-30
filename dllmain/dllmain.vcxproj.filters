@@ -574,6 +574,9 @@
     <ClCompile Include="Trainer_ItemMgr.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="DisplayModeFix.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\injector\include\injector\assembly.hpp">

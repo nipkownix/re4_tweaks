@@ -36,7 +36,7 @@ public:
 	bool bRemove16by10BlackBars = true;
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
-	int iCustomRefreshRate = -1;
+	bool bOnlyShowHighestRefreshRates = false;
 	bool bOverrideLaserColor = false;
 	bool bRainbowLaser = false;
 	int iLaserR = 255;

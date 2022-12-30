@@ -469,16 +469,14 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnSwitch();
 
-						if (ImGui::Checkbox("DisableVsync", &re4t::cfg->bDisableVsync))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableVsync", &re4t::cfg->bDisableVsync);
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
+
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Change the game's resolution or restart the game for this option to take effect.");
 					}
 
 					// Aspect ratio tweaks
@@ -557,29 +555,15 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Allows game to use non - 60Hz refresh rates in fullscreen, fixing the black screen issue people have when starting the game.");
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui_ItemSeparator2();
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-						ImGui::Text("CustomRefreshRate");
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-						ImGui::PushItemWidth(100 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 						ImGui::BeginDisabled(!re4t::cfg->bFixDisplayMode);
-						ImGui::InputInt("Hz", &re4t::cfg->iCustomRefreshRate);
-						ImGui::EndDisabled();
-						ImGui::PopItemWidth();
-
-						if (ImGui::IsItemEdited())
+						if (ImGui::Checkbox("OnlyShowHighestRefreshRates", &re4t::cfg->bOnlyShowHighestRefreshRates))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
-
-						ImGui::Spacing();
-
-						ImGui::TextWrapped("Determines a custom refresh rate for the game to use.");
-						ImGui::TextWrapped("Requires FixDisplayMode to be enabled.");
-						ImGui::TextWrapped("-1 will make it try to use the current refresh rate as reported by Windows.");
+						ImGui::TextWrapped("When using FixDisplayMode, only display the highest refresh rate available for each resolution in the game's config menu.");
+						ImGui::EndDisabled();
 					}
 
 					// OverrideLaserColor

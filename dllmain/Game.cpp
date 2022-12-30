@@ -116,6 +116,12 @@ namespace bio4 {
   
 	BOOL(__cdecl* joyFireTrg)();
 	BOOL(__cdecl* joyFireOn)();
+
+	namespace g_D3D {
+		uint32_t* RefreshRate = nullptr;
+		uint32_t* Width_1 = nullptr;
+		uint32_t* Height_1 = nullptr;
+	}
 };
 
 // Current play time (H, M, S)
@@ -367,9 +373,23 @@ bool GameVersionIsDebug()
 }
 
 uint32_t* ptrGameVariableFrameRate;
-int GameVariableFrameRate()
+int GetGameVariableFrameRate()
 {
 	return *(int32_t*)(ptrGameVariableFrameRate);
+}
+
+void SetGameVariableFrameRate(int newRate)
+{
+	*(int32_t*)(ptrGameVariableFrameRate) = newRate;
+}
+
+INIConfig* INIConfig_ptr = nullptr;
+INIConfig* g_INIConfig()
+{
+	if (!INIConfig_ptr)
+		return nullptr;
+
+	return INIConfig_ptr;
 }
 
 int CurrentFrameRate()
@@ -875,6 +895,19 @@ bool re4t::init::Game()
 	auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
 	ptrGameVariableFrameRate = *pattern.count(1).get(0).get<uint32_t*>(2);
 
+	// Get pointer to QLOC's INIConfig
+	pattern = hook::pattern("8B 8D ? ? ? ? 51 E8 ? ? ? ? 83 7E");
+	struct INIConfig_get
+	{
+		void operator()(injector::reg_pack& regs)
+		{
+			// Code we replaced
+			regs.ecx = *(uint32_t*)(regs.ebp - 0xA08);
+
+			INIConfig_ptr = (INIConfig*)regs.esi;
+		}
+	}; injector::MakeInline<INIConfig_get>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+	
 	// LastUsedDevice pointer
 	pattern = hook::pattern("A1 ? ? ? ? 85 C0 74 ? 83 F8 ? 74 ? 81 F9");
 	ptrLastUsedDevice = *pattern.count(1).get(0).get<uint32_t*>(1);
@@ -1191,6 +1224,14 @@ bool re4t::init::Game()
 
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 04 4E 75 C1 8B 0D ? ? ? ? 8B 91");
 	ReadCall(pattern.count(2).get(0).get<uint8_t>(0), bio4::SceSleep);
+
+	// Get pointer to some D3D globals
+	pattern = hook::pattern("89 35 ? ? ? ? 89 15 ? ? ? ? A3 ? ? ? ? 89");
+	bio4::g_D3D::RefreshRate = (uint32_t*)*pattern.count(1).get(0).get<uint32_t>(2);
+
+	pattern = hook::pattern("8B 15 ? ? ? ? 3B 14 ? 75 ? 8B 15 ? ? ? ? 3B 54 38");
+	bio4::g_D3D::Width_1 = (uint32_t*)*pattern.count(1).get(0).get<uint32_t>(2);
+	bio4::g_D3D::Height_1 = bio4::g_D3D::Width_1 + 1;
 
 	// Store current game time that's being calculated inside GetGameTime
 	pattern = hook::pattern("8B 55 ? 8B 45 ? 51 8B 4D ? 52 50 51 68");

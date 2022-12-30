@@ -130,7 +130,7 @@ void ReadSettingsIni(std::wstring ini_path)
 
 		re4t::cfg->bFixDPIScale = ini.getBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 		re4t::cfg->bFixDisplayMode = ini.getBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-		re4t::cfg->iCustomRefreshRate = ini.getInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		re4t::cfg->bOnlyShowHighestRefreshRates = ini.getBool("DISPLAY", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates);
 		re4t::cfg->bOverrideLaserColor = ini.getBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
 		re4t::cfg->bRainbowLaser = ini.getBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
@@ -600,7 +600,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
 		ini.setBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 		ini.setBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-		ini.setInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		ini.setBool("DISPLAY", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates);
 		ini.setBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
 		ini.setBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
@@ -936,7 +936,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", re4t::cfg->bFixDPIScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", re4t::cfg->bFixDisplayMode ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RainbowLaser", re4t::cfg->bRainbowLaser ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LaserR", re4t::cfg->iLaserR);

@@ -6,8 +6,6 @@
 #include "Settings.h"
 #include <timeapi.h>
 
-int g_UserRefreshRate;
-
 uintptr_t ptrGXCopyTex;
 uintptr_t ptrAfterItemExamineHook;
 uintptr_t ptrFilter03;
@@ -103,7 +101,7 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 		framelimiterInited = true;
 	}
 
-	int gameFramerate = GameVariableFrameRate();
+	int gameFramerate = GetGameVariableFrameRate();
 
 	// The games IsAliveEvt check seems to (indirectly) result in framelimiter loop limiting to 60FPS
 	// maybe a remnant of some time when more framerate options were available?
@@ -272,6 +270,8 @@ void re4t::init::MultithreadFix()
 
 void re4t::init::DisplayTweaks()
 {
+	re4t::init::DisplayModeFix();
+
 	// Implements new reduced-CPU-usage limiter
 	if (re4t::cfg->bReplaceFramelimiter)
 	{
@@ -344,103 +344,6 @@ void re4t::init::DisplayTweaks()
 		}; injector::MakeInline<WriteIniHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 
 		spd::log()->info("Vsync disabled");
-	}
-
-	// Game is hardcoded to only allow 60Hz display modes for some reason...
-	// Hook func that runs EnumAdapterModes & checks for 60Hz modes, make it use the refresh rate from Windows instead
-	if (re4t::cfg->bFixDisplayMode)
-	{
-		if (re4t::cfg->iCustomRefreshRate > -1)
-		{
-			g_UserRefreshRate = re4t::cfg->iCustomRefreshRate;
-		}
-		else
-		{
-			DISPLAY_DEVICE device{ 0 };
-			device.cb = sizeof(DISPLAY_DEVICE);
-			DEVMODE lpDevMode{ 0 };
-			if (EnumDisplayDevices(NULL, 0, &device, 0) == false ||
-				EnumDisplaySettings(device.DeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode) == false)
-			{
-				#ifdef VERBOSE
-				con.log("Couldn't read the display refresh rate. Using fallback value.");
-				#endif
-
-				spd::log()->info("FixDisplayMode -> Couldn't read the display refresh rate. Using fallback value.");
-
-				g_UserRefreshRate = 60; // Fallback value.
-			}
-			else
-			{
-				#ifdef VERBOSE
-				con.log("Device 0 name: %s", device.DeviceName);
-				#endif
-				g_UserRefreshRate = lpDevMode.dmDisplayFrequency;
-
-				// Log display modes for troubleshooting
-				if (re4t::cfg->bVerboseLog)
-				{
-					DEVMODE dm = { 0 };
-					dm.dmSize = sizeof(dm);
-					spd::log()->info("+----------+----------+");
-					spd::log()->info("| Display modes       |");
-					spd::log()->info("+----------+----------+");
-					for (int iModeNum = 0; EnumDisplaySettings(device.DeviceName, iModeNum, &dm) != 0; iModeNum++)
-					{
-						spd::log()->info("| {:<5}x {:<5} {:>3} Hz |", dm.dmPelsWidth, dm.dmPelsHeight, dm.dmDisplayFrequency);
-					}
-					spd::log()->info("+----------+----------+");
-				}
-			}
-		}
-
-		#ifdef VERBOSE
-		con.log("New refresh rate = %d", g_UserRefreshRate);
-		#endif
-
-		spd::log()->info("FixDisplayMode -> New refresh rate = {}", g_UserRefreshRate);
-
-		auto pattern = hook::pattern("8B 45 ? 83 F8 ? 75 ? 8B 4D ? 8B 7D ? 3B 4D");
-		struct DisplayModeFix
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				regs.eax = g_UserRefreshRate;
-				regs.ef |= (1 << regs.zero_flag);
-			}
-		}; injector::MakeInline<DisplayModeFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		// Patch function that fills resolution list, normally it filters resolutions to only 60Hz modes, which is bad for non-60Hz players...
-		// Changing it to check for desktop refresh-rate helped, but unfortunately D3D doesn't always match desktop refresh rate
-		// Luckily it turns out this function has an unused code-path which filters by checking for duplicate width/height combos instead, so any refresh rate can be allowed
-		// who knows why they chose not to use it...
-		pattern = hook::pattern("81 FA 98 26 00 00 77 ? 38 45 ? 75 ?");
-		injector::WriteMemory(pattern.count(1).get(0).get<uint8_t>(11), uint8_t(0xEB), true);
-
-		// Patch above function to only allow 59Hz+ modes
-		// (workaround for game potentially displaying invalid modes that some displays expose)
-		struct DisplayModeFilter
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				const int GameMaxHeight = 10480 - 600; // game does strange optimized check involving 600 taken away from edx...
-
-				// Game does JA after the CMP we patched, so we set ZF and CF both to 1 here
-				// then if we want game to take the JA, we clear them both
-				regs.ef |= (1 << regs.zero_flag);
-				regs.ef |= (1 << regs.carry_flag);
-
-				// Make game skip any mode under 59, since they're likely invalid
-				// (old game code would only accept 60Hz modes, so I think this is fine for us to do)
-				int refreshRate = *(int*)(regs.ebp - 0xC);
-				if (regs.edx > GameMaxHeight || refreshRate < 59)
-				{
-					// Clear both flags to make game take JA and skip this mode
-					regs.ef &= ~(1 << regs.zero_flag);
-					regs.ef &= ~(1 << regs.carry_flag);
-				}
-			}
-		}; injector::MakeInline<DisplayModeFilter>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// Apply window changes
