@@ -276,7 +276,7 @@ bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& a
 	float y_text_offset = ((p1.y - p0.y) - textHeight) * 0.5f;
 
 	float x_icon_offset = x_text_offset - iconWidth - 7.0f;
-	float y_icon_offset = y_text_offset * 1.35f;
+	float y_icon_offset = y_text_offset * 1.0f;
 
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_icon_offset, p0.y + y_icon_offset), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + x_text_offset, p0.y + y_text_offset), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
