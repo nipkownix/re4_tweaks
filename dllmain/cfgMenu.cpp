@@ -122,12 +122,43 @@ void cfgMenuRender()
 
 			ImVec2 btn_size = ImVec2(leftside_size_x - 28, 31 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 
+			// ImGui font size
+			ImGui::SetCursorPos(ImVec2(12, 0));
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 0.00f));
+			if (ImGui::Button("-"))
+			{
+				if (re4t::cfg->fFontSizeScale > 1.0f)
+				{
+					re4t::cfg->fFontSizeScale -= 0.05f;
+
+					bRebuildFont = true;
+					re4t::cfg->HasUnsavedChanges = true;
+				}
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("+"))
+			{
+				if (re4t::cfg->fFontSizeScale < 1.20f)
+				{
+					re4t::cfg->fFontSizeScale += 0.05f;
+					bRebuildFont = true;
+					re4t::cfg->HasUnsavedChanges = true;
+				}
+			}
+
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			ImGui::Text("Font Size");
+
 			// cfgMenu title
-			ImGui::SetCursorPos(ImVec2(12, 25));
+			ImGui::SetCursorPos(ImVec2(12, 45));
 
 			ImGui::Text(cfgMenuTitle.data());
 
-			ImGui::Dummy(ImVec2(30, 30 * esHook._cur_monitor_dpi));
+			ImGui::Dummy(ImVec2(30, 15 * esHook._cur_monitor_dpi));
 
 			// Display
 			ImGui::Dummy(ImVec2(0, 13 * esHook._cur_monitor_dpi)); ImGui::SameLine();
@@ -266,40 +297,17 @@ void cfgMenuRender()
 
 		// Setup top right
 		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 0.00f));
-
 			ImGui::BeginChild("top right", ImVec2(0, topright_size_y));
 
-			// Config menu font size
-			if (ImGui::Button("-"))
+			// "Pause game" option
+			if (ImGui::Checkbox("Pause game", &bPauseGameWhileInCfgMenu))
 			{
-				if (re4t::cfg->fFontSizeScale > 1.0f)
-				{
-					re4t::cfg->fFontSizeScale -= 0.05f;
-
-					bRebuildFont = true;
-					re4t::cfg->HasUnsavedChanges = true;
-				}
+				PauseGame(bCfgMenuOpen && bPauseGameWhileInCfgMenu);
 			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Keep the game frozen while the config menu is open");
 
-			ImGui::SameLine();
-
-			if (ImGui::Button("+"))
-			{
-				if (re4t::cfg->fFontSizeScale < 1.20f)
-				{
-					re4t::cfg->fFontSizeScale += 0.05f;
-					bRebuildFont = true;
-					re4t::cfg->HasUnsavedChanges = true;
-				}
-			}
-
-			ImGui::PopStyleColor();
-			ImGui::SameLine();
-			ImGui::AlignTextToFramePadding();
-			ImGui::Text("Font Size");
-
-			// Tips
+			// Unsaved changes tip
 			float tip_offset = 45.0f;
 			tip_offset *= re4t::cfg->fFontSizeScale;
 			tip_offset *= esHook._cur_monitor_dpi;
@@ -315,13 +323,20 @@ void cfgMenuRender()
 				ImGui::BulletText(txt);
 			}
 
-			if (ImGui::Checkbox("Pause game", &bPauseGameWhileInCfgMenu))
-			{
-				PauseGame(bCfgMenuOpen&& bPauseGameWhileInCfgMenu);
-			}
+			// Search bar
+			ImGui::PushID("#optionsfilter");
+			OptionsFilter.Draw("", 150.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+			ImGui::PopID();
 			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Keep the game frozen while the config menu is open");
+				ImGui::SetTooltip("Search for options in this tab");
 
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.51f, 0.00f, 0.14f, 0.00f));
+			if (ImGui::SmallButton(ICON_FA_BACKSPACE))
+				OptionsFilter.Clear();
+			ImGui::PopStyleColor();
+
+			// Restart tip
 			if (NeedsToRestart)
 			{
 				ImGui::SameLine();
@@ -355,6 +370,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// Vulkan
+					if ((OptionsFilter.PassFilter("Vulkan") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -415,6 +431,7 @@ void cfgMenuRender()
 					}
 
 					// FOVAdditional
+					if ((OptionsFilter.PassFilter("FOV") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -443,6 +460,7 @@ void cfgMenuRender()
 					}
 
 					// DisableVsync
+					if ((OptionsFilter.PassFilter("DisableVsync") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -459,6 +477,7 @@ void cfgMenuRender()
 					}
 
 					// Aspect ratio tweaks
+					if ((OptionsFilter.PassFilter("Aspect ratio UltraWideAspectSupport SideAlignHUD Stretch Black Bars") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -500,6 +519,7 @@ void cfgMenuRender()
 					}
 
 					// FixDPIScale
+					if ((OptionsFilter.PassFilter("FixDPIScale") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -516,6 +536,7 @@ void cfgMenuRender()
 					}
 
 					// FixDisplayMode
+					if ((OptionsFilter.PassFilter("Display Mode") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -557,6 +578,7 @@ void cfgMenuRender()
 					}
 
 					// OverrideLaserColor
+					if ((OptionsFilter.PassFilter("OverrideLaserColor RainbowLaser") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -590,6 +612,7 @@ void cfgMenuRender()
 					}
 
 					// RestorePickupTransparency
+					if ((OptionsFilter.PassFilter("RestorePickupTransparency") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -602,6 +625,7 @@ void cfgMenuRender()
 					}
 
 					// DisableBrokenFilter03
+					if ((OptionsFilter.PassFilter("DisableBrokenFilter03") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -615,6 +639,7 @@ void cfgMenuRender()
 					}
 
 					// FixBlurryImage
+					if ((OptionsFilter.PassFilter("FixBlurryImage") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -627,6 +652,7 @@ void cfgMenuRender()
 					}
 
 					// DisableFilmGrain
+					if ((OptionsFilter.PassFilter("DisableFilmGrain") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -639,6 +665,7 @@ void cfgMenuRender()
 					}
 
 					// FixWaterScaling
+					if ((OptionsFilter.PassFilter("FixWaterScaling") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -652,6 +679,7 @@ void cfgMenuRender()
 					}
 
 					// EnableGCBlur
+					if ((OptionsFilter.PassFilter("EnableGCBlur") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -685,6 +713,7 @@ void cfgMenuRender()
 					}
 
 					// EnableGCScopeBlur
+					if ((OptionsFilter.PassFilter("EnableGCScopeBlur") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -701,6 +730,7 @@ void cfgMenuRender()
 					}
 
 					// WindowBorderless
+					if ((OptionsFilter.PassFilter("WindowBorderless") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -742,11 +772,12 @@ void cfgMenuRender()
 			
 			if (Tab == MenuTab::Audio)
 			{
-				if (ImGui::BeginTable("Display", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
+				if (ImGui::BeginTable("Audio", 2, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
 				{
 					ImGui_ColumnInit();
 
 					// Audio volume
+					if ((OptionsFilter.PassFilter("Audio volume") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -776,6 +807,7 @@ void cfgMenuRender()
 					}
 
 					// GC sound effects
+					if ((OptionsFilter.PassFilter("RestoreGCSoundEffects") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -789,6 +821,7 @@ void cfgMenuRender()
 					}
 
 					// SilenceArmoredAshley
+					if ((OptionsFilter.PassFilter("SilenceArmoredAshley") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -813,6 +846,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// CameraImprovements
+					if ((OptionsFilter.PassFilter("CameraImprovements") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -854,6 +888,7 @@ void cfgMenuRender()
 					}
 
 					// UseMouseTurning
+					if ((OptionsFilter.PassFilter("UseMouseTurning") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -892,6 +927,7 @@ void cfgMenuRender()
 					}
 
 					// UseRawMouseInput
+					if ((OptionsFilter.PassFilter("UseRawMouseInput") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -906,6 +942,7 @@ void cfgMenuRender()
 					}
 
 					// DetachCameraFromAim
+					if ((OptionsFilter.PassFilter("DetachCameraFromAim") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -920,6 +957,7 @@ void cfgMenuRender()
 					}
 
 					// FixSniperZoom
+					if ((OptionsFilter.PassFilter("FixSniperZoom") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -932,6 +970,7 @@ void cfgMenuRender()
 					}
 
 					// FixSniperFocus
+					if ((OptionsFilter.PassFilter("FixSniperFocus") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -949,6 +988,7 @@ void cfgMenuRender()
 					}
 
 					// FixRetryLoadMouseSelector
+					if ((OptionsFilter.PassFilter("FixRetryLoadMouseSelector") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -973,6 +1013,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// FallbackToEnglishKeyIcons
+					if ((OptionsFilter.PassFilter("FallbackToEnglishKeyIcons") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -990,6 +1031,7 @@ void cfgMenuRender()
 					}
 
 					// AllowReloadWithoutAiming_kbm
+					if ((OptionsFilter.PassFilter("AllowReloadWithoutAiming") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1028,6 +1070,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// OverrideControllerSensitivity
+					if ((OptionsFilter.PassFilter("OverrideControllerSensitivity") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1051,6 +1094,7 @@ void cfgMenuRender()
 					}
 
 					// RemoveExtraXinputDeadzone
+					if ((OptionsFilter.PassFilter("RemoveExtraXinputDeadzone") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1063,6 +1107,7 @@ void cfgMenuRender()
 					}
 
 					// EnableDeadzoneOverride
+					if ((OptionsFilter.PassFilter("EnableDeadzoneOverride") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1091,6 +1136,7 @@ void cfgMenuRender()
 					}
 
 					// AllowReloadWithoutAiming_controller
+					if ((OptionsFilter.PassFilter("AllowReloadWithoutAiming") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1130,6 +1176,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// FixFallingItemsSpeed
+					if ((OptionsFilter.PassFilter("FixFallingItemsSpeed") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1142,6 +1189,7 @@ void cfgMenuRender()
 					}
 
 					// FixCompartmentsOpeningSpeed
+					if ((OptionsFilter.PassFilter("FixCompartmentsOpeningSpeed") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1154,6 +1202,7 @@ void cfgMenuRender()
 					}
 
 					// FixMovingGeometrySpeed
+					if ((OptionsFilter.PassFilter("FixMovingGeometrySpeed") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1166,6 +1215,7 @@ void cfgMenuRender()
 					}
 
 					// FixTurningSpeed
+					if ((OptionsFilter.PassFilter("FixTurningSpeed") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1178,6 +1228,7 @@ void cfgMenuRender()
 					}
 
 					// FixQTE
+					if ((OptionsFilter.PassFilter("FixQTE") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1191,6 +1242,7 @@ void cfgMenuRender()
 					}
 
 					// FixAshleyBustPhysics
+					if ((OptionsFilter.PassFilter("FixAshleyBustPhysics") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1203,6 +1255,7 @@ void cfgMenuRender()
 					}
 
 					// EnableFastMath
+					if ((OptionsFilter.PassFilter("EnableFastMath") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1220,6 +1273,7 @@ void cfgMenuRender()
 					}
 
 					// ReplaceFramelimiter
+					if ((OptionsFilter.PassFilter("ReplaceFramelimiter") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1237,6 +1291,7 @@ void cfgMenuRender()
 					}
 
 					// MultithreadFix
+					if ((OptionsFilter.PassFilter("MultithreadFix") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1254,6 +1309,7 @@ void cfgMenuRender()
 					}
 
 					// PrecacheModels
+					if ((OptionsFilter.PassFilter("PrecacheModels") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1280,6 +1336,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// AshleyJPCameraAngles
+					if ((OptionsFilter.PassFilter("AshleyJPCameraAngles") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1292,6 +1349,7 @@ void cfgMenuRender()
 					}
 
 					// SeparateWaysProfessional
+					if ((OptionsFilter.PassFilter("SeparateWaysProfessional") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1304,6 +1362,7 @@ void cfgMenuRender()
 					}
 
 					// EnableNTSCMode
+					if ((OptionsFilter.PassFilter("EnableNTSCMode") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1322,6 +1381,7 @@ void cfgMenuRender()
 					}
 
 					// AllowAshleySuplex
+					if ((OptionsFilter.PassFilter("AllowAshleySuplex") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1335,6 +1395,7 @@ void cfgMenuRender()
 					}
 
 					// AllowSellingHandgunSilencer
+					if ((OptionsFilter.PassFilter("AllowSellingHandgunSilencer") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1351,6 +1412,7 @@ void cfgMenuRender()
 					}
 
 					// FixDitmanGlitch
+					if ((OptionsFilter.PassFilter("FixDitmanGlitch") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1363,6 +1425,7 @@ void cfgMenuRender()
 					}
 
 					// UseSprintToggle
+					if ((OptionsFilter.PassFilter("UseSprintToggle") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1375,6 +1438,7 @@ void cfgMenuRender()
 					}
 
 					// RifleScreenShake
+					if ((OptionsFilter.PassFilter("RifleScreenShake") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1391,6 +1455,7 @@ void cfgMenuRender()
 					}
 
 					// QTE options
+					if ((OptionsFilter.PassFilter("QTE disable automatic") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						// DisableQTE
 						ImGui_ColumnSwitch();
@@ -1413,6 +1478,7 @@ void cfgMenuRender()
 					}
 
 					// Matilda options
+					if ((OptionsFilter.PassFilter("AllowMatildaQuickturn LimitMatildaBurst") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						// AllowMatildaQuickturn
 						ImGui_ColumnSwitch();
@@ -1447,6 +1513,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// RestoreDemoVideos
+					if ((OptionsFilter.PassFilter("RestoreDemoVideos") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1465,6 +1532,7 @@ void cfgMenuRender()
 					}
 
 					// RestoreAnalogTitleScroll
+					if ((OptionsFilter.PassFilter("RestoreAnalogTitleScroll") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1478,6 +1546,7 @@ void cfgMenuRender()
 					}
 
 					// ViolenceLevelOverride
+					if ((OptionsFilter.PassFilter("ViolenceLevelOverride") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1506,6 +1575,7 @@ void cfgMenuRender()
 					}
 
 					// AllowMafiaLeonCutscenes
+					if ((OptionsFilter.PassFilter("AllowMafiaLeonCutscenes") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1522,6 +1592,7 @@ void cfgMenuRender()
 					}
 
 					// SkipIntroLogos
+					if ((OptionsFilter.PassFilter("SkipIntroLogos SkipMenuFades") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1543,6 +1614,7 @@ void cfgMenuRender()
 					}
 
 					// SpeedUpQuitGame
+					if ((OptionsFilter.PassFilter("SpeedUpQuitGame") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1559,6 +1631,7 @@ void cfgMenuRender()
 					}
 
 					// EnableDebugMenu
+					if ((OptionsFilter.PassFilter("EnableDebugMenu") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1578,6 +1651,7 @@ void cfgMenuRender()
 					}
 
 					// ShowGameOutput
+					if ((OptionsFilter.PassFilter("ShowGameOutput") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1590,6 +1664,7 @@ void cfgMenuRender()
 					}
 
 					// AlwaysShowOriginalTitleBackground
+					if ((OptionsFilter.PassFilter("AlwaysShowOriginalTitleBackground") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1613,6 +1688,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// AllowHighResolutionSFD
+					if ((OptionsFilter.PassFilter("AllowHighResolutionSFD") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1630,6 +1706,7 @@ void cfgMenuRender()
 					}
 
 					// RaiseVertexAlloc
+					if ((OptionsFilter.PassFilter("RaiseVertexAlloc") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1647,6 +1724,7 @@ void cfgMenuRender()
 					}
 
 					// RaiseInventoryAlloc
+					if ((OptionsFilter.PassFilter("RaiseInventoryAlloc") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1694,6 +1772,7 @@ void cfgMenuRender()
 					ImGui_ColumnInit();
 
 					// cfgMenu 
+					if ((OptionsFilter.PassFilter("config menu") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1714,6 +1793,7 @@ void cfgMenuRender()
 					}
 
 					// Console
+					if ((OptionsFilter.PassFilter("debug console") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1734,6 +1814,7 @@ void cfgMenuRender()
 					}
 
 					// Inv flip 
+					if ((OptionsFilter.PassFilter("inventory flip") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1801,6 +1882,7 @@ void cfgMenuRender()
 					}
 
 					// QTE 
+					if ((OptionsFilter.PassFilter("QTE") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1843,6 +1925,7 @@ void cfgMenuRender()
 					}
 
 					// Debug menu
+					if ((OptionsFilter.PassFilter("debug menu") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1866,6 +1949,7 @@ void cfgMenuRender()
 					}
 
 					// MouseTurningModifier
+					if ((OptionsFilter.PassFilter("MouseTurningModifier") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
@@ -1889,6 +1973,7 @@ void cfgMenuRender()
 					}
 
 					// JetSkiTricks 
+					if ((OptionsFilter.PassFilter("JetSkiTricks") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 

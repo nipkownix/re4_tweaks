@@ -32,6 +32,8 @@ enum class TrainerTab
 };
 extern TrainerTab CurTrainerTab; // UI_Utility.cpp
 
+extern ImGuiTextFilter OptionsFilter; // UI_Utility.cpp
+
 bool ImGuiShouldAcceptInput(); // EndSceneHook.cpp
 
 void ImGui_ItemSeparator();

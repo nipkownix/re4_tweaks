@@ -7,6 +7,7 @@
 
 MenuTab Tab = MenuTab::Display;
 TrainerTab CurTrainerTab = TrainerTab::Patches;
+ImGuiTextFilter OptionsFilter;
 
 void ImGui_ItemSeparator()
 {
@@ -241,13 +242,15 @@ bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCo
 	float icon_pos_x = text_pos_x / 2;
 
 	float text_pos_y = (p1.y - p0.y) / 4;
-	float icon_pos_y = (p1.y - p0.y) / 3;
+	float icon_pos_y = (p1.y - p0.y) / 4;
 
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + icon_pos_x, p0.y + icon_pos_y), iconColor, icon, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + text_pos_x, p0.y + text_pos_y), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret)
 		Tab = tabID;
+
+	OptionsFilter.Clear();
 
 	return ret;
 }

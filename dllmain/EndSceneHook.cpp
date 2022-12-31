@@ -308,6 +308,7 @@ void BuildFontAtlas()
 	ImFontConfig ImCustomIcons;
 	ImCustomIcons.MergeMode = true;
 	ImCustomIcons.PixelSnapH = true;
+	ImCustomIcons.GlyphOffset.y = 2;
 	ImCustomIcons.FontDataOwnedByAtlas = false;
 
 	io.Fonts->AddFontFromMemoryTTF(&FAprolight, sizeof FAprolight, fFontSize, &ImCustomIcons, icon_ranges);

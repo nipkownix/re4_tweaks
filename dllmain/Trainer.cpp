@@ -1467,7 +1467,7 @@ void InvItemAdder_SetPopUp(const char* popupname)
 			ImGui::PopItemWidth();
 
 			ImGui::SameLine();
-			if (ImGui::SmallButton("X"))
+			if (ImGui::SmallButton(ICON_FA_BACKSPACE))
 				strcpy(searchText, "");
 
 			ImGui::TableNextColumn();
@@ -1912,6 +1912,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Invincibility
+			if ((OptionsFilter.PassFilter("Invincibility") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 				bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
@@ -1926,6 +1927,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Weak Enemies
+			if ((OptionsFilter.PassFilter("Weak Enemies") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -1941,6 +1943,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Notarget
+			if ((OptionsFilter.PassFilter("Disable Enemy Targeting") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -1956,6 +1959,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Inf Ammo
+			if ((OptionsFilter.PassFilter("Infinite Ammo") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -1971,6 +1975,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Numpad Movement
+			if ((OptionsFilter.PassFilter("Disable Player Collision no-clip no clip") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2011,6 +2016,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 			
 			// Free camera
+			if ((OptionsFilter.PassFilter("Free Camera") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2069,6 +2075,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// DisableEnemySpawn
+			if ((OptionsFilter.PassFilter("DisableEnemySpawn") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2084,6 +2091,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Dead bodies never disappear
+			if ((OptionsFilter.PassFilter("Dead bodies never disappear") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2098,6 +2106,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// AllowEnterDoorsWithoutAsh
+			if ((OptionsFilter.PassFilter("Allow entering doors without Ashley") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2112,6 +2121,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// EnableDebugTrg
+			if ((OptionsFilter.PassFilter("Enable DebugTrg") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2144,6 +2154,7 @@ void Trainer_RenderUI(int columnCount)
 			ImGui_ColumnInit();
 
 			// OverrideCostumes
+			if ((OptionsFilter.PassFilter("OverrideCostumes") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2200,6 +2211,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// OverrideDifficulty
+			if ((OptionsFilter.PassFilter("OverrideDifficulty") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2232,6 +2244,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Speed override
+			if ((OptionsFilter.PassFilter("Player Speed Override") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2260,6 +2273,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Dynamic Difficulty Slider
+			if ((OptionsFilter.PassFilter("Dynamic Difficulty") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2286,6 +2300,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Ashley presence
+			if ((OptionsFilter.PassFilter("Ashley presence") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2302,6 +2317,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Enemy HP multiplier
+			if ((OptionsFilter.PassFilter("Enemy HP multiplier") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2393,7 +2409,8 @@ void Trainer_RenderUI(int columnCount)
 		{
 			ImGui_ColumnInit();
 
-			// UI Focus 
+			// UI Focus
+			if ((OptionsFilter.PassFilter("UI Focus") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2414,6 +2431,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// No-clip
+			if ((OptionsFilter.PassFilter("No-clip no clip") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2434,6 +2452,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Free cam
+			if ((OptionsFilter.PassFilter("Free Camera") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2454,6 +2473,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Speed override
+			if ((OptionsFilter.PassFilter("Speed override") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2475,6 +2495,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Weapon Hotkeys
+			if ((OptionsFilter.PassFilter("Weapon Hotkeys") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2530,6 +2551,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// Move Ash to Player
+			if ((OptionsFilter.PassFilter("move Ashley to the player") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2550,6 +2572,7 @@ void Trainer_RenderUI(int columnCount)
 			}
 
 			// DebugTrg trigger
+			if ((OptionsFilter.PassFilter("DebugTrg") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 			{
 				ImGui_ColumnSwitch();
 
@@ -2652,7 +2675,7 @@ void Trainer_RenderUI(int columnCount)
 			ImGui::PopItemWidth();
 
 			ImGui::SameLine();
-			if (ImGui::SmallButton("X"))
+			if (ImGui::SmallButton(ICON_FA_BACKSPACE))
 				strcpy(searchText, "");
 
 			ImGui::TableNextColumn();
@@ -3006,7 +3029,7 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::PopItemWidth();
 
 				ImGui::SameLine();
-				if (ImGui::SmallButton("X"))
+				if (ImGui::SmallButton(ICON_FA_BACKSPACE))
 					strcpy(searchText, "");
 
 				ImGui::TableNextColumn();
