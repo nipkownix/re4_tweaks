@@ -571,6 +571,9 @@
     <ClCompile Include="Gameplay.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="Trainer_ItemMgr.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\inireader\ini_parser.hpp">
