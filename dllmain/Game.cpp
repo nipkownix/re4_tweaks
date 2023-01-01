@@ -121,7 +121,11 @@ namespace bio4 {
 		uint32_t* RefreshRate = nullptr;
 		uint32_t* Width_1 = nullptr;
 		uint32_t* Height_1 = nullptr;
+		bool* Fullscreen = nullptr;
 	}
+
+	void(__cdecl* D3D_SetupResolution)(int Width, int Height);
+	void(__cdecl* ScreenReSize)(int Width, int Height);
 };
 
 // Current play time (H, M, S)
@@ -1232,6 +1236,16 @@ bool re4t::init::Game()
 	pattern = hook::pattern("8B 15 ? ? ? ? 3B 14 ? 75 ? 8B 15 ? ? ? ? 3B 54 38");
 	bio4::g_D3D::Width_1 = (uint32_t*)*pattern.count(1).get(0).get<uint32_t>(2);
 	bio4::g_D3D::Height_1 = bio4::g_D3D::Width_1 + 1;
+	
+	pattern = hook::pattern("38 1D ? ? ? ? 74 0C BE ? ? ? ? BF ? ? ? ? EB 1F 8B 15 ? ? ? ? 6A 40 51 50 53");
+	bio4::g_D3D::Fullscreen = (bool*)*pattern.count(1).get(0).get<uint32_t>(2);
+
+	// Pointer to D3D_SetupResolution
+	pattern = hook::pattern("E8 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? E8 ? ? ? ? 83 C0 ? 50 E8 ? ? ? ? 8B 0E");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::D3D_SetupResolution);
+
+	// Pointer to D3D_SetupResolution
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(15)).as_int(), bio4::ScreenReSize);
 
 	// Store current game time that's being calculated inside GetGameTime
 	pattern = hook::pattern("8B 55 ? 8B 45 ? 51 8B 4D ? 52 50 51 68");

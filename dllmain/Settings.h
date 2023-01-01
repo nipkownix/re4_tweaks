@@ -51,6 +51,7 @@ public:
 	bool bUseEnhancedGCBlur = true;
 	bool bEnableGCScopeBlur = true;
 	bool bWindowBorderless = false;
+	bool bEnableWindowResize = false;
 	int iWindowPositionX = -1;
 	int iWindowPositionY = -1;
 	bool bRememberWindowPos = false;

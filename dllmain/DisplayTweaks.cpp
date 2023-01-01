@@ -58,24 +58,6 @@ void __declspec(naked) Esp04TransHook()
 		_asm {ret}
 }
 
-BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
-{
-	int windowX = re4t::cfg->iWindowPositionX < 0 ? 0 : re4t::cfg->iWindowPositionX;
-	int windowY = re4t::cfg->iWindowPositionY < 0 ? 0 : re4t::cfg->iWindowPositionY;
-	return SetWindowPos(hWnd, hWndInsertAfter, windowX, windowY, cx, cy, uFlags);
-}
-
-BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
-{
-	// Early return if bWindowBorderless is set to true, as this call changes the window size to include borders.
-	if (re4t::cfg->bWindowBorderless)
-		return true;
-
-	int windowX = re4t::cfg->iWindowPositionX < 0 ? 0 : re4t::cfg->iWindowPositionX;
-	int windowY = re4t::cfg->iWindowPositionY < 0 ? 0 : re4t::cfg->iWindowPositionY;
-	return MoveWindow(hWnd, windowX, windowY, nWidth, nHeight, bRepaint);
-}
-
 double FramelimiterFrequency = 0;
 double FramelimiterPrevTicks = 0;
 void Framelimiter_Hook(uint8_t isAliveEvt_result)
@@ -344,28 +326,6 @@ void re4t::init::DisplayTweaks()
 		}; injector::MakeInline<WriteIniHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 
 		spd::log()->info("Vsync disabled");
-	}
-
-	// Apply window changes
-	if (re4t::cfg->bWindowBorderless || re4t::cfg->iWindowPositionX > -1 || re4t::cfg->iWindowPositionY > -1)
-	{
-		// hook SetWindowPos, can't nop as it's used for resizing window on resolution changes
-		auto pattern = hook::pattern("FF 15 ? ? ? ? 56 53 57 8D 45 EC 50 FF 15 ? ? ? ? 8B");
-		injector::MakeNOP(pattern.get_first(0), 6);
-		InjectHook(pattern.get_first(0), SetWindowPos_Hook, PATCH_CALL);
-
-		// hook MoveWindow. Also can't nop this one as it seems to set up the correct window size on startup
-		pattern = hook::pattern("FF 15 ? ? ? ? 8B 0D ? ? ? ? 6A 01");
-		injector::MakeNOP(pattern.get_first(0), 6);
-		InjectHook(pattern.get_first(0), MoveWindow_Hook, PATCH_CALL);
-
-		if (re4t::cfg->bWindowBorderless)
-		{
-			// if borderless, update the style set by SetWindowLongA
-			pattern = hook::pattern("25 00 00 38 7F 05 00 00 C8 00");
-			injector::WriteMemory(pattern.get_first(5), uint8_t(0xb8), true); // mov eax, XXXXXXXX
-			injector::WriteMemory(pattern.get_first(6), uint32_t(WS_POPUP), true);
-		}
 	}
 
 	// Restore missing transparency in the item pickup screen by

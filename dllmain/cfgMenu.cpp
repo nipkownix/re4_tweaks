@@ -469,14 +469,19 @@ void cfgMenuRender()
 					{
 						ImGui_ColumnSwitch();
 
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableVsync", &re4t::cfg->bDisableVsync);
+						if (ImGui::Checkbox("DisableVsync", &re4t::cfg->bDisableVsync))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+
+							// Trigger resolution change to make apply the new v-sync option
+							bio4::D3D_SetupResolution(*bio4::g_D3D::Width_1, *bio4::g_D3D::Height_1);
+							bio4::ScreenReSize(0x200, 0x1C0);
+						}
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Force V-Sync to be disabled. For some reason the vanilla game doesn't provide a functional way to do this.");
-
-						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Change the game's resolution or restart the game for this option to take effect.");
 					}
 
 					// Aspect ratio tweaks
@@ -726,13 +731,37 @@ void cfgMenuRender()
 						if (ImGui::Checkbox("WindowBorderless", &re4t::cfg->bWindowBorderless))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
+
+							// Trigger resolution change to apply changes
+							if (!*bio4::g_D3D::Fullscreen)
+							{
+								bio4::D3D_SetupResolution(*bio4::g_D3D::Width_1, *bio4::g_D3D::Height_1);
+								bio4::ScreenReSize(0x200, 0x1C0);
+							}
 						}
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Whether to use a borderless-window when using windowed-mode.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui_ItemSeparator2();
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						if (ImGui::Checkbox("EnableWindowResize", &re4t::cfg->bEnableWindowResize))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+
+							// Trigger resolution change to apply changes
+							if (!*bio4::g_D3D::Fullscreen)
+							{
+								bio4::D3D_SetupResolution(*bio4::g_D3D::Width_1, *bio4::g_D3D::Height_1);
+								bio4::ScreenReSize(0x200, 0x1C0);
+							}
+						}
+
+						ImGui::TextWrapped("When playing in windowed mode, allow the game window to be resized by dragging the window borders.");
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui_ItemSeparator2();

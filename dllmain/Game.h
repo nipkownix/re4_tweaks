@@ -119,5 +119,9 @@ namespace bio4
 		extern uint32_t* RefreshRate;
 		extern uint32_t* Width_1;
 		extern uint32_t* Height_1;
+		extern bool* Fullscreen;
 	}
+
+	extern void(__cdecl* D3D_SetupResolution)(int Width, int Height);
+	extern void(__cdecl* ScreenReSize)(int Width, int Height);
 }

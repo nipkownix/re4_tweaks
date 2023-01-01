@@ -165,6 +165,7 @@ void ReadSettingsIni(std::wstring ini_path)
 
 		re4t::cfg->bEnableGCScopeBlur = ini.getBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
 		re4t::cfg->bWindowBorderless = ini.getBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		re4t::cfg->bEnableWindowResize = ini.getBool("DISPLAY", "EnableWindowResize", re4t::cfg->bEnableWindowResize);
 		re4t::cfg->iWindowPositionX = ini.getInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		re4t::cfg->iWindowPositionY = ini.getInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		re4t::cfg->bRememberWindowPos = ini.getBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
@@ -622,6 +623,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		ini.setBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
 		ini.setBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		ini.setBool("DISPLAY", "EnableWindowResize", re4t::cfg->bEnableWindowResize);
 		ini.setInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		ini.setInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		ini.setBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
@@ -956,6 +958,7 @@ void re4t_cfg::LogSettings()
 
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", re4t::cfg->bWindowBorderless ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableWindowResize", re4t::cfg->bEnableWindowResize ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", re4t::cfg->iWindowPositionX);
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", re4t::cfg->iWindowPositionY);
 	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", re4t::cfg->bRememberWindowPos ? "true" : "false");
