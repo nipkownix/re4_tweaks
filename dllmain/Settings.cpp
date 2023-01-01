@@ -12,7 +12,6 @@
 #include "../dxvk/src/config.h"
 
 const std::wstring sSettingOverridesPath = L"re4_tweaks\\setting_overrides\\";
-const std::wstring sHDProjectOverrideName = L"HDProject.ini";
 
 const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
@@ -146,13 +145,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bDisableBrokenFilter03 = ini.getBool("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
 		re4t::cfg->bFixBlurryImage = ini.getBool("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
 		re4t::cfg->bDisableFilmGrain = ini.getBool("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
-
 		re4t::cfg->bImproveWater = ini.getBool("DISPLAY", "ImproveWater", re4t::cfg->bImproveWater);
-		if (re4t::cfg->bIsUsingHDProject)
-		{
-			re4t::cfg->bImproveWater = false; // Should be inside HDProject.ini instead, but we'll keep it here untill a new version of the HD Project is released
-		}
-
 		re4t::cfg->bEnableGCBlur = ini.getBool("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
 
 		std::string GCBlurTypeStr = ini.getString("DISPLAY", "GCBlurType", "");
@@ -529,11 +522,14 @@ void re4t_cfg::ReadSettings()
 	for (const auto& path : override_inis)
 		ReadSettingsIni(path.wstring());
 
-	// Special case for HDProject settings, make sure it overrides all other INIs
-	auto hdproject_path = override_path + sHDProjectOverrideName;
-	if (std::filesystem::exists(hdproject_path))
+	// Special case for HDProject settings
+	if (re4t::cfg->bIsUsingHDProject)
 	{
-		ReadSettings(hdproject_path);
+		re4t::cfg->bDisableBrokenFilter03 = false;
+		re4t::cfg->bAllowHighResolutionSFD = true;
+		re4t::cfg->bRaiseVertexAlloc = true;
+		re4t::cfg->bRaiseInventoryAlloc = true;
+		re4t::cfg->bImproveWater = false; // The current HD project water textures are optimized to the broken effect
 	}
 }
 
