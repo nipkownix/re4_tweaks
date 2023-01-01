@@ -576,12 +576,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\external\inireader\ini_parser.hpp">
-      <Filter>external\inireader</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\inireader\IniReader.h">
-      <Filter>external\inireader</Filter>
-    </ClInclude>
     <ClInclude Include="..\external\injector\include\injector\assembly.hpp">
       <Filter>external\injector</Filter>
     </ClInclude>
@@ -1635,6 +1629,9 @@
     <ClInclude Include="..\includes\iniReader.h">
       <Filter>includes</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\simpleini\SimpleIni.h">
+      <Filter>external\simpleini</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">
@@ -1651,9 +1648,6 @@
     </Filter>
     <Filter Include="external">
       <UniqueIdentifier>{519c6c33-721f-48c7-ae8d-02adbc3058ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\inireader">
-      <UniqueIdentifier>{4e462c16-30a0-469e-837e-e087a37306f3}</UniqueIdentifier>
     </Filter>
     <Filter Include="external\injector">
       <UniqueIdentifier>{aae8b126-aaff-4521-8354-1de4e1c22a11}</UniqueIdentifier>
@@ -1747,6 +1741,9 @@
     </Filter>
     <Filter Include="external\ImGuiFileDialog">
       <UniqueIdentifier>{6a90538b-9818-4c37-9150-0996803386ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\simpleini">
+      <UniqueIdentifier>{4e462c16-30a0-469e-837e-e087a37306f3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

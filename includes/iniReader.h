@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include "../dllmain/ConsoleWnd.h"
+#include <simpleini/SimpleIni.h>
 #include "log.h"
 #include <shellapi.h>
 
@@ -15,13 +16,13 @@ class iniReader
 {
 public:
     // Use .ini path/filename from parameter
-    iniReader(const std::string& filename)
+    iniReader(const std::wstring& filename)
     {
-        // Store the filename
-        filename_ = filename;
+        // Store the ini path
+        inipath = filename;
 
         // Read and parse the INI file
-        parseIniFile();
+        m_ini.LoadFile(filename.c_str());
     }
 
     // Find the .ini path/filename using the module path
@@ -35,14 +36,14 @@ public:
         wchar_t pathBuf[MAX_PATH];
         GetModuleFileNameW(hModule, pathBuf, MAX_PATH);
 
-        // wstring -> string
-        std::string modulePath = WstrToStr(pathBuf);
+        // wstring
+        std::wstring modulePath = pathBuf;
 
-        // Store the filename
-        filename_ = modulePath.substr(0, modulePath.find_last_of('.')) + ".ini";
+        // Store the file path
+        inipath = modulePath.substr(0, modulePath.find_last_of('.')) + L".ini";
 
         // Read and parse the INI file
-        parseIniFile();
+        m_ini.LoadFile(inipath.c_str());
     }
 
     // Destructor
@@ -70,12 +71,8 @@ public:
             return cmd_value;
         }
 
-        // Read from values map
-        std::string full_key = section + "." + key;
-        if (values_.count(full_key) > 0)
-            return values_[full_key];
-        else
-            return default_value;
+        // Read from simpleIni
+        return m_ini.GetValue(section.c_str(), key.c_str(), default_value.c_str());
     }
 
     bool getBool(const std::string& section, const std::string& key, bool default_value = false)
@@ -93,22 +90,8 @@ public:
             return !(_stricmp(cmd_value.c_str(), "false") == 0 || _stricmp(cmd_value.c_str(), "0") == 0);
         }
 
-        // Read from values map
-        std::string full_key = section + "." + key;
-        if (values_.count(full_key) > 0)
-        {
-            std::string value = values_[full_key];
-            std::transform(value.begin(), value.end(), value.begin(), ::tolower);
-
-            if (value == "true" || value == "1") // Treat "1" as true
-                return true;
-            else if (value == "false" || value == "0") // Also treat "0" as false
-                return false;
-            else
-                return default_value; // If everything fails, just return the default value
-        }
-        else
-            return default_value;
+        // Read from simpleIni
+        return m_ini.GetBoolValue(section.c_str(), key.c_str(), default_value);
     }
 
     int getInt(const std::string& section, const std::string& key, int default_value = 0)
@@ -130,17 +113,8 @@ public:
             catch (std::exception&) {}
         }
 
-        // Read from values map
-        std::string full_key = section + "." + key;
-        if (values_.count(full_key) > 0)
-        {
-            std::istringstream iss(values_[full_key]);
-            int value;
-            iss >> value;
-            return value;
-        }
-        else
-            return default_value;
+        // Read from simpleIni
+        return int(m_ini.GetLongValue(section.c_str(), key.c_str(), default_value));
     }
 
     float getFloat(const std::string& section, const std::string& key, float default_value = 0.0f)
@@ -162,91 +136,39 @@ public:
             catch (std::exception&) {}
         }
 
-        std::string full_key = section + "." + key;
-        if (values_.count(full_key) > 0)
-        {
-            std::istringstream iss(values_[full_key]);
-            float value;
-            iss >> value;
-            return value;
-        }
-        else
-            return default_value;
+        // Read from simpleIni
+        return float(m_ini.GetDoubleValue(section.c_str(), key.c_str(), default_value));
     }
 
     // Write
-    void writeString(const std::string& section, const std::string& key, const std::string& value)
+    void setString(const std::string& section, const std::string& key, const std::string& value)
     {
-        std::string value_str = " " + value;
-        WritePrivateProfileStringA(section.c_str(), key.c_str(), value_str.c_str(), filename_.c_str());
+        m_ini.SetValue(section.c_str(), key.c_str(), value.c_str());
     }
     
-    void writeBool(const std::string& section, const std::string& key, bool value)
+    void setBool(const std::string& section, const std::string& key, bool value)
     {
-        std::string value_str = " " + std::string(value ? "True" : "False");
-        WritePrivateProfileStringA(section.c_str(), key.c_str(), value_str.c_str(), filename_.c_str());
+        m_ini.SetBoolValue(section.c_str(), key.c_str(), value);
     }
 
-    void writeInt(const std::string& section, const std::string& key, int value)
+    void setInt(const std::string& section, const std::string& key, int value)
     {
-        char value_char[255];
-        _snprintf_s(value_char, 255, "%s%d", " ", value);
-        WritePrivateProfileStringA(section.c_str(), key.c_str(), value_char, filename_.c_str());
+        m_ini.SetLongValue(section.c_str(), key.c_str(), value);
     }
 
-    void writeFloat(const std::string& section, const std::string& key, float value)
+    void setFloat(const std::string& section, const std::string& key, float value)
     {
-        char value_char[255];
-        _snprintf_s(value_char, 255, "%s%.6f", " ", value);
-        WritePrivateProfileStringA(section.c_str(), key.c_str(), value_char, filename_.c_str());
+        m_ini.SetDoubleValue(section.c_str(), key.c_str(), value);
+    }
+
+    void writeIni() {
+        m_ini.SaveFile(inipath.c_str());
     }
 
 private:
-    std::string filename_;
-    std::map<std::string, std::string> values_;
+    CSimpleIniA m_ini;
 
-    void parseIniFile()
-    {
-        // Open the file for reading
-        std::ifstream file(filename_);
-
-        // Read the file line by line
-        std::string line;
-        std::string section;
-        while (std::getline(file, line))
-        {
-            // Skip comments
-            if (line[0] == '#' || line[0] == ';')
-                continue;
-
-            // Check if this is a section header
-            size_t separator_pos = line.find('=');
-            if (line[0] == '[')
-            {
-                // Get section name
-                size_t closing_bracket_pos = line.find(']');
-                if (closing_bracket_pos != std::string::npos)
-                    section = line.substr(1, closing_bracket_pos - 1);
-            }
-            else if (separator_pos != std::string::npos) // Should be key-value pair then
-            {
-                // Extract the key and value strings
-                std::string key = line.substr(0, separator_pos);
-                std::string value = line.substr(separator_pos + 1);
-
-                // Remove leading and trailing white spaces from key and value
-                while (!key.empty() && key.back() == ' ')
-                    key.pop_back();
-                while (!value.empty() && (value.back() == ' ' || value.back() == '\t'))
-                    value.pop_back();
-                while (!value.empty() && (value.front() == ' ' || value.front() == '\t'))
-                    value.erase(0, 1);
-
-                // Store the pair in our values map
-                values_[section + "." + key] = value;
-            }
-        }
-    }
+    std::wstring inipath;
 
     // CommandLine overrides
     LPWSTR* argv = nullptr;

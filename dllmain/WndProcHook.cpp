@@ -130,8 +130,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				re4t::cfg->iWindowPositionX = curPosX;
 				re4t::cfg->iWindowPositionY = curPosY;
 
-				ini.writeInt("DISPLAY", "WindowPositionX", curPosX);
-				ini.writeInt("DISPLAY", "WindowPositionY", curPosY);
+				ini.setInt("DISPLAY", "WindowPositionX", curPosX);
+				ini.setInt("DISPLAY", "WindowPositionY", curPosY);
 			}
 			break;
 

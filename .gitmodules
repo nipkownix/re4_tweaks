@@ -23,3 +23,6 @@
 	path = external/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog/
 	branch = Lib_Only
+[submodule "external/simpleini"]
+	path = external/simpleini
+	url = https://github.com/brofield/simpleini
