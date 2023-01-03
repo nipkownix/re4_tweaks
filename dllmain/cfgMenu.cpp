@@ -1676,6 +1676,19 @@ void cfgMenuRender()
 						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
 					}
 
+					// HideZoomControlHints 
+					if ((OptionsFilter.PassFilter("HideZoomControlHints Rifle Scope Binoculars") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("HideZoomControlHints", &re4t::cfg->bHideZoomControlHints);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Hide zoom control reminders from the weapon scope and binocular HUDs.");
+					}
+
 					ImGui_ColumnFinish();
 					ImGui::EndTable();
 				}

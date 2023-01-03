@@ -135,6 +135,7 @@ public:
 	bool bEnableModExpansion = false;
 	bool bForceETSApplyScale = false;
 	bool bAlwaysShowOriginalTitleBackground = false;
+	bool bHideZoomControlHints = false;
   
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;
