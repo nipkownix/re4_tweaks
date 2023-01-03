@@ -1452,6 +1452,17 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::TextWrapped("Adds a screen shake effect when firing a rifle.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Recoil").x);
+						ImGui::BeginDisabled(!re4t::cfg->bRifleScreenShake);
+						ImGui::SliderFloat("Recoil", &re4t::cfg->fRifleScreenShakeRecoil, 0.0f, 10.0f, "%.1f");
+						ImGui::EndDisabled();
+						ImGui::PopItemWidth();
+
+						if (ImGui::IsItemEdited())
+							re4t::cfg->HasUnsavedChanges = true;
 					}
 
 					// QTE options

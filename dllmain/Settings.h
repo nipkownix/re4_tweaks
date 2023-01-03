@@ -115,6 +115,7 @@ public:
 	bool bAllowSellingHandgunSilencer = true;
 	bool bUseSprintToggle = false;
 	bool bRifleScreenShake = false;
+	float fRifleScreenShakeRecoil = 5.0f;
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
 	bool bAllowMatildaQuickturn = false;

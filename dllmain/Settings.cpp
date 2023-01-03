@@ -299,6 +299,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	re4t::cfg->bUseSprintToggle = iniReader.ReadBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 	re4t::cfg->bRifleScreenShake = iniReader.ReadBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
+	re4t::cfg->fRifleScreenShakeRecoil = iniReader.ReadFloat("GAMEPLAY", "RifleScreenShakeRecoil", re4t::cfg->fRifleScreenShakeRecoil);
 	re4t::cfg->bDisableQTE = iniReader.ReadBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 	re4t::cfg->bAutomaticMashingQTE = iniReader.ReadBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
 	re4t::cfg->bAllowMatildaQuickturn = iniReader.ReadBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
@@ -828,6 +829,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 	iniReader.WriteBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 	iniReader.WriteBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
+	iniReader.WriteFloat("GAMEPLAY", "RifleScreenShakeRecoil", re4t::cfg->fRifleScreenShakeRecoil);
 	iniReader.WriteBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 	iniReader.WriteBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
 	iniReader.WriteBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
@@ -1012,6 +1014,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShakeRecoil", re4t::cfg->fRifleScreenShakeRecoil);
 	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn ? "true" : "false");

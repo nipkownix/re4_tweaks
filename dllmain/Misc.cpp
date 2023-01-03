@@ -1018,7 +1018,7 @@ void re4t::init::Misc()
 			void operator()(injector::reg_pack& regs)
 			{
 				if (re4t::cfg->bRifleScreenShake)
-					bio4::QuakeExec(0, 0, 5, 40.0f, 2u);
+					bio4::QuakeExec(0, 0, 5, 20 * re4t::cfg->fRifleScreenShakeRecoil, 2u);
 
 				// Code we overwrote
 				regs.edx = *(uint32_t*)(regs.esi + 0x7D8);
