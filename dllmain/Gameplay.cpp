@@ -6,6 +6,15 @@
 #include "Settings.h"
 #include "input.hpp"
 
+struct ADA_WEAPON_LEVEL
+{
+	ITEM_ID id_0;
+	int8_t power_2;
+	int8_t speed_3;
+	int8_t reload_4;
+	int8_t bullet_5;
+};
+
 struct FILE_MSG_TBL_mb
 {
 	uint8_t top_0;
@@ -55,8 +64,122 @@ void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 	cPlayer__weaponInit(thisptr, unused);
 }
 
+bool bShouldDropChicagoAmmo = false;
+void ChicagoAmmoDropCheck() noexcept
+{
+	bool hasChicago = ItemMgr->num((ITEM_ID)EItemId::Thompson) /* || ItemMgr->num((ITEM_ID)EItemId::Ada_Machine_Gun) */;
+	if (!hasChicago)
+	{
+		bShouldDropChicagoAmmo = false;
+		return;
+	}
+
+	int curChicagoAmmo = ItemMgr->num((ITEM_ID)EItemId::Bullet_45in_M);
+	bool rnd = GetRandomInt(0, 31) == 5; // 5/31 probability (16%)
+
+	bShouldDropChicagoAmmo = (rnd || (curChicagoAmmo <= 35));
+}
+
+uintptr_t ChicagoAmmoDrop_finish;
+void __declspec(naked) ChicagoAmmoDrop()
+{
+	_asm
+	{
+		pushad
+		pushfd
+	}
+
+	ChicagoAmmoDropCheck();
+
+	if (bShouldDropChicagoAmmo)
+	{
+		bShouldDropChicagoAmmo = false;
+		static int ret_id = int(EItemId::Bullet_45in_M);
+		static int ret_num = 70;
+
+		_asm
+		{
+			popfd
+			popad
+
+			mov eax, ret_id
+			mov ebx, ret_num
+			mov edx, [ebp + 0x8]
+			mov ecx, [ebp + 0xC]
+			mov dword ptr[edx], eax
+			mov dword ptr[ecx], ebx
+			mov eax, 0x1
+			mov esp, ebp
+			pop ebp
+			ret
+		}
+	}
+	else
+	{
+		_asm
+		{
+			popfd
+			popad
+
+			mov ebx, [ebp - 0x10]
+			cmp[ebp - 0x14], ebx
+			jmp ChicagoAmmoDrop_finish
+		}
+	}
+}
+
 void re4t::init::Gameplay()
 {
+	// Make the Chicago Typewrite not upgraded by default and try to balance it more for normal gameplay
+	{
+		// Hook GetDropBullet to make the game drop the unused Chicago Typewriter ammo
+		auto pattern = hook::pattern("8b 5d ? 39 5d ? 72 ? e8 ? ? ? ? 0f b6 ? 81 e2 ? ? ? ? 79 ? 4a 83 ca ? 42 83 fa ? 0f 85");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6, true);
+		ChicagoAmmoDrop_finish = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
+		injector::MakeJMP(pattern.count(1).get(0).get<uint32_t>(0), ChicagoAmmoDrop, true);
+
+		// Get WeaponLevelTbl to change the Chicago Typewriter firepower stats.
+		// Originally it is always 10.0f regardless of what upgrade level you have. We now make it grow over time, with
+		// the max upgrade level bringing it to the vanilla fiewpower of 10.0f.
+		pattern = hook::pattern("D9 04 8D ? ? ? ? D9 5D ? 75 ? 8B CE 83 E9");
+		auto WeaponLevelTbl = *pattern.count(1).get(0).get<float(*)[49][7]>(3);
+
+		// Get wep num of Leon's Chicago
+		auto TypewriterNumLeon = bio4::WeaponId2WeaponNo(ITEM_ID(EItemId::Thompson));
+
+		/*
+		// Get wep num of Ada's Chicago
+		auto TypewriterNumAda = bio4::WeaponId2WeaponNo(ITEM_ID(EItemId::Ada_Machine_Gun));
+		*/
+
+		// Our new firepower array
+		float NewChicagoFirepower[] = { 0.9f, 1.2f, 1.7f, 2.5f, 4.0f, 7.0f, 10.0f };
+
+		// Write new values
+		std::copy(std::begin(NewChicagoFirepower), std::end(NewChicagoFirepower), std::begin((*WeaponLevelTbl)[TypewriterNumLeon]));
+		/* std::copy(std::begin(NewChicagoFirepower), std::end(NewChicagoFirepower), std::begin((*WeaponLevelTbl)[TypewriterNumAda])); */
+
+		// Nop special case inside dispBuyItemList that make the weapon stats be shows as fully upgraded
+		pattern = hook::pattern("BE ? ? ? ? F7 42 ? ? ? ? ? 74 ? 83 C0 ? 83 F8 ? 77 ? 0F B6 90");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 5, true);
+
+		// Nop check inside cItemMgr::construct that forcefully upgrades the chicago when bought
+		pattern = hook::pattern("B9 ? ? ? ? 66 89 4E ? 8B 15 ? ? ? ? F7 42");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 5, true);
+
+		/*
+		// Get ada_weapon_level to change Ada's Chicago Typewriter firepower stats.
+		pattern = hook::pattern("0F BE 8C 12 ? ? ? ? 03 D2 66 ? 66 33 4E");
+		auto tbl_addr = *pattern.count(1).get(0).get<uintptr_t>(4);
+		tbl_addr -= 2;
+
+		auto ada_weapon_level = (ADA_WEAPON_LEVEL(*)[7])tbl_addr;
+
+		(*ada_weapon_level)[5].power_2 = 1;
+		(*ada_weapon_level)[5].bullet_5 = 1;
+		*/
+	}
+
 	// Unlock JP-only classic camera angle during Ashley segment
 	{
 		static uint8_t* pSys = nullptr;

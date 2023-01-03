@@ -85,5 +85,7 @@ namespace bio4
 {
 	extern void(__cdecl* C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
 	extern uint8_t(__cdecl* WeaponId2MaxLevel)(ITEM_ID item_id, int type);
+	extern uint8_t(__cdecl* WeaponId2WeaponNo)(ITEM_ID item_id);
+
 	extern void(__cdecl* SceSleep)(uint32_t ctr);
 }
