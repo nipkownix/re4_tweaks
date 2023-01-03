@@ -188,3 +188,14 @@ enum ID_CLASS
 	IDC_TOOL = 0xFE,
 	IDC_ANY = 0xFF,
 };
+
+struct IDApplication { struct IDApplication_vtbl* __vftable /*VFT*/; };
+assert_size(IDApplication, 0x4);
+
+struct IdScope : IDApplication
+{
+	uint32_t m_pos_time_sav_4;
+	uint32_t m_size_time_sav_8;
+	bool m_zoom_disp_C;
+};
+assert_size(IdScope, 0x10);
