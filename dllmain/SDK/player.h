@@ -30,7 +30,7 @@ public:
 	int32_t m_Work1_42C;
 	int32_t m_Work2_430;
 	int32_t m_Work3_434;
-	int32_t plunk_438;
+	int32_t m_Work4_438;
 	float m_Work5_43C;
 	int32_t m_Work6_440;
 	int32_t m_Work7_444;

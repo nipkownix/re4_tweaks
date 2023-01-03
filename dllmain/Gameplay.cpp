@@ -20,6 +20,8 @@ wepXX_routine wep17_r3_ready00 = nullptr;
 wepXX_routine wep17_r3_ready10 = nullptr;
 wepXX_routine wep02_r3_ready10 = nullptr;
 
+bool wep17_justFired = false;
+
 float(__cdecl* CameraControl__getCameraDirection)();
 void __cdecl wep17_r3_ready00_Hook(cPlayer* a1)
 {
@@ -264,16 +266,48 @@ void re4t::init::Gameplay()
 
 	// Limit the Matilda to one three round burst per trigger pull
 	{
-		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
-		struct wep17_r2_set_LimitMatildaBurst
+		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 96 D8 07 00 00 8B 4A 34 E8");
+		struct wep17_r2_set_joyFireTrig
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (!re4t::cfg->bLimitMatildaBurst && bio4::joyFireOn())
+				if (bio4::joyFireTrg())
+				{
+					wep17_justFired = true;
 					regs.ef &= ~(1 << regs.zero_flag);
+				}
 				else
 					regs.ef |= (1 << regs.zero_flag);
 			}
-		}; injector::MakeInline<wep17_r2_set_LimitMatildaBurst>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+		}; injector::MakeInline<wep17_r2_set_joyFireTrig>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(7));
+
+		pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
+		struct wep17_r2_set_joyFireOn 
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if ((!re4t::cfg->bLimitMatildaBurst || !wep17_justFired) && bio4::joyFireOn())
+				{
+					wep17_justFired = true;
+					regs.ef &= ~(1 << regs.zero_flag);
+				}
+				else
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<wep17_r2_set_joyFireOn>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
+
+		pattern = hook::pattern("55 8B EC 56 8B ? ? 0F B6 86 FE 00 00 00 8B ? ? ? ? ? ? 56 FF ? 8B 8E D8 07 00 00 83 C4 04 E8 ? ? ? ? 83");
+		struct wep17_move_LimitMatildaBurst
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// reset justFired flag anytime the player lifts up on the trigger
+				if (!bio4::joyFireOn())
+					wep17_justFired = false;
+
+				// Code we overwrote
+				regs.eax = *(uint8_t*)(regs.esi + 0xFE);
+			}
+		}; injector::MakeInline<wep17_move_LimitMatildaBurst>(pattern.count(3).get(2).get<uint32_t>(7), pattern.count(3).get(2).get<uint32_t>(14));
 	}
 }
