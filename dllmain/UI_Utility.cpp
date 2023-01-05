@@ -248,9 +248,10 @@ bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCo
 	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(p0.x + text_pos_x, p0.y + text_pos_y), textColor, text, NULL, 0.0f, &ImVec4(p0.x, p0.y, p1.x, p1.y));
 
 	if (ret)
+	{
 		Tab = tabID;
-
-	OptionsFilter.Clear();
+		OptionsFilter.Clear();
+	}
 
 	return ret;
 }

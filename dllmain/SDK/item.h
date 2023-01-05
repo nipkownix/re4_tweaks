@@ -413,10 +413,14 @@ typedef cItem* (__fastcall* cItemMgr__search_Fn)(cItemMgr* thisptr, void* unused
 typedef bool(__fastcall* cItemMgr__arm_Fn)(cItemMgr* thisptr, void* unused, cItem* pItem);
 typedef bool(__fastcall* cItemMgr__get_Fn)(cItemMgr* thisptr, void* unused, ITEM_ID id, uint16_t num);
 typedef void(__fastcall* cItemMgr__erase_Fn)(cItemMgr* thisptr, void* unused, cItem* pItem);
+typedef uint16_t(__thiscall* cItemMgr__num_0_Fn)(cItemMgr* thisptr, ITEM_ID id);
+typedef uint32_t(__thiscall* cItemMgr__bulletNumTotal_Fn)(cItemMgr* thisptr, ITEM_ID bllt_id);
 extern cItemMgr__search_Fn cItemMgr__search;
 extern cItemMgr__arm_Fn cItemMgr__arm;
 extern cItemMgr__get_Fn cItemMgr__get;
 extern cItemMgr__erase_Fn cItemMgr__erase;
+extern cItemMgr__num_0_Fn cItemMgr__num_0;
+extern cItemMgr__bulletNumTotal_Fn cItemMgr__bulletNumTotal;
 
 class cItemMgr
 {
@@ -473,6 +477,16 @@ public:
 
 			erase(itmPtr);
 		}
+	}
+
+	inline uint16_t num(ITEM_ID id)
+	{
+		return cItemMgr__num_0(this, id);
+	}
+
+	inline uint32_t bulletNumTotal(ITEM_ID bllt_id)
+	{
+		return cItemMgr__bulletNumTotal(this, bllt_id);
 	}
 };
 assert_size(cItemMgr, 0x30);

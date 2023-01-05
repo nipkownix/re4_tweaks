@@ -6,6 +6,15 @@
 #include "Settings.h"
 #include "input.hpp"
 
+struct ADA_WEAPON_LEVEL
+{
+	ITEM_ID id_0;
+	int8_t power_2;
+	int8_t speed_3;
+	int8_t reload_4;
+	int8_t bullet_5;
+};
+
 struct FILE_MSG_TBL_mb
 {
 	uint8_t top_0;
@@ -55,8 +64,190 @@ void __fastcall cPlayer__weaponInit_Hook(cPlayer* thisptr, void* unused)
 	cPlayer__weaponInit(thisptr, unused);
 }
 
+bool bShouldDropChicagoAmmo = false;
+void ChicagoAmmoDropCheck() noexcept
+{
+	bool hasChicago = ItemMgr->num((ITEM_ID)EItemId::Thompson) /* || ItemMgr->num((ITEM_ID)EItemId::Ada_Machine_Gun) */;
+	if (!hasChicago)
+	{
+		bShouldDropChicagoAmmo = false;
+		return;
+	}
+
+	auto chicagoPtr = ItemMgr->search((ITEM_ID)EItemId::Thompson);
+	if (!chicagoPtr)
+	{
+		bShouldDropChicagoAmmo = false;
+		return;
+	}
+
+	// Don't drop ammo if the weapon has unlimited ammo already
+	if ((chicagoPtr->getCapacity() + 1) == 7)
+	{
+		bShouldDropChicagoAmmo = false;
+		return;
+	}
+	
+	int curChicagoAmmo = ItemMgr->num((ITEM_ID)EItemId::Bullet_45in_M);
+	bool rnd = GetRandomInt(0, 31) == 5; // 5/31 probability (16%)
+
+	bShouldDropChicagoAmmo = (rnd || (curChicagoAmmo <= 35));
+}
+
+// A bit ugly, but I couldn't find a better way to do this without reimplementing the entire func...
+uintptr_t ChicagoAmmoDrop_finish;
+void __declspec(naked) ChicagoAmmoDrop()
+{
+	_asm
+	{
+		pushad
+		pushfd
+	}
+
+	ChicagoAmmoDropCheck();
+
+	if (bShouldDropChicagoAmmo)
+	{
+		bShouldDropChicagoAmmo = false;
+		static int ret_id = int(EItemId::Bullet_45in_M);
+		static int ret_num = 70;
+
+		_asm
+		{
+			popfd
+			popad
+
+			mov eax, ret_id
+			mov ebx, ret_num
+			mov edx, [ebp + 0x8]
+			mov ecx, [ebp + 0xC]
+			mov dword ptr[edx], eax
+			mov dword ptr[ecx], ebx
+			mov eax, 0x1
+			mov esp, ebp
+			pop ebp
+			ret
+		}
+	}
+	else
+	{
+		_asm
+		{
+			popfd
+			popad
+
+			mov ebx, [ebp - 0x10]
+			cmp[ebp - 0x14], ebx
+			jmp ChicagoAmmoDrop_finish
+		}
+	}
+}
+
 void re4t::init::Gameplay()
 {
+	// Make the Chicago Typewriter not upgraded by default and try to balance it more for normal gameplay.
+	// This mostly works fine for Ada too (minus the fact the Merchant has no upgrades in SW...), but the bigger problem
+	// is that Ada's Chicago Typewriter never calls its reload func. Haven't figured out why that is. For now, we'll just
+	// not enable any of this for her, so I've left everyting I got so far commented out.
+	if (re4t::cfg->bBalancedChicagoTypewriter)
+	{
+		// Hook GetDropBullet to make the game drop the unused Chicago Typewriter ammo
+		auto pattern = hook::pattern("8B 5D ? 39 5D ? 72 ? E8 ? ? ? ? 0F B6 ? 81 E2 ? ? ? ? 79 ? 4A 83 CA ? 42 83 FA ? 0F 85");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6, true);
+		ChicagoAmmoDrop_finish = (uintptr_t)pattern.count(1).get(0).get<uint32_t>(6);
+		injector::MakeJMP(pattern.count(1).get(0).get<uint32_t>(0), ChicagoAmmoDrop, true);
+
+		// Get WeaponLevelTbl to change the Chicago Typewriter firepower stats.
+		// Originally it is always 10.0f regardless of what upgrade level you have. We now make it grow over time, with
+		// the max upgrade level bringing it to the vanilla firepower of 10.0f.
+		pattern = hook::pattern("D9 04 8D ? ? ? ? D9 5D ? 75 ? 8B CE 83 E9");
+		auto WeaponLevelTbl = *pattern.count(1).get(0).get<float(*)[49][7]>(3);
+
+		// Get wep num of Leon's Chicago
+		auto TypewriterNumLeon = bio4::WeaponId2WeaponNo(ITEM_ID(EItemId::Thompson));
+
+		/*
+		// Get wep num of Ada's Chicago
+		auto TypewriterNumAda = bio4::WeaponId2WeaponNo(ITEM_ID(EItemId::Ada_Machine_Gun));
+		*/
+
+		// Our new fire power array
+		float NewChicagoFirepower[] = { 0.9f, 1.5f, 1.7f, 2.0f, 2.5f, 3.5f, 10.0f };
+
+		// Write new values
+		std::copy(std::begin(NewChicagoFirepower), std::end(NewChicagoFirepower), std::begin((*WeaponLevelTbl)[TypewriterNumLeon]));
+		/* std::copy(std::begin(NewChicagoFirepower), std::end(NewChicagoFirepower), std::begin((*WeaponLevelTbl)[TypewriterNumAda])); */
+
+		// Nop special case inside dispBuyItemList that makes the weapon stats be shown as fully upgraded
+		pattern = hook::pattern("BE ? ? ? ? F7 42 ? ? ? ? ? 74 ? 83 C0 ? 83 F8 ? 77 ? 0F B6 90");
+		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 5, true);
+
+		// Prevent cItemMgr::construct from forcefully applying upgrades the chicago when bought
+		pattern = hook::pattern("B9 ? ? ? ? 66 89 4E ? 8B 15 ? ? ? ? F7 42");
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(1), uint32_t(0), true);
+
+		/*
+		// Get ada_weapon_level to change Ada's Chicago Typewriter fire power stats.
+		pattern = hook::pattern("0F BE 8C 12 ? ? ? ? 03 D2 66 ? 66 33 4E");
+		auto tbl_addr = *pattern.count(1).get(0).get<uintptr_t>(4);
+		tbl_addr -= 2;
+
+		auto ada_weapon_level = (ADA_WEAPON_LEVEL(*)[7])tbl_addr;
+
+		(*ada_weapon_level)[5].power_2 = 1;
+		(*ada_weapon_level)[5].bullet_5 = 1;
+		*/
+
+		// Add chicago to the Merchant's upgrade list
+		pattern = hook::pattern("68 ? ? ? ? E8 ? ? ? ? 6A 00 68 ? ? ? ? EB 54");
+		static auto merchantData = *pattern.count(1).get(0).get<MERCHANT_DATA(*)[1]>(1);
+
+		static LEVEL_INFO level_ext_tompson[2] = {
+			{ 0x34, {7, 1, 1, 7}, {0, 0} },
+			{ 0xFFFF, {0, 0, 0, 0}, {0, 0} }
+		};
+		
+		pattern = hook::pattern("8B 0D ? ? ? ? F7 41 ? ? ? ? ? 74 ? 6A");
+		struct MerchantRoomInit_hook_chicagolvl
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				regs.ecx = uint32_t(SystemSavePtr());
+
+				bio4::levelDataAdd(*merchantData, level_ext_tompson, 2);
+			}
+		}; injector::MakeInline<MerchantRoomInit_hook_chicagolvl>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		/* <- Works, but it isn't really necessary. Meh.
+		* 
+		// Add new value to level_price
+		pattern = hook::pattern("C7 05 ? ? ? ? ? ? ? ? 0F B7 81 ? ? ? ? 8D");
+		static auto level_price = *pattern.count(1).get(0).get<LEVEL_PRICE(*)[16]>(6);
+
+		// define the new element
+		LEVEL_PRICE chicagoLvlUpPrice = {
+			0x34, // id
+			{ 700, 1400, 1800, 2400, 3500, 10000, 0 },
+			{ 0, 0, 0 },
+			{ 500, 1500, 0 },
+			{ 700, 1500, 2000, 2500, 3500, 0, 0 }
+		};
+
+		// copy all the elements from the original array into a array
+		static LEVEL_PRICE newArray[18];
+		std::copy(std::begin(*level_price), std::end(*level_price), newArray);
+
+		// add the new element to the end of the array
+		newArray[17] = chicagoLvlUpPrice;
+
+		memset(*level_price, 0, sizeof(*level_price));
+
+		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), &newArray, true);
+		*/
+
+		spd::log()->info("BlancedChicagoTypewriter enabled");
+	}
+
 	// Unlock JP-only classic camera angle during Ashley segment
 	{
 		static uint8_t* pSys = nullptr;

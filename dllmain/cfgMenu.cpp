@@ -1411,6 +1411,27 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
 					}
 
+					// BlancedChicagoTypewriter
+					if ((OptionsFilter.PassFilter("BlancedChicagoTypewriter") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						if (ImGui::Checkbox("BlancedChicagoTypewriter", &re4t::cfg->bBalancedChicagoTypewriter))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							NeedsToRestart = true;
+						}
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Changes how Leon's Chicago Typewriter works:");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Chicago Typewriter ammo can now drop from dead enemies if the weapon is in the player's inventory.");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("No longer has unlimited ammo by default. Now, unlimited ammo is part of it's exclusive upgrade.");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Fire power greatly reduced. When fully upgraded, it reaches it's vanilla fire power (10).");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Upgrades for it are now available in the Merchant, and all levels should be already unlocked by default.");
+					}
+
 					// FixDitmanGlitch
 					if ((OptionsFilter.PassFilter("FixDitmanGlitch") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{

@@ -1626,6 +1626,9 @@
     <ClInclude Include="ConsoleWnd.h">
       <Filter>dllmain</Filter>
     </ClInclude>
+    <ClInclude Include="sdk\merchant.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="includes">

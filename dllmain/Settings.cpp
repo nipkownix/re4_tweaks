@@ -297,6 +297,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
 	re4t::cfg->bFixDitmanGlitch = iniReader.ReadBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
 	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+	re4t::cfg->bBalancedChicagoTypewriter = iniReader.ReadBoolean("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 	re4t::cfg->bUseSprintToggle = iniReader.ReadBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 	re4t::cfg->bRifleScreenShake = iniReader.ReadBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 	re4t::cfg->bDisableQTE = iniReader.ReadBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
@@ -827,6 +828,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
 	iniReader.WriteBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
 	iniReader.WriteBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+	iniReader.WriteBoolean("GAMEPLAY", "BlancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 	iniReader.WriteBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 	iniReader.WriteBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 	iniReader.WriteBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
@@ -1012,6 +1014,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "BlancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");

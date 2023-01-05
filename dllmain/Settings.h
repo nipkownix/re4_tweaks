@@ -113,6 +113,7 @@ public:
 	bool bAllowAshleySuplex = false;
 	bool bFixDitmanGlitch = false;
 	bool bAllowSellingHandgunSilencer = true;
+	bool bBalancedChicagoTypewriter = false;
 	bool bUseSprintToggle = false;
 	bool bRifleScreenShake = false;
 	bool bDisableQTE = false;

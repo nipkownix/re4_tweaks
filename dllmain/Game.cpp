@@ -30,6 +30,8 @@ cItemMgr__search_Fn cItemMgr__search = nullptr;
 cItemMgr__arm_Fn cItemMgr__arm = nullptr;
 cItemMgr__get_Fn cItemMgr__get = nullptr;
 cItemMgr__erase_Fn cItemMgr__erase = nullptr;
+cItemMgr__num_0_Fn cItemMgr__num_0 = nullptr;
+cItemMgr__bulletNumTotal_Fn cItemMgr__bulletNumTotal = nullptr;
 WeaponId2ChargeNum_Fn WeaponId2ChargeNum = nullptr;
 
 // event.h externs
@@ -55,6 +57,9 @@ namespace bio4 {
 	bool(__cdecl* PutInCase)(ITEM_ID item_id, uint16_t item_num, uint32_t size);
 	void(__cdecl* itemInfo)(ITEM_ID id, ITEM_INFO* info);
 	uint8_t(__cdecl* WeaponId2MaxLevel)(ITEM_ID item_id, int type);
+	uint8_t(__cdecl* WeaponId2WeaponNo)(ITEM_ID item_id);
+
+	void(__cdecl* levelDataAdd)(MERCHANT_DATA* p_data, LEVEL_INFO* p_level, uint32_t add_flag);
 
 	void(__cdecl* WeaponChange)();
 	void(__cdecl* PlChangeData)();
@@ -992,6 +997,10 @@ bool re4t::init::Game()
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(7), cItemMgr__get);
 	pattern = hook::pattern("E8 ? ? ? ? 8A 45 ? 8B 4D ? 24 ? 66 0F ? ? 8D 04 FD ? ? ? ? 66 0B ? 66 89 53");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), cItemMgr__erase);
+	pattern = hook::pattern("E8 ? ? ? ? 66 85 C0 75 ? 6A 04 6A 08 6A FF");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), cItemMgr__num_0);
+	pattern = hook::pattern("E8 ? ? ? ? 0F B7 C0 85 C0 74 05 D1");
+	ReadCall(pattern.count(1).get(0).get<uint8_t>(0), cItemMgr__bulletNumTotal);
 
 	// EvtMgr
 	pattern = hook::pattern("75 ? 6A 00 6A 00 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 84 C0");
@@ -1044,9 +1053,17 @@ bool re4t::init::Game()
 	pattern = hook::pattern("E8 ? ? ? ? 0F B6 D0 0F BE C3 83 C4 08 3B C2 75 70");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::WeaponId2MaxLevel);
 
+	// WeaponId2WeaponNo funcptr
+	pattern = hook::pattern("E8 ? ? ? ? 0F B7 15 ? ? ? ? 0F B6 C8 52 89 4D E8 E8 ? ? ? ? 0F B6 C0");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::WeaponId2WeaponNo);
+
 	// WeaponId2ChargeNum funcptr
 	pattern = hook::pattern("E8 ? ? ? ? B9 ? ? ? ? 83 C4 ? 66 3B ? 0F 84");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), WeaponId2ChargeNum);
+
+	// levelDataAdd funcptr
+	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 83 C4 ? 81 88 ? ? ? ? ? ? ? ? 8B 0D ? ? ? ? 0F B7 81 ? ? ? ? 8D 88");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::levelDataAdd);
 
 	// OptionOpenFlag <- Maybe should be somewhere else in the SDK/Game.cpp?
 	pattern = hook::pattern("A2 ? ? ? ? A2 ? ? ? ? A1 ? ? ? ? 81 48 ? ? ? ? ? E9");
