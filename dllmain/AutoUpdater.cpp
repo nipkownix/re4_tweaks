@@ -23,7 +23,7 @@ std::vector<std::string> description_lines;
 void updateCheck()
 {
 	// Delete old dll file if it is present
-	if (std::filesystem::remove(rootPath + L"dinput8.dll.deleteonnextlaunch"))
+	if (std::filesystem::remove(rootPath + wrapperName + L".dll.deleteonnextlaunch"))
 	{
 		spd::log()->info("{} -> Old .dll found and deleted", __FUNCTION__);
 	}
@@ -254,14 +254,33 @@ void updateDownloadApply()
 				}
 			}
 
-			// Rename the dll to something that will be deleted on the next launch
-			std::wstring module_path = rootPath + L"dinput8.dll";
-			std::wstring module_path_del = rootPath + L"dinput8.dll.deleteonnextlaunch";
+			// Rename the newly extracted dll+ini to the current wrapper name
+			std::wstring new_module_path1 = target + L"dinput8.dll";
+			std::wstring new_module_path2 = target + wrapperName + L".dll";
 
-			BOOL result_moveFile = MoveFileExW(module_path.c_str(), module_path_del.c_str(), MOVEFILE_REPLACE_EXISTING);
+			std::wstring new_ini_path1 = target + L"dinput8.ini";
+			std::wstring new_ini_path2 = target + wrapperName + L".ini";
+
+			BOOL result_moveFile1 = MoveFileExW(new_module_path1.c_str(), new_module_path2.c_str(), MOVEFILE_REPLACE_EXISTING);
+			BOOL result_moveFile2 = MoveFileExW(new_ini_path1.c_str(), new_ini_path2.c_str(), MOVEFILE_REPLACE_EXISTING);
+			
+			if (!result_moveFile1 || !result_moveFile1)
+			{
+				spd::log()->info("{} -> Failed to rename file. Not critical, continuing...", __FUNCTION__);
+
+				#ifdef VERBOSE
+				con.log("AutoUpdate: Failed to rename file. Not critical, continuing...");
+				#endif 
+			}
+
+			// Rename the dll to something that will be deleted on the next launch
+			std::wstring old_module_path1 = rootPath + wrapperName + L".dll";
+			std::wstring old_module_path2 = rootPath + wrapperName + L".dll.deleteonnextlaunch";
+
+			BOOL result_moveFile3 = MoveFileExW(old_module_path1.c_str(), old_module_path2.c_str(), MOVEFILE_REPLACE_EXISTING);
 
 			// Apply the updated files
-			if (result_moveFile)
+			if (result_moveFile3)
 			{
 				const auto copyOptions = std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive;
 
@@ -287,7 +306,7 @@ void updateDownloadApply()
 					updt.UpdateStatus = UpdateStatus::Failed;
 
 					// Try to restore the dll
-					MoveFileExW(module_path_del.c_str(), module_path.c_str(), MOVEFILE_REPLACE_EXISTING);
+					MoveFileExW(old_module_path2.c_str(), old_module_path1.c_str(), MOVEFILE_REPLACE_EXISTING);
 				}
 			}
 			else
