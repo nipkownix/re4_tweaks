@@ -52,12 +52,12 @@ void ConsoleOutput::Render()
         #ifdef VERBOSE
         if (ImGui::CollapsingHeader("Debug"))
         {
-            ImGui::SliderFloat("fdbg1", &re4t::cfg->fdbg1, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderFloat("fdbg2", &re4t::cfg->fdbg2, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderFloat("fdbg3", &re4t::cfg->fdbg3, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderFloat("fdbg4", &re4t::cfg->fdbg4, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderFloat("fdbg5", &re4t::cfg->fdbg5, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderFloat("fdbg6", &re4t::cfg->fdbg6, -200.0f, 200.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("fdbg1", &re4t::cfg->fdbg1, -255.0f, 255.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("fdbg2", &re4t::cfg->fdbg2, -255.0f, 255.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("fdbg3", &re4t::cfg->fdbg3, -255.0f, 255.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("fdbg4", &re4t::cfg->fdbg4, -255.0f, 255.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("fdbg5", &re4t::cfg->fdbg5, -255.0f, 255.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("fdbg6", &re4t::cfg->fdbg6, -255.0f, 255.0f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
 
             ImGui::Spacing();
 

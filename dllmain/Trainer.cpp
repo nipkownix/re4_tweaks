@@ -2241,14 +2241,13 @@ void Trainer_RenderUI(int columnCount)
 		{
 			ImGui::TableNextColumn();
 
-			static float bgHeight = 0;
-			ImGui_ItemBG(bgHeight, itmbgColor);
-
+			//ImGui_BeginBackground();
+			ImGui::BeginGroup();
 			ImGui::TextWrapped("Key combinations for trainer-related toggles.");
 			ImGui::TextWrapped("Most keys can be combined (requiring multiple to be pressed at the same time). To combine, hold one key and press another at the same time.");
 			ImGui::TextWrapped("(Press \"Save\" for changes to take effect.)");
-
-			bgHeight = ImGui::GetCursorPos().y;
+			ImGui::EndGroup();
+			//ImGui_EndBackground();
 
 			ImGui::EndTable();
 		}

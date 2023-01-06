@@ -42,8 +42,9 @@ void ImGui_ItemSeparator2();
 void ImGui_ColumnInit();
 void ImGui_ColumnSwitch();
 void ImGui_ColumnFinish();
-void ImGui_ItemBG(float RowSize, ImColor bgCol);
-extern ImColor itmbgColor;
+
+void ImGui_BeginBackground();
+void ImGui_EndBackground(float extraMargin = 10.0f, float rounding = 5.0f, bool fillX = true, ImColor bgCol = ImColor(25, 20, 20, 166));
 
 void ImGui_SetHotkeyComboThread(std::string* cfgHotkey);
 void ImGui_SetHotkeyThread(std::string* cfgHotkey);

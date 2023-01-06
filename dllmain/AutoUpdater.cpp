@@ -358,14 +358,9 @@ void AutoUpdate::RenderUI()
 
 					ImGui::TableNextColumn();
 
-					static std::vector<float> bgHeights;
-					bgHeights.resize(description_lines.size());
-
-					ImGui_ItemBG(bgHeights[i], ImColor(38, 38, 46, 166));
-
+					ImGui_BeginBackground();
 					ImGui::TextWrapped(description_lines[i].c_str());
-
-					bgHeights[i] = ImGui::GetCursorPos().y;
+					ImGui_EndBackground();
 				}
 
 				ImGui::EndTable();

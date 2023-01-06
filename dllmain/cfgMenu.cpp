@@ -117,8 +117,8 @@ void cfgMenuRender()
 
 			ImColor icn_color = ImColor(230, 15, 95);
 
-			ImVec4 active = ImVec4(150.0f / 255.0f, 10.0f / 255.0f, 40.0f / 255.0f, 255.0f / 255.0f);
-			ImVec4 inactive = ImVec4(31.0f / 255.0f, 30.0f / 255.0f, 31.0f / 255.0f, 0.0f / 255.0f);
+			ImColor active = ImColor(150, 10, 40, 255);
+			ImColor inactive = ImColor(31, 30, 31, 0);
 
 			ImVec2 btn_size = ImVec2(leftside_size_x - 28, 31 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 
@@ -361,8 +361,6 @@ void cfgMenuRender()
 
 			int columnCount = 1 + (int)((ImGui::GetWindowWidth() / (716.0f * esHook._cur_monitor_dpi)) * 1.5f);
 
-			ImColor itmbgColor = ImColor(25, 20, 20, 166);
-
 			if (Tab == MenuTab::Display)
 			{
 				if (ImGui::BeginTable("Display", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
@@ -379,7 +377,6 @@ void cfgMenuRender()
 							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
-
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
@@ -1787,14 +1784,13 @@ void cfgMenuRender()
 				{
 					ImGui::TableNextColumn();
 
-					static float bgHeight = 0;
-					ImGui_ItemBG(bgHeight, itmbgColor);
-
+					ImGui_BeginBackground();
+					ImGui::BeginGroup();
 					ImGui::TextWrapped("Key combinations for various re4_tweaks features.");
 					ImGui::TextWrapped("Most keys can be combined (requiring multiple to be pressed at the same time). To combine, hold one key and press another at the same time.");
 					ImGui::TextWrapped("(Press \"Save\" for changes to take effect.)");
-
-					bgHeight = ImGui::GetCursorPos().y;
+					ImGui::EndGroup();
+					ImGui_EndBackground();
 
 					ImGui::EndTable();
 				}
