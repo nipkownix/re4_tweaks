@@ -43,7 +43,8 @@ void PauseGame(bool setPaused)
 		SubScreenWk->open_flag_2C != 0 ||
 		OptionOpenFlag() ||
 		GlobalPtr()->playerHpCur_4FB4 == 0 ||
-		GlobalPtr()->subHpCur_4FB8 == 0;
+		GlobalPtr()->subHpCur_4FB8 == 0 ||
+		EvtMgr->IsAliveEvt(EvtMgr->NowExeEvtName_1C, 0, AliveEvtType::AliveEvtTypeNormal);
 
 	if (disable)
 		return;
