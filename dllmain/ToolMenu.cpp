@@ -368,7 +368,7 @@ void GetToolMenuPointers()
 	pattern = hook::pattern("E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? FE 46 ? 8B 07");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cDvd__ReadCheck);
 
-	pattern = hook::pattern("E8 ? ? ? ? 8B 85 ? ? ? ? 8B 0D ? ? ? ? 8B 15 ? ? ? ? 8D 44 08 0C");
+	pattern = hook::pattern("E8 ? ? ? ? 85 C0 79 ? 33 C0 5E 8B E5 5D C2 ? ? 8B 86");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cDvd__FileExistCheck);
 
 	pattern = hook::pattern("A1 ? ? ? ? B9 FF FF FF 7F 21 48 ? A1");

@@ -850,6 +850,13 @@ bool re4t::init::Game()
 			gameVersion += "j";
 		}
 
+		// Check if the EXT_CMD_MERCENARIES case exists in titleExtraSelect. If not, this is a German build
+		pattern = hook::pattern("B8 ? ? ? ? C3 B8 ? ? ? ? C3 B8 ? ? ? ? C3 8B 56 ? 8B C1 57 25");
+		if (pattern.empty())
+		{
+			gameVersion += "g";
+		}
+
 		// Check for part of gameDebug function, if exists this must be a debug-enabled build
 		pattern = hook::pattern("6A 00 6A 00 6A 08 68 AE 01 00 00 6A 10 6A 0A");
 		if (!pattern.empty())
