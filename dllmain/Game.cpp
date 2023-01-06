@@ -113,7 +113,8 @@ namespace bio4 {
 
 	void(__cdecl* QuakeExec)(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis);
   
-	bool(__cdecl* joyFireOn)();
+	BOOL(__cdecl* joyFireTrg)();
+	BOOL(__cdecl* joyFireOn)();
 };
 
 // Current play time (H, M, S)
@@ -1072,6 +1073,10 @@ bool re4t::init::Game()
 	// PlChangeData funcptr
 	pattern = hook::pattern("75 ? E8 ? ? ? ? E8 ? ? ? ? 38 1D ? ? ? ?");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::PlChangeData);
+
+	// joyFireTrg ptr
+	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 96 D8 07 00 00 8B 4A 34 F6 81 55 03");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), bio4::joyFireTrg);
 
 	// joyFireOn ptr
 	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
