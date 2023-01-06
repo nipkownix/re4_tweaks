@@ -441,15 +441,8 @@ void Trainer_Init()
 
 	// DBG_NO_DEATH2
 	{
-		// EmAtkHitCk patch
-		auto pattern = hook::pattern("05 88 00 00 00 50 53 57 E8");
-		auto EmAtkHitCk_thunk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(8));
-		FlagPatch patch_EmAtkHitCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
-		patch_EmAtkHitCk.SetPatch((uint8_t*)EmAtkHitCk_thunk.as_int(), { 0x33, 0xC0, 0xC3 });
-		flagPatches.push_back(patch_EmAtkHitCk);
-
 		// LifeDownSet2 patch
-		pattern = hook::pattern("0F 85 ? ? ? ? A1 ? ? ? ? 66 83 B8 B4 4F 00 00 00 7F");
+		auto pattern = hook::pattern("0F 85 ? ? ? ? A1 ? ? ? ? 66 83 B8 B4 4F 00 00 00 7F");
 		auto LifeDownSet2_jg = pattern.count(1).get(0).get<uint8_t>(0x13);
 		FlagPatch patch_LifeDownSet2(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 		patch_LifeDownSet2.SetPatch(LifeDownSet2_jg, { 0x90, 0x90 });
@@ -468,6 +461,256 @@ void Trainer_Init()
 		FlagPatch patch_PlGachaMove(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 		patch_PlGachaMove.SetPatch(PlGachaMove, { 0xC3 });
 		flagPatches.push_back(patch_PlGachaMove);
+
+		// em10AtkCk
+		pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? 8B 45 ? 53 8B 5D ? 56 8B 75 ? 57 8B FA");
+		auto em10AtkCk = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em10AtkCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em10AtkCk.SetPatch(em10AtkCk, { 0xC3 });
+		flagPatches.push_back(patch_em10AtkCk);
+
+		// em10TorchFrameAtkCk
+		pattern = hook::pattern("55 8B EC 83 EC 40 A1 ? ? ? ? 33 C5 89 45 FC A1 ? ? ? ? 66");
+		auto em10TorchFrameAtkCk = pattern.count(2).get(0).get<uint8_t>(0);
+		FlagPatch patch_em10TorchFrameAtkCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em10TorchFrameAtkCk.SetPatch(em10TorchFrameAtkCk, { 0xC3 });
+		flagPatches.push_back(patch_em10TorchFrameAtkCk);
+
+		// emBarrelRollHitCk
+		auto emBarrelRollHitCk = pattern.count(2).get(1).get<uint8_t>(0); // Same pattern as before
+		FlagPatch patch_emBarrelRollHitCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_emBarrelRollHitCk.SetPatch(emBarrelRollHitCk, { 0xC3 });
+		flagPatches.push_back(patch_emBarrelRollHitCk);
+
+		// em10DragonFireCk
+		pattern = hook::pattern("55 8B EC 53 8B 5D ? 83 BB ? ? ? ? ? 0F 84 ? ? ? ? 8B");
+		auto em10DragonFireCk = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em10DragonFireCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em10DragonFireCk.SetPatch(em10DragonFireCk, { 0xC3 });
+		flagPatches.push_back(patch_em10DragonFireCk);
+
+		// em10_R1_NeckHang
+		pattern = hook::pattern("55 8B EC 56 8B 75 ? 81 8E ? ? ? ? ? ? ? ? A1 ? ? ? ? 8A 80");
+		auto em10_R1_NeckHang = pattern.count(2).get(1).get<uint8_t>(0);
+		FlagPatch patch_em10_R1_NeckHang(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em10_R1_NeckHang.SetPatch(em10_R1_NeckHang, { 0xC3 });
+		flagPatches.push_back(patch_em10_R1_NeckHang);
+
+		// em10_R1_NeckHang_Ashley
+		pattern = hook::pattern("55 8B EC 53 56 8B 75 ? 81 8E ? ? ? ? ? ? ? ? A1");
+		auto em10_R1_NeckHang_Ashley = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em10_R1_NeckHang_Ashley(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em10_R1_NeckHang_Ashley.SetPatch(em10_R1_NeckHang_Ashley, { 0xC3 });
+		flagPatches.push_back(patch_em10_R1_NeckHang_Ashley);
+
+		// em10_R1_Bombhold
+		pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? 56 8B 75 ? 81 8E ? ? ? ? ? ? ? ? A1");
+		auto em10_R1_Bombhold = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em10_R1_Bombhold(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em10_R1_Bombhold.SetPatch(em10_R1_Bombhold, { 0xC3 });
+		flagPatches.push_back(patch_em10_R1_Bombhold);
+
+		// em10_R1_Backhold
+		pattern = hook::pattern("55 8B EC 51 8B 0D ? ? ? ? 56 8B 75");
+		auto em10_R1_Backhold = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em10_R1_Backhold(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em10_R1_Backhold.SetPatch(em10_R1_Backhold, { 0xC3 });
+		flagPatches.push_back(patch_em10_R1_Backhold);
+
+		// em22_R1_JumpAtkHit
+		pattern = hook::pattern("55 8B EC 56 8B 75 08 0F B6 86 ? ? ? ? C6 86 ? ? ? ? ? 83 F8 07");
+		auto em22_R1_JumpAtkHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em22_R1_JumpAtkHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em22_R1_JumpAtkHit.SetPatch(em22_R1_JumpAtkHit, { 0xC3 });
+		flagPatches.push_back(patch_em22_R1_JumpAtkHit);
+
+		// em22_R1_ParaAtkHit
+		pattern = hook::pattern("55 8B EC 56 8B 75 08 81 8E ? ? ? ? ? ? ? ? 0F B6 86 ? ? ? ? 83 E8 00 C6 86 ? ? ? ? ? 74 06 48 74 77");
+		auto em22_R1_ParaAtkHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em22_R1_ParaAtkHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em22_R1_ParaAtkHit.SetPatch(em22_R1_ParaAtkHit, { 0xC3 });
+		flagPatches.push_back(patch_em22_R1_ParaAtkHit);
+
+		// em25_R1_Bite
+		pattern = hook::pattern("55 8B EC 56 8B 75 08 C6 86 ? ? ? ? ? 0F B6 86 ? ? ? ? 83 F8 03");
+		auto em25_R1_Bite = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em25_R1_Bite(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em25_R1_Bite.SetPatch(em25_R1_Bite, { 0xC3 });
+		flagPatches.push_back(patch_em25_R1_Bite);
+
+		// em2a_R1_Trap1Bite
+		pattern = hook::pattern("55 8B EC 8B 0D ? ? ? ? 53 56 8B 75 08");
+		auto em2a_R1_Trap1Bite = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em2a_R1_Trap1Bite(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em2a_R1_Trap1Bite.SetPatch(em2a_R1_Trap1Bite, { 0xC3 });
+		flagPatches.push_back(patch_em2a_R1_Trap1Bite);
+
+		// em2d_R1_JumpKickHit
+		pattern = hook::pattern("55 8B EC 83 EC 14 A1 ? ? ? ? 33 C5 89 45 FC 56 8B 75 08 6A 02");
+		auto em2d_R1_JumpKickHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em2d_R1_JumpKickHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em2d_R1_JumpKickHit.SetPatch(em2d_R1_JumpKickHit, { 0xC3 });
+		flagPatches.push_back(patch_em2d_R1_JumpKickHit);
+
+		// em2d_R1_JumpAtkHit
+		pattern = hook::pattern("55 8B EC 83 EC 1C A1 ? ? ? ? 33 C5 89 45 FC 56 8B 75 08 6A 02");
+		auto em2d_R1_JumpAtkHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em2d_R1_JumpAtkHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em2d_R1_JumpAtkHit.SetPatch(em2d_R1_JumpAtkHit, { 0xC3 });
+		flagPatches.push_back(patch_em2d_R1_JumpAtkHit);
+
+		// em2d_R1_A_CatchKick
+		pattern = hook::pattern("55 8B EC 56 8B 75 ? 81 8E ? ? ? ? ? ? ? ? 6A ? 8B CE E8 ? ? ? ? 81 8E ? ? ? ? ? ? ? ? 0F B6 86 ? ? ? ? 83 E8 ? 74 ? 48 0F 84 ? ? ? ? 5E 5D C3 A1");
+		auto em2d_R1_A_CatchKick = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em2d_R1_A_CatchKick(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em2d_R1_A_CatchKick.SetPatch(em2d_R1_A_CatchKick, { 0xC3 });
+		flagPatches.push_back(patch_em2d_R1_A_CatchKick);
+
+		// em2d_R1_A_CatchHit
+		pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? 56 8B 75 ? 83 8E ? ? ? ? ? 6A ? 8B CE E8 ? ? ? ? 6A");
+		auto em2d_R1_A_CatchHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em2d_R1_A_CatchHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em2d_R1_A_CatchHit.SetPatch(em2d_R1_A_CatchHit, { 0xC3 });
+		flagPatches.push_back(patch_em2d_R1_A_CatchHit);
+
+		// em31_R1_CatchHit
+		pattern = hook::pattern("55 8B EC 53 56 8B 75 ? 81 8E ? ? ? ? ? ? ? ? 0F B6 86 ? ? ? ? 83 E8 ? C6 86 ? ? ? ? ? 74");
+		auto em31_R1_CatchHit = pattern.count(2).get(0).get<uint8_t>(0);
+		FlagPatch patch_em31_R1_CatchHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em31_R1_CatchHit.SetPatch(em31_R1_CatchHit, { 0xC3 });
+		flagPatches.push_back(patch_em31_R1_CatchHit);
+
+		// em31_R1_StepCatchHit
+		auto em31_R1_StepCatchHit = pattern.count(2).get(1).get<uint8_t>(0);
+		FlagPatch patch_em31_R1_StepCatchHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em31_R1_StepCatchHit.SetPatch(em31_R1_StepCatchHit, { 0xC3 });
+		flagPatches.push_back(patch_em31_R1_StepCatchHit);
+
+		// em35_R1_CatchHit
+		pattern = hook::pattern("55 8B EC 56 8B 75 ? 0F B6 86 ? ? ? ? 83 F8 ? 0F 87 ? ? ? ? 53 BB ? ? ? ? FF 24 85 ? ? ? ? B8");
+		auto em35_R1_CatchHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em35_R1_CatchHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em35_R1_CatchHit.SetPatch(em35_R1_CatchHit, { 0xC3 });
+		flagPatches.push_back(patch_em35_R1_CatchHit);
+
+		// em36_R1_CatchHit
+		pattern = hook::pattern("55 8B EC 53 56 8B 75 ? BB ? ? ? ? 09 9E ? ? ? ? C6 86");
+		auto em36_R1_CatchHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em36_R1_CatchHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em36_R1_CatchHit.SetPatch(em36_R1_CatchHit, { 0xC3 });
+		flagPatches.push_back(patch_em36_R1_CatchHit);
+
+		// em36_R1_SpineCatchHit
+		pattern = hook::pattern("55 8B EC 56 8B 75 ? 83 8E ? ? ? ? ? C6 86 ? ? ? ? ? 0F B6 86 ? ? ? ? 83 E8");
+		auto em36_R1_SpineCatchHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em36_R1_SpineCatchHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em36_R1_SpineCatchHit.SetPatch(em36_R1_SpineCatchHit, { 0xC3 });
+		flagPatches.push_back(patch_em36_R1_SpineCatchHit);
+
+		// em39_R1_KnifeHit
+		pattern = hook::pattern("55 8B EC D9 05 ? ? ? ? 56 8B 75 08 D9 9E ? ? ? ? A1 ? ? ? ? D9 40 70 D9 E8 DE E1 DC 05 ? ? ? ? D9 9E ? ? ? ? 0F B6 86 ? ? ? ? 83 F8 05");
+		auto em39_R1_KnifeHit = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em39_R1_KnifeHit(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em39_R1_KnifeHit.SetPatch(em39_R1_KnifeHit, { 0xC3 });
+		flagPatches.push_back(patch_em39_R1_KnifeHit);
+
+		// em39_R1_Knife4Atk
+		pattern = hook::pattern("55 8B EC D9 05 ? ? ? ? 56 8B 75 08 D9 9E ? ? ? ? A1 ? ? ? ? D9 40 70 D9 E8 DE E1 DC 05 ? ? ? ? D9 9E ? ? ? ? 0F B6 86 ? ? ? ? 83 F8 0D");
+		auto em39_R1_Knife4Atk = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em39_R1_Knife4Atk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em39_R1_Knife4Atk.SetPatch(em39_R1_Knife4Atk, { 0xC3 });
+		flagPatches.push_back(patch_em39_R1_Knife4Atk);
+
+		// em39_R1_br_T_Kick
+		pattern = hook::pattern("55 8B EC 57 8B 7D ? 66 83 BF ? ? ? ? ? 0F 8E ? ? ? ? 80 BF");
+		auto em39_R1_br_T_Kick = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em39_R1_br_T_Kick(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em39_R1_br_T_Kick.SetPatch(em39_R1_br_T_Kick, { 0xC3 });
+		flagPatches.push_back(patch_em39_R1_br_T_Kick);
+		
+		// em39_R1_br_T_LowKick
+		pattern = hook::pattern("55 8B EC 57 8B 7D 08 66 83 BF ? ? ? ? ? 7E 72");
+		auto em39_R1_br_T_LowKick = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em39_R1_br_T_LowKick(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em39_R1_br_T_LowKick.SetPatch(em39_R1_br_T_LowKick, { 0xC3 });
+		flagPatches.push_back(patch_em39_R1_br_T_LowKick);
+
+		// em3c_R1_AtkWait
+		pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 83 C4 ? 3B C3 74 ? 66 39 98");
+		auto em3c_R1_AtkWait = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_em3c_R1_AtkWait(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_em3c_R1_AtkWait.SetPatch(em3c_R1_AtkWait, { 0x90, 0x90, 0x90, 0x90, 0x90 });
+		flagPatches.push_back(patch_em3c_R1_AtkWait);
+
+		// sub_576900
+		pattern = hook::pattern("55 8B EC 56 8B 75 08 66 83 BE ? ? ? ? ? 0F 8E ? ? ? ? 80 BE ? ? ? ? ? 74 7A");
+		auto sub_576900 = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_sub_576900(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_sub_576900.SetPatch(sub_576900, { 0xC3 });
+		flagPatches.push_back(patch_sub_576900);
+
+		// sub_57A670
+		pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? 56 8B 75 ? 81 8E ? ? ? ? ? ? ? ? 8A 86");
+		auto sub_57A670 = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_sub_57A670(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_sub_57A670.SetPatch(sub_57A670, { 0xC3 });
+		flagPatches.push_back(patch_sub_57A670);
+
+		// EmAtkSetDamagePL
+		pattern = hook::pattern("55 8B EC 83 EC 20 A1 ? ? ? ? 33 C5 89 45 FC 8B 4D 14");
+		auto EmAtkSetDamagePL = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_EmAtkSetDamagePL(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_EmAtkSetDamagePL.SetPatch(EmAtkSetDamagePL, { 0xC3 });
+		flagPatches.push_back(patch_EmAtkSetDamagePL);
+
+		// PlBombHitCk
+		pattern = hook::pattern("55 8B EC 51 A1 ? ? ? ? 66 83 B8 ? ? ? ? ? 7E 5E");
+		auto PlBombHitCk = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_PlBombHitCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_PlBombHitCk.SetPatch(PlBombHitCk, { 0xC3 });
+		flagPatches.push_back(patch_PlBombHitCk);
+
+		// EmAtkHitCk
+		pattern = hook::pattern("55 8B EC 8B 45 ? 8B 4D ? 53 56 8B 75 ? 57 50 51");
+		auto EmAtkHitCk = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_EmAtkHitCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_EmAtkHitCk.SetPatch(EmAtkHitCk, { 0xC3 });
+		flagPatches.push_back(patch_EmAtkHitCk);
+
+		// cPlayer::dmgCheck
+		pattern = hook::pattern("56 8B F1 80 BE ? ? ? ? ? 0F 85 ? ? ? ? 80 BE");
+		auto cPlayer__dmgCheck = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_cPlayer__dmgCheck(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_cPlayer__dmgCheck.SetPatch(cPlayer__dmgCheck, { 0xC3 });
+		flagPatches.push_back(patch_cPlayer__dmgCheck);
+
+		// cSubChar::dmgCheck
+		pattern = hook::pattern("53 56 8B F1 33 DB 38 9E ? ? ? ? 0F 85 ? ? ? ? 38 9E");
+		auto cSubChar__dmgCheck = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_cSubChar__dmgCheck(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_cSubChar__dmgCheck.SetPatch(cSubChar__dmgCheck, { 0xC3 });
+		flagPatches.push_back(patch_cSubChar__dmgCheck);
+
+		// cSubChar::damageCheck
+		pattern = hook::pattern("55 8B EC 83 EC 20 A1 ? ? ? ? 33 C5 89 45 FC 53 56 8B F1 33 DB");
+		auto cSubChar__damageCheck = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_cSubChar__damageCheck(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_cSubChar__damageCheck.SetPatch(cSubChar__damageCheck, { 0xC3 });
+		flagPatches.push_back(patch_cSubChar__damageCheck);
+
+		// sceAtFunc_damage
+		pattern = hook::pattern("55 8B EC 83 EC 48 A1 ? ? ? ? 33 C5 89 45 FC 56 8B 75 08");
+		auto sceAtFunc_damage = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_sceAtFunc_damage(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_sceAtFunc_damage.SetPatch(sceAtFunc_damage, { 0xC3 });
+		flagPatches.push_back(patch_sceAtFunc_damage);
+
+		// Obj41AtkCk
+		pattern = hook::pattern("55 8B EC 83 EC ? A1 ? ? ? ? 33 C5 89 45 ? 56 8B B7");
+		auto Obj41AtkCk = pattern.count(1).get(0).get<uint8_t>(0);
+		FlagPatch patch_Obj41AtkCk(globals->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
+		patch_Obj41AtkCk.SetPatch(Obj41AtkCk, { 0xC3 });
+		flagPatches.push_back(patch_Obj41AtkCk);
 	}
 
 	// DBG_EM_WEAK
@@ -818,6 +1061,15 @@ void Trainer_Update()
 		return;
 
 	ItemMgr_Update();
+
+	// Invincibility handling
+	{
+		// Keep m_Timer_5 at a non-zero value to prevent the em**_**_Catch funcs from running. Prevents a grabs from enemies.
+		if (FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2)))
+		{
+			player->m_DmgInfo_328.m_Timer_5 = 128;
+		}
+	}
 
 	// Player speed override handling
 	{
@@ -1505,13 +1757,23 @@ void Trainer_RenderUI(int columnCount)
 				ImGui_ColumnSwitch();
 				bool invincibility = FlagIsSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2));
 				if (ImGui::Checkbox("Invincibility", &invincibility))
+				{
 					FlagSet(GlobalPtr()->flags_DEBUG_0_60, uint32_t(Flags_DEBUG::DBG_NO_DEATH2), invincibility);
+
+					if (PlayerPtr())
+					{
+						if (invincibility)
+							PlayerPtr()->m_DmgInfo_328.m_Timer_5 = 128;
+						else
+							PlayerPtr()->m_DmgInfo_328.m_Timer_5 = 0;
+					}
+				}
 
 				ImGui_ItemSeparator();
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-				ImGui::TextWrapped("Prevents taking hits from enemies & automatically skips grabs.");
+				ImGui::TextWrapped("Prevents taking damage/hits & automatically skips grabs.");
 			}
 
 			// Weak Enemies

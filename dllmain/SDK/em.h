@@ -20,11 +20,12 @@ assert_size(YARARE_INFO, 0x34);
 
 class cDmgInfo
 {
+public:
 	// old version of cDmgInfo only had a single float member
 	// unsure if this float is actually m_Dist or not, it might be m_Timer, since a lot of timer related stuff got changed to float during 60FPS change
 	float m_Dist_mb_0;
 	uint8_t m_Flag_4;
-	uint8_t m_Timer_mb_5;
+	uint8_t m_Timer_5;
 	uint8_t m_Wep_6;
 	uint8_t m_Padding03_7;
 	Vec m_PosFrom_8;
