@@ -5,6 +5,7 @@
 #include "imgui\imgui.h"
 #include "input.hpp"
 #include "Utils.h"
+#include <FAhashes.h>
 
 ConsoleOutput con;
 
@@ -88,12 +89,19 @@ void ConsoleOutput::Render()
                 bool clear = ImGui::Button("Clear");
                 ImGui::SameLine();
                 bool copy = ImGui::Button("Copy");
+
                 ImGui::SameLine();
                 ImGui::Dummy(ImVec2(20 * esHook._cur_monitor_dpi, 0));
                 ImGui::SameLine();
-                Filter.Draw("Filter", -70.0f);
+
+                // Search bar
+                ImGui::PushID("#consolefilter");
+                static const std::string searchLabel = ICON_FA_SEARCH + std::string(" Search");
+                Filter.Draw2(searchLabel.c_str(), -50.0f);
+                ImGui::PopID();
+
                 ImGui::SameLine();
-                if (ImGui::SmallButton("X"))
+                if (ImGui::SmallButton(ICON_FA_BACKSPACE))
                     Filter.Clear();
 
                 ImGui::BeginChild("scrolling1", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -148,9 +156,15 @@ void ConsoleOutput::Render()
                 ImGui::SameLine();
                 ImGui::Dummy(ImVec2(20 * esHook._cur_monitor_dpi, 0));
                 ImGui::SameLine();
-                Filter_game.Draw("Filter", -70.0f);
+
+                // Search bar
+                ImGui::PushID("#game_consolefilter");
+                static const std::string searchLabel = ICON_FA_SEARCH + std::string(" Search");
+                Filter_game.Draw2(searchLabel.c_str(), -50.0f);
+                ImGui::PopID();
+
                 ImGui::SameLine();
-                if (ImGui::SmallButton("X"))
+                if (ImGui::SmallButton(ICON_FA_BACKSPACE))
                     Filter_game.Clear();
 
                 ImGui::BeginChild("scrolling2", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);

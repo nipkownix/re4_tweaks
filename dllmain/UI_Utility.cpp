@@ -8,7 +8,7 @@
 
 MenuTab Tab = MenuTab::Display;
 TrainerTab CurTrainerTab = TrainerTab::Patches;
-ImGuiTextFilter OptionsFilter;
+ImGuiTextFilterCustom OptionsFilter;
 
 void ImGui_ItemSeparator()
 {
@@ -28,6 +28,18 @@ void ImGui_ItemSeparator2()
 	ImVec2 p0 = ImGui::GetCursorScreenPos();
 
 	drawList->AddRectFilled(ImVec2(p0.x, p0.y), ImVec2(p0.x + ImGui::GetContentRegionAvail().x, p0.y + 3), ImColor(150, 10, 40));
+}
+
+// Customized version that puts the label inside the inputbox
+bool ImGuiTextFilterCustom::Draw2(const char* label, float width) {
+	if (width != 0.0f)
+		ImGui::SetNextItemWidth(width);
+
+	std::string id = std::string("##Input_") += label;
+	bool value_changed = ImGui::InputTextWithHint(id.c_str(), label, InputBuf, IM_ARRAYSIZE(InputBuf));
+	if (value_changed)
+		Build();
+	return value_changed;
 }
 
 ImColor itmbgColor = ImColor(25, 20, 20, 166);

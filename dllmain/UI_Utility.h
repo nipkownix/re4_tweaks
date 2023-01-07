@@ -32,12 +32,16 @@ enum class TrainerTab
 };
 extern TrainerTab CurTrainerTab; // UI_Utility.cpp
 
-extern ImGuiTextFilter OptionsFilter; // UI_Utility.cpp
-
 bool ImGuiShouldAcceptInput(); // EndSceneHook.cpp
 
 void ImGui_ItemSeparator();
 void ImGui_ItemSeparator2();
+
+struct ImGuiTextFilterCustom : public ImGuiTextFilter {
+	IMGUI_API bool Draw2(const char* label = "Filter (inc,-exc)", float width = 0.0f); 
+};
+
+extern ImGuiTextFilterCustom OptionsFilter; // UI_Utility.cpp
 
 void ImGui_ColumnInit();
 void ImGui_ColumnSwitch();

@@ -326,7 +326,8 @@ void cfgMenuRender()
 
 			// Search bar
 			ImGui::PushID("#optionsfilter");
-			OptionsFilter.Draw("", 150.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+			static const std::string searchLabel = ICON_FA_SEARCH + std::string(" Search");
+			OptionsFilter.Draw2(searchLabel.c_str(), 150.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 			ImGui::PopID();
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Search for options in this tab");

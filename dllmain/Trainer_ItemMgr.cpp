@@ -7,6 +7,9 @@
 #include <nlohmann/json.hpp>
 #include <FAhashes.h>
 
+ImGuiTextFilterCustom filterItemMgr;
+ImGuiTextFilterCustom filterItemAdder;
+
 ITEM_ID wepAdded_ID = 0;
 int wepAdded_FirePower = 1;
 int wepAdded_FiringSpeed = 1;
@@ -103,24 +106,25 @@ void ItemMgr_Render()
 		}
 		ImGui::PopStyleVar();
 
-		static char searchText[256] = { 0 };
 		static bool alwaysShowInventory = true;
 		static int columns = 3;
 
 		ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.f, 2.f));
-		if (ImGui::BeginTable("##itmmgrsearch", 2))
+		if (ImGui::BeginTable("##itemmgrsearch", 2))
 		{
 			ImGui::TableNextColumn();
 
-			ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-			ImGui::InputText("Search", searchText, 256);
-			ImGui::PopItemWidth();
+			// Search bar
+			ImGui::PushID("#itmmgrfilter");
+			static const std::string searchLabel = ICON_FA_SEARCH + std::string(" Search");
+			filterItemMgr.Draw2(searchLabel.c_str(), 220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+			ImGui::PopID();
 
 			ImGui::SameLine();
 			if (ImGui::SmallButton(ICON_FA_BACKSPACE))
-				strcpy(searchText, "");
+				filterItemMgr.Clear();
 
 			ImGui::TableNextColumn();
 
@@ -145,8 +149,6 @@ void ItemMgr_Render()
 			ImGui::EndTable();
 		}
 		ImGui::PopStyleVar();
-
-		std::string searchTextUpper = StrToUpper(searchText);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f, 5.f));
 
@@ -202,14 +204,7 @@ void ItemMgr_Render()
 					if (stackable)
 						name += " (" + std::to_string(itmPtr->num_2) + ")";
 
-					bool makeVisible = true;
-					if (!searchTextUpper.empty())
-					{
-						std::string itemNameUpper = StrToUpper(name);
-
-						makeVisible = itemNameUpper.find(searchTextUpper) != std::string::npos;
-					}
-
+					bool makeVisible = filterItemMgr.PassFilter(name.c_str()) || !filterItemMgr.IsActive();
 					if (makeVisible)
 					{
 						ImGui::TableNextColumn();
@@ -555,7 +550,6 @@ void ItemMgr_Render()
 				}
 				ImGui::PopStyleVar();
 
-				static char searchText[256] = { 0 };
 				static int columns = 3;
 
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
@@ -565,13 +559,15 @@ void ItemMgr_Render()
 				{
 					ImGui::TableNextColumn();
 
-					ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-					ImGui::InputText("Search", searchText, 256);
-					ImGui::PopItemWidth();
+					// Search bar
+					ImGui::PushID("#itemadderfilter");
+					static const std::string searchLabel = ICON_FA_SEARCH + std::string(" Search");
+					filterItemAdder.Draw2(searchLabel.c_str(), 220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+					ImGui::PopID();
 
 					ImGui::SameLine();
 					if (ImGui::SmallButton(ICON_FA_BACKSPACE))
-						strcpy(searchText, "");
+						filterItemAdder.Clear();
 
 					ImGui::TableNextColumn();
 
@@ -596,8 +592,6 @@ void ItemMgr_Render()
 					ImGui::EndTable();
 				}
 				ImGui::PopStyleVar();
-
-				std::string searchTextUpper = StrToUpper(searchText);
 
 				static std::vector<EItemId> badItems = {
 					// These use ITEM_TYPE_WEAPON but don't have any "piece_info" data in the game for them
@@ -667,14 +661,7 @@ void ItemMgr_Render()
 
 							std::string name = std::string(ITEM_TYPE_Names[curInfo.type_2]) + ": " + EItemId_Names[int(item_id)];
 
-							bool makeVisible = true;
-							if (!searchTextUpper.empty())
-							{
-								std::string itemNameUpper = StrToUpper(name);
-
-								makeVisible = itemNameUpper.find(searchTextUpper) != std::string::npos;
-							}
-
+							bool makeVisible = filterItemAdder.PassFilter(name.c_str()) || !filterItemAdder.IsActive();
 							if (makeVisible)
 							{
 								ImGui::TableNextColumn();

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include "UI_Utility.h"
 
 struct ConsoleOutput
 {
@@ -65,12 +66,12 @@ struct ConsoleOutput
 
 private:
     // re4t messages
-    ImGuiTextFilter Filter;
+    ImGuiTextFilterCustom Filter;
     ImGuiTextBuffer textBuffer;
     std::vector<int> lineOffsets;
 
     // Orignal RE4 messages
-    ImGuiTextFilter Filter_game;
+    ImGuiTextFilterCustom Filter_game;
     ImGuiTextBuffer textBuffer_game;
     std::vector<int> lineOffsets_game;
 };

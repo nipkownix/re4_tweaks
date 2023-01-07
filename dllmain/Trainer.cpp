@@ -12,7 +12,9 @@
 #include "Trainer.h"
 #include <DirectXMath.h>
 
+int flagCategory = 0; // Flag editor category, matches with CategoryInfoIdx enum in Trainer.h
 std::optional<uint32_t> FlagsExtraValue;
+ImGuiTextFilterCustom flagsFilter;
 
 int AshleyStateOverride;
 int last_weaponId;
@@ -1645,25 +1647,6 @@ void Trainer_RenderUI(int columnCount)
 
 	ImGui::BeginChild("right side", ImVec2(0, 0));
 
-	// Make sure to keep order of this in sync with flagCategoryInfo vector below
-	enum class CategoryInfoIdx
-	{
-		DEBUG,
-		STOP,
-		STATUS,
-		SYSTEM,
-		ITEM_SET,
-		SCENARIO,
-		KEY_LOCK,
-		DISP,
-		EXTRA,
-		CONFIG,
-		ROOM_SAVE,
-		ROOM
-	};
-	static int flagCategory = 0; // Flag editor category, matches with enum above
-	static char searchText[256] = { 0 }; // Flag editor search text
-
 	if (CurTrainerTab == TrainerTab::Patches)
 	{
 		if (ImGui::BeginTable("TrainerPatches", columnCount, ImGuiTableFlags_PadOuterX, ImVec2(ImGui::GetItemRectSize().x - 12, 0)))
@@ -1745,7 +1728,7 @@ void Trainer_RenderUI(int columnCount)
 				// Easy way to let users jump to the EXTRA flags, since it might not be obvious they need to use flag editor for these
 				if (ImGui::Button("Edit unlockables"))
 				{
-					searchText[0] = '\0';
+					flagsFilter.Clear();
 					flagCategory = int(CategoryInfoIdx::EXTRA);
 					CurTrainerTab = TrainerTab::FlagEdit;
 				}
@@ -2519,13 +2502,15 @@ void Trainer_RenderUI(int columnCount)
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 				ImGui::SetTooltip("Only display flags that are known to have an effect.\n(note that some working flags may be missing!)");
 
-			ImGui::PushItemWidth(220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
-			ImGui::InputText("Search", searchText, 256);
-			ImGui::PopItemWidth();
+			// Search bar
+			ImGui::PushID("#flagsfilter");
+			static const std::string searchLabel = ICON_FA_SEARCH + std::string(" Search");
+			flagsFilter.Draw2(searchLabel.c_str(), 220.0f * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+			ImGui::PopID();
 
 			ImGui::SameLine();
 			if (ImGui::SmallButton(ICON_FA_BACKSPACE))
-				strcpy(searchText, "");
+				flagsFilter.Clear();
 
 			ImGui::TableNextColumn();
 
@@ -2564,9 +2549,6 @@ void Trainer_RenderUI(int columnCount)
 		if (helpText)
 			ImGui::TextWrapped(helpText);
 
-		// make search uppercase to make case insensitive search easier...
-		std::string searchTextUpper = StrToUpper(searchText);
-
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0f, 5.0f));
 		if (ImGui::BeginTable("##flags", columns, ImGuiTableFlags_ScrollY))
 		{
@@ -2578,16 +2560,13 @@ void Trainer_RenderUI(int columnCount)
 						description = (*curFlagCategory->valueDescriptions)[i].c_str();
 
 					bool makeVisible = true;
-					if (!searchTextUpper.empty())
+					if (flagsFilter.IsActive())
 					{
-						std::string flagNameUpper = StrToUpper(curFlagCategory->valueNames[i]);
-
-						makeVisible = flagNameUpper.find(searchTextUpper) != std::string::npos;
+						makeVisible = flagsFilter.PassFilter(curFlagCategory->valueNames[i]);
 
 						if (!makeVisible && description)
 						{
-							std::string descriptionUpper = StrToUpper(description);
-							makeVisible = descriptionUpper.find(searchTextUpper) != std::string::npos;
+							makeVisible = flagsFilter.PassFilter(description);
 						}
 					}
 
