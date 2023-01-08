@@ -104,17 +104,19 @@ void cfgMenuRender()
 		topright_size_y *= esHook._cur_monitor_dpi;
 
 		// Left side BG
-		draw->AddRectFilled(ImVec2(pos.x + 0, pos.y + 0), ImVec2(pos.x + leftside_size_x + 1, pos.y + ImGui::GetWindowHeight()), ImColor(8, 8, 8, 230), 10.f, 5);
+		draw->AddRectFilled(ImVec2(pos.x + 0, pos.y + 0), ImVec2(pos.x + leftside_size_x + 1, pos.y + ImGui::GetWindowHeight()), ImGui::GetColorU32(ImGuiCol_WindowBg), 10.f, 5);
 
 		// Right side BG
-		draw->AddRectFilled(ImVec2(pos.x + leftside_size_x, pos.y + 0), ImVec2(pos.x + ImGui::GetWindowWidth(), pos.y + ImGui::GetWindowHeight()), ImColor(8, 8, 8, 250), 8.f, 10);
+		draw->AddRectFilled(ImVec2(pos.x + leftside_size_x, pos.y + 0), ImVec2(pos.x + ImGui::GetWindowWidth(), pos.y + ImGui::GetWindowHeight()), ImGui::GetColorU32(ImGuiCol_ChildBg), 8.f, 10);
 
 		// Top right separator
 		draw->AddLine(ImVec2(pos.x + leftside_size_x + 10, round(pos.y + topright_size_y)), ImVec2(pos.x + ImGui::GetItemRectSize().x - 15, round(pos.y + topright_size_y)), ImColor(150, 10, 40));
 
 		// Setup tab buttons
 		{
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 			ImGui::BeginChild("left side", ImVec2(leftside_size_x, 0));
+			ImGui::PopStyleColor();
 
 			ImColor icn_color = ImColor(230, 15, 95);
 
@@ -298,7 +300,9 @@ void cfgMenuRender()
 
 		// Setup top right
 		{
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 			ImGui::BeginChild("top right", ImVec2(0, topright_size_y));
+			ImGui::PopStyleColor();
 
 			// "Pause game" option
 			if (ImGui::Checkbox("Pause game", &bPauseGameWhileInCfgMenu))
@@ -357,7 +361,9 @@ void cfgMenuRender()
 		{
 			ImGui::SetCursorPos(ImVec2(leftside_size_x + 16, topright_size_y + 10));
 
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 			ImGui::BeginChild("right side", ImVec2(0, 0));
+			ImGui::PopStyleColor();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(16.f, 16.f));
 
