@@ -1,10 +1,23 @@
 #pragma once
 #include "camera.h"
+class cModel;
 
 class CameraControl;
 extern CameraControl* CamCtrl; // Game.cpp
 
-class cModel;
+class CameraSmooth : public CAMERA
+{
+public:
+    uint32_t m_flag_F8;
+    float m_ratio_FC;
+    CAMERA_POINT m_effect_100;
+    Vec m_effect_Campos_bak_120;
+    uint8_t CameraSmooth_field_12C;
+    uint8_t pad_12D[3];
+    CAMERA_POINT m_effect_bak_mb_130;
+};
+assert_size(CameraSmooth, 0x150);
+extern CameraSmooth* CamSmth; // Game.cpp
 
 struct CameraInterpolation
 {
@@ -13,6 +26,7 @@ struct CameraInterpolation
 };
 assert_size(CameraInterpolation, 0x24);
 
+// TODO: move to cam_qfps.h to match ps2 symbols
 struct QFPS_OFFSET
 {
   Vec m_campos_0[2];

@@ -11,6 +11,7 @@ SND_CTRL* Snd_ctrl_work = nullptr; // extern inside Game.h
 SUB_SCREEN* SubScreenWk = nullptr; // extern inside sscrn.h
 pzlPlayer__ptrPiece_Fn pzlPlayer__ptrPiece = nullptr; // extern inside puzzle.h
 CameraControl* CamCtrl = nullptr; // extern inside cam_ctrl.h
+CameraSmooth* CamSmth = nullptr; // extern inside cam_ctrl.h
 cPlayer__subScrCheck_Fn cPlayer__subScrCheck = nullptr; // extern inside player.h
 j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr; // extern inside fade.h
 uint32_t* cSofdec = nullptr;
@@ -650,6 +651,18 @@ void Game_ScheduleInMainThread(std::function<void()> function)
 	game_pendingMainThreadFuncs.emplace_back(std::move(function));
 }
 
+const float CamSmoothRatioOrig = 0.80000001f;
+float CamSmoothRatioNew = CamSmoothRatioOrig; // Game is patched to make CameraQuasiFPS::init read from this
+void Game_SetCameraSmoothness(float scale)
+{
+	CamSmoothRatioNew = CamSmoothRatioOrig * scale;
+
+	if (CamCtrl)
+		CamCtrl->m_QuasiFPS_278.m_walk_ratio_1B0 = CamSmoothRatioNew;
+	if (CamSmth)
+		CamSmth->m_ratio_FC = CamSmoothRatioNew;
+}
+
 void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui, bool handle_attache_case)
 {
 	// TODO: `piece_info` array inside game defines the puzzle piece for items that can be stored in inventory
@@ -1114,9 +1127,17 @@ bool re4t::init::Game()
 	pattern = hook::pattern("80 B9 FC 00 00 00 00 75 ? 8A 81 FD 00 00 00");
 	cPlayer__subScrCheck = (cPlayer__subScrCheck_Fn)pattern.count(1).get(0).get<uint32_t>(0);
 
+	// CamSmth ptr
+	pattern = hook::pattern("56 B9 ? ? ? ? E8 ? ? ? ? 8D 53 60");
+	CamSmth = *pattern.count(1).get(0).get<CameraSmooth*>(2);
+
 	// CamCtrl ptr
 	pattern = hook::pattern("D9 EE B9 ? ? ? ? D9 9E A4 00 00 00 E8 ? ? ? ? D9 EE");
 	CamCtrl = *pattern.count(1).get(0).get<CameraControl*>(3);
+
+	// Patch CameraQuasiFPS::init to use our CamSmoothRatioNew value
+	pattern = hook::pattern("D9 05 ? ? ? ? 56 8B F1 D9 96 B0 01 00 00");
+	injector::WriteMemory<float*>(pattern.count(1).get(0).get<float*>(2), &CamSmoothRatioNew, true);
 
 	// Sofdec ptr
 	pattern = hook::pattern("B9 ? ? ? ? C6 86 1F 05 00 00 01");

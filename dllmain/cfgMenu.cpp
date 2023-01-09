@@ -464,6 +464,29 @@ void cfgMenuRender()
 							re4t::cfg->fFOVAdditional = 0.0f;
 					}
 
+					// FOVAdditional
+					if ((OptionsFilter.PassFilter("CameraSmooth") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						ImGui::TextWrapped("Camera smoothing percentage");
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::TextWrapped("Adjusts the smoothness ratio applied to camera movements, some may prefer to lower this.");
+						ImGui::TextWrapped("NOTE: setting to 0 is not recommended, as that will make small camera movements extremely jerky (eg. when character climbs a small bump)");
+						
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Smoothing").x);
+						if (ImGui::SliderFloat("Smoothing", &re4t::cfg->fCameraSmoothing, 0.0f, 100.0f, "%.0f", ImGuiSliderFlags_AlwaysClamp))
+							Game_SetCameraSmoothness(re4t::cfg->fCameraSmoothing / 100.0f);
+
+						ImGui::PopItemWidth();
+					}
+
 					// DisableVsync
 					if ((OptionsFilter.PassFilter("DisableVsync") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{

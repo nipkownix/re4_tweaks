@@ -120,6 +120,9 @@ void ReadSettingsIni(std::wstring ini_path)
 		else
 			re4t::cfg->bEnableFOV = false;
 
+		re4t::cfg->fCameraSmoothing = ini.getFloat("DISPLAY", "CameraSmoothing", re4t::cfg->fCameraSmoothing);
+		Game_SetCameraSmoothness(re4t::cfg->fCameraSmoothing / 100.0f);
+
 		re4t::cfg->bDisableVsync = ini.getBool("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
 
 		re4t::cfg->bUltraWideAspectSupport = ini.getBool("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
@@ -591,6 +594,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		// DISPLAY
 		ini.setFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
+		ini.setFloat("DISPLAY", "CameraSmoothing", re4t::cfg->fCameraSmoothing);
 		ini.setBool("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
 
 		ini.setBool("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
@@ -928,6 +932,7 @@ void re4t_cfg::LogSettings()
 	// DISPLAY
 	spd::log()->info("+ DISPLAY------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "FOVAdditional", re4t::cfg->fFOVAdditional);
+	spd::log()->info("| {:<30} | {:>15} |", "CameraSmoothing", re4t::cfg->fCameraSmoothing);
 	spd::log()->info("| {:<30} | {:>15} |", "DisableVsync", re4t::cfg->bDisableVsync ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "SideAlignHUD", re4t::cfg->bSideAlignHUD ? "true" : "false");
