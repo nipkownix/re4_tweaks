@@ -138,6 +138,7 @@ struct JOY
 	uint8_t analogA_C;
 	uint8_t analogB_D;
 	int8_t err_E;
+	uint8_t pad_F[1];
 	JOY_BTN old_10;
 	JOY_BTN on_14;
 	JOY_BTN trg_18;

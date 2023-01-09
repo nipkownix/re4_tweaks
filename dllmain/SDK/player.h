@@ -85,7 +85,8 @@ public:
 	cMotBase* MotBase_7F4;
 	Vec pos_bak_7F8;
 	LASER_TYPE laser_type_804;
-	uint8_t plunk_field_808;
+	uint8_t JumpFallInProgress_mb_808;
+	uint8_t pad_809[3];
 	float m_invisi_rate_80C;
 	uint32_t pc_func_810;
 

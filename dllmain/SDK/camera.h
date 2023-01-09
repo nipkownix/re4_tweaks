@@ -15,14 +15,14 @@ class CAMERA
 public:
 	Mtx mat_0;
 	Mtx v_mat_30;
-	float cam_field_60;
+	int ProjType_60;
 	Mtx44 ProjMat_64;
 	CAMERA_POINT CamPoint_A4;
 	Vec Up_C4;
 	Vec Look_D0;
 	Vec Right_DC;
 	Vec Ang_E8;
-	float cam_field_F4;
+	float Distance_F4;
 };
 assert_size(CAMERA, 0xF8);
 

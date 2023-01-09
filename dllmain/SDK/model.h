@@ -3,32 +3,82 @@
 #include "atariInfo.h" // cAtariInfo
 #include "camera.h" // ATTACH_CAMERA
 
+#pragma pack(push, 1)
+struct PEN_INFO
+{
+	Vec Offset_0;
+	Vec Normal_C;
+	float Length_l_18;
+	float Length_r_1C;
+	float Length_lu_20;
+	float Length_ru_24;
+	Vec Speed_28;
+	Vec Pos_34;
+	Vec Pos_old_40;
+	Vec Fix_pos_4C;
+	float Length_58;
+	float Gravity_5C;
+	float Fix_rate_60;
+	float Max_rad_64;
+	float Spd_rate_68;
+	float Wind_rate_6C;
+	uint8_t At_ck_70;
+	uint8_t Flag_71;
+};
+assert_size(PEN_INFO, 0x72);
+#pragma pack(pop)
+
+struct PBOMB_INFO
+{
+	Vec Pos_0[5];
+	Vec Speed_3C[5];
+	uint16_t Flag_78;
+	int16_t Delay_7A;
+};
+assert_size(PBOMB_INFO, 0x7C);
+
 class cParts : public cCoord
 {
 public:
-	// TODO: a lot of this is incorrect
-	// seems to be using union to handle storing data for different part types...
-	Mtx mtx_C4;
+	Mtx hokan_mat_C4;
 	cParts* nextParts_F4;
-	Mtx mat_F8;
-	Vec unionStart_128;
-	Vec field_134;
-	float cloth_Lp_dist_140;
-	float cloth_Rp_dist_144;
-	float cloth_ULp_dist_148;
-	float cloth_unk_dist_14C;
-	Vec field_150;
-	Vec field_15C;
-	Vec field_168;
-	Vec field_174;
-	Vec field_180;
-	Vec field_18C;
-	uint32_t flags_198;
-	uint8_t unk_19C[4];
-	uint16_t field_1A0;
-	uint16_t field_1A2;
-	uint8_t unk_1A4[28];
-	uint32_t flags_1C0;
+	Mtx lt_inv_mat_F8;
+	union
+	{
+		struct
+		{
+			float length_128;
+			Mtx ik_inv_mat_12C;
+			Vec up_vector_15C;
+			Vec ik_dir_168;
+			Vec pos_bak_174;
+			Vec ang_bak_180;
+			Vec scale_bak_18C;
+			float ang_x_bak_198;
+			uint16_t key_hist_19C[3][3];
+			uint16_t key_histB_1AE[3][3];
+		};
+		struct
+		{
+			Vec world_ang_128;
+			uint8_t world_ang_padd_134[132];
+		};
+		struct
+		{
+			PEN_INFO Pen;
+		};
+		struct
+		{
+			uint32_t Kaboom_flg_128;
+			Vec Kaboom_spd_12C;
+			Vec Kaboom_ang_spd_138;
+		};
+		struct
+		{
+			PBOMB_INFO Bomb_128;
+		};
+	};
+	uint32_t flag_1C0;
 	uint8_t unk_1C4[20];
 };
 assert_size(cParts, 0x1D8); // TODO: check size
@@ -117,7 +167,7 @@ public:
 	SHAPE_WK shape_list_B0[5];
 	uint32_t shape_status_D8_flags;
 	float shape_frame_DC;
-	uint8_t cModelInfo_field_E0;
+	uint8_t blendSetNum_mb_E0;
 	uint8_t cModelInfo_unk_E1[3];
 	float cModelInfo_field_E4;
 	TEXANM_INFO texanm_info_E8;
@@ -130,20 +180,8 @@ assert_size(cModelInfo, 0x130);
 class cLightInfo
 {
 public:
-	Mtx* imat_0;
-	uint32_t cLightInfo_field_4;
-	uint32_t cLightInfo_field_8;
-	uint32_t cLightInfo_field_C;
-	Vec position_10;
-	Vec rotation_1C;
-	Vec scale_28;
-	int32_t cLightInfo_field_34;
-	int32_t cLightInfo_field_38;
-	int32_t cLightInfo_field_3C;
-	int32_t cLightInfo_field_40;
-	int32_t cLightInfo_field_44;
-	int32_t cLightInfo_field_48;
-	int32_t cLightInfo_field_4C;
+	Mtx mat_0;
+	class cLight* pLight_30[8];
 	uint8_t EnableMask_50;
 	uint8_t Flag_51;
 	int8_t PartsNo_52;
