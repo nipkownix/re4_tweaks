@@ -1257,6 +1257,10 @@ void Trainer_Update()
 				ashley->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
 			}
 
+			// Override camera smoothness
+			// (users will be able to override this if they change smoothness in cfgMenu tho... oh well, it's not a bug, it's a feature :)
+			Game_SetCameraSmoothness(0);
+
 			// Set pl stop flag
 			FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL), true);
 			stopPlFlagSet = true;
@@ -1393,6 +1397,9 @@ void Trainer_Update()
 		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3] = CamXYZbackup[0];
 		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3] = CamXYZbackup[1];
 		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3] = CamXYZbackup[2];
+
+		// Restore camera smoothness to users setting...
+		Game_SetCameraSmoothness(re4t::cfg->fCameraSmoothing / 100.0f);
 
 		FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL), false);
 		stopPlFlagSet = false;
