@@ -1211,16 +1211,25 @@ void Trainer_Update()
 	if (re4t::cfg->bTrainerEnableFreeCam)
 	{
 		// Camera rotation
+		float dir_delta = 0;
+		float dep_delta = 0;
 		if (isController())
 		{
-			fFreeCam_direction -= *AnalogRX_8 / 800.0f;
-			fFreeCam_depression += *AnalogRY_9 / 800.0f;
+			dir_delta = *AnalogRX_8 / 800.0f;
+			dep_delta = *AnalogRY_9 / 800.0f;
 		}
 		else
 		{
-			fFreeCam_direction -= *MouseDeltaX / 600.0f;
-			fFreeCam_depression += *MouseDeltaY / 600.0f;
+			dir_delta = *MouseDeltaX / 600.0f;
+			dep_delta = *MouseDeltaY / 600.0f;
 		}
+
+		// invert Y if CFG_AIM_REVERSE flag is set
+		if (FlagIsSet(SystemSavePtr()->flags_CONFIG_0, uint32_t(Flags_CONFIG::CFG_AIM_REVERSE)))
+			dep_delta = -dep_delta;
+
+		fFreeCam_direction -= dir_delta;
+		fFreeCam_depression += dep_delta;
 
 		fFreeCam_depression = std::clamp(fFreeCam_depression, -2.33f, 2.33f);
 
