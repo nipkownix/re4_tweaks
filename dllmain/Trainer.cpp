@@ -1298,46 +1298,44 @@ void Trainer_Update()
 			movSpeed *= 2.0f;
 
 		// Directions
-		float Sine = CamCtrl->Camera_60.mat_0[2][0];
-		float Cosine = CamCtrl->Camera_60.mat_0[0][0];
-		float Pitch = fFreeCam_depression;
+		float LookX = -GlobalPtr()->Camera_74.Look_D0.x * movSpeed;
+		float LookY = -GlobalPtr()->Camera_74.Look_D0.y * movSpeed;
+		float LookZ = -GlobalPtr()->Camera_74.Look_D0.z * movSpeed;
 
-		Sine *= movSpeed;
-		Cosine *= movSpeed;
-		Pitch *= movSpeed;
-
-		float *X = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
-		float *Y = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
-		float *Z = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
+		float* X = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
+		float* Y = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
+		float* Z = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
 
 		// Forwards
 		if (isPressingFwd)
 		{
-			*X += Sine;
-			*Y += Pitch;
-			*Z -= Cosine;
+			*X += LookX;
+			*Y += LookY;
+			*Z += LookZ;
 		}
 
 		// Backwards
 		if (isPressingBack)
 		{
-			*X -= Sine;
-			*Y -= Pitch;
-			*Z += Cosine;
+			*X -= LookX;
+			*Y -= LookY;
+			*Z -= LookZ;
 		}
 
 		// Left
 		if (isPressingLeft)
 		{
-			*X -= Cosine;
-			*Z -= Sine;
+			*X += LookZ;
+			*Z -= LookX;
 		}
 
 		// Right
 		if (isPressingRight)
 		{
-			*X += Cosine;
-			*Z += Sine;
+			// TODO: these values are a bit off from (Camera_74.Right_DC * movSpeed), but only by a tiny amount
+			// The difference doesn't really seem to matter, but maybe this would be more accurate to use the Right_DC values instead..
+			*X -= LookZ;
+			*Z += LookX;
 		}
 
 		// Up
