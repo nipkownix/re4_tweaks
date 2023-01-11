@@ -529,7 +529,7 @@ uint16_t* GetEtcFlgPtr_Hook(uint32_t etc_no, uint16_t room_no)
 }
 
 void (__cdecl* itemCaption)(ITEM_ID a1);
-void __cdecl itemCaption_hook(ITEM_ID a1)
+void __cdecl BuyMenuSelect__move_itemCaption_hook(ITEM_ID a1)
 {
 	if (a1 == (ITEM_ID)EItemId::Thompson && re4t::cfg->bBalancedChicagoTypewriter)
 		a1 = (ITEM_ID)EItemId::Ada_Machine_Gun;
@@ -537,14 +537,14 @@ void __cdecl itemCaption_hook(ITEM_ID a1)
 	itemCaption(a1);
 }
 
-cItem SsItemExamine__move__cItem;
+cItem SsItemExamine__move_cItem;
 bool(__fastcall* MesSet)(MessageControl* thisptr, void* unused, uint32_t num, int px, int py, uint32_t attr, int wk, uint8_t col, int font_no);
 bool __fastcall SsItemExamine__move_MesSet_hook(MessageControl* thisptr, void* unused, uint32_t num, int px, int py, uint32_t attr, int wk, uint8_t col, int font_no)
 {
-	if (num == (ITEM_ID)EItemId::Thompson && !SsItemExamine__move__cItem.specialTuned() && re4t::cfg->bBalancedChicagoTypewriter)
+	if (num == (ITEM_ID)EItemId::Thompson && !SsItemExamine__move_cItem.specialTuned() && re4t::cfg->bBalancedChicagoTypewriter)
 		num = (ITEM_ID)EItemId::Ada_Machine_Gun;
 
-	if (num == (ITEM_ID)EItemId::Ruger_SA && !SsItemExamine__move__cItem.specialTuned() && re4t::cfg->bFixSilencedHandgunDescription)
+	if (num == (ITEM_ID)EItemId::Ruger_SA && !SsItemExamine__move_cItem.specialTuned() && re4t::cfg->bFixSilencedHandgunDescription)
 		num = (ITEM_ID)EItemId::Ruger;
 
 	return MesSet(thisptr, nullptr, num, px, py, attr, wk, col, font_no);
@@ -1298,7 +1298,7 @@ void re4t::init::Misc()
 	// Silenced Handgun: display "A standard 9mm handgun" when it has less than max firepower
 	// Leon's Chicago Typewriter: display "This machinegun is outfitted with a powerful .45 caliber magazine" when it has less than max capacity
 	{
-		// SellMenuSelect__move
+		// SellMenuSelect::move
 		auto pattern = hook::pattern("8B F0 E8 ? ? ? ? 0F b7 D0 52");
 		struct GetMsgID_hook
 		{
@@ -1339,23 +1339,23 @@ void re4t::init::Misc()
 			}
 		}; injector::MakeInline<GetMsgID_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
-		// LvUpMenuSelect__move
+		// LvUpMenuSelect::move
 		pattern = hook::pattern("8B F0 E8 ? ? ? ? 8B ? ? 0F B7 C0");
 		injector::MakeInline<GetMsgID_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
-		// BuyMenuSelect__move
+		// BuyMenuSelect::move
 		pattern = hook::pattern("0F B7 10 52 E8 ? ? ? ? 83");
 		ReadCall(pattern.count(1).get(0).get<uint8_t>(4), itemCaption);
-		InjectHook(pattern.count(1).get(0).get<uint32_t>(4), itemCaption_hook);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(4), BuyMenuSelect__move_itemCaption_hook);
 
-		// SsItemExamine__move
+		// SsItemExamine::move
 		pattern = hook::pattern("0F B7 46 06 8B D0 C1");
 		struct SsItemExamine__move_SavecItem
 		{
 			void operator()(injector::reg_pack& regs)
 			{
 				// capture cItem so we can check its upgrade status
-				SsItemExamine__move__cItem = *(cItem*)regs.esi;
+				SsItemExamine__move_cItem = *(cItem*)regs.esi;
 
 				// code we overwrote
 				regs.eax = *(uint32_t*)(regs.esi + 0x6);

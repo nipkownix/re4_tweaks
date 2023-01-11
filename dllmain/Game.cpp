@@ -1070,7 +1070,7 @@ bool re4t::init::Game()
 	pattern = hook::pattern("E8 ? ? ? ? B9 ? ? ? ? 83 C4 ? 66 3B ? 0F 84");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), WeaponId2ChargeNum);
 
-	// cItem__specialTuned funcptr
+	// cItem::specialTuned funcptr
 	pattern = hook::pattern("8B CE E8 ? ? ? ? 84 C0 74 ? C6");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(2)).as_int(), cItem__specialTuned);
 
