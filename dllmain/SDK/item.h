@@ -369,6 +369,7 @@ public:
 		weapon_6[1] = newVal << 3;
 	}
 	
+	// determines whether a weapon has its exclusive upgrade
 	inline bool specialTuned()
 	{
 		return cItem__specialTuned(this);

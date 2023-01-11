@@ -541,10 +541,10 @@ cItem SsItemExamine__move__cItem;
 bool(__fastcall* MesSet)(MessageControl* thisptr, void* unused, uint32_t num, int px, int py, uint32_t attr, int wk, uint8_t col, int font_no);
 bool __fastcall SsItemExamine__move_MesSet_hook(MessageControl* thisptr, void* unused, uint32_t num, int px, int py, uint32_t attr, int wk, uint8_t col, int font_no)
 {
-	if (num == (ITEM_ID)EItemId::Thompson && !SsItemExamine__move__cItem.specialTuned())
+	if (num == (ITEM_ID)EItemId::Thompson && !SsItemExamine__move__cItem.specialTuned() && re4t::cfg->bBalancedChicagoTypewriter)
 		num = (ITEM_ID)EItemId::Ada_Machine_Gun;
 
-	if (num == (ITEM_ID)EItemId::Ruger_SA && !SsItemExamine__move__cItem.specialTuned())
+	if (num == (ITEM_ID)EItemId::Ruger_SA && !SsItemExamine__move__cItem.specialTuned() && re4t::cfg->bFixSilencedHandgunDescription)
 		num = (ITEM_ID)EItemId::Ruger;
 
 	return MesSet(thisptr, nullptr, num, px, py, attr, wk, col, font_no);
@@ -1330,7 +1330,7 @@ void re4t::init::Misc()
 						item.id_0 = 260;
 					break;
 				case EItemId::Thompson:
-					if (!item.specialTuned())
+					if (!item.specialTuned() && re4t::cfg->bFixSilencedHandgunDescription)
 						item.id_0 = (ITEM_ID)EItemId::Ada_Machine_Gun;
 					break;
 				}
