@@ -1135,40 +1135,36 @@ void Trainer_Update()
 			float movSpeed = 140.0f * re4t::cfg->fTrainerNumMoveSpeed;
 
 			// Cam directions
-			float Sine = CamCtrl->Camera_60.mat_0[2][0];
-			float Cosine = CamCtrl->Camera_60.mat_0[0][0];
-			float Pitch = fFreeCam_depression;
-
-			Sine *= movSpeed;
-			Cosine *= movSpeed;
-			Pitch *= movSpeed;
+			float LookX = -GlobalPtr()->Camera_74.Look_D0.x * movSpeed;
+			float LookY = -GlobalPtr()->Camera_74.Look_D0.y * movSpeed;
+			float LookZ = -GlobalPtr()->Camera_74.Look_D0.z * movSpeed;
 
 			// Forwards
 			if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
 			{
-				player->pos_94.x += Sine;
-				player->pos_94.z -= Cosine;
+				player->pos_94.x += LookX;
+				player->pos_94.z += LookZ;
 			}
 
 			// Backwards
 			if (pInput->is_key_down(0x62)) //VK_NUMPAD_2
 			{
-				player->pos_94.x -= Sine;
-				player->pos_94.z += Cosine;
+				player->pos_94.x -= LookX;
+				player->pos_94.z -= LookZ;
 			}
 
 			// Left
 			if (pInput->is_key_down(0x64)) //VK_NUMPAD_4
 			{
-				player->pos_94.x -= Cosine;
-				player->pos_94.z -= Sine;
+				player->pos_94.x += LookZ;
+				player->pos_94.z -= LookX;
 			}
 
 			// Right
 			if (pInput->is_key_down(0x66)) //VK_NUMPAD_6
 			{
-				player->pos_94.x += Cosine;
-				player->pos_94.z += Sine;
+				player->pos_94.x -= LookZ;
+				player->pos_94.z += LookX;
 			}
 
 			// Up
