@@ -290,8 +290,11 @@ struct upgradeTypes {
 
 extern std::unordered_map<EItemId, upgradeTypes> extra_upgrades;
 
+class cItem;
 typedef uint16_t(__cdecl* WeaponId2ChargeNum_Fn)(ITEM_ID item_id, int level);
+typedef bool(__thiscall* cItem__specialTuned_Fn)(cItem* thisptr);
 extern WeaponId2ChargeNum_Fn WeaponId2ChargeNum;
+extern cItem__specialTuned_Fn cItem__specialTuned;
 
 class cItem
 {
@@ -364,6 +367,11 @@ public:
 	inline void setAmmo(int newVal)
 	{
 		weapon_6[1] = newVal << 3;
+	}
+	
+	inline bool specialTuned()
+	{
+		return cItem__specialTuned(this);
 	}
 };
 assert_size(cItem, 0xE);

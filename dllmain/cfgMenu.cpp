@@ -1416,12 +1416,12 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
 					}
 
-					// BlancedChicagoTypewriter
-					if ((OptionsFilter.PassFilter("BlancedChicagoTypewriter") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					// BalancedChicagoTypewriter
+					if ((OptionsFilter.PassFilter("BalancedChicagoTypewriter") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
-						if (ImGui::Checkbox("BlancedChicagoTypewriter", &re4t::cfg->bBalancedChicagoTypewriter))
+						if (ImGui::Checkbox("BalancedChicagoTypewriter", &re4t::cfg->bBalancedChicagoTypewriter))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;

@@ -247,7 +247,7 @@ void re4t::init::Gameplay()
 		injector::WriteMemory(pattern.count(1).get(0).get<uint32_t>(6), &newArray, true);
 		*/
 
-		spd::log()->info("BlancedChicagoTypewriter enabled");
+		spd::log()->info("BalancedChicagoTypewriter enabled");
 	}
 
 	// Unlock JP-only classic camera angle during Ashley segment
