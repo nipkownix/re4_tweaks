@@ -1330,7 +1330,7 @@ void re4t::init::Misc()
 						item.id_0 = 260;
 					break;
 				case EItemId::Thompson:
-					if (!item.specialTuned() && re4t::cfg->bFixSilencedHandgunDescription)
+					if (!item.specialTuned() && re4t::cfg->bBalancedChicagoTypewriter)
 						item.id_0 = (ITEM_ID)EItemId::Ada_Machine_Gun;
 					break;
 				}
