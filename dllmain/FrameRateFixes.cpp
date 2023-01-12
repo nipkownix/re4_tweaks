@@ -55,6 +55,17 @@ void __cdecl OpenBoxMain_hook(int type, bool openedFlag, __int16 seId, int smdId
 		GlobalPtr()->deltaTime_70 = deltaTimeBackup;
 }
 
+void __cdecl QuakeExec_hook(uint32_t No, uint32_t Delay, int Time, float Scale, uint32_t Axis)
+{
+	if (re4t::cfg->bFixCameraShakeEffects)
+	{
+		Delay = (uint32_t)(Delay / GlobalPtr()->deltaTime_70);
+		Time  = (int)(Time / GlobalPtr()->deltaTime_70);
+	}
+
+	bio4::QuakeExec(No, Delay, Time, Scale, Axis);
+}
+
 void re4t::init::FrameRateFixes()
 {
 	// Fix the speed of falling items
@@ -1571,6 +1582,12 @@ void re4t::init::FrameRateFixes()
 					regs.ef &= ~(1 << regs.zero_flag);
 			}
 		}; injector::MakeInline<MercsModeFPSFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
+	}
+
+	// Fix the strength and duration of camera shake effects
+	{
+		auto pattern = hook::pattern("6A 1E 6A 00 6A 00 E8");
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(6)).as_int(), QuakeExec_hook, PATCH_JUMP);
 	}
 
 	// Copy delta-time related code from cSubChar::moveBust to cPlAshley::moveBust

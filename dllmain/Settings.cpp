@@ -285,6 +285,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
 	re4t::cfg->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
 	re4t::cfg->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
+	re4t::cfg->bFixCameraShakeEffects = iniReader.ReadBoolean("FRAME RATE", "FixCameraShakeEffects", re4t::cfg->bFixCameraShakeEffects);
 	re4t::cfg->bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
 	re4t::cfg->bReplaceFramelimiter = iniReader.ReadBoolean("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
 	re4t::cfg->bMultithreadFix = iniReader.ReadBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
@@ -816,6 +817,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
 	iniReader.WriteBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
 	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
+	iniReader.WriteBoolean("FRAME RATE", "FixCameraShakeEffects", re4t::cfg->bFixCameraShakeEffects);
 	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
 	iniReader.WriteBoolean("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
 	iniReader.WriteBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
@@ -1000,6 +1002,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixQTE", re4t::cfg->bFixQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixCameraShakeEffects", re4t::cfg->bFixCameraShakeEffects ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableFastMath", re4t::cfg->bEnableFastMath ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "MultithreadFix", re4t::cfg->bMultithreadFix ? "true" : "false");

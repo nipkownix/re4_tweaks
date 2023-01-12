@@ -101,6 +101,7 @@ public:
 	bool bFixTurningSpeed = true;
 	bool bFixQTE = true;
 	bool bFixAshleyBustPhysics = true;
+	bool bFixCameraShakeEffects = true;
 	bool bEnableFastMath = true;
 	bool bReplaceFramelimiter = true;
 	bool bMultithreadFix = true;

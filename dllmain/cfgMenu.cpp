@@ -1259,6 +1259,19 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Fixes difference between 30/60FPS on physics applied to Ashley.");
 					}
 
+					// FixCameraShakeEffects
+					if ((OptionsFilter.PassFilter("FixCameraShakeEffects Quake") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixCameraShakeEffects", &re4t::cfg->bFixCameraShakeEffects);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Fixes weak camera shake effects at framerates higher than 30fps.");
+					}
+
 					// EnableFastMath
 					if ((OptionsFilter.PassFilter("EnableFastMath") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
