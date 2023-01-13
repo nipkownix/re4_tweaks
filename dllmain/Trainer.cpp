@@ -998,6 +998,19 @@ void Trainer_Init()
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck_Hook, PATCH_JUMP);
 
+		pattern = hook::pattern("05 94 00 00 00 50 8B CE E8 ? ? ? ? 8B 0D");
+		struct cBlock__checkv_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Check against camera position instead of player pos if freecam is enabled
+				if (re4t::cfg->bTrainerEnableFreeCam)
+					regs.eax = (uint32_t)&CamCtrl->m_camera_38.Campos_0;
+				else
+					regs.eax += 0x94; // orig code
+			}
+		}; injector::MakeInline<cBlock__checkv_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
+
 		// Redirect m_direction_ratio_208 and m_depression_ratio_204 when using free cam
 		pattern = hook::pattern("D9 83 ? ? ? ? DA E9 89 85 ? ? ? ? DF E0");
 		struct calcOffset_direction
