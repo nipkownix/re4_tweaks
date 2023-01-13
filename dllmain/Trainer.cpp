@@ -310,13 +310,23 @@ void __cdecl GameAddPoint_Hook(LVADD type)
 	GameAddPoint_orig(type);
 }
 
-bool(__cdecl* cameraHitCheck_orig)(Vec *pCross, Vec *pNorm, Vec p0, Vec p1);
-bool __cdecl cameraHitCheck_hook(Vec *pCross, Vec *pNorm, Vec p0, Vec p1)
+void(__fastcall* CameraQuasiFPS__hitCheck)(CameraQuasiFPS* thisptr, void* unused, Mtx pl_mat, QFPS_OFFSET* p_offset, CAMERA_POINT* p_aim);
+void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unused, Mtx pl_mat, QFPS_OFFSET* p_offset, CAMERA_POINT* p_aim)
 {
-	if (re4t::cfg->bTrainerEnableFreeCam)
-		return false;
-	else
-		return cameraHitCheck_orig(pCross, pNorm, p0, p1);
+	// Override p_offset->m_campos_0 value to remove freecam orbiting
+	// CameraQuasiFPS::hitCheck gets called right after that value is calculated inside ::calcOffset
+	// Our freecam isn't interested in collision neither, so it's a very convenient place to override this :^)
+
+	if (!re4t::cfg->bTrainerEnableFreeCam)
+	{
+		CameraQuasiFPS__hitCheck(thisptr, unused, pl_mat, p_offset, p_aim);
+		return;
+	}
+
+	p_aim->Campos_0 = { 0 }; // remove orbit offset from camera
+	p_aim->Target_C = p_offset->m_target_18;
+	p_aim->Roll_18 = p_offset->m_roll_24;
+	p_aim->Fovy_1C = p_offset->m_fovy_28;
 }
 
 bool ShowDebugTrgHint = false;
@@ -983,10 +993,10 @@ void Trainer_Init()
 
 	// Free cam
 	{
-		// Hook cameraHitCheck to disable hit detection
-		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 20 84 C0 74 2A");
-		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_orig);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_hook, PATCH_JUMP);
+		// Hook CameraQuasiFPS::hitCheck to remove collision & camera orbit offset
+		auto pattern = hook::pattern("52 8D 85 ? ? ? ? 50 8D 4D ? 51 8B CB E8");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck_Hook, PATCH_JUMP);
 
 		// Redirect m_direction_ratio_208 and m_depression_ratio_204 when using free cam
 		pattern = hook::pattern("D9 83 ? ? ? ? DA E9 89 85 ? ? ? ? DF E0");
@@ -1227,7 +1237,7 @@ void Trainer_Update()
 		fFreeCam_direction -= dir_delta;
 		fFreeCam_depression += dep_delta;
 
-		fFreeCam_depression = std::clamp(fFreeCam_depression, -2.33f, 2.33f);
+		fFreeCam_depression = std::clamp(fFreeCam_depression, -6.f, 6.f);
 
 		// Flag and backup
 		bool isFlagSet = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL));
