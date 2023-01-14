@@ -313,9 +313,8 @@ void __cdecl GameAddPoint_Hook(LVADD type)
 void(__fastcall* CameraQuasiFPS__hitCheck)(CameraQuasiFPS* thisptr, void* unused, Mtx pl_mat, QFPS_OFFSET* p_offset, CAMERA_POINT* p_aim);
 void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unused, Mtx pl_mat, QFPS_OFFSET* p_offset, CAMERA_POINT* p_aim)
 {
-	// Override p_offset->m_campos_0 value to remove freecam orbiting
-	// CameraQuasiFPS::hitCheck gets called right after that value is calculated inside ::calcOffset
-	// Our freecam isn't interested in collision neither, so it's a very convenient place to override this :^)
+	// CameraQuasiFPS::hitCheck gets called right after camera values are calculated inside ::calcOffset
+	// Our freecam isn't interested in collision, so it's a very convenient place to override things :^)
 
 	if (!re4t::cfg->bTrainerEnableFreeCam)
 	{
@@ -323,8 +322,24 @@ void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unu
 		return;
 	}
 
-	p_aim->Campos_0 = { 0 }; // remove orbit offset from camera
-	p_aim->Target_C = p_offset->m_target_18;
+	// Override results of calcOffset
+	{
+		// Remove orbit offset from camera
+		p_aim->Campos_0 = { 0 };
+	
+		// Recalculate target direction, fixes issues with it being biased toward one Y axis direction, and "sticking" at certain angles
+		void MTXRotRad(Mtx m, char axis, float rad); // MathReimpl.cpp
+		void MTXMultVecSR(const Mtx m, const Vec * v, Vec * out); // MathReimpl.cpp
+
+		Mtx m;
+		MTXRotRad(m, 0x79, fFreeCam_direction);
+
+		p_aim->Target_C = { 0 };
+		p_aim->Target_C.y = fFreeCam_depression;
+		p_aim->Target_C.z = 1;
+		MTXMultVecSR(m, &p_aim->Target_C, &p_aim->Target_C);
+	}
+
 	p_aim->Roll_18 = p_offset->m_roll_24;
 	p_aim->Fovy_1C = p_offset->m_fovy_28;
 }
