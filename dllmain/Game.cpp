@@ -662,6 +662,10 @@ void Game_SetCameraSmoothness(float scale)
 	if (CamSmth)
 		CamSmth->m_ratio_FC = CamSmoothRatioNew;
 }
+float Game_GetCameraSmoothness()
+{
+	return CamSmoothRatioNew;
+}
 
 void InventoryItemAdd(ITEM_ID id, uint32_t count, bool always_show_inv_ui, bool handle_attache_case)
 {

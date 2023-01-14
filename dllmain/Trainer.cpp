@@ -334,8 +334,28 @@ void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unu
 		Mtx m;
 		MTXRotRad(m, 0x79, fFreeCam_direction);
 
+		// Smooth out Y axis movement, but only if CamSmooth is disabled/very low
+		static float fFreeCam_depression_prev = 0;
+		if (Game_GetCameraSmoothness() > 0) // CamSmooth already enabled, use value without smoothing
+			fFreeCam_depression_prev = fFreeCam_depression;
+		else
+		{
+#if 1
+			// Smooth out y axis by tracking previous frame value
+			// Same method game uses to smooth X axis in CameraQuasiFPS::move (at 0x59E27A in 1.1.0)
+			const float ud_rate = 0.6f;
+			const float ud_rate_inv = 1.0 - ud_rate;
+			float dep_inv = fFreeCam_depression * ud_rate_inv;
+			fFreeCam_depression_prev = (fFreeCam_depression_prev * ud_rate) + dep_inv;
+#else
+			// Smooth out y axis by using the average of previous frame value + new value
+			// Should make the Y axis rotation increase toward the new value each frame, rather than being immediately set to it
+			// (above method seems to work better, but figured it was worth leaving this as an example...)
+			fFreeCam_depression_prev = (fFreeCam_depression_prev + fFreeCam_depression) / 2;
+#endif
+		}
 		p_aim->Target_C = { 0 };
-		p_aim->Target_C.y = fFreeCam_depression;
+		p_aim->Target_C.y = fFreeCam_depression_prev;
 		p_aim->Target_C.z = 1;
 		MTXMultVecSR(m, &p_aim->Target_C, &p_aim->Target_C);
 	}
