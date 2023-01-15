@@ -332,7 +332,7 @@ void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unu
 		void MTXMultVecSR(const Mtx m, const Vec * v, Vec * out); // MathReimpl.cpp
 
 		Mtx m;
-		MTXRotRad(m, 0x79, fFreeCam_direction);
+		MTXRotRad(m, 'y', fFreeCam_direction);
 
 		// Smooth out Y axis movement, but only if CamSmooth is disabled/very low
 		static float fFreeCam_depression_prev = 0;
@@ -354,14 +354,16 @@ void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unu
 			fFreeCam_depression_prev = (fFreeCam_depression_prev + fFreeCam_depression) / 2;
 #endif
 		}
-		p_aim->Target_C = { 0 };
-		p_aim->Target_C.y = fFreeCam_depression_prev;
-		p_aim->Target_C.z = 1;
+		p_aim->Target_C.x = 0;
+		p_aim->Target_C.y = sin(fFreeCam_depression_prev);
+		p_aim->Target_C.z = cos(fFreeCam_depression_prev);
 		MTXMultVecSR(m, &p_aim->Target_C, &p_aim->Target_C);
 	}
 
 	p_aim->Roll_18 = p_offset->m_roll_24;
 	p_aim->Fovy_1C = p_offset->m_fovy_28;
+	if (p_aim->Fovy_1C <= 0)
+		p_aim->Fovy_1C = 50;
 }
 
 bool ShowDebugTrgHint = false;
@@ -1285,7 +1287,8 @@ void Trainer_Update()
 		fFreeCam_direction -= dir_delta;
 		fFreeCam_depression += dep_delta;
 
-		fFreeCam_depression = std::clamp(fFreeCam_depression, -6.f, 6.f);
+		// Clamp to a tiny bit below (M_PI / 2) to prevent some camera weirdness
+		fFreeCam_depression = std::clamp(fFreeCam_depression, -1.56f, 1.56f);
 
 		// Flag and backup
 		bool isFlagSet = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL));

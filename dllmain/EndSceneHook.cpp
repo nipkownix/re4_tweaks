@@ -417,7 +417,10 @@ void Init_ImGui(LPDIRECT3DDEVICE9 pDevice)
 	cfgMenuTitle.append(APP_VERSION);
 
 	if (TweaksDevMode)
+	{
 		UI_NewGlobalsViewer();
+		bImGuiUIFocus = false;
+	}
 }
 
 // Add our new code right before the game calls EndScene
