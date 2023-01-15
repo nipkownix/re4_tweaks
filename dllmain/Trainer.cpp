@@ -1359,44 +1359,57 @@ void Trainer_Update()
 			movSpeed *= 2.0f;
 
 		// Directions
-		float LookX = -GlobalPtr()->Camera_74.Look_D0.x * movSpeed;
-		float LookY = -GlobalPtr()->Camera_74.Look_D0.y * movSpeed;
-		float LookZ = -GlobalPtr()->Camera_74.Look_D0.z * movSpeed;
+		Vec* Look = &GlobalPtr()->Camera_74.Look_D0;
+		Vec* Right = &GlobalPtr()->Camera_74.Right_DC;
 
 		float* X = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
 		float* Y = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
 		float* Z = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
 
+		Vec Move = { 0 };
+
 		// Forwards
 		if (isPressingFwd)
 		{
-			*X += LookX;
-			*Y += LookY;
-			*Z += LookZ;
+			Move.x += -Look->x;
+			Move.y += -Look->y;
+			Move.z += -Look->z;
 		}
 
 		// Backwards
 		if (isPressingBack)
 		{
-			*X -= LookX;
-			*Y -= LookY;
-			*Z -= LookZ;
+			Move.x -= -Look->x;
+			Move.y -= -Look->y;
+			Move.z -= -Look->z;
 		}
 
 		// Left
 		if (isPressingLeft)
 		{
-			*X += LookZ;
-			*Z -= LookX;
+			Move.x -= Right->x;
+			Move.y -= Right->y;
+			Move.z -= Right->z;
 		}
 
 		// Right
 		if (isPressingRight)
 		{
-			// TODO: these values are a bit off from (Camera_74.Right_DC * movSpeed), but only by a tiny amount
-			// The difference doesn't really seem to matter, but maybe this would be more accurate to use the Right_DC values instead..
-			*X -= LookZ;
-			*Z += LookX;
+			Move.x += Right->x;
+			Move.y += Right->y;
+			Move.z += Right->z;
+		}
+
+		// normalize our move direction before applying it, to prevent diagonal movement from speeding up movement
+		// (normalize breaks if vec.x / .y / .z are all 0, so check that a button was pressed first...)
+		if (isPressingFwd || isPressingBack || isPressingLeft || isPressingRight)
+		{
+			void VECNormalize_SSE1(const Vec* vec, Vec* out);
+			VECNormalize_SSE1(&Move, &Move);
+
+			*X += (Move.x * movSpeed);
+			*Y += (Move.y * movSpeed);
+			*Z += (Move.z * movSpeed);
 		}
 
 		// Up
