@@ -67,7 +67,7 @@ class UI_AreaJump : public UI_Window
 	int curRoomIdx = 0;
 
 	char curRoomNo[256] = { 0 };
-	Vec curRoomPosition = { 0 };
+	Vec curRoomPosition;
 	float curRoomRotation = 0;
 
 	bool roomPosRotNeedsUpdate = true;

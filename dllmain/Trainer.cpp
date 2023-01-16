@@ -325,7 +325,7 @@ void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unu
 	// Override results of calcOffset
 	{
 		// Remove orbit offset from camera
-		p_aim->Campos_0 = { 0 };
+		p_aim->Campos_0 = Vec();
 	
 		// Recalculate target direction, fixes issues with it being biased toward one Y axis direction, and "sticking" at certain angles
 		void MTXRotRad(Mtx m, char axis, float rad); // MathReimpl.cpp
@@ -1195,36 +1195,32 @@ void Trainer_Update()
 			float movSpeed = 140.0f * re4t::cfg->fTrainerNumMoveSpeed;
 
 			// Cam directions
-			float LookX = -GlobalPtr()->Camera_74.Look_D0.x * movSpeed;
-			float LookY = -GlobalPtr()->Camera_74.Look_D0.y * movSpeed;
-			float LookZ = -GlobalPtr()->Camera_74.Look_D0.z * movSpeed;
+			Vec& Look = GlobalPtr()->Camera_74.Look_D0;
+			Vec& Right = GlobalPtr()->Camera_74.Right_DC;
+
+			Vec Move;
 
 			// Forwards
 			if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
-			{
-				player->pos_94.x += LookX;
-				player->pos_94.z += LookZ;
-			}
+				Move -= Look;
 
 			// Backwards
 			if (pInput->is_key_down(0x62)) //VK_NUMPAD_2
-			{
-				player->pos_94.x -= LookX;
-				player->pos_94.z -= LookZ;
-			}
+				Move += Look;
 
 			// Left
 			if (pInput->is_key_down(0x64)) //VK_NUMPAD_4
-			{
-				player->pos_94.x += LookZ;
-				player->pos_94.z -= LookX;
-			}
+				Move -= Right;
 
 			// Right
 			if (pInput->is_key_down(0x66)) //VK_NUMPAD_6
+				Move += Right;
+
+			if (Move.x != 0.0f || Move.y != 0.0f || Move.z != 0.0f)
 			{
-				player->pos_94.x -= LookZ;
-				player->pos_94.z += LookX;
+				Move.normalize();
+
+				player->pos_94 += (Move * movSpeed);
 			}
 
 			// Up
@@ -1359,53 +1355,36 @@ void Trainer_Update()
 			movSpeed *= 2.0f;
 
 		// Directions
-		Vec* Look = &GlobalPtr()->Camera_74.Look_D0;
-		Vec* Right = &GlobalPtr()->Camera_74.Right_DC;
+		Vec& Look = GlobalPtr()->Camera_74.Look_D0;
+		Vec& Right = GlobalPtr()->Camera_74.Right_DC;
 
 		float* X = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
 		float* Y = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
 		float* Z = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
 
-		Vec Move = { 0 };
+		Vec Move;
 
 		// Forwards
 		if (isPressingFwd)
-		{
-			Move.x += -Look->x;
-			Move.y += -Look->y;
-			Move.z += -Look->z;
-		}
+			Move -= Look; // look is inverted from forward position, subtract it to move forward...
 
 		// Backwards
 		if (isPressingBack)
-		{
-			Move.x -= -Look->x;
-			Move.y -= -Look->y;
-			Move.z -= -Look->z;
-		}
+			Move += Look;
 
 		// Left
 		if (isPressingLeft)
-		{
-			Move.x -= Right->x;
-			Move.y -= Right->y;
-			Move.z -= Right->z;
-		}
+			Move -= Right;
 
 		// Right
 		if (isPressingRight)
-		{
-			Move.x += Right->x;
-			Move.y += Right->y;
-			Move.z += Right->z;
-		}
+			Move += Right;
 
 		// normalize our move direction before applying it, to prevent diagonal movement from speeding up movement
 		// (normalize breaks if vec.x / .y / .z are all 0, so check that a button was pressed first...)
 		if (isPressingFwd || isPressingBack || isPressingLeft || isPressingRight)
 		{
-			void VECNormalize_SSE1(const Vec* vec, Vec* out);
-			VECNormalize_SSE1(&Move, &Move);
+			Move.normalize();
 
 			*X += (Move.x * movSpeed);
 			*Y += (Move.y * movSpeed);

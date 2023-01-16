@@ -166,7 +166,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					else
 						ImGui::Text("#%d %s (type %x)", em->guid_F8, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
 
-					static Vec copyPosition = { 0 };
+					static Vec copyPosition = Vec();
 					if (ImGui::Button("Copy position"))
 						copyPosition = em->pos_94;
 
@@ -687,7 +687,7 @@ void UI_AreaJump::UpdateRoomInfo()
 	}
 	else
 	{
-		curRoomPosition = { 0 };
+		curRoomPosition = Vec();
 		curRoomRotation = 0;
 	};
 

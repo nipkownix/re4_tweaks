@@ -251,7 +251,7 @@ void re4t::init::CommandLine()
 		if (posX)
 		{
 			if (!paramPosition.has_value())
-				paramPosition = { 0 };
+				paramPosition = Vec();
 			try
 			{
 				(*paramPosition).x = std::stof(posX);
@@ -265,7 +265,7 @@ void re4t::init::CommandLine()
 		if (posY)
 		{
 			if (!paramPosition.has_value())
-				paramPosition = { 0 };
+				paramPosition = Vec();
 			try
 			{
 				(*paramPosition).y = std::stof(posY);
@@ -279,7 +279,7 @@ void re4t::init::CommandLine()
 		if (posZ)
 		{
 			if (!paramPosition.has_value())
-				paramPosition = { 0 };
+				paramPosition = Vec();
 			try
 			{
 				(*paramPosition).z = std::stof(posZ);
