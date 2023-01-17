@@ -120,6 +120,9 @@ void ImGui_ColumnSwitch()
 
 void ImGui_ColumnFinish()
 {
+	if (itemIdx <= -1)
+		return;
+
 	ImGui::EndGroup();
 	ImGui_EndBackground();
 	ImGui::Dummy(ImVec2(10, 25));
