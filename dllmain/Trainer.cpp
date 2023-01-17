@@ -1047,54 +1047,6 @@ void Trainer_Init()
 					regs.eax += 0x94; // orig code
 			}
 		}; injector::MakeInline<cBlock__checkv_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
-
-		// Redirect m_direction_ratio_208 and m_depression_ratio_204 when using free cam
-		pattern = hook::pattern("D9 83 ? ? ? ? DA E9 89 85 ? ? ? ? DF E0");
-		struct calcOffset_direction
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				float direction;
-
-				if (re4t::cfg->bTrainerEnableFreeCam)
-					direction = fFreeCam_direction;
-				else
-					direction = CamCtrl->m_QuasiFPS_278.m_direction_ratio_208;
-
-				__asm {fld direction}
-			}
-		}; injector::MakeInline<calcOffset_direction>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? 51 D9 1C ? 8D 85 ? ? ? ? 6A ? 50");
-		injector::MakeInline<calcOffset_direction>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? D9 EE D9 C0 DD EA DF E0 DD D9 F6 C4 ? 7A ? 8B 75");
-		struct calcOffset_depression
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				float depression;
-
-				if (re4t::cfg->bTrainerEnableFreeCam)
-					depression = fFreeCam_depression;
-				else
-					depression = CamCtrl->m_QuasiFPS_278.m_depression_ratio_204;
-
-				__asm {fld depression}
-			}
-		}; injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? D8 D9 DF E0 F6 C4 ? 0F 85");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? 52 D9 9D ? ? ? ? 51 D9 85 ? ? ? ? 8D 45");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? D8 D9 DF E0 F6 C4 ? 0F 8A ? ? ? ? DD D8 8D 95");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? 52 DC 0D ? ? ? ? 51 8D 45 ? D9 9D");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
 	// Hook DebugTrg stub to use our reimplemented version
