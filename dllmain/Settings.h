@@ -131,12 +131,13 @@ public:
 	bool bSkipIntroLogos = false;
 	bool bSkipMenuFades = false;
 	bool bSpeedUpQuitGame = true;
+	bool bAlwaysShowOriginalTitleBackground = false;
+	bool bHideZoomControlHints = false;
+	bool bFixSilencedHandgunDescription = true;
 	bool bEnableDebugMenu = false;
 	bool bShowGameOutput = false;
 	bool bEnableModExpansion = false;
 	bool bForceETSApplyScale = false;
-	bool bAlwaysShowOriginalTitleBackground = false;
-	bool bHideZoomControlHints = false;
   
 	// MEMORY
 	bool bAllowHighResolutionSFD = true;

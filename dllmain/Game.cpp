@@ -32,6 +32,7 @@ cItemMgr__get_Fn cItemMgr__get = nullptr;
 cItemMgr__erase_Fn cItemMgr__erase = nullptr;
 cItemMgr__num_0_Fn cItemMgr__num_0 = nullptr;
 cItemMgr__bulletNumTotal_Fn cItemMgr__bulletNumTotal = nullptr;
+cItem__specialTuned_Fn cItem__specialTuned = nullptr;
 WeaponId2ChargeNum_Fn WeaponId2ChargeNum = nullptr;
 
 // event.h externs
@@ -1068,6 +1069,10 @@ bool re4t::init::Game()
 	// WeaponId2ChargeNum funcptr
 	pattern = hook::pattern("E8 ? ? ? ? B9 ? ? ? ? 83 C4 ? 66 3B ? 0F 84");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), WeaponId2ChargeNum);
+
+	// cItem::specialTuned funcptr
+	pattern = hook::pattern("8B CE E8 ? ? ? ? 84 C0 74 ? C6");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(2)).as_int(), cItem__specialTuned);
 
 	// levelDataAdd funcptr
 	pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 83 C4 ? 81 88 ? ? ? ? ? ? ? ? 8B 0D ? ? ? ? 0F B7 81 ? ? ? ? 8D 88");

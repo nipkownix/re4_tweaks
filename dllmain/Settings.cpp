@@ -321,6 +321,7 @@ void re4t_cfg::ReadSettings(std::wstring ini_path)
 	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 	re4t::cfg->bAlwaysShowOriginalTitleBackground = iniReader.ReadBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 	re4t::cfg->bHideZoomControlHints = iniReader.ReadBoolean("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
+	re4t::cfg->bFixSilencedHandgunDescription = iniReader.ReadBoolean("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
 
 	// MEMORY
 	re4t::cfg->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
@@ -828,7 +829,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
 	iniReader.WriteBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
 	iniReader.WriteBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
-	iniReader.WriteBoolean("GAMEPLAY", "BlancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
+	iniReader.WriteBoolean("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 	iniReader.WriteBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 	iniReader.WriteBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 	iniReader.WriteBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
@@ -849,6 +850,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 	iniReader.WriteBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
 	iniReader.WriteBoolean("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
+	iniReader.WriteBoolean("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
 	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
 	// We don't have any UI options for those anyway, so pointless for us to write it back
 
@@ -1014,7 +1016,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "BlancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
@@ -1040,6 +1042,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AlwaysShowOriginalTitleBg", re4t::cfg->bAlwaysShowOriginalTitleBackground ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// MEMORY

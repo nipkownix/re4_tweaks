@@ -1416,12 +1416,12 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Allows selling the (normally unused) handgun silencer to the merchant.");
 					}
 
-					// BlancedChicagoTypewriter
-					if ((OptionsFilter.PassFilter("BlancedChicagoTypewriter") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					// BalancedChicagoTypewriter
+					if ((OptionsFilter.PassFilter("BalancedChicagoTypewriter") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
-						if (ImGui::Checkbox("BlancedChicagoTypewriter", &re4t::cfg->bBalancedChicagoTypewriter))
+						if (ImGui::Checkbox("BalancedChicagoTypewriter", &re4t::cfg->bBalancedChicagoTypewriter))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;
@@ -1656,6 +1656,45 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Speeds up the unnecessarily slow screen fade that takes place after you press \"Quit\" in the game's main menu.");
 					}
 
+					// AlwaysShowOriginalTitleBackground
+					if ((OptionsFilter.PassFilter("AlwaysShowOriginalTitleBackground") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AlwaysShowOriginalTitleBackground", &re4t::cfg->bAlwaysShowOriginalTitleBackground);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
+					}
+
+					// HideZoomControlHints 
+					if ((OptionsFilter.PassFilter("HideZoomControlHints Rifle Scope Binoculars") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("HideZoomControlHints", &re4t::cfg->bHideZoomControlHints);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Hide zoom control reminders from the weapon scope and binocular HUDs.");
+					}
+
+					// FixSilencedHandgunDescription
+					if ((OptionsFilter.PassFilter("FixSilencedHandgunDescription Silencer") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("FixSilencedHandgunDescription", &re4t::cfg->bFixSilencedHandgunDescription);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Updates the silenced handgun's item description to only mention increased critical hit chance when the handgun is fully upgraded.");
+					}
+
 					// EnableDebugMenu
 					if ((OptionsFilter.PassFilter("EnableDebugMenu") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
@@ -1687,32 +1726,6 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window. (F2 by default)");					
-					}
-
-					// AlwaysShowOriginalTitleBackground
-					if ((OptionsFilter.PassFilter("AlwaysShowOriginalTitleBackground") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("AlwaysShowOriginalTitleBackground", &re4t::cfg->bAlwaysShowOriginalTitleBackground);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
-					}
-
-					// HideZoomControlHints 
-					if ((OptionsFilter.PassFilter("HideZoomControlHints Rifle Scope Binoculars") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("HideZoomControlHints", &re4t::cfg->bHideZoomControlHints);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Hide zoom control reminders from the weapon scope and binocular HUDs.");
 					}
 
 					ImGui_ColumnFinish();
