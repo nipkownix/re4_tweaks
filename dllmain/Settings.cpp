@@ -246,6 +246,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bAllowAshleySuplex = ini.getBool("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
 		re4t::cfg->bFixDitmanGlitch = ini.getBool("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
 		re4t::cfg->bAllowSellingHandgunSilencer = ini.getBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+		re4t::cfg->bBalancedChicagoTypewriter = ini.getBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 		re4t::cfg->bUseSprintToggle = ini.getBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 		re4t::cfg->bRifleScreenShake = ini.getBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 		re4t::cfg->bDisableQTE = ini.getBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
@@ -262,11 +263,14 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bAllowMafiaLeonCutscenes = ini.getBool("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
 		re4t::cfg->bSkipIntroLogos = ini.getBool("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 		re4t::cfg->bSkipMenuFades = ini.getBool("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+		re4t::cfg->bSpeedUpQuitGame = ini.getBool("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
 		re4t::cfg->bEnableDebugMenu = ini.getBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 		re4t::cfg->bShowGameOutput = ini.getBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
 		re4t::cfg->bEnableModExpansion = ini.getBool("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 		re4t::cfg->bForceETSApplyScale = ini.getBool("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 		re4t::cfg->bAlwaysShowOriginalTitleBackground = ini.getBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
+		re4t::cfg->bHideZoomControlHints = ini.getBool("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
+		re4t::cfg->bFixSilencedHandgunDescription = ini.getBool("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
 
 		// MEMORY
 		re4t::cfg->bAllowHighResolutionSFD = ini.getBool("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
@@ -683,6 +687,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
 		ini.setBool("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
 		ini.setBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+		ini.setBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 		ini.setBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
 		ini.setBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 		ini.setBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
@@ -698,9 +703,12 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
 		ini.setBool("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
 		ini.setBool("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+		ini.setBool("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
 		ini.setBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 		ini.setBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 		ini.setBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
+		ini.setBool("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
+		ini.setBool("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
 		// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
 		// We don't have any UI options for those anyway, so pointless for us to write it back
 
