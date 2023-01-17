@@ -3,7 +3,6 @@
 #define _USE_MATH_DEFINES
 
 #include <iomanip>
-#include <IniReader.h>
 #include <injector\injector.hpp>
 #include <injector\calling.hpp>
 #include <injector\hooking.hpp>

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <mutex>
 #include "dllmain.h"
+#include <iniReader.h>
 #include "Settings.h"
 #include "ConsoleWnd.h"
 #include "input.hpp"
@@ -11,7 +12,6 @@
 #include "../dxvk/src/config.h"
 
 const std::wstring sSettingOverridesPath = L"re4_tweaks\\setting_overrides\\";
-const std::wstring sHDProjectOverrideName = L"HDProject.ini";
 
 const char* sLeonCostumeNames[] = {"Jacket", "Normal", "Vest", "RPD", "Mafia"};
 const char* sAshleyCostumeNames[] = {"Normal", "Popstar", "Armor"};
@@ -75,16 +75,428 @@ std::vector<uint32_t> re4t_cfg::ParseKeyCombo(std::string_view in_combo)
 	return new_combo;
 }
 
+void re4t_cfg::ParseHotkeys()
+{
+	pInput->clear_hotkeys();
+
+	ParseConfigMenuKeyCombo(re4t::cfg->sConfigMenuKeyCombo);
+	ParseConsoleKeyCombo(re4t::cfg->sConsoleKeyCombo);
+	ParseToolMenuKeyCombo(re4t::cfg->sDebugMenuKeyCombo);
+	ParseMouseTurnModifierCombo(re4t::cfg->sMouseTurnModifierKeyCombo);
+	ParseJetSkiTrickCombo(re4t::cfg->sJetSkiTrickCombo);
+	ParseImGuiUIFocusCombo(re4t::cfg->sTrainerFocusUIKeyCombo);
+
+	Trainer_ParseKeyCombos();
+}
+
+void ReadSettingsIni(std::wstring ini_path)
+{
+	iniReader ini(ini_path);
+
+	#ifdef VERBOSE
+	con.log("Reading settings from: %s", WstrToStr(ini_path).data());
+	#endif
+
+	spd::log()->info("Reading settings from: \"{}\"", WstrToStr(ini_path).data());
+
+	re4t::cfg->HasUnsavedChanges = false;
+	
+	// Main .ini file
+	{
+		// VULKAN
+		re4t::dxvk::cfg->bUseVulkanRenderer = ini.getBool("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+		re4t::dxvk::cfg->bShowFPS = ini.getBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+		re4t::dxvk::cfg->bShowGPULoad = ini.getBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+		re4t::dxvk::cfg->bShowDeviceInfo = ini.getBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
+		re4t::dxvk::cfg->bDisableAsync = ini.getBool("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
+
+		re4t::dxvk::cfg->DXVK_HUD = ini.getString("VULKAN", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
+		re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = ini.getString("VULKAN", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
+
+		// DISPLAY
+		re4t::cfg->fFOVAdditional = ini.getFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
+		if (re4t::cfg->fFOVAdditional > 0.0f)
+			re4t::cfg->bEnableFOV = true;
+		else
+			re4t::cfg->bEnableFOV = false;
+
+		re4t::cfg->bDisableVsync = ini.getBool("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
+
+		re4t::cfg->bUltraWideAspectSupport = ini.getBool("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
+		re4t::cfg->bSideAlignHUD = ini.getBool("DISPLAY", "SideAlignHUD", re4t::cfg->bSideAlignHUD);
+		re4t::cfg->bStretchFullscreenImages = ini.getBool("DISPLAY", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages);
+		re4t::cfg->bStretchVideos = ini.getBool("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
+		re4t::cfg->bRemove16by10BlackBars = ini.getBool("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
+
+		re4t::cfg->bFixDPIScale = ini.getBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
+		re4t::cfg->bFixDisplayMode = ini.getBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
+		re4t::cfg->iCustomRefreshRate = ini.getInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		re4t::cfg->bOverrideLaserColor = ini.getBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
+		re4t::cfg->bRainbowLaser = ini.getBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
+
+		re4t::cfg->iLaserR = ini.getInt("DISPLAY", "LaserR", re4t::cfg->iLaserR);
+		re4t::cfg->iLaserG = ini.getInt("DISPLAY", "LaserG", re4t::cfg->iLaserG);
+		re4t::cfg->iLaserB = ini.getInt("DISPLAY", "LaserB", re4t::cfg->iLaserB);
+		fLaserColorPicker[0] = re4t::cfg->iLaserR / 255.0f;
+		fLaserColorPicker[1] = re4t::cfg->iLaserG / 255.0f;
+		fLaserColorPicker[2] = re4t::cfg->iLaserB / 255.0f;
+
+		re4t::cfg->bRestorePickupTransparency = ini.getBool("DISPLAY", "RestorePickupTransparency", re4t::cfg->bRestorePickupTransparency);
+		re4t::cfg->bDisableBrokenFilter03 = ini.getBool("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
+		re4t::cfg->bFixBlurryImage = ini.getBool("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
+		re4t::cfg->bDisableFilmGrain = ini.getBool("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
+		re4t::cfg->bImproveWater = ini.getBool("DISPLAY", "ImproveWater", re4t::cfg->bImproveWater);
+		re4t::cfg->bEnableGCBlur = ini.getBool("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
+
+		std::string GCBlurTypeStr = ini.getString("DISPLAY", "GCBlurType", "");
+		if (!GCBlurTypeStr.empty())
+		{
+			if (GCBlurTypeStr == std::string("Enhanced"))
+			{
+				re4t::cfg->bUseEnhancedGCBlur = true;
+				iGCBlurMode = 0;
+			}
+			else if (GCBlurTypeStr == std::string("Classic"))
+			{
+				re4t::cfg->bUseEnhancedGCBlur = false;
+				iGCBlurMode = 1;
+			}
+		}
+
+		re4t::cfg->bEnableGCScopeBlur = ini.getBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
+		re4t::cfg->bWindowBorderless = ini.getBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		re4t::cfg->iWindowPositionX = ini.getInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
+		re4t::cfg->iWindowPositionY = ini.getInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
+		re4t::cfg->bRememberWindowPos = ini.getBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+
+		// AUDIO
+		re4t::cfg->iVolumeMaster = ini.getInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
+		re4t::cfg->iVolumeMaster = std::min(std::max(re4t::cfg->iVolumeMaster, 0), 100); // limit between 0 - 100
+
+		re4t::cfg->iVolumeBGM = ini.getInt("AUDIO", "VolumeBGM", re4t::cfg->iVolumeBGM);
+		re4t::cfg->iVolumeBGM = std::min(std::max(re4t::cfg->iVolumeBGM, 0), 100); // limit between 0 - 100
+
+		re4t::cfg->iVolumeSE = ini.getInt("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
+		re4t::cfg->iVolumeSE = std::min(std::max(re4t::cfg->iVolumeSE, 0), 100); // limit between 0 - 100
+
+		re4t::cfg->iVolumeCutscene = ini.getInt("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
+		re4t::cfg->iVolumeCutscene = std::min(std::max(re4t::cfg->iVolumeCutscene, 0), 100); // limit between 0 - 100
+
+		re4t::cfg->bRestoreGCSoundEffects = ini.getBool("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
+		re4t::cfg->bSilenceArmoredAshley = ini.getBool("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
+
+		// MOUSE
+		re4t::cfg->bCameraImprovements = ini.getBool("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+		re4t::cfg->bResetCameraAfterUsingWeapons = ini.getBool("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
+		re4t::cfg->bResetCameraAfterUsingKnife = ini.getBool("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
+		re4t::cfg->bResetCameraWhenRunning = ini.getBool("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
+		re4t::cfg->fCameraSensitivity = ini.getFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
+		re4t::cfg->fCameraSensitivity = fmin(fmax(re4t::cfg->fCameraSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
+		re4t::cfg->bUseMouseTurning = ini.getBool("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
+		
+		std::string MouseTurnTypeStr = ini.getString("MOUSE", "MouseTurnType", "");
+		if (!MouseTurnTypeStr.empty())
+		{
+			if (MouseTurnTypeStr == std::string("TypeA"))
+				re4t::cfg->iMouseTurnType = MouseTurnTypes::TypeA;
+			else if (MouseTurnTypeStr == std::string("TypeB"))
+				re4t::cfg->iMouseTurnType = MouseTurnTypes::TypeB;
+		}
+
+		re4t::cfg->fTurnTypeBSensitivity = ini.getFloat("MOUSE", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
+		re4t::cfg->fTurnTypeBSensitivity = fmin(fmax(re4t::cfg->fTurnTypeBSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
+		re4t::cfg->bUseRawMouseInput = ini.getBool("MOUSE", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput);
+		re4t::cfg->bDetachCameraFromAim = ini.getBool("MOUSE", "DetachCameraFromAim", re4t::cfg->bDetachCameraFromAim);
+		re4t::cfg->bFixSniperZoom = ini.getBool("MOUSE", "FixSniperZoom", re4t::cfg->bFixSniperZoom);
+		re4t::cfg->bFixSniperFocus = ini.getBool("MOUSE", "FixSniperFocus", re4t::cfg->bFixSniperFocus);
+		re4t::cfg->bFixRetryLoadMouseSelector = ini.getBool("MOUSE", "FixRetryLoadMouseSelector", re4t::cfg->bFixRetryLoadMouseSelector);
+
+		// KEYBOARD
+		re4t::cfg->bFallbackToEnglishKeyIcons = ini.getBool("KEYBOARD", "FallbackToEnglishKeyIcons", re4t::cfg->bFallbackToEnglishKeyIcons);
+		re4t::cfg->bAllowReloadWithoutAiming_kbm = ini.getBool("KEYBOARD", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_kbm);
+		re4t::cfg->bReloadWithoutZoom_kbm = ini.getBool("KEYBOARD", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_kbm);
+
+		// CONTROLLER
+		re4t::cfg->bOverrideControllerSensitivity = ini.getBool("CONTROLLER", "OverrideControllerSensitivity", re4t::cfg->bOverrideControllerSensitivity);
+		re4t::cfg->fControllerSensitivity = ini.getFloat("CONTROLLER", "ControllerSensitivity", re4t::cfg->fControllerSensitivity);
+		re4t::cfg->fControllerSensitivity = fmin(fmax(re4t::cfg->fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
+		re4t::cfg->bRemoveExtraXinputDeadzone = ini.getBool("CONTROLLER", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone);
+		re4t::cfg->bOverrideXinputDeadzone = ini.getBool("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
+		re4t::cfg->fXinputDeadzone = ini.getFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
+		re4t::cfg->fXinputDeadzone = fmin(fmax(re4t::cfg->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
+		re4t::cfg->bAllowReloadWithoutAiming_controller = ini.getBool("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
+		re4t::cfg->bReloadWithoutZoom_controller = ini.getBool("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
+
+		// FRAME RATE
+		re4t::cfg->bFixFallingItemsSpeed = ini.getBool("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
+		re4t::cfg->bFixCompartmentsOpeningSpeed = ini.getBool("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
+		re4t::cfg->bFixMovingGeometrySpeed = ini.getBool("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
+		re4t::cfg->bFixTurningSpeed = ini.getBool("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
+		re4t::cfg->bFixQTE = ini.getBool("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
+		re4t::cfg->bFixAshleyBustPhysics = ini.getBool("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
+		re4t::cfg->bEnableFastMath = ini.getBool("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
+		re4t::cfg->bReplaceFramelimiter = ini.getBool("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
+		re4t::cfg->bMultithreadFix = ini.getBool("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
+		re4t::cfg->bPrecacheModels = ini.getBool("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
+
+		// GAMEPLAY
+		re4t::cfg->bAshleyJPCameraAngles = ini.getBool("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
+		re4t::cfg->bSeparateWaysProfessional = ini.getBool("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
+		re4t::cfg->bEnableNTSCMode = ini.getBool("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
+		re4t::cfg->bAllowAshleySuplex = ini.getBool("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
+		re4t::cfg->bFixDitmanGlitch = ini.getBool("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
+		re4t::cfg->bAllowSellingHandgunSilencer = ini.getBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+		re4t::cfg->bBalancedChicagoTypewriter = ini.getBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
+		re4t::cfg->bUseSprintToggle = ini.getBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+		re4t::cfg->bRifleScreenShake = ini.getBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
+		re4t::cfg->bDisableQTE = ini.getBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
+		re4t::cfg->bAutomaticMashingQTE = ini.getBool("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+		re4t::cfg->bAllowMatildaQuickturn = ini.getBool("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
+		re4t::cfg->bLimitMatildaBurst = ini.getBool("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
+
+		// MISC
+		re4t::cfg->bNeverCheckForUpdates = ini.getBool("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
+		re4t::cfg->bRestoreDemoVideos = ini.getBool("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
+		re4t::cfg->bRestoreAnalogTitleScroll = ini.getBool("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
+		re4t::cfg->iViolenceLevelOverride = ini.getInt("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
+		re4t::cfg->iViolenceLevelOverride = std::min(std::max(re4t::cfg->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
+		re4t::cfg->bAllowMafiaLeonCutscenes = ini.getBool("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
+		re4t::cfg->bSkipIntroLogos = ini.getBool("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
+		re4t::cfg->bSkipMenuFades = ini.getBool("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+		re4t::cfg->bSpeedUpQuitGame = ini.getBool("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
+		re4t::cfg->bEnableDebugMenu = ini.getBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
+		re4t::cfg->bShowGameOutput = ini.getBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
+		re4t::cfg->bEnableModExpansion = ini.getBool("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
+		re4t::cfg->bForceETSApplyScale = ini.getBool("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
+		re4t::cfg->bAlwaysShowOriginalTitleBackground = ini.getBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
+		re4t::cfg->bHideZoomControlHints = ini.getBool("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
+		re4t::cfg->bFixSilencedHandgunDescription = ini.getBool("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
+
+		// MEMORY
+		re4t::cfg->bAllowHighResolutionSFD = ini.getBool("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
+		re4t::cfg->bRaiseVertexAlloc = ini.getBool("MEMORY", "RaiseVertexAlloc", re4t::cfg->bRaiseVertexAlloc);
+		re4t::cfg->bRaiseInventoryAlloc = ini.getBool("MEMORY", "RaiseInventoryAlloc", re4t::cfg->bRaiseInventoryAlloc);
+
+		// HOTKEYS
+		re4t::cfg->sConfigMenuKeyCombo = StrToUpper(ini.getString("HOTKEYS", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo));
+		re4t::cfg->sConsoleKeyCombo = StrToUpper(ini.getString("HOTKEYS", "Console", re4t::cfg->sConsoleKeyCombo));
+		re4t::cfg->sFlipItemUp = StrToUpper(ini.getString("HOTKEYS", "FlipItemUp", re4t::cfg->sFlipItemUp));
+		re4t::cfg->sFlipItemDown = StrToUpper(ini.getString("HOTKEYS", "FlipItemDown", re4t::cfg->sFlipItemDown));
+		re4t::cfg->sFlipItemLeft = StrToUpper(ini.getString("HOTKEYS", "FlipItemLeft", re4t::cfg->sFlipItemLeft));
+		re4t::cfg->sFlipItemRight = StrToUpper(ini.getString("HOTKEYS", "FlipItemRight", re4t::cfg->sFlipItemRight));
+
+		re4t::cfg->sQTE_key_1 = StrToUpper(ini.getString("HOTKEYS", "QTE_key_1", re4t::cfg->sQTE_key_1));
+		re4t::cfg->sQTE_key_2 = StrToUpper(ini.getString("HOTKEYS", "QTE_key_2", re4t::cfg->sQTE_key_2));
+		
+		// Check if the QTE bindings are valid for the current keyboard layout.
+		// Try to reset them using VK Hex Codes if they aren't.
+		if (pInput->vk_from_key_name(re4t::cfg->sQTE_key_1) == 0)
+			re4t::cfg->sQTE_key_1 = pInput->key_name_from_vk(0x44); // Latin D
+
+		if (pInput->vk_from_key_name(re4t::cfg->sQTE_key_2) == 0)
+			re4t::cfg->sQTE_key_2 = pInput->key_name_from_vk(0x41); // Latin A
+
+		re4t::cfg->sDebugMenuKeyCombo = StrToUpper(ini.getString("HOTKEYS", "DebugMenu", re4t::cfg->sDebugMenuKeyCombo));
+		re4t::cfg->sMouseTurnModifierKeyCombo = StrToUpper(ini.getString("HOTKEYS", "MouseTurningModifier", re4t::cfg->sMouseTurnModifierKeyCombo));
+		re4t::cfg->sJetSkiTrickCombo = StrToUpper(ini.getString("HOTKEYS", "JetSkiTricks", re4t::cfg->sJetSkiTrickCombo));
+
+		// FPS WARNING
+		re4t::cfg->bIgnoreFPSWarning = ini.getBool("WARNING", "IgnoreFPSWarning", re4t::cfg->bIgnoreFPSWarning);
+
+		// IMGUI
+		re4t::cfg->fFontSizeScale = ini.getFloat("IMGUI", "FontSizeScale", re4t::cfg->fFontSizeScale);
+		re4t::cfg->fFontSizeScale = fmin(fmax(re4t::cfg->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
+
+		re4t::cfg->bEnableDPIScale = ini.getBool("IMGUI", "EnableDPIScale", re4t::cfg->bEnableDPIScale);
+		re4t::cfg->bDisableMenuTip = ini.getBool("IMGUI", "DisableMenuTip", re4t::cfg->bDisableMenuTip);
+
+		// DEBUG
+		re4t::cfg->bVerboseLog = ini.getBool("DEBUG", "VerboseLog", re4t::cfg->bVerboseLog);
+		re4t::cfg->bNeverHideCursor = ini.getBool("DEBUG", "NeverHideCursor", re4t::cfg->bNeverHideCursor);
+		re4t::cfg->bUseDynamicFrametime = ini.getBool("DEBUG", "UseDynamicFrametime", re4t::cfg->bUseDynamicFrametime);
+		re4t::cfg->bDisableFramelimiting = ini.getBool("DEBUG", "DisableFramelimiting", re4t::cfg->bDisableFramelimiting);
+
+		if (ini.getBool("DEBUG", "TweaksDevMode", TweaksDevMode))
+			TweaksDevMode = true; // let the INI enable it if it's disabled, but not disable it
+	}
+
+	// Trainer .ini file
+	{
+		// TRAINER
+		re4t::cfg->bTrainerEnable = ini.getBool("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
+
+		// PATCHES
+		re4t::cfg->bTrainerUseNumpadMovement = ini.getBool("PATCHES", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
+		re4t::cfg->bTrainerUseMouseWheelUpDown = ini.getBool("PATCHES", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
+		re4t::cfg->fTrainerNumMoveSpeed = ini.getFloat("PATCHES", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
+		re4t::cfg->fTrainerNumMoveSpeed = fmin(fmax(re4t::cfg->fTrainerNumMoveSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
+		re4t::cfg->bTrainerEnableFreeCam = ini.getBool("PATCHES", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
+		re4t::cfg->fTrainerFreeCamSpeed = ini.getFloat("PATCHES", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
+		re4t::cfg->fTrainerFreeCamSpeed = fmin(fmax(re4t::cfg->fTrainerFreeCamSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
+		re4t::cfg->bTrainerDisableEnemySpawn = ini.getBool("PATCHES", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
+		re4t::cfg->bTrainerDeadBodiesNeverDisappear = ini.getBool("PATCHES", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
+		re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh = ini.getBool("PATCHES", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
+		re4t::cfg->bTrainerEnableDebugTrg = ini.getBool("PATCHES", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
+		re4t::cfg->bTrainerShowDebugTrgHintText = ini.getBool("PATCHES", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+		re4t::cfg->bTrainerOpenInventoryOnItemAdd = ini.getBool("PATCHES", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+		re4t::cfg->iTrainerLastAreaJumpStage = ini.getInt("PATCHES", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+		re4t::cfg->iTrainerLastAreaJumpRoomIdx = ini.getInt("PATCHES", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
+
+		// OVERRIDES
+		re4t::cfg->bOverrideCostumes = ini.getBool("OVERRIDES", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
+		std::string buf = ini.getString("OVERRIDES", "LeonCostume", "");
+		if (!buf.empty())
+		{
+			if (buf == "Jacket") re4t::cfg->CostumeOverride.Leon = LeonCostume::Jacket;
+			if (buf == "Normal") re4t::cfg->CostumeOverride.Leon = LeonCostume::Normal;
+			if (buf == "Vest") re4t::cfg->CostumeOverride.Leon = LeonCostume::Vest;
+			if (buf == "RPD") re4t::cfg->CostumeOverride.Leon = LeonCostume::RPD;
+			if (buf == "Mafia") re4t::cfg->CostumeOverride.Leon = LeonCostume::Mafia;
+		}
+
+		buf = ini.getString("OVERRIDES", "AshleyCostume", "");
+		if (!buf.empty())
+		{
+			if (buf == "Normal") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Normal;
+			if (buf == "Popstar") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Popstar;
+			if (buf == "Armor") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Armor;
+		}
+
+		buf = ini.getString("OVERRIDES", "AdaCostume", "");
+		if (!buf.empty())
+		{
+			if (buf == "Resident Evil 2") re4t::cfg->CostumeOverride.Ada = AdaCostume::RE2;
+			if (buf == "Spy") re4t::cfg->CostumeOverride.Ada = AdaCostume::Spy;
+			if (buf == "Normal") re4t::cfg->CostumeOverride.Ada = AdaCostume::Normal;
+		}
+
+		re4t::cfg->bOverrideDifficulty = ini.getBool("OVERRIDES", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+		buf = ini.getString("OVERRIDES", "NewDifficulty", "");
+		if (!buf.empty())
+		{
+			if (buf == "Amateur") re4t::cfg->NewDifficulty = GameDifficulty::VeryEasy;
+			if (buf == "Easy") re4t::cfg->NewDifficulty = GameDifficulty::Easy;
+			if (buf == "Normal") re4t::cfg->NewDifficulty = GameDifficulty::Medium;
+			if (buf == "Professional") re4t::cfg->NewDifficulty = GameDifficulty::Pro;
+		}
+
+		re4t::cfg->bTrainerPlayerSpeedOverride = ini.getBool("OVERRIDES", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
+		re4t::cfg->fTrainerPlayerSpeedOverride = ini.getFloat("OVERRIDES", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
+		re4t::cfg->bTrainerEnemyHPMultiplier = ini.getBool("OVERRIDES", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
+		re4t::cfg->fTrainerEnemyHPMultiplier = ini.getFloat("OVERRIDES", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
+		re4t::cfg->fTrainerEnemyHPMultiplier = fmin(fmax(re4t::cfg->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
+		re4t::cfg->bTrainerRandomHPMultiplier = ini.getBool("OVERRIDES", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
+		re4t::cfg->fTrainerRandomHPMultiMin = ini.getFloat("OVERRIDES", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
+		re4t::cfg->fTrainerRandomHPMultiMin = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
+		re4t::cfg->fTrainerRandomHPMultiMax = ini.getFloat("OVERRIDES", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
+		re4t::cfg->fTrainerRandomHPMultiMax = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMax, re4t::cfg->fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
+
+		// ESP
+		re4t::cfg->bShowESP = ini.getBool("ESP", "ShowESP", re4t::cfg->bShowESP);
+		re4t::cfg->bEspShowInfoOnTop = ini.getBool("ESP", "ShowInfoOnTop", re4t::cfg->bEspShowInfoOnTop);
+		re4t::cfg->bEspOnlyShowEnemies = ini.getBool("ESP", "OnlyShowEnemies", re4t::cfg->bEspOnlyShowEnemies);
+		re4t::cfg->bEspOnlyShowValidEms = ini.getBool("ESP", "OnlyShowValidEms", re4t::cfg->bEspOnlyShowValidEms);
+		re4t::cfg->bEspOnlyShowESLSpawned = ini.getBool("ESP", "OnlyShowESLSpawned", re4t::cfg->bEspOnlyShowESLSpawned);
+		re4t::cfg->bEspOnlyShowAlive = ini.getBool("ESP", "OnlyShowAlive", re4t::cfg->bEspOnlyShowAlive);
+		re4t::cfg->fEspMaxEmDistance = ini.getFloat("ESP", "MaxEmDistance", re4t::cfg->fEspMaxEmDistance);
+		re4t::cfg->bEspOnlyShowClosestEms = ini.getBool("ESP", "OnlyShowClosestEms", re4t::cfg->bEspOnlyShowClosestEms);
+		re4t::cfg->iEspClosestEmsAmount = ini.getInt("ESP", "ClosestEmsAmount", re4t::cfg->iEspClosestEmsAmount);
+		re4t::cfg->bEspDrawLines = ini.getBool("ESP", "DrawLines", re4t::cfg->bEspDrawLines);
+
+		buf = ini.getString("ESP", "EmNameMode", "");
+		if (!buf.empty())
+		{
+			if (buf == "DontShow") re4t::cfg->iEspEmNameMode = 0;
+			if (buf == "Normal") re4t::cfg->iEspEmNameMode = 1;
+			if (buf == "Simplified") re4t::cfg->iEspEmNameMode = 2;
+		}
+
+		buf = ini.getString("ESP", "EmHPMode", "");
+		if (!buf.empty())
+		{
+			if (buf == "DontShow") re4t::cfg->iEspEmHPMode = 0;
+			if (buf == "Bar") re4t::cfg->iEspEmHPMode = 1;
+			if (buf == "Text") re4t::cfg->iEspEmHPMode = 2;
+		}
+
+		re4t::cfg->bEspDrawDebugInfo = ini.getBool("ESP", "DrawDebugInfo", re4t::cfg->bEspDrawDebugInfo);
+
+		// SIDEINFO
+		re4t::cfg->bShowSideInfo = ini.getBool("SIDEINFO", "ShowSideInfo", re4t::cfg->bShowSideInfo);
+		re4t::cfg->bSideShowEmCount = ini.getBool("SIDEINFO", "ShowEmCount", re4t::cfg->bSideShowEmCount);
+		re4t::cfg->bSideShowEmList = ini.getBool("SIDEINFO", "ShowEmList", re4t::cfg->bSideShowEmList);
+		re4t::cfg->bSideOnlyShowESLSpawned = ini.getBool("SIDEINFO", "OnlyShowESLSpawned", re4t::cfg->bSideOnlyShowESLSpawned);
+		re4t::cfg->bSideShowSimpleNames = ini.getBool("SIDEINFO", "ShowSimpleNames", re4t::cfg->bSideShowSimpleNames);
+		re4t::cfg->iSideClosestEmsAmount = ini.getInt("SIDEINFO", "ClosestEmsAmount", re4t::cfg->iSideClosestEmsAmount);
+		re4t::cfg->fSideMaxEmDistance = ini.getFloat("SIDEINFO", "MaxEmDistance", re4t::cfg->fSideMaxEmDistance);
+
+		buf = ini.getString("SIDEINFO", "EmHPMode", "");
+		if (!buf.empty())
+		{
+			if (buf == "DontShow") re4t::cfg->iSideEmHPMode = 0;
+			if (buf == "Bar") re4t::cfg->iSideEmHPMode = 1;
+			if (buf == "Text") re4t::cfg->iSideEmHPMode = 2;
+		}
+
+		// TRAINER HOTKEYS
+		re4t::cfg->sTrainerFocusUIKeyCombo = ini.getString("TRAINER_HOTKEYS", "FocusUI", re4t::cfg->sTrainerFocusUIKeyCombo);
+		re4t::cfg->sTrainerNoclipKeyCombo = ini.getString("TRAINER_HOTKEYS", "NoclipToggle", re4t::cfg->sTrainerNoclipKeyCombo);
+		re4t::cfg->sTrainerFreeCamKeyCombo = ini.getString("TRAINER_HOTKEYS", "FreeCamToggle", re4t::cfg->sTrainerFreeCamKeyCombo);
+		re4t::cfg->sTrainerSpeedOverrideKeyCombo = ini.getString("TRAINER_HOTKEYS", "SpeedOverrideToggle", re4t::cfg->sTrainerSpeedOverrideKeyCombo);
+		re4t::cfg->sTrainerMoveAshToPlayerKeyCombo = ini.getString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
+		re4t::cfg->sTrainerDebugTrgKeyCombo = ini.getString("TRAINER_HOTKEYS", "DebugTrg", re4t::cfg->sTrainerDebugTrgKeyCombo);
+
+		// WEAPON HOTKEYS
+		re4t::cfg->bWeaponHotkeysEnable = ini.getBool("WEAPON_HOTKEYS", "Enable", re4t::cfg->bWeaponHotkeysEnable);
+		re4t::cfg->sWeaponHotkeys[0] = ini.getString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", re4t::cfg->sWeaponHotkeys[0]);
+		re4t::cfg->sWeaponHotkeys[1] = ini.getString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", re4t::cfg->sWeaponHotkeys[1]);
+		re4t::cfg->sWeaponHotkeys[2] = ini.getString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", re4t::cfg->sWeaponHotkeys[2]);
+		re4t::cfg->sWeaponHotkeys[3] = ini.getString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", re4t::cfg->sWeaponHotkeys[3]);
+		re4t::cfg->sWeaponHotkeys[4] = ini.getString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", re4t::cfg->sWeaponHotkeys[4]);
+		re4t::cfg->sLastWeaponHotkey = ini.getString("WEAPON_HOTKEYS", "LastWeaponHotkey", re4t::cfg->sLastWeaponHotkey);
+		re4t::cfg->iWeaponHotkeyWepIds[0] = ini.getInt("WEAPON_HOTKEYS", "WeaponIdSlot1", re4t::cfg->iWeaponHotkeyWepIds[0]);
+		re4t::cfg->iWeaponHotkeyWepIds[1] = ini.getInt("WEAPON_HOTKEYS", "WeaponIdSlot2", re4t::cfg->iWeaponHotkeyWepIds[1]);
+		re4t::cfg->iWeaponHotkeyWepIds[2] = ini.getInt("WEAPON_HOTKEYS", "WeaponIdSlot3", re4t::cfg->iWeaponHotkeyWepIds[2]);
+		re4t::cfg->iWeaponHotkeyWepIds[3] = ini.getInt("WEAPON_HOTKEYS", "WeaponIdSlot4", re4t::cfg->iWeaponHotkeyWepIds[3]);
+		re4t::cfg->iWeaponHotkeyWepIds[4] = ini.getInt("WEAPON_HOTKEYS", "WeaponIdSlot5", re4t::cfg->iWeaponHotkeyWepIds[4]);
+		auto readIntVect = [&ini](std::string section, std::string key, std::string& default_value)
+		{
+			std::vector<int> ret;
+
+			default_value = ini.getString(section, key, default_value);
+
+			std::stringstream ss(default_value);
+
+			for (int i; ss >> i;) {
+				ret.push_back(i);
+				int peeked = ss.peek();
+				if (peeked == ',' || peeked == ' ')
+					ss.ignore();
+			}
+
+			return ret;
+		};
+		re4t::cfg->iWeaponHotkeyCycle[0] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", re4t::cfg->iWeaponHotkeyCycleString[0]);
+		re4t::cfg->iWeaponHotkeyCycle[1] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", re4t::cfg->iWeaponHotkeyCycleString[1]);
+		re4t::cfg->iWeaponHotkeyCycle[2] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", re4t::cfg->iWeaponHotkeyCycleString[2]);
+		re4t::cfg->iWeaponHotkeyCycle[3] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", re4t::cfg->iWeaponHotkeyCycleString[3]);
+		re4t::cfg->iWeaponHotkeyCycle[4] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", re4t::cfg->iWeaponHotkeyCycleString[4]);
+	}
+
+	// Parse all hotkeys
+	re4t::cfg->ParseHotkeys();
+}
+
 void re4t_cfg::ReadSettings()
 {
 	// Read default settings file first
 	std::wstring sDefaultIniPath = rootPath + wrapperName + L".ini";
-	ReadSettings(sDefaultIniPath);
+	ReadSettingsIni(sDefaultIniPath);
 
 	// Try reading in trainer.ini settings
 	std::wstring sTrainerIniPath = rootPath + L"re4_tweaks\\trainer.ini";
 	if (std::filesystem::exists(sTrainerIniPath))
-		ReadSettings(sTrainerIniPath);
+		ReadSettingsIni(sTrainerIniPath);
 
 	// Try reading any setting override files
 	auto override_path = rootPath + sSettingOverridesPath;
@@ -112,528 +524,305 @@ void re4t_cfg::ReadSettings()
 
 	// Process override INIs
 	for (const auto& path : override_inis)
-		ReadSettings(path.wstring());
+		ReadSettingsIni(path.wstring());
 
-	// Special case for HDProject settings, make sure it overrides all other INIs
-	auto hdproject_path = override_path + sHDProjectOverrideName;
-	if (std::filesystem::exists(hdproject_path))
-	{
-		ReadSettings(hdproject_path);
-	}
-}
-
-void re4t_cfg::ParseHotkeys()
-{
-	pInput->clear_hotkeys();
-
-	ParseConfigMenuKeyCombo(re4t::cfg->sConfigMenuKeyCombo);
-	ParseConsoleKeyCombo(re4t::cfg->sConsoleKeyCombo);
-	ParseToolMenuKeyCombo(re4t::cfg->sDebugMenuKeyCombo);
-	ParseMouseTurnModifierCombo(re4t::cfg->sMouseTurnModifierKeyCombo);
-	ParseJetSkiTrickCombo(re4t::cfg->sJetSkiTrickCombo);
-	ParseImGuiUIFocusCombo(re4t::cfg->sTrainerFocusUIKeyCombo);
-
-	Trainer_ParseKeyCombos();
-}
-
-void re4t_cfg::ReadSettings(std::wstring ini_path)
-{
-	CIniReader iniReader(WstrToStr(ini_path));
-
-	#ifdef VERBOSE
-	con.log("Reading settings from: %s", WstrToStr(ini_path).data());
-	#endif
-
-	spd::log()->info("Reading settings from: \"{}\"", WstrToStr(ini_path).data());
-
-	re4t::cfg->HasUnsavedChanges = false;
-	
-	// VULKAN
-	re4t::dxvk::cfg->bUseVulkanRenderer = iniReader.ReadBoolean("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
-	re4t::dxvk::cfg->bShowFPS = iniReader.ReadBoolean("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
-	re4t::dxvk::cfg->bShowGPULoad = iniReader.ReadBoolean("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
-	re4t::dxvk::cfg->bShowDeviceInfo = iniReader.ReadBoolean("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
-	re4t::dxvk::cfg->bDisableAsync = iniReader.ReadBoolean("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
-
-	re4t::dxvk::cfg->DXVK_HUD = iniReader.ReadString("VULKAN", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
-	re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = iniReader.ReadString("VULKAN", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
-
-	// DISPLAY
-	re4t::cfg->fFOVAdditional = iniReader.ReadFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
-	if (re4t::cfg->fFOVAdditional > 0.0f)
-		re4t::cfg->bEnableFOV = true;
-	else
-		re4t::cfg->bEnableFOV = false;
-
-	re4t::cfg->bDisableVsync = iniReader.ReadBoolean("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
-
-	re4t::cfg->bUltraWideAspectSupport = iniReader.ReadBoolean("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
-	re4t::cfg->bSideAlignHUD = iniReader.ReadBoolean("DISPLAY", "SideAlignHUD", re4t::cfg->bSideAlignHUD);
-	re4t::cfg->bStretchFullscreenImages = iniReader.ReadBoolean("DISPLAY", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages);
-	re4t::cfg->bStretchVideos = iniReader.ReadBoolean("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
-	re4t::cfg->bRemove16by10BlackBars = iniReader.ReadBoolean("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
-
-	re4t::cfg->bFixDPIScale = iniReader.ReadBoolean("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
-	re4t::cfg->bFixDisplayMode = iniReader.ReadBoolean("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-	re4t::cfg->iCustomRefreshRate = iniReader.ReadInteger("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
-	re4t::cfg->bOverrideLaserColor = iniReader.ReadBoolean("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
-	re4t::cfg->bRainbowLaser = iniReader.ReadBoolean("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
-
-	re4t::cfg->iLaserR = iniReader.ReadInteger("DISPLAY", "LaserR", re4t::cfg->iLaserR);
-	re4t::cfg->iLaserG = iniReader.ReadInteger("DISPLAY", "LaserG", re4t::cfg->iLaserG);
-	re4t::cfg->iLaserB = iniReader.ReadInteger("DISPLAY", "LaserB", re4t::cfg->iLaserB);
-	fLaserColorPicker[0] = re4t::cfg->iLaserR / 255.0f;
-	fLaserColorPicker[1] = re4t::cfg->iLaserG / 255.0f;
-	fLaserColorPicker[2] = re4t::cfg->iLaserB / 255.0f;
-
-	re4t::cfg->bRestorePickupTransparency = iniReader.ReadBoolean("DISPLAY", "RestorePickupTransparency", re4t::cfg->bRestorePickupTransparency);
-	re4t::cfg->bDisableBrokenFilter03 = iniReader.ReadBoolean("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
-	re4t::cfg->bFixBlurryImage = iniReader.ReadBoolean("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
-	re4t::cfg->bDisableFilmGrain = iniReader.ReadBoolean("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
-
-	re4t::cfg->bImproveWater = iniReader.ReadBoolean("DISPLAY", "ImproveWater", re4t::cfg->bImproveWater);
+	// Special case for HDProject settings
 	if (re4t::cfg->bIsUsingHDProject)
 	{
-		re4t::cfg->bImproveWater = false; // Should be inside HDProject.ini instead, but we'll keep it here untill a new version of the HD Project is released
+		re4t::cfg->bDisableBrokenFilter03 = false;
+		re4t::cfg->bAllowHighResolutionSFD = true;
+		re4t::cfg->bRaiseVertexAlloc = true;
+		re4t::cfg->bRaiseInventoryAlloc = true;
+		re4t::cfg->bImproveWater = false; // The current HD project water textures are optimized to the broken effect
 	}
-
-	re4t::cfg->bEnableGCBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
-
-	std::string GCBlurTypeStr = iniReader.ReadString("DISPLAY", "GCBlurType", "");
-	if (!GCBlurTypeStr.empty())
-	{
-		if (GCBlurTypeStr == std::string("Enhanced"))
-		{
-			re4t::cfg->bUseEnhancedGCBlur = true;
-			iGCBlurMode = 0;
-		}
-		else if (GCBlurTypeStr == std::string("Classic"))
-		{
-			re4t::cfg->bUseEnhancedGCBlur = false;
-			iGCBlurMode = 1;
-		}
-	}
-
-	re4t::cfg->bEnableGCScopeBlur = iniReader.ReadBoolean("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
-	re4t::cfg->bWindowBorderless = iniReader.ReadBoolean("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
-	re4t::cfg->iWindowPositionX = iniReader.ReadInteger("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
-	re4t::cfg->iWindowPositionY = iniReader.ReadInteger("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
-	re4t::cfg->bRememberWindowPos = iniReader.ReadBoolean("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
-
-	// AUDIO
-	re4t::cfg->iVolumeMaster = iniReader.ReadInteger("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
-	re4t::cfg->iVolumeMaster = std::min(std::max(re4t::cfg->iVolumeMaster, 0), 100); // limit between 0 - 100
-
-	re4t::cfg->iVolumeBGM = iniReader.ReadInteger("AUDIO", "VolumeBGM", re4t::cfg->iVolumeBGM);
-	re4t::cfg->iVolumeBGM = std::min(std::max(re4t::cfg->iVolumeBGM, 0), 100); // limit between 0 - 100
-
-	re4t::cfg->iVolumeSE = iniReader.ReadInteger("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
-	re4t::cfg->iVolumeSE = std::min(std::max(re4t::cfg->iVolumeSE, 0), 100); // limit between 0 - 100
-
-	re4t::cfg->iVolumeCutscene = iniReader.ReadInteger("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
-	re4t::cfg->iVolumeCutscene = std::min(std::max(re4t::cfg->iVolumeCutscene, 0), 100); // limit between 0 - 100
-
-	re4t::cfg->bRestoreGCSoundEffects = iniReader.ReadBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
-	re4t::cfg->bSilenceArmoredAshley = iniReader.ReadBoolean("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
-
-	// MOUSE
-	re4t::cfg->bCameraImprovements = iniReader.ReadBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
-	re4t::cfg->bResetCameraAfterUsingWeapons = iniReader.ReadBoolean("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
-	re4t::cfg->bResetCameraAfterUsingKnife = iniReader.ReadBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
-	re4t::cfg->bResetCameraWhenRunning = iniReader.ReadBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
-	re4t::cfg->fCameraSensitivity = iniReader.ReadFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
-	re4t::cfg->fCameraSensitivity = fmin(fmax(re4t::cfg->fCameraSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
-	re4t::cfg->bUseMouseTurning = iniReader.ReadBoolean("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
-	
-	std::string MouseTurnTypeStr = iniReader.ReadString("MOUSE", "MouseTurnType", "");
-	if (!MouseTurnTypeStr.empty())
-	{
-		if (MouseTurnTypeStr == std::string("TypeA"))
-			re4t::cfg->iMouseTurnType = MouseTurnTypes::TypeA;
-		else if (MouseTurnTypeStr == std::string("TypeB"))
-			re4t::cfg->iMouseTurnType = MouseTurnTypes::TypeB;
-	}
-
-	re4t::cfg->fTurnTypeBSensitivity = iniReader.ReadFloat("MOUSE", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
-	re4t::cfg->fTurnTypeBSensitivity = fmin(fmax(re4t::cfg->fTurnTypeBSensitivity, 0.5f), 2.0f); // limit between 0.5 - 2.0
-	re4t::cfg->bUseRawMouseInput = iniReader.ReadBoolean("MOUSE", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput);
-	re4t::cfg->bDetachCameraFromAim = iniReader.ReadBoolean("MOUSE", "DetachCameraFromAim", re4t::cfg->bDetachCameraFromAim);
-	re4t::cfg->bFixSniperZoom = iniReader.ReadBoolean("MOUSE", "FixSniperZoom", re4t::cfg->bFixSniperZoom);
-	re4t::cfg->bFixSniperFocus = iniReader.ReadBoolean("MOUSE", "FixSniperFocus", re4t::cfg->bFixSniperFocus);
-	re4t::cfg->bFixRetryLoadMouseSelector = iniReader.ReadBoolean("MOUSE", "FixRetryLoadMouseSelector", re4t::cfg->bFixRetryLoadMouseSelector);
-
-	// KEYBOARD
-	re4t::cfg->bFallbackToEnglishKeyIcons = iniReader.ReadBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", re4t::cfg->bFallbackToEnglishKeyIcons);
-	re4t::cfg->bAllowReloadWithoutAiming_kbm = iniReader.ReadBoolean("KEYBOARD", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_kbm);
-	re4t::cfg->bReloadWithoutZoom_kbm = iniReader.ReadBoolean("KEYBOARD", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_kbm);
-
-	// CONTROLLER
-	re4t::cfg->bOverrideControllerSensitivity = iniReader.ReadBoolean("CONTROLLER", "OverrideControllerSensitivity", re4t::cfg->bOverrideControllerSensitivity);
-	re4t::cfg->fControllerSensitivity = iniReader.ReadFloat("CONTROLLER", "ControllerSensitivity", re4t::cfg->fControllerSensitivity);
-	re4t::cfg->fControllerSensitivity = fmin(fmax(re4t::cfg->fControllerSensitivity, 0.5f), 4.0f); // limit between 0.5 - 4.0
-	re4t::cfg->bRemoveExtraXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone);
-	re4t::cfg->bOverrideXinputDeadzone = iniReader.ReadBoolean("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
-	re4t::cfg->fXinputDeadzone = iniReader.ReadFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
-	re4t::cfg->fXinputDeadzone = fmin(fmax(re4t::cfg->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
-	re4t::cfg->bAllowReloadWithoutAiming_controller = iniReader.ReadBoolean("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
-	re4t::cfg->bReloadWithoutZoom_controller = iniReader.ReadBoolean("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
-
-	// FRAME RATE
-	re4t::cfg->bFixFallingItemsSpeed = iniReader.ReadBoolean("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
-	re4t::cfg->bFixCompartmentsOpeningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
-	re4t::cfg->bFixMovingGeometrySpeed = iniReader.ReadBoolean("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
-	re4t::cfg->bFixTurningSpeed = iniReader.ReadBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
-	re4t::cfg->bFixQTE = iniReader.ReadBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
-	re4t::cfg->bFixAshleyBustPhysics = iniReader.ReadBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
-	re4t::cfg->bEnableFastMath = iniReader.ReadBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
-	re4t::cfg->bReplaceFramelimiter = iniReader.ReadBoolean("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
-	re4t::cfg->bMultithreadFix = iniReader.ReadBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
-	re4t::cfg->bPrecacheModels = iniReader.ReadBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
-
-	// GAMEPLAY
-	re4t::cfg->bAshleyJPCameraAngles = iniReader.ReadBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
-	re4t::cfg->bSeparateWaysProfessional = iniReader.ReadBoolean("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
-	re4t::cfg->bEnableNTSCMode = iniReader.ReadBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
-	re4t::cfg->bAllowAshleySuplex = iniReader.ReadBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
-	re4t::cfg->bFixDitmanGlitch = iniReader.ReadBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
-	re4t::cfg->bAllowSellingHandgunSilencer = iniReader.ReadBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
-	re4t::cfg->bBalancedChicagoTypewriter = iniReader.ReadBoolean("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
-	re4t::cfg->bUseSprintToggle = iniReader.ReadBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
-	re4t::cfg->bRifleScreenShake = iniReader.ReadBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
-	re4t::cfg->bDisableQTE = iniReader.ReadBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
-	re4t::cfg->bAutomaticMashingQTE = iniReader.ReadBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
-	re4t::cfg->bAllowMatildaQuickturn = iniReader.ReadBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
-	re4t::cfg->bLimitMatildaBurst = iniReader.ReadBoolean("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
-
-	// MISC
-	re4t::cfg->bNeverCheckForUpdates = iniReader.ReadBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-	re4t::cfg->bRestoreDemoVideos = iniReader.ReadBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
-	re4t::cfg->bRestoreAnalogTitleScroll = iniReader.ReadBoolean("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
-	re4t::cfg->iViolenceLevelOverride = iniReader.ReadInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
-	re4t::cfg->iViolenceLevelOverride = std::min(std::max(re4t::cfg->iViolenceLevelOverride, -1), 2); // limit between -1 to 2
-	re4t::cfg->bAllowMafiaLeonCutscenes = iniReader.ReadBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
-	re4t::cfg->bSkipIntroLogos = iniReader.ReadBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
-	re4t::cfg->bSkipMenuFades = iniReader.ReadBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
-	re4t::cfg->bSpeedUpQuitGame = iniReader.ReadBoolean("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
-	re4t::cfg->bEnableDebugMenu = iniReader.ReadBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
-	re4t::cfg->bShowGameOutput = iniReader.ReadBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
-	re4t::cfg->bEnableModExpansion = iniReader.ReadBoolean("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
-	re4t::cfg->bForceETSApplyScale = iniReader.ReadBoolean("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
-	re4t::cfg->bAlwaysShowOriginalTitleBackground = iniReader.ReadBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
-	re4t::cfg->bHideZoomControlHints = iniReader.ReadBoolean("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
-	re4t::cfg->bFixSilencedHandgunDescription = iniReader.ReadBoolean("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
-
-	// MEMORY
-	re4t::cfg->bAllowHighResolutionSFD = iniReader.ReadBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
-	re4t::cfg->bRaiseVertexAlloc = iniReader.ReadBoolean("MEMORY", "RaiseVertexAlloc", re4t::cfg->bRaiseVertexAlloc);
-	re4t::cfg->bRaiseInventoryAlloc = iniReader.ReadBoolean("MEMORY", "RaiseInventoryAlloc", re4t::cfg->bRaiseInventoryAlloc);
-
-	// HOTKEYS
-	re4t::cfg->sConfigMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo));
-	re4t::cfg->sConsoleKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "Console", re4t::cfg->sConsoleKeyCombo));
-	re4t::cfg->sFlipItemUp = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemUp", re4t::cfg->sFlipItemUp));
-	re4t::cfg->sFlipItemDown = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemDown", re4t::cfg->sFlipItemDown));
-	re4t::cfg->sFlipItemLeft = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemLeft", re4t::cfg->sFlipItemLeft));
-	re4t::cfg->sFlipItemRight = StrToUpper(iniReader.ReadString("HOTKEYS", "FlipItemRight", re4t::cfg->sFlipItemRight));
-
-	re4t::cfg->sQTE_key_1 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_1", re4t::cfg->sQTE_key_1));
-	re4t::cfg->sQTE_key_2 = StrToUpper(iniReader.ReadString("HOTKEYS", "QTE_key_2", re4t::cfg->sQTE_key_2));
-	
-	// Check if the QTE bindings are valid for the current keyboard layout.
-	// Try to reset them using VK Hex Codes if they aren't.
-	if (pInput->vk_from_key_name(re4t::cfg->sQTE_key_1) == 0)
-		re4t::cfg->sQTE_key_1 = pInput->key_name_from_vk(0x44); // Latin D
-
-	if (pInput->vk_from_key_name(re4t::cfg->sQTE_key_2) == 0)
-		re4t::cfg->sQTE_key_2 = pInput->key_name_from_vk(0x41); // Latin A
-
-	re4t::cfg->sDebugMenuKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "DebugMenu", re4t::cfg->sDebugMenuKeyCombo));
-	re4t::cfg->sMouseTurnModifierKeyCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "MouseTurningModifier", re4t::cfg->sMouseTurnModifierKeyCombo));
-	re4t::cfg->sJetSkiTrickCombo = StrToUpper(iniReader.ReadString("HOTKEYS", "JetSkiTricks", re4t::cfg->sJetSkiTrickCombo));
-
-	// TRAINER
-	re4t::cfg->bTrainerEnable = iniReader.ReadBoolean("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
-
-	// PATCHES
-	re4t::cfg->bTrainerUseNumpadMovement = iniReader.ReadBoolean("PATCHES", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
-	re4t::cfg->bTrainerUseMouseWheelUpDown = iniReader.ReadBoolean("PATCHES", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
-	re4t::cfg->fTrainerNumMoveSpeed = iniReader.ReadFloat("PATCHES", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
-	re4t::cfg->fTrainerNumMoveSpeed = fmin(fmax(re4t::cfg->fTrainerNumMoveSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
-	re4t::cfg->bTrainerEnableFreeCam = iniReader.ReadBoolean("PATCHES", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
-	re4t::cfg->fTrainerFreeCamSpeed = iniReader.ReadFloat("PATCHES", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
-	re4t::cfg->fTrainerFreeCamSpeed = fmin(fmax(re4t::cfg->fTrainerFreeCamSpeed, 0.1f), 10.0f); // limit between 0.1 - 10
-	re4t::cfg->bTrainerDisableEnemySpawn = iniReader.ReadBoolean("PATCHES", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
-	re4t::cfg->bTrainerDeadBodiesNeverDisappear = iniReader.ReadBoolean("PATCHES", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
-	re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh = iniReader.ReadBoolean("PATCHES", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
-	re4t::cfg->bTrainerEnableDebugTrg = iniReader.ReadBoolean("PATCHES", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
-	re4t::cfg->bTrainerShowDebugTrgHintText = iniReader.ReadBoolean("PATCHES", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
-	re4t::cfg->bTrainerOpenInventoryOnItemAdd = iniReader.ReadBoolean("PATCHES", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
-	re4t::cfg->iTrainerLastAreaJumpStage = iniReader.ReadInteger("PATCHES", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
-	re4t::cfg->iTrainerLastAreaJumpRoomIdx = iniReader.ReadInteger("PATCHES", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
-
-	// OVERRIDES
-	re4t::cfg->bOverrideCostumes = iniReader.ReadBoolean("OVERRIDES", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
-	std::string buf = iniReader.ReadString("OVERRIDES", "LeonCostume", "");
-	if (!buf.empty())
-	{
-		if (buf == "Jacket") re4t::cfg->CostumeOverride.Leon = LeonCostume::Jacket;
-		if (buf == "Normal") re4t::cfg->CostumeOverride.Leon = LeonCostume::Normal;
-		if (buf == "Vest") re4t::cfg->CostumeOverride.Leon = LeonCostume::Vest;
-		if (buf == "RPD") re4t::cfg->CostumeOverride.Leon = LeonCostume::RPD;
-		if (buf == "Mafia") re4t::cfg->CostumeOverride.Leon = LeonCostume::Mafia;
-	}
-
-	buf = iniReader.ReadString("OVERRIDES", "AshleyCostume", "");
-	if (!buf.empty())
-	{
-		if (buf == "Normal") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Normal;
-		if (buf == "Popstar") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Popstar;
-		if (buf == "Armor") re4t::cfg->CostumeOverride.Ashley = AshleyCostume::Armor;
-	}
-
-	buf = iniReader.ReadString("OVERRIDES", "AdaCostume", "");
-	if (!buf.empty())
-	{
-		if (buf == "Resident Evil 2") re4t::cfg->CostumeOverride.Ada = AdaCostume::RE2;
-		if (buf == "Spy") re4t::cfg->CostumeOverride.Ada = AdaCostume::Spy;
-		if (buf == "Normal") re4t::cfg->CostumeOverride.Ada = AdaCostume::Normal;
-	}
-
-	re4t::cfg->bOverrideDifficulty = iniReader.ReadBoolean("OVERRIDES", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
-	buf = iniReader.ReadString("OVERRIDES", "NewDifficulty", "");
-	if (!buf.empty())
-	{
-		if (buf == "Amateur") re4t::cfg->NewDifficulty = GameDifficulty::VeryEasy;
-		if (buf == "Easy") re4t::cfg->NewDifficulty = GameDifficulty::Easy;
-		if (buf == "Normal") re4t::cfg->NewDifficulty = GameDifficulty::Medium;
-		if (buf == "Professional") re4t::cfg->NewDifficulty = GameDifficulty::Pro;
-	}
-
-	re4t::cfg->bTrainerPlayerSpeedOverride = iniReader.ReadBoolean("OVERRIDES", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
-	re4t::cfg->fTrainerPlayerSpeedOverride = iniReader.ReadFloat("OVERRIDES", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
-	re4t::cfg->bTrainerEnemyHPMultiplier = iniReader.ReadBoolean("OVERRIDES", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
-	re4t::cfg->fTrainerEnemyHPMultiplier = iniReader.ReadFloat("OVERRIDES", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
-	re4t::cfg->fTrainerEnemyHPMultiplier = fmin(fmax(re4t::cfg->fTrainerEnemyHPMultiplier, 0.1f), 15.0f); // limit between 0.1 - 15
-	re4t::cfg->bTrainerRandomHPMultiplier = iniReader.ReadBoolean("OVERRIDES", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
-	re4t::cfg->fTrainerRandomHPMultiMin = iniReader.ReadFloat("OVERRIDES", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
-	re4t::cfg->fTrainerRandomHPMultiMin = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMin, 0.1f), 14.0f); // limit between 0.1 - 14
-	re4t::cfg->fTrainerRandomHPMultiMax = iniReader.ReadFloat("OVERRIDES", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
-	re4t::cfg->fTrainerRandomHPMultiMax = fmin(fmax(re4t::cfg->fTrainerRandomHPMultiMax, fTrainerRandomHPMultiMin), 15.0f); // limit between fTrainerRandomHPMultiMin - 15
-
-	// ESP
-	re4t::cfg->bShowESP = iniReader.ReadBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
-	re4t::cfg->bEspShowInfoOnTop = iniReader.ReadBoolean("ESP", "ShowInfoOnTop", re4t::cfg->bEspShowInfoOnTop);
-	re4t::cfg->bEspOnlyShowEnemies = iniReader.ReadBoolean("ESP", "OnlyShowEnemies", re4t::cfg->bEspOnlyShowEnemies);
-	re4t::cfg->bEspOnlyShowValidEms = iniReader.ReadBoolean("ESP", "OnlyShowValidEms", re4t::cfg->bEspOnlyShowValidEms);
-	re4t::cfg->bEspOnlyShowESLSpawned = iniReader.ReadBoolean("ESP", "OnlyShowESLSpawned", re4t::cfg->bEspOnlyShowESLSpawned);
-	re4t::cfg->bEspOnlyShowAlive = iniReader.ReadBoolean("ESP", "OnlyShowAlive", re4t::cfg->bEspOnlyShowAlive);
-	re4t::cfg->fEspMaxEmDistance = iniReader.ReadFloat("ESP", "MaxEmDistance", re4t::cfg->fEspMaxEmDistance);
-	re4t::cfg->bEspOnlyShowClosestEms = iniReader.ReadBoolean("ESP", "OnlyShowClosestEms", re4t::cfg->bEspOnlyShowClosestEms);
-	re4t::cfg->iEspClosestEmsAmount = iniReader.ReadInteger("ESP", "ClosestEmsAmount", re4t::cfg->iEspClosestEmsAmount);
-	re4t::cfg->bEspDrawLines = iniReader.ReadBoolean("ESP", "DrawLines", re4t::cfg->bEspDrawLines);
-
-	buf = iniReader.ReadString("ESP", "EmNameMode", "");
-	if (!buf.empty())
-	{
-		if (buf == "DontShow") re4t::cfg->iEspEmNameMode = 0;
-		if (buf == "Normal") re4t::cfg->iEspEmNameMode = 1;
-		if (buf == "Simplified") re4t::cfg->iEspEmNameMode = 2;
-	}
-
-	buf = iniReader.ReadString("ESP", "EmHPMode", "");
-	if (!buf.empty())
-	{
-		if (buf == "DontShow") re4t::cfg->iEspEmHPMode = 0;
-		if (buf == "Bar") re4t::cfg->iEspEmHPMode = 1;
-		if (buf == "Text") re4t::cfg->iEspEmHPMode = 2;
-	}
-
-	re4t::cfg->bEspDrawDebugInfo = iniReader.ReadBoolean("ESP", "DrawDebugInfo", re4t::cfg->bEspDrawDebugInfo);
-
-	// SIDEINFO
-	re4t::cfg->bShowSideInfo = iniReader.ReadBoolean("SIDEINFO", "ShowSideInfo", re4t::cfg->bShowSideInfo);
-	re4t::cfg->bSideShowEmCount = iniReader.ReadBoolean("SIDEINFO", "ShowEmCount", re4t::cfg->bSideShowEmCount);
-	re4t::cfg->bSideShowEmList = iniReader.ReadBoolean("SIDEINFO", "ShowEmList", re4t::cfg->bSideShowEmList);
-	re4t::cfg->bSideOnlyShowESLSpawned = iniReader.ReadBoolean("SIDEINFO", "OnlyShowESLSpawned", re4t::cfg->bSideOnlyShowESLSpawned);
-	re4t::cfg->bSideShowSimpleNames = iniReader.ReadBoolean("SIDEINFO", "ShowSimpleNames", re4t::cfg->bSideShowSimpleNames);
-	re4t::cfg->iSideClosestEmsAmount = iniReader.ReadInteger("SIDEINFO", "ClosestEmsAmount", re4t::cfg->iSideClosestEmsAmount);
-	re4t::cfg->fSideMaxEmDistance = iniReader.ReadFloat("SIDEINFO", "MaxEmDistance", re4t::cfg->fSideMaxEmDistance);
-
-	buf = iniReader.ReadString("SIDEINFO", "EmHPMode", "");
-	if (!buf.empty())
-	{
-		if (buf == "DontShow") re4t::cfg->iSideEmHPMode = 0;
-		if (buf == "Bar") re4t::cfg->iSideEmHPMode = 1;
-		if (buf == "Text") re4t::cfg->iSideEmHPMode = 2;
-	}
-
-	// TRAINER HOTKEYS
-	re4t::cfg->sTrainerFocusUIKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FocusUI", re4t::cfg->sTrainerFocusUIKeyCombo);
-	re4t::cfg->sTrainerNoclipKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "NoclipToggle", re4t::cfg->sTrainerNoclipKeyCombo);
-	re4t::cfg->sTrainerFreeCamKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "FreeCamToggle", re4t::cfg->sTrainerFreeCamKeyCombo);
-	re4t::cfg->sTrainerSpeedOverrideKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "SpeedOverrideToggle", re4t::cfg->sTrainerSpeedOverrideKeyCombo);
-	re4t::cfg->sTrainerMoveAshToPlayerKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
-	re4t::cfg->sTrainerDebugTrgKeyCombo = iniReader.ReadString("TRAINER_HOTKEYS", "DebugTrg", re4t::cfg->sTrainerDebugTrgKeyCombo);
-
-	// WEAPON HOTKEYS
-	re4t::cfg->bWeaponHotkeysEnable = iniReader.ReadBoolean("WEAPON_HOTKEYS", "Enable", re4t::cfg->bWeaponHotkeysEnable);
-	re4t::cfg->sWeaponHotkeys[0] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", re4t::cfg->sWeaponHotkeys[0]);
-	re4t::cfg->sWeaponHotkeys[1] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", re4t::cfg->sWeaponHotkeys[1]);
-	re4t::cfg->sWeaponHotkeys[2] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", re4t::cfg->sWeaponHotkeys[2]);
-	re4t::cfg->sWeaponHotkeys[3] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", re4t::cfg->sWeaponHotkeys[3]);
-	re4t::cfg->sWeaponHotkeys[4] = iniReader.ReadString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", re4t::cfg->sWeaponHotkeys[4]);
-	re4t::cfg->sLastWeaponHotkey = iniReader.ReadString("WEAPON_HOTKEYS", "LastWeaponHotkey", re4t::cfg->sLastWeaponHotkey);
-	re4t::cfg->iWeaponHotkeyWepIds[0] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", re4t::cfg->iWeaponHotkeyWepIds[0]);
-	re4t::cfg->iWeaponHotkeyWepIds[1] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", re4t::cfg->iWeaponHotkeyWepIds[1]);
-	re4t::cfg->iWeaponHotkeyWepIds[2] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", re4t::cfg->iWeaponHotkeyWepIds[2]);
-	re4t::cfg->iWeaponHotkeyWepIds[3] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", re4t::cfg->iWeaponHotkeyWepIds[3]);
-	re4t::cfg->iWeaponHotkeyWepIds[4] = iniReader.ReadInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", re4t::cfg->iWeaponHotkeyWepIds[4]);
-	auto readIntVect = [&iniReader](std::string section, std::string key, std::string& default_value)
-	{
-		std::vector<int> ret;
-
-		default_value = iniReader.ReadString(section, key, default_value);
-
-		std::stringstream ss(default_value);
-
-		for (int i; ss >> i;) {
-			ret.push_back(i);
-			int peeked = ss.peek();
-			if (peeked == ',' || peeked == ' ')
-				ss.ignore();
-		}
-
-		return ret;
-	};
-	re4t::cfg->iWeaponHotkeyCycle[0] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", re4t::cfg->iWeaponHotkeyCycleString[0]);
-	re4t::cfg->iWeaponHotkeyCycle[1] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", re4t::cfg->iWeaponHotkeyCycleString[1]);
-	re4t::cfg->iWeaponHotkeyCycle[2] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", re4t::cfg->iWeaponHotkeyCycleString[2]);
-	re4t::cfg->iWeaponHotkeyCycle[3] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", re4t::cfg->iWeaponHotkeyCycleString[3]);
-	re4t::cfg->iWeaponHotkeyCycle[4] = readIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", re4t::cfg->iWeaponHotkeyCycleString[4]);
-
-	// Parse all hotkeys
-	ParseHotkeys();
-
-	// FPS WARNING
-	re4t::cfg->bIgnoreFPSWarning = iniReader.ReadBoolean("WARNING", "IgnoreFPSWarning", re4t::cfg->bIgnoreFPSWarning);
-	
-	// IMGUI
-	re4t::cfg->fFontSizeScale = iniReader.ReadFloat("IMGUI", "FontSizeScale", re4t::cfg->fFontSizeScale);
-	re4t::cfg->fFontSizeScale = fmin(fmax(re4t::cfg->fFontSizeScale, 1.0f), 1.25f); // limit between 1.0 - 1.25
-
-	re4t::cfg->bEnableDPIScale = iniReader.ReadBoolean("IMGUI", "EnableDPIScale", re4t::cfg->bEnableDPIScale);
-	re4t::cfg->bDisableMenuTip = iniReader.ReadBoolean("IMGUI", "DisableMenuTip", re4t::cfg->bDisableMenuTip);
-
-	// DEBUG
-	re4t::cfg->bVerboseLog = iniReader.ReadBoolean("DEBUG", "VerboseLog", re4t::cfg->bVerboseLog);
-	re4t::cfg->bNeverHideCursor = iniReader.ReadBoolean("DEBUG", "NeverHideCursor", re4t::cfg->bNeverHideCursor);
-	re4t::cfg->bUseDynamicFrametime = iniReader.ReadBoolean("DEBUG", "UseDynamicFrametime", re4t::cfg->bUseDynamicFrametime);
-	re4t::cfg->bDisableFramelimiting = iniReader.ReadBoolean("DEBUG", "DisableFramelimiting", re4t::cfg->bDisableFramelimiting);
-
-	if (iniReader.ReadBoolean("DEBUG", "TweaksDevMode", TweaksDevMode))
-		TweaksDevMode = true; // let the INI enable it if it's disabled, but not disable it
 }
 
-std::mutex settingsThreadRunningMutex;
-
-void WriteSettings(std::wstring iniPath, bool trainerIni)
+void re4t_cfg::WriteSettings(bool trainerOnly)
 {
-	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // only allow single thread writing to INI at one time
+	// Main .ini
+	if (!trainerOnly)
+	{
+		std::wstring iniPath = rootPath + wrapperName + L".ini";
 
-	CIniReader iniReader(WstrToStr(iniPath));
-
-	#ifdef VERBOSE
-	con.log("Writing settings to: %s", WstrToStr(iniPath));
-	#endif
-
-	// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
-	if (!std::filesystem::exists(iniPath)) {
 		#ifdef VERBOSE
-		con.log("ini file doesn't exist in folder. Creating new one.");
+		con.log("Writing main settings to: %s", WstrToStr(iniPath));
 		#endif
 
-		std::filesystem::create_directory(std::filesystem::path(iniPath).parent_path()); // Create the dir if it doesn't exist
+		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
+		if (!std::filesystem::exists(iniPath)) {
+			#ifdef VERBOSE
+			con.log("Main ini file doesn't exist in folder. Creating new one.");
+			#endif
 
-		const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
+			std::filesystem::create_directory(std::filesystem::path(iniPath).parent_path()); // Create the dir if it doesn't exist
 
-		if (!trainerIni)
-		{
+			const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
+
 			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\settings.ini"))
 				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
 		}
-		else
-		{
-			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini"))
-				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini", iniPath, copyOptions);
+
+		// Try to remove read-only flag is it is set, for some reason.
+		DWORD iniFile = GetFileAttributesW(iniPath.data());
+		if (iniFile != INVALID_FILE_ATTRIBUTES) {
+			bool isReadOnly = iniFile & FILE_ATTRIBUTE_READONLY;
+
+			if (isReadOnly)
+			{
+				#ifdef VERBOSE
+				con.log("Read-only ini file detected. Attempting to remove flag");
+				#endif
+
+				spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
+
+				SetFileAttributesW(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
+			}
 		}
+
+		// Load .ini
+		iniReader ini(iniPath);
+
+		// VULKAN
+		ini.setBool("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+		ini.setBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+		ini.setBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+		ini.setBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
+		ini.setBool("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
+
+		// DISPLAY
+		ini.setFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
+		ini.setBool("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
+
+		ini.setBool("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
+		ini.setBool("DISPLAY", "SideAlignHUD", re4t::cfg->bSideAlignHUD);
+		ini.setBool("DISPLAY", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages);
+		ini.setBool("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
+		ini.setBool("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
+		ini.setBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
+		ini.setBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
+		ini.setInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		ini.setBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
+		ini.setBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
+
+		ini.setInt("DISPLAY", "LaserR", re4t::cfg->iLaserR);
+		ini.setInt("DISPLAY", "LaserG", re4t::cfg->iLaserG);
+		ini.setInt("DISPLAY", "LaserB", re4t::cfg->iLaserB);
+
+		ini.setBool("DISPLAY", "RestorePickupTransparency", re4t::cfg->bRestorePickupTransparency);
+		ini.setBool("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
+		ini.setBool("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
+		ini.setBool("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
+		ini.setBool("DISPLAY", "ImproveWater", re4t::cfg->bImproveWater);
+		ini.setBool("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
+
+		if (re4t::cfg->bUseEnhancedGCBlur)
+			ini.setString("DISPLAY", "GCBlurType", "Enhanced");
+		else
+			ini.setString("DISPLAY", "GCBlurType", "Classic");
+
+		ini.setBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
+		ini.setBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		ini.setInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
+		ini.setInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
+		ini.setBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+
+		// AUDIO
+		ini.setInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
+		ini.setInt("AUDIO", "VolumeBGM", re4t::cfg->iVolumeBGM);
+		ini.setInt("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
+		ini.setInt("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
+		ini.setBool("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
+		ini.setBool("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
+
+		// MOUSE
+		ini.setBool("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
+		ini.setBool("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
+		ini.setBool("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
+		ini.setBool("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
+		ini.setFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
+		ini.setBool("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
+
+		if (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)
+			ini.setString("MOUSE", "MouseTurnType", "TypeA");
+		else
+			ini.setString("MOUSE", "MouseTurnType", "TypeB");
+
+		ini.setFloat("MOUSE", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
+		ini.setBool("MOUSE", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput);
+		ini.setBool("MOUSE", "DetachCameraFromAim", re4t::cfg->bDetachCameraFromAim);
+		ini.setBool("MOUSE", "FixSniperZoom", re4t::cfg->bFixSniperZoom);
+		ini.setBool("MOUSE", "FixSniperFocus", re4t::cfg->bFixSniperFocus);
+		ini.setBool("MOUSE", "FixRetryLoadMouseSelector", re4t::cfg->bFixRetryLoadMouseSelector);
+
+		// KEYBOARD
+		ini.setBool("KEYBOARD", "FallbackToEnglishKeyIcons", re4t::cfg->bFallbackToEnglishKeyIcons);
+		ini.setBool("KEYBOARD", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_kbm);
+		ini.setBool("KEYBOARD", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_kbm);
+
+		// CONTROLLER
+		ini.setBool("CONTROLLER", "OverrideControllerSensitivity", re4t::cfg->bOverrideControllerSensitivity);
+		ini.setFloat("CONTROLLER", "ControllerSensitivity", re4t::cfg->fControllerSensitivity);
+		ini.setBool("CONTROLLER", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone);
+		ini.setBool("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
+		ini.setFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
+		ini.setBool("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
+		ini.setBool("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
+
+		// FRAME RATE
+		ini.setBool("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
+		ini.setBool("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
+		ini.setBool("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
+		ini.setBool("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
+		ini.setBool("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
+		ini.setBool("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
+		ini.setBool("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
+		ini.setBool("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
+		ini.setBool("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
+		ini.setBool("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
+
+		// GAMEPLAY
+		ini.setBool("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
+		ini.setBool("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
+		ini.setBool("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
+		ini.setBool("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
+		ini.setBool("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
+		ini.setBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
+		ini.setBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
+		ini.setBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+		ini.setBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
+		ini.setBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
+		ini.setBool("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
+		ini.setBool("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
+		ini.setBool("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
+
+		// MISC
+		ini.setBool("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
+		ini.setBool("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
+		ini.setBool("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
+		ini.setInt("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
+		ini.setBool("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
+		ini.setBool("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
+		ini.setBool("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
+		ini.setBool("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
+		ini.setBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
+		ini.setBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
+		ini.setBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
+		ini.setBool("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
+		ini.setBool("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
+		// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
+		// We don't have any UI options for those anyway, so pointless for us to write it back
+
+		// MEMORY
+		ini.setBool("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
+		ini.setBool("MEMORY", "RaiseVertexAlloc", re4t::cfg->bRaiseVertexAlloc);
+		ini.setBool("MEMORY", "RaiseInventoryAlloc", re4t::cfg->bRaiseInventoryAlloc);
+
+		// HOTKEYS
+		ini.setString("HOTKEYS", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo);
+		ini.setString("HOTKEYS", "Console", re4t::cfg->sConsoleKeyCombo);
+		ini.setString("HOTKEYS", "FlipItemUp", re4t::cfg->sFlipItemUp);
+		ini.setString("HOTKEYS", "FlipItemDown", re4t::cfg->sFlipItemDown);
+		ini.setString("HOTKEYS", "FlipItemLeft", re4t::cfg->sFlipItemLeft);
+		ini.setString("HOTKEYS", "FlipItemRight", re4t::cfg->sFlipItemRight);
+		ini.setString("HOTKEYS", "QTE_key_1", re4t::cfg->sQTE_key_1);
+		ini.setString("HOTKEYS", "QTE_key_2", re4t::cfg->sQTE_key_2);
+		ini.setString("HOTKEYS", "DebugMenu", re4t::cfg->sDebugMenuKeyCombo);
+		ini.setString("HOTKEYS", "MouseTurningModifier", re4t::cfg->sMouseTurnModifierKeyCombo);
+		ini.setString("HOTKEYS", "JetSkiTricks", re4t::cfg->sJetSkiTrickCombo);
+
+		// IMGUI
+		ini.setFloat("IMGUI", "FontSizeScale", re4t::cfg->fFontSizeScale);
+
+		// Save main .ini file
+		ini.writeIni();
 	}
 
-	// Try to remove read-only flag is it is set, for some reason.
-	DWORD iniFile = GetFileAttributesW(iniPath.data());
-	if (iniFile != INVALID_FILE_ATTRIBUTES) {
-		bool isReadOnly = iniFile & FILE_ATTRIBUTE_READONLY;
+	// trainer.ini-only settings
+	{
+		std::wstring iniPath = rootPath + L"re4_tweaks\\trainer.ini";
 
-		if (isReadOnly)
-		{
+		#ifdef VERBOSE
+		con.log("Writing trainer settings to: %s", WstrToStr(iniPath));
+		#endif
+
+		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
+		if (!std::filesystem::exists(iniPath)) {
 			#ifdef VERBOSE
-			con.log("Read-only ini file detected. Attempting to remove flag");
+			con.log("Main ini file doesn't exist in folder. Creating new one.");
 			#endif
 
-			spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
+			std::filesystem::create_directory(std::filesystem::path(iniPath).parent_path()); // Create the dir if it doesn't exist
 
-			SetFileAttributesW(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
+			const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
+
+			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\settings.ini"))
+				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
 		}
-	}
 
-	if (trainerIni)
-	{
-		// trainer.ini-only settings
-		iniReader = CIniReader(WstrToStr(iniPath));
+		// Try to remove read-only flag is it is set, for some reason.
+		DWORD iniFile = GetFileAttributesW(iniPath.data());
+		if (iniFile != INVALID_FILE_ATTRIBUTES) {
+			bool isReadOnly = iniFile & FILE_ATTRIBUTE_READONLY;
+
+			if (isReadOnly)
+			{
+				#ifdef VERBOSE
+				con.log("Read-only ini file detected. Attempting to remove flag");
+				#endif
+
+				spd::log()->info("{} -> Read-only ini file detected. Attempting to remove flag", __FUNCTION__);
+
+				SetFileAttributesW(iniPath.c_str(), iniFile & ~FILE_ATTRIBUTE_READONLY);
+			}
+		}
+
+		// Load .ini
+		iniReader ini(iniPath);
 
 		// Trainer
-		iniReader.WriteBoolean("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
+		ini.setBool("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
 
 		// PATCHES
-		iniReader.WriteBoolean("PATCHES", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
-		iniReader.WriteBoolean("PATCHES", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
-		iniReader.WriteFloat("PATCHES", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
-		iniReader.WriteBoolean("PATCHES", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
-		iniReader.WriteFloat("PATCHES", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
-		iniReader.WriteBoolean("PATCHES", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
-		iniReader.WriteBoolean("PATCHES", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
-		iniReader.WriteBoolean("PATCHES", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
-		iniReader.WriteBoolean("PATCHES", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
-		iniReader.WriteBoolean("PATCHES", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
-		iniReader.WriteBoolean("PATCHES", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
-		iniReader.WriteInteger("PATCHES", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
-		iniReader.WriteInteger("PATCHES", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
+		ini.setBool("PATCHES", "UseNumpadMovement", re4t::cfg->bTrainerUseNumpadMovement);
+		ini.setBool("PATCHES", "UseMouseWheelUpDown", re4t::cfg->bTrainerUseMouseWheelUpDown);
+		ini.setFloat("PATCHES", "NumpadMovementSpeed", re4t::cfg->fTrainerNumMoveSpeed);
+		ini.setBool("PATCHES", "EnableFreeCamera", re4t::cfg->bTrainerEnableFreeCam);
+		ini.setFloat("PATCHES", "FreeCamSpeed", re4t::cfg->fTrainerFreeCamSpeed);
+		ini.setBool("PATCHES", "DisableEnemySpawn", re4t::cfg->bTrainerDisableEnemySpawn);
+		ini.setBool("PATCHES", "DeadBodiesNeverDisappear", re4t::cfg->bTrainerDeadBodiesNeverDisappear);
+		ini.setBool("PATCHES", "AllowEnterDoorsWithoutAshley", re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh);
+		ini.setBool("PATCHES", "EnableDebugTrg", re4t::cfg->bTrainerEnableDebugTrg);
+		ini.setBool("PATCHES", "ShowDebugTrgHintText", re4t::cfg->bTrainerShowDebugTrgHintText);
+		ini.setBool("PATCHES", "OpenInventoryOnItemAdd", re4t::cfg->bTrainerOpenInventoryOnItemAdd);
+		ini.setInt("PATCHES", "LastAreaJumpStage", re4t::cfg->iTrainerLastAreaJumpStage);
+		ini.setInt("PATCHES", "LastAreaJumpRoomIdx", re4t::cfg->iTrainerLastAreaJumpRoomIdx);
 
 		// OVERRIDES
-		iniReader.WriteBoolean("OVERRIDES", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
-		iniReader.WriteFloat("OVERRIDES", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
-		iniReader.WriteBoolean("OVERRIDES", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
-		iniReader.WriteString("OVERRIDES", "LeonCostume", " " + std::string(sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]));
-		iniReader.WriteString("OVERRIDES", "AshleyCostume", " " + std::string(sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]));
-		iniReader.WriteString("OVERRIDES", "AdaCostume", " " + std::string(sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]));
-		iniReader.WriteBoolean("OVERRIDES", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
-		iniReader.WriteString("OVERRIDES", "NewDifficulty", " " + std::string(sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]));
-		iniReader.WriteBoolean("OVERRIDES", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
-		iniReader.WriteFloat("OVERRIDES", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
-		iniReader.WriteBoolean("OVERRIDES", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
-		iniReader.WriteFloat("OVERRIDES", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
-		iniReader.WriteFloat("OVERRIDES", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
+		ini.setBool("OVERRIDES", "EnablePlayerSpeedOverride", re4t::cfg->bTrainerPlayerSpeedOverride);
+		ini.setFloat("OVERRIDES", "PlayerSpeedOverride", re4t::cfg->fTrainerPlayerSpeedOverride);
+		ini.setBool("OVERRIDES", "OverrideCostumes", re4t::cfg->bOverrideCostumes);
+		ini.setString("OVERRIDES", "LeonCostume", std::string(sLeonCostumeNames[int(re4t::cfg->CostumeOverride.Leon)]));
+		ini.setString("OVERRIDES", "AshleyCostume", std::string(sAshleyCostumeNames[int(re4t::cfg->CostumeOverride.Ashley)]));
+		ini.setString("OVERRIDES", "AdaCostume", std::string(sAdaCostumeNames[int(re4t::cfg->CostumeOverride.Ada)]));
+		ini.setBool("OVERRIDES", "OverrideDifficulty", re4t::cfg->bOverrideDifficulty);
+		ini.setString("OVERRIDES", "NewDifficulty", std::string(sGameDifficultyNames[int(re4t::cfg->NewDifficulty)]));
+		ini.setBool("OVERRIDES", "EnableEnemyHPMultiplier", re4t::cfg->bTrainerEnemyHPMultiplier);
+		ini.setFloat("OVERRIDES", "EnemyHPMultiplier", re4t::cfg->fTrainerEnemyHPMultiplier);
+		ini.setBool("OVERRIDES", "UseRandomHPMultiplier", re4t::cfg->bTrainerRandomHPMultiplier);
+		ini.setFloat("OVERRIDES", "RandomHPMultiplierMin", re4t::cfg->fTrainerRandomHPMultiMin);
+		ini.setFloat("OVERRIDES", "RandomHPMultiplierMax", re4t::cfg->fTrainerRandomHPMultiMax);
 
 		// ESP
-		iniReader.WriteBoolean("ESP", "ShowESP", re4t::cfg->bShowESP);
-		iniReader.WriteBoolean("ESP", "ShowInfoOnTop", re4t::cfg->bEspShowInfoOnTop);
-		iniReader.WriteBoolean("ESP", "OnlyShowEnemies", re4t::cfg->bEspOnlyShowEnemies);
-		iniReader.WriteBoolean("ESP", "OnlyShowValidEms", re4t::cfg->bEspOnlyShowValidEms);
-		iniReader.WriteBoolean("ESP", "OnlyShowESLSpawned", re4t::cfg->bEspOnlyShowESLSpawned);
-		iniReader.WriteBoolean("ESP", "OnlyShowAlive", re4t::cfg->bEspOnlyShowAlive);
-		iniReader.WriteFloat("ESP", "MaxEmDistance", re4t::cfg->fEspMaxEmDistance);
-		iniReader.WriteBoolean("ESP", "OnlyShowClosestEms", re4t::cfg->bEspOnlyShowClosestEms);
-		iniReader.WriteInteger("ESP", "ClosestEmsAmount", re4t::cfg->iEspClosestEmsAmount);
-		iniReader.WriteBoolean("ESP", "DrawLines", re4t::cfg->bEspDrawLines);
+		ini.setBool("ESP", "ShowESP", re4t::cfg->bShowESP);
+		ini.setBool("ESP", "ShowInfoOnTop", re4t::cfg->bEspShowInfoOnTop);
+		ini.setBool("ESP", "OnlyShowEnemies", re4t::cfg->bEspOnlyShowEnemies);
+		ini.setBool("ESP", "OnlyShowValidEms", re4t::cfg->bEspOnlyShowValidEms);
+		ini.setBool("ESP", "OnlyShowESLSpawned", re4t::cfg->bEspOnlyShowESLSpawned);
+		ini.setBool("ESP", "OnlyShowAlive", re4t::cfg->bEspOnlyShowAlive);
+		ini.setFloat("ESP", "MaxEmDistance", re4t::cfg->fEspMaxEmDistance);
+		ini.setBool("ESP", "OnlyShowClosestEms", re4t::cfg->bEspOnlyShowClosestEms);
+		ini.setInt("ESP", "ClosestEmsAmount", re4t::cfg->iEspClosestEmsAmount);
+		ini.setBool("ESP", "DrawLines", re4t::cfg->bEspDrawLines);
 
 		std::string buf;
 		switch (re4t::cfg->iEspEmNameMode) {
@@ -646,7 +835,7 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		case 2:
 			buf = "Simplified";
 			break;
-		} iniReader.WriteString("ESP", "EmNameMode", " " + buf);
+		} ini.setString("ESP", "EmNameMode", buf);
 
 		switch (re4t::cfg->iEspEmHPMode) {
 		case 0:
@@ -658,18 +847,18 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		case 2:
 			buf = "Text";
 			break;
-		} iniReader.WriteString("ESP", "EmHPMode", " " + buf);
+		} ini.setString("ESP", "EmHPMode", buf);
 
-		iniReader.WriteBoolean("ESP", "DrawDebugInfo", re4t::cfg->bEspDrawDebugInfo);
+		ini.setBool("ESP", "DrawDebugInfo", re4t::cfg->bEspDrawDebugInfo);
 
 		// SIDEINFO
-		iniReader.WriteBoolean("SIDEINFO", "ShowSideInfo", re4t::cfg->bShowSideInfo);
-		iniReader.WriteBoolean("SIDEINFO", "ShowEmCount", re4t::cfg->bSideShowEmCount);
-		iniReader.WriteBoolean("SIDEINFO", "ShowEmList", re4t::cfg->bSideShowEmList);
-		iniReader.WriteBoolean("SIDEINFO", "OnlyShowESLSpawned", re4t::cfg->bSideOnlyShowESLSpawned);
-		iniReader.WriteBoolean("SIDEINFO", "ShowSimpleNames", re4t::cfg->bSideShowSimpleNames);
-		iniReader.WriteInteger("SIDEINFO", "ClosestEmsAmount", re4t::cfg->iSideClosestEmsAmount);
-		iniReader.WriteFloat("SIDEINFO", "MaxEmDistance", re4t::cfg->fSideMaxEmDistance);
+		ini.setBool("SIDEINFO", "ShowSideInfo", re4t::cfg->bShowSideInfo);
+		ini.setBool("SIDEINFO", "ShowEmCount", re4t::cfg->bSideShowEmCount);
+		ini.setBool("SIDEINFO", "ShowEmList", re4t::cfg->bSideShowEmList);
+		ini.setBool("SIDEINFO", "OnlyShowESLSpawned", re4t::cfg->bSideOnlyShowESLSpawned);
+		ini.setBool("SIDEINFO", "ShowSimpleNames", re4t::cfg->bSideShowSimpleNames);
+		ini.setInt("SIDEINFO", "ClosestEmsAmount", re4t::cfg->iSideClosestEmsAmount);
+		ini.setFloat("SIDEINFO", "MaxEmDistance", re4t::cfg->fSideMaxEmDistance);
 
 		switch (re4t::cfg->iSideEmHPMode) {
 		case 0:
@@ -681,225 +870,53 @@ void WriteSettings(std::wstring iniPath, bool trainerIni)
 		case 2:
 			buf = "Text";
 			break;
-		} iniReader.WriteString("SIDEINFO", "EmHPMode", " " + buf);
+		} ini.setString("SIDEINFO", "EmHPMode", buf);
 
 		// TRAINER_HOTKEYS
-		iniReader.WriteString("TRAINER_HOTKEYS", "FocusUI", " " + re4t::cfg->sTrainerFocusUIKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "NoclipToggle", " " + re4t::cfg->sTrainerNoclipKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "FreeCamToggle", " " + re4t::cfg->sTrainerFreeCamKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "SpeedOverrideToggle", " " + re4t::cfg->sTrainerSpeedOverrideKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", " " + re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
-		iniReader.WriteString("TRAINER_HOTKEYS", "DebugTrg", " " + re4t::cfg->sTrainerDebugTrgKeyCombo);
+		ini.setString("TRAINER_HOTKEYS", "FocusUI", re4t::cfg->sTrainerFocusUIKeyCombo);
+		ini.setString("TRAINER_HOTKEYS", "NoclipToggle", re4t::cfg->sTrainerNoclipKeyCombo);
+		ini.setString("TRAINER_HOTKEYS", "FreeCamToggle", re4t::cfg->sTrainerFreeCamKeyCombo);
+		ini.setString("TRAINER_HOTKEYS", "SpeedOverrideToggle", re4t::cfg->sTrainerSpeedOverrideKeyCombo);
+		ini.setString("TRAINER_HOTKEYS", "MoveAshleyToPlayer", re4t::cfg->sTrainerMoveAshToPlayerKeyCombo);
+		ini.setString("TRAINER_HOTKEYS", "DebugTrg", re4t::cfg->sTrainerDebugTrgKeyCombo);
 
 		// WEAPON HOTKEYS
-		iniReader.WriteBoolean("WEAPON_HOTKEYS", "Enable", re4t::cfg->bWeaponHotkeysEnable);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", " " + re4t::cfg->sWeaponHotkeys[0]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", " " + re4t::cfg->sWeaponHotkeys[1]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", " " + re4t::cfg->sWeaponHotkeys[2]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", " " + re4t::cfg->sWeaponHotkeys[3]);
-		iniReader.WriteString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", " " + re4t::cfg->sWeaponHotkeys[4]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot1", re4t::cfg->iWeaponHotkeyWepIds[0]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot2", re4t::cfg->iWeaponHotkeyWepIds[1]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot3", re4t::cfg->iWeaponHotkeyWepIds[2]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot4", re4t::cfg->iWeaponHotkeyWepIds[3]);
-		iniReader.WriteInteger("WEAPON_HOTKEYS", "WeaponIdSlot5", re4t::cfg->iWeaponHotkeyWepIds[4]);
+		ini.setBool("WEAPON_HOTKEYS", "Enable", re4t::cfg->bWeaponHotkeysEnable);
+		ini.setString("WEAPON_HOTKEYS", "WeaponHotkeySlot1", re4t::cfg->sWeaponHotkeys[0]);
+		ini.setString("WEAPON_HOTKEYS", "WeaponHotkeySlot2", re4t::cfg->sWeaponHotkeys[1]);
+		ini.setString("WEAPON_HOTKEYS", "WeaponHotkeySlot3", re4t::cfg->sWeaponHotkeys[2]);
+		ini.setString("WEAPON_HOTKEYS", "WeaponHotkeySlot4", re4t::cfg->sWeaponHotkeys[3]);
+		ini.setString("WEAPON_HOTKEYS", "WeaponHotkeySlot5", re4t::cfg->sWeaponHotkeys[4]);
+		ini.setInt("WEAPON_HOTKEYS", "WeaponIdSlot1", re4t::cfg->iWeaponHotkeyWepIds[0]);
+		ini.setInt("WEAPON_HOTKEYS", "WeaponIdSlot2", re4t::cfg->iWeaponHotkeyWepIds[1]);
+		ini.setInt("WEAPON_HOTKEYS", "WeaponIdSlot3", re4t::cfg->iWeaponHotkeyWepIds[2]);
+		ini.setInt("WEAPON_HOTKEYS", "WeaponIdSlot4", re4t::cfg->iWeaponHotkeyWepIds[3]);
+		ini.setInt("WEAPON_HOTKEYS", "WeaponIdSlot5", re4t::cfg->iWeaponHotkeyWepIds[4]);
 
-		auto writeIntVect = [&iniReader](std::string section, std::string key, std::vector<int>& vect) {
+		auto setIntVect = [&ini](std::string section, std::string key, std::vector<int>& vect) {
 			std::string val = "";
 			for (int num : vect)
 				val += std::to_string(num) + ", ";
 			if (!val.empty())
 				val = val.substr(0, val.size() - 2);
-			iniReader.WriteString(section, key, " " + val);
+			ini.setString(section, key, val);
 		};
 
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", re4t::cfg->iWeaponHotkeyCycle[0]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", re4t::cfg->iWeaponHotkeyCycle[1]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", re4t::cfg->iWeaponHotkeyCycle[2]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", re4t::cfg->iWeaponHotkeyCycle[3]);
-		writeIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", re4t::cfg->iWeaponHotkeyCycle[4]);
+		setIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot1", re4t::cfg->iWeaponHotkeyCycle[0]);
+		setIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot2", re4t::cfg->iWeaponHotkeyCycle[1]);
+		setIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot3", re4t::cfg->iWeaponHotkeyCycle[2]);
+		setIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot4", re4t::cfg->iWeaponHotkeyCycle[3]);
+		setIntVect("WEAPON_HOTKEYS", "WeaponCycleSlot5", re4t::cfg->iWeaponHotkeyCycle[4]);
 
-		iniReader.WriteString("WEAPON_HOTKEYS", "LastWeaponHotkey", " " + re4t::cfg->sLastWeaponHotkey);
+		ini.setString("WEAPON_HOTKEYS", "LastWeaponHotkey", re4t::cfg->sLastWeaponHotkey);
+
+		// Save trainer .ini file
+		ini.writeIni();
 
 		return;
 	}
 
-	// VULKAN
-	iniReader.WriteBoolean("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
-	iniReader.WriteBoolean("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
-	iniReader.WriteBoolean("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
-	iniReader.WriteBoolean("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
-	iniReader.WriteBoolean("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
-
-	// DISPLAY
-	iniReader.WriteFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
-	iniReader.WriteBoolean("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
-
-	iniReader.WriteBoolean("DISPLAY", "UltraWideAspectSupport", re4t::cfg->bUltraWideAspectSupport);
-	iniReader.WriteBoolean("DISPLAY", "SideAlignHUD", re4t::cfg->bSideAlignHUD);
-	iniReader.WriteBoolean("DISPLAY", "StretchFullscreenImages", re4t::cfg->bStretchFullscreenImages);
-	iniReader.WriteBoolean("DISPLAY", "StretchVideos", re4t::cfg->bStretchVideos);
-	iniReader.WriteBoolean("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
-	iniReader.WriteBoolean("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
-	iniReader.WriteBoolean("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-	iniReader.WriteInteger("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
-	iniReader.WriteBoolean("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
-	iniReader.WriteBoolean("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
-
-	iniReader.WriteInteger("DISPLAY", "LaserR", re4t::cfg->iLaserR);
-	iniReader.WriteInteger("DISPLAY", "LaserG", re4t::cfg->iLaserG);
-	iniReader.WriteInteger("DISPLAY", "LaserB", re4t::cfg->iLaserB);
-
-	iniReader.WriteBoolean("DISPLAY", "RestorePickupTransparency", re4t::cfg->bRestorePickupTransparency);
-	iniReader.WriteBoolean("DISPLAY", "DisableBrokenFilter03", re4t::cfg->bDisableBrokenFilter03);
-	iniReader.WriteBoolean("DISPLAY", "FixBlurryImage", re4t::cfg->bFixBlurryImage);
-	iniReader.WriteBoolean("DISPLAY", "DisableFilmGrain", re4t::cfg->bDisableFilmGrain);
-	iniReader.WriteBoolean("DISPLAY", "ImproveWater", re4t::cfg->bImproveWater);
-	iniReader.WriteBoolean("DISPLAY", "EnableGCBlur", re4t::cfg->bEnableGCBlur);
-
-	if (re4t::cfg->bUseEnhancedGCBlur)
-		iniReader.WriteString("DISPLAY", "GCBlurType", " Enhanced");
-	else
-		iniReader.WriteString("DISPLAY", "GCBlurType", " Classic");
-
-	iniReader.WriteBoolean("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
-	iniReader.WriteBoolean("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
-	iniReader.WriteInteger("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
-	iniReader.WriteInteger("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
-	iniReader.WriteBoolean("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
-
-	// AUDIO
-	iniReader.WriteInteger("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
-	iniReader.WriteInteger("AUDIO", "VolumeBGM", re4t::cfg->iVolumeBGM);
-	iniReader.WriteInteger("AUDIO", "VolumeSE", re4t::cfg->iVolumeSE);
-	iniReader.WriteInteger("AUDIO", "VolumeCutscene", re4t::cfg->iVolumeCutscene);
-	iniReader.WriteBoolean("AUDIO", "RestoreGCSoundEffects", re4t::cfg->bRestoreGCSoundEffects);
-	iniReader.WriteBoolean("AUDIO", "SilenceArmoredAshley", re4t::cfg->bSilenceArmoredAshley);
-
-	// MOUSE
-	iniReader.WriteBoolean("MOUSE", "CameraImprovements", re4t::cfg->bCameraImprovements);
-	iniReader.WriteBoolean("MOUSE", "ResetCameraAfterUsingWeapons", re4t::cfg->bResetCameraAfterUsingWeapons);
-	iniReader.WriteBoolean("MOUSE", "ResetCameraAfterUsingKnife", re4t::cfg->bResetCameraAfterUsingKnife);
-	iniReader.WriteBoolean("MOUSE", "ResetCameraWhenRunning", re4t::cfg->bResetCameraWhenRunning);
-	iniReader.WriteFloat("MOUSE", "CameraSensitivity", re4t::cfg->fCameraSensitivity);
-	iniReader.WriteBoolean("MOUSE", "UseMouseTurning", re4t::cfg->bUseMouseTurning);
-
-	if (re4t::cfg->iMouseTurnType == MouseTurnTypes::TypeA)
-		iniReader.WriteString("MOUSE", "MouseTurnType", " TypeA");
-	else
-		iniReader.WriteString("MOUSE", "MouseTurnType", " TypeB");
-
-	iniReader.WriteFloat("MOUSE", "TurnTypeBSensitivity", re4t::cfg->fTurnTypeBSensitivity);
-	iniReader.WriteBoolean("MOUSE", "UseRawMouseInput", re4t::cfg->bUseRawMouseInput);
-	iniReader.WriteBoolean("MOUSE", "DetachCameraFromAim", re4t::cfg->bDetachCameraFromAim);
-	iniReader.WriteBoolean("MOUSE", "FixSniperZoom", re4t::cfg->bFixSniperZoom);
-	iniReader.WriteBoolean("MOUSE", "FixSniperFocus", re4t::cfg->bFixSniperFocus);
-	iniReader.WriteBoolean("MOUSE", "FixRetryLoadMouseSelector", re4t::cfg->bFixRetryLoadMouseSelector);
-
-	// KEYBOARD
-	iniReader.WriteBoolean("KEYBOARD", "FallbackToEnglishKeyIcons", re4t::cfg->bFallbackToEnglishKeyIcons);
-	iniReader.WriteBoolean("KEYBOARD", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_kbm);
-	iniReader.WriteBoolean("KEYBOARD", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_kbm);
-
-	// CONTROLLER
-	iniReader.WriteBoolean("CONTROLLER", "OverrideControllerSensitivity", re4t::cfg->bOverrideControllerSensitivity);
-	iniReader.WriteFloat("CONTROLLER", "ControllerSensitivity", re4t::cfg->fControllerSensitivity);
-	iniReader.WriteBoolean("CONTROLLER", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone);
-	iniReader.WriteBoolean("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
-	iniReader.WriteFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
-	iniReader.WriteBoolean("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
-	iniReader.WriteBoolean("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
-
-	// FRAME RATE
-	iniReader.WriteBoolean("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixTurningSpeed", re4t::cfg->bFixTurningSpeed);
-	iniReader.WriteBoolean("FRAME RATE", "FixQTE", re4t::cfg->bFixQTE);
-	iniReader.WriteBoolean("FRAME RATE", "FixAshleyBustPhysics", re4t::cfg->bFixAshleyBustPhysics);
-	iniReader.WriteBoolean("FRAME RATE", "EnableFastMath", re4t::cfg->bEnableFastMath);
-	iniReader.WriteBoolean("FRAME RATE", "ReplaceFramelimiter", re4t::cfg->bReplaceFramelimiter);
-	iniReader.WriteBoolean("FRAME RATE", "MultithreadFix", re4t::cfg->bMultithreadFix);
-	iniReader.WriteBoolean("FRAME RATE", "PrecacheModels", re4t::cfg->bPrecacheModels);
-	
-	// GAMEPLAY
-	iniReader.WriteBoolean("GAMEPLAY", "AshleyJPCameraAngles", re4t::cfg->bAshleyJPCameraAngles);
-	iniReader.WriteBoolean("GAMEPLAY", "SeparateWaysProfessional", re4t::cfg->bSeparateWaysProfessional);
-	iniReader.WriteBoolean("GAMEPLAY", "EnableNTSCMode", re4t::cfg->bEnableNTSCMode);
-	iniReader.WriteBoolean("GAMEPLAY", "AllowAshleySuplex", re4t::cfg->bAllowAshleySuplex);
-	iniReader.WriteBoolean("GAMEPLAY", "FixDitmanGlitch", re4t::cfg->bFixDitmanGlitch);
-	iniReader.WriteBoolean("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
-	iniReader.WriteBoolean("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
-	iniReader.WriteBoolean("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
-	iniReader.WriteBoolean("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
-	iniReader.WriteBoolean("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
-	iniReader.WriteBoolean("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
-	iniReader.WriteBoolean("GAMEPLAY", "AllowMatildaQuickturn", re4t::cfg->bAllowMatildaQuickturn);
-	iniReader.WriteBoolean("GAMEPLAY", "LimitMatildaBurst", re4t::cfg->bLimitMatildaBurst);
-
-	// MISC
-	iniReader.WriteBoolean("MISC", "NeverCheckForUpdates", re4t::cfg->bNeverCheckForUpdates);
-	iniReader.WriteBoolean("MISC", "RestoreDemoVideos", re4t::cfg->bRestoreDemoVideos);
-	iniReader.WriteBoolean("MISC", "RestoreAnalogTitleScroll", re4t::cfg->bRestoreAnalogTitleScroll);
-	iniReader.WriteInteger("MISC", "ViolenceLevelOverride", re4t::cfg->iViolenceLevelOverride);
-	iniReader.WriteBoolean("MISC", "AllowMafiaLeonCutscenes", re4t::cfg->bAllowMafiaLeonCutscenes);
-	iniReader.WriteBoolean("MISC", "SkipIntroLogos", re4t::cfg->bSkipIntroLogos);
-	iniReader.WriteBoolean("MISC", "SkipMenuFades", re4t::cfg->bSkipMenuFades);
-	iniReader.WriteBoolean("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
-	iniReader.WriteBoolean("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
-	iniReader.WriteBoolean("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
-	iniReader.WriteBoolean("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
-	iniReader.WriteBoolean("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
-	iniReader.WriteBoolean("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
-	// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
-	// We don't have any UI options for those anyway, so pointless for us to write it back
-
-	// MEMORY
-	iniReader.WriteBoolean("MEMORY", "AllowHighResolutionSFD", re4t::cfg->bAllowHighResolutionSFD);
-	iniReader.WriteBoolean("MEMORY", "RaiseVertexAlloc", re4t::cfg->bRaiseVertexAlloc);
-	iniReader.WriteBoolean("MEMORY", "RaiseInventoryAlloc", re4t::cfg->bRaiseInventoryAlloc);
-
-	// HOTKEYS
-	iniReader.WriteString("HOTKEYS", "ConfigMenu", " " + re4t::cfg->sConfigMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "Console", " " + re4t::cfg->sConsoleKeyCombo);
-	iniReader.WriteString("HOTKEYS", "FlipItemUp", " " + re4t::cfg->sFlipItemUp);
-	iniReader.WriteString("HOTKEYS", "FlipItemDown", " " + re4t::cfg->sFlipItemDown);
-	iniReader.WriteString("HOTKEYS", "FlipItemLeft", " " + re4t::cfg->sFlipItemLeft);
-	iniReader.WriteString("HOTKEYS", "FlipItemRight", " " + re4t::cfg->sFlipItemRight);
-	iniReader.WriteString("HOTKEYS", "QTE_key_1", " " + re4t::cfg->sQTE_key_1);
-	iniReader.WriteString("HOTKEYS", "QTE_key_2", " " + re4t::cfg->sQTE_key_2);
-	iniReader.WriteString("HOTKEYS", "DebugMenu", " " + re4t::cfg->sDebugMenuKeyCombo);
-	iniReader.WriteString("HOTKEYS", "MouseTurningModifier", " " + re4t::cfg->sMouseTurnModifierKeyCombo);
-	iniReader.WriteString("HOTKEYS", "JetSkiTricks", " " + re4t::cfg->sJetSkiTrickCombo);
-
-	// IMGUI
-	iniReader.WriteFloat("IMGUI", "FontSizeScale", re4t::cfg->fFontSizeScale);
-}
-
-DWORD WINAPI WriteSettingsThread(LPVOID lpParameter)
-{
-	bool writeTrainerOnly = bool(lpParameter);
-
-	std::wstring iniPathMain = rootPath + wrapperName + L".ini";
-	std::wstring iniPathTrainer = rootPath + L"re4_tweaks\\trainer.ini";
-
-	WriteSettings(iniPathTrainer, true);
-
-	if (!writeTrainerOnly)
-	{
-		WriteSettings(iniPathMain, false);
-		re4t::cfg->HasUnsavedChanges = false;
-	}
-
-	return 0;
-}
-
-void re4t_cfg::WriteSettings(bool trainerOnly)
-{
-	std::lock_guard<std::mutex> guard(settingsThreadRunningMutex); // if thread is already running, wait for it to finish
-
-	// Spawn a new thread to handle writing settings, as INI writing funcs that get used are pretty slow
-	CreateThreadAutoClose(NULL, 0, WriteSettingsThread, (LPVOID)trainerOnly, 0, NULL);
+	re4t::cfg->HasUnsavedChanges = false;
 }
 
 void re4t_cfg::LogSettings()

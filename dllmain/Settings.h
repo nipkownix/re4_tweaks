@@ -15,7 +15,6 @@ class re4t_cfg
 public:
 	// Funcs
 	void ReadSettings();
-	void ReadSettings(std::wstring ini_path);
 	void WriteSettings(bool trainerOnly);
 	void LogSettings();
 

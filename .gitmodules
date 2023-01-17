@@ -1,6 +1,3 @@
-[submodule "external/inireader"]
-	path = external/inireader
-	url = https://github.com/ThirteenAG/IniReader.git
 [submodule "external/injector"]
 	path = external/injector
 	url = https://github.com/thelink2012/injector.git
@@ -26,3 +23,6 @@
 	path = external/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog/
 	branch = Lib_Only
+[submodule "external/simpleini"]
+	path = external/simpleini
+	url = https://github.com/brofield/simpleini
