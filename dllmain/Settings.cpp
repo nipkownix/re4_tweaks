@@ -121,6 +121,7 @@ void ReadSettingsIni(std::wstring ini_path)
 			re4t::cfg->bEnableFOV = false;
 
 		re4t::cfg->fCameraSmoothing = ini.getFloat("DISPLAY", "CameraSmoothing", re4t::cfg->fCameraSmoothing);
+		re4t::cfg->fCameraSmoothing = std::clamp(re4t::cfg->fCameraSmoothing, 0.f, 100.f);
 		Game_SetCameraSmoothness(re4t::cfg->fCameraSmoothing / 100.0f);
 
 		re4t::cfg->bDisableVsync = ini.getBool("DISPLAY", "DisableVsync", re4t::cfg->bDisableVsync);
