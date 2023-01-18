@@ -1276,6 +1276,7 @@ void Trainer_Update()
 		}
 
 		// Input handling
+		bool isPressingAimBtn = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
 		bool isPressingFwd = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_FORWARD) == (uint64_t)KEY_BTN::KEY_FORWARD);
 		bool isPressingBack = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_BACK) == (uint64_t)KEY_BTN::KEY_BACK);
 		bool isPressingLeft = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT);
@@ -1316,31 +1317,38 @@ void Trainer_Update()
 
 		Vec Move;
 
-		// Forwards
-		if (isPressingFwd)
-			Move -= Look; // look is inverted from forward position, subtract it to move forward...
-
-		// Backwards
-		if (isPressingBack)
-			Move += Look;
-
-		// Left
-		if (isPressingLeft)
-			Move -= Right;
-
-		// Right
-		if (isPressingRight)
-			Move += Right;
-
-		// normalize our move direction before applying it, to prevent diagonal movement from speeding up movement
-		// (normalize breaks if vec.x / .y / .z are all 0, so check that a button was pressed first...)
-		if (isPressingFwd || isPressingBack || isPressingLeft || isPressingRight)
+		// If aim button is pressed then game will set KEY_FORWARD etc buttons based on mouse movement, guess aim mode must be relying on those
+		// For now we'll prevent checking KEY_FORWARD if aim is pressed, to get rid of the weird movement pattern it activates
+		// More info at https://github.com/nipkownix/re4_tweaks/pull/437#issuecomment-1386479475
+		// TODO: maybe could be worth adding our own code to update position based on actual mouse movement, to help make subtle adjustments to position
+		if (!isPressingAimBtn)
 		{
-			Move.normalize();
+			// Forwards
+			if (isPressingFwd)
+				Move -= Look; // look is inverted from forward position, subtract it to move forward...
 
-			*X += (Move.x * movSpeed);
-			*Y += (Move.y * movSpeed);
-			*Z += (Move.z * movSpeed);
+			// Backwards
+			if (isPressingBack)
+				Move += Look;
+
+			// Left
+			if (isPressingLeft)
+				Move -= Right;
+
+			// Right
+			if (isPressingRight)
+				Move += Right;
+
+			// normalize our move direction before applying it, to prevent diagonal movement from speeding up movement
+			// (normalize breaks if vec.x / .y / .z are all 0, so check that a button was pressed first...)
+			if (isPressingFwd || isPressingBack || isPressingLeft || isPressingRight)
+			{
+				Move.normalize();
+
+				*X += (Move.x * movSpeed);
+				*Y += (Move.y * movSpeed);
+				*Z += (Move.z * movSpeed);
+			}
 		}
 
 		// Up
