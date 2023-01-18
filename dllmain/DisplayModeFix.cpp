@@ -106,11 +106,17 @@ void FillDisplayModeVector(std::vector<GX_DisplayMode> *vect, bool OnlyHighestRe
 	return;
 }
 
-char __cdecl D3D_FillDisplayModeVector_hook(std::vector<GX_DisplayMode>* vect, bool checkWidthHeightCombinations)
+DWORD* (__thiscall* bio4__vector_D3D_DisplayMode__push_back)(std::vector<GX_DisplayMode>* displayVec, GX_DisplayMode* displayMode);
+char __cdecl D3D_FillDisplayModeVector_hook(std::vector<GX_DisplayMode>* vect)
 {
-	UNREFERENCED_PARAMETER(checkWidthHeightCombinations);
+	std::vector<GX_DisplayMode> dispModeVec;
+	FillDisplayModeVector(&dispModeVec, re4t::cfg->bOnlyShowHighestRefreshRates);
 
-	FillDisplayModeVector(vect, re4t::cfg->bOnlyShowHighestRefreshRates);
+	for (GX_DisplayMode& mode : dispModeVec)
+	{
+		bio4__vector_D3D_DisplayMode__push_back(vect, &mode);
+	}
+
 	return 0;
 }
 
@@ -145,6 +151,10 @@ void re4t::init::DisplayModeFix()
 		auto pattern = hook::pattern("E8 ? ? ? ? A1 ? ? ? ? 83 C4 08 3B C7");
 		auto ptr_D3D_FillDisplayModeVector = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
 		InjectHook(ptr_D3D_FillDisplayModeVector, D3D_FillDisplayModeVector_hook);
+
+		// Use the game's own std::vector<D3D_DisplayMode>::push_back function to push values to its display vector, othewise issue can happen.
+		pattern = hook::pattern("E8 ? ? ? ? 8B 4D E8 41 89 4D E8 3B 4D E4");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4__vector_D3D_DisplayMode__push_back);
 
 		// Hook D3D_GetDisplayModeForWidthHeight to manipulate its filter, so we can use our own refresh rate instead.
 		// This function was originally only capable of returning 60 Hz resolutions, which is quite an oversight on QLOC's part.
