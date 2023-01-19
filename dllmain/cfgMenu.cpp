@@ -779,7 +779,19 @@ void cfgMenuRender()
 						ImGui::EndDisabled();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &re4t::cfg->bRememberWindowPos);
+						if (ImGui::Checkbox("RememberWindowPos", &re4t::cfg->bRememberWindowPos))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+
+							if (re4t::cfg->bRememberWindowPos)
+							{
+								RECT rect;
+								GetWindowRect(hWindow, &rect);
+
+								re4t::cfg->iWindowPositionX = rect.left;
+								re4t::cfg->iWindowPositionY = rect.top;
+							}
+						}
 						ImGui::TextWrapped("Remember the last window position. This automatically updates the \"X Pos\" and \"Y Pos\" values above.");
 					}
 

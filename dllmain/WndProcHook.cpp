@@ -137,6 +137,7 @@ LRESULT CALLBACK WndProc_hook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				ini.setInt("DISPLAY", "WindowPositionX", curPosX);
 				ini.setInt("DISPLAY", "WindowPositionY", curPosY);
+				ini.writeIni();
 			}
 
 			// Resize game's resolution
@@ -191,7 +192,7 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	// Perform LAA check/prompt before game window has a chance to be created
 	LAACheck();
 
-	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, 0, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, 0, 0, 0, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 	
 	// Register hWnd for input processing
 	spd::log()->info("{} -> Window created; Registering for input", __FUNCTION__);
@@ -225,6 +226,32 @@ BOOL __stdcall AdjustWindowRectEx_Hook(LPRECT lpRect, DWORD dwStyle, BOOL bMenu,
 	return AdjustWindowRectEx(lpRect, lStyle, bMenu, lExStyle);
 }
 
+BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
+{
+	bool isFullscreen = *bio4::g_D3D::Fullscreen;
+
+	int WindowX = X;
+	int WindowY = Y;
+
+	if (!isFullscreen)
+	{
+		RECT rect;
+		GetWindowRect(hWnd, &rect);
+
+		if (re4t::cfg->iWindowPositionX != -1)
+			WindowX = re4t::cfg->iWindowPositionX;
+		else
+			WindowX = rect.left;
+
+		if (re4t::cfg->iWindowPositionY != -1)
+			WindowY = re4t::cfg->iWindowPositionY;
+		else
+			WindowY = rect.top;
+	}
+
+	return SetWindowPos(hWnd, hWndInsertAfter, WindowX, WindowY, cx, cy, uFlags);
+}
+
 BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
 {
 	bool isFullscreen = *bio4::g_D3D::Fullscreen;
@@ -232,11 +259,21 @@ BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight,
 	int WindowX = X;
 	int WindowY = Y;
 
-	if (re4t::cfg->iWindowPositionX != -1 && !isFullscreen)
-		WindowX = re4t::cfg->iWindowPositionX;
+	if (!isFullscreen)
+	{
+		RECT rect;
+		GetWindowRect(hWnd, &rect);
 
-	if (re4t::cfg->iWindowPositionX != -1 && !isFullscreen)
-		WindowX = re4t::cfg->iWindowPositionX;
+		if (re4t::cfg->iWindowPositionX != -1)
+			WindowX = re4t::cfg->iWindowPositionX;
+		else
+			WindowX = rect.left;
+
+		if (re4t::cfg->iWindowPositionY != -1)
+			WindowY = re4t::cfg->iWindowPositionY;
+		else
+			WindowY = rect.top;
+	}
 
 	return MoveWindow(hWnd, WindowX, WindowY, nWidth, nHeight, bRepaint);
 }
@@ -245,8 +282,8 @@ void re4t::init::WndProcHook()
 {
 	// CreateWindowEx hook
 	auto pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
-	injector::MakeNOP(pattern.get_first(0x12), 6);
-	injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(18), 6);
+	injector::MakeCALL(pattern.count(1).get(0).get<uint32_t>(18), CreateWindowExA_Hook, true);
 
 	// WndProc hook
 	pattern = hook::pattern("C7 45 ? ? ? ? ? 89 75 ? 89 75 ? 89 45 ? FF 15 ? ? ? ? 6A");
@@ -257,11 +294,16 @@ void re4t::init::WndProcHook()
 
 	// Hook AdjustWindowRectEx call inside sub_93A0B0 to apply our style changes
 	pattern = hook::pattern("FF 15 ? ? ? ? 8B 4D ? 2B 4D ? 8B 55");
-	injector::MakeNOP(pattern.get_first(0), 6);
-	InjectHook(pattern.get_first(0), AdjustWindowRectEx_Hook, PATCH_CALL);
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), AdjustWindowRectEx_Hook, PATCH_CALL);
 
-	// Hook MoveWindow call inside sub_93A0B0 to apply our custom X Y window position
+	// Hook SetWindowPos call inside sub_93A0B0 to apply our custom X Y window position
+	pattern = hook::pattern("FF 15 ? ? ? ? 56 53 57 8D 45 EC 50");
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), SetWindowPos_Hook, PATCH_CALL);
+
+	// Same as before
 	pattern = hook::pattern("FF 15 ? ? ? ? 8B 0D ? ? ? ? 6A 01");
-	injector::MakeNOP(pattern.get_first(0), 6);
-	InjectHook(pattern.get_first(0), MoveWindow_Hook, PATCH_CALL);
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), MoveWindow_Hook, PATCH_CALL);
 }
