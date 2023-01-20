@@ -6,8 +6,6 @@
 #include "Settings.h"
 #include "input.hpp"
 
-static uint32_t* ptrGameFrameRate;
-
 // Trainer.cpp externs
 extern std::optional<uint32_t> FlagsExtraValue;
 
@@ -991,7 +989,6 @@ void re4t::init::Misc()
 	{
 		// Hook function to read the FPS value from config.ini
 		auto pattern = hook::pattern("89 0D ? ? ? ? 0F 95 ? 88 15 ? ? ? ? D9 1D ? ? ? ? A3 ? ? ? ? DB 46 ? D9 1D ? ? ? ? 8B 4E ? 89 0D ? ? ? ? 8B 4D ? 5E");
-		ptrGameFrameRate = *pattern.count(1).get(0).get<uint32_t*>(2);
 		struct ReadFPS
 		{
 			void operator()(injector::reg_pack& regs)
@@ -1020,11 +1017,11 @@ void re4t::init::Misc()
 					MessageBoxA(NULL, Msg.c_str(), "re4_tweaks", MB_ICONERROR | MB_SYSTEMMODAL | MB_SETFOREGROUND);
 
 					// Use new FPS value
-					*(int32_t*)(ptrGameFrameRate) = intNewFPS;
+					SetGameVariableFrameRate(intNewFPS);
 				}
 				else {
 					// Use .ini FPS value.
-					*(int32_t*)(ptrGameFrameRate) = intIniFPS;
+					SetGameVariableFrameRate(intIniFPS);
 				}
 			}
 		}; injector::MakeInline<ReadFPS>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));

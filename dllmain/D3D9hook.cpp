@@ -189,6 +189,8 @@ HRESULT hook_Direct3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND h
 	// Force v-sync off
 	if (re4t::cfg->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+	else
+		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
 	IDirect3DDevice9* device = nullptr;
 
@@ -306,6 +308,8 @@ HRESULT hook_Direct3DDevice9::Reset(D3DPRESENT_PARAMETERS* pPresentationParamete
 	// Force v-sync off
 	if (re4t::cfg->bDisableVsync)
 		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+	else
+		pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
 	ImGui_ImplDX9_InvalidateDeviceObjects(); // Reset ImGui objects to prevent freezing
 

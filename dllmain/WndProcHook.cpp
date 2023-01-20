@@ -6,13 +6,12 @@
 #include "ConsoleWnd.h"
 #include <iniReader.h>
 
-WNDPROC oWndProc;
 HWND hWindow;
-
-static uint32_t* ptrMouseDeltaX;
 
 bool bIsMoving;
 
+int curSizeX;
+int curSizeY;
 int curPosX;
 int curPosY;
 
@@ -89,8 +88,8 @@ void DisableClipCursor(bool bCenterCursor)
 	#endif
 }
 
-// Our new hooked WndProc function
-LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT(CALLBACK* GameWndProc)(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProc_hook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 		case WM_KEYDOWN:
@@ -108,6 +107,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			curPosY = (int)(short)HIWORD(lParam);   // vertical position 
 			break;
 
+		case WM_SIZE:
+			// Get current window position
+			curSizeX = (int)LOWORD(lParam);   // horizontal size 
+			curSizeY = (int)HIWORD(lParam);   // vertical size 
+			break;
+
 		case WM_ENTERSIZEMOVE:
 			bIsMoving = true;
 			break;
@@ -117,9 +122,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			EnableClipCursor(hWindow);
 
+			// Write new window position
 			if (re4t::cfg->bRememberWindowPos)
 			{
-				// Write new window position
 				#ifdef VERBOSE
 				con.log("curPosX = %d", curPosY);
 				con.log("curPosY = %d", curPosX);
@@ -132,7 +137,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				ini.setInt("DISPLAY", "WindowPositionX", curPosX);
 				ini.setInt("DISPLAY", "WindowPositionY", curPosY);
+				ini.writeIni();
 			}
+
+			// Resize game's resolution
+			if (curSizeX != *bio4::g_D3D::Width_1 ||
+				curSizeY != *bio4::g_D3D::Height_1)
+			{
+				bio4::D3D_SetupResolution(curSizeX, curSizeY);
+				bio4::ScreenReSize(0x200, 0x1C0);
+			}
+
 			break;
 
 		case WM_ACTIVATEAPP:
@@ -150,7 +165,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case WM_KILLFOCUS:
 			// Clear the mouse delta value if we lose focus
-			*(int32_t*)(ptrMouseDeltaX) = 0;
 			pInput->clear_raw_mouse_delta();
 
 			// Unlock cursor
@@ -166,11 +180,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	if (bCfgMenuOpen)
 	{
 		// Clear the mouse delta value if the cfg menu is open
-		*(int32_t*)(ptrMouseDeltaX) = 0;
 		pInput->clear_raw_mouse_delta();
 	}
 
-	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
+	return GameWndProc(hWnd, uMsg, wParam, lParam);
 }
 
 // CreateWindowExA hook to get the hWindow and set up the WndProc hook
@@ -179,28 +192,118 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	// Perform LAA check/prompt before game window has a chance to be created
 	LAACheck();
 
-	int windowX = re4t::cfg->iWindowPositionX < 0 ? CW_USEDEFAULT : re4t::cfg->iWindowPositionX;
-	int windowY = re4t::cfg->iWindowPositionY < 0 ? CW_USEDEFAULT : re4t::cfg->iWindowPositionY;
-
-	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, re4t::cfg->bWindowBorderless ? WS_POPUP : dwStyle, windowX, windowY, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-
+	hWindow = CreateWindowExA(dwExStyle, lpClassName, lpWindowName, 0, 0, 0, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+	
+	// Register hWnd for input processing
 	spd::log()->info("{} -> Window created; Registering for input", __FUNCTION__);
 
-	// Register hWnd for input processing
 	pInput = re4t::input::register_window(hWindow);
-
-	oWndProc = (WNDPROC)SetWindowLongPtr(hWindow, GWL_WNDPROC, (LONG_PTR)WndProc);
 
 	return hWindow;
 }
 
+BOOL __stdcall AdjustWindowRectEx_Hook(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle)
+{
+	DWORD lStyle = GetWindowLong(hWindow, GWL_STYLE);
+	DWORD lExStyle = GetWindowLong(hWindow, GWL_EXSTYLE);
+
+	bool isFullscreen = *bio4::g_D3D::Fullscreen;
+
+	if (re4t::cfg->bWindowBorderless && !isFullscreen)
+	{
+		lStyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
+		lStyle |= (WS_POPUP);
+	}
+	else
+	{
+		lStyle |= (WS_MINIMIZEBOX | WS_SYSMENU);
+		if (re4t::cfg->bEnableWindowResize && !isFullscreen)
+			lStyle |= (WS_MAXIMIZEBOX | WS_THICKFRAME);
+	}
+
+	SetWindowLong(hWindow, GWL_STYLE, lStyle);
+
+	return AdjustWindowRectEx(lpRect, lStyle, bMenu, lExStyle);
+}
+
+BOOL __stdcall SetWindowPos_Hook(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
+{
+	bool isFullscreen = *bio4::g_D3D::Fullscreen;
+
+	int WindowX = X;
+	int WindowY = Y;
+
+	if (!isFullscreen)
+	{
+		RECT rect;
+		GetWindowRect(hWnd, &rect);
+
+		if (re4t::cfg->iWindowPositionX != -1)
+			WindowX = re4t::cfg->iWindowPositionX;
+		else
+			WindowX = rect.left;
+
+		if (re4t::cfg->iWindowPositionY != -1)
+			WindowY = re4t::cfg->iWindowPositionY;
+		else
+			WindowY = rect.top;
+	}
+
+	return SetWindowPos(hWnd, hWndInsertAfter, WindowX, WindowY, cx, cy, uFlags);
+}
+
+BOOL __stdcall MoveWindow_Hook(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
+{
+	bool isFullscreen = *bio4::g_D3D::Fullscreen;
+
+	int WindowX = X;
+	int WindowY = Y;
+
+	if (!isFullscreen)
+	{
+		RECT rect;
+		GetWindowRect(hWnd, &rect);
+
+		if (re4t::cfg->iWindowPositionX != -1)
+			WindowX = re4t::cfg->iWindowPositionX;
+		else
+			WindowX = rect.left;
+
+		if (re4t::cfg->iWindowPositionY != -1)
+			WindowY = re4t::cfg->iWindowPositionY;
+		else
+			WindowY = rect.top;
+	}
+
+	return MoveWindow(hWnd, WindowX, WindowY, nWidth, nHeight, bRepaint);
+}
+
 void re4t::init::WndProcHook()
 {
-	auto pattern = hook::pattern("DB 05 ? ? ? ? D9 45 ? D9 C0 DE CA D9 C5");
-	ptrMouseDeltaX = *pattern.count(1).get(0).get<uint32_t*>(2);
-
 	// CreateWindowEx hook
-	pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
-	injector::MakeNOP(pattern.get_first(0x12), 6);
-	injector::MakeCALL(pattern.get_first(0x12), CreateWindowExA_Hook, true);
+	auto pattern = hook::pattern("68 00 00 00 80 56 68 ? ? ? ? 68 ? ? ? ? 6A 00");
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(18), 6);
+	injector::MakeCALL(pattern.count(1).get(0).get<uint32_t>(18), CreateWindowExA_Hook, true);
+
+	// WndProc hook
+	pattern = hook::pattern("C7 45 ? ? ? ? ? 89 75 ? 89 75 ? 89 45 ? FF 15 ? ? ? ? 6A");
+	uint32_t* wndproc_addr = pattern.count(1).get(0).get<uint32_t>(3);
+	uint32_t GameWndProcAddr = *(uint32_t*)wndproc_addr;
+	GameWndProc = (LRESULT(WINAPI*)(HWND, UINT, WPARAM, LPARAM))GameWndProcAddr;
+	injector::WriteMemory<uint32_t>(wndproc_addr, (uint32_t)&WndProc_hook, true);
+
+	// Hook AdjustWindowRectEx call inside sub_93A0B0 to apply our style changes
+	pattern = hook::pattern("FF 15 ? ? ? ? 8B 4D ? 2B 4D ? 8B 55");
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), AdjustWindowRectEx_Hook, PATCH_CALL);
+
+	// Hook SetWindowPos call inside sub_93A0B0 to apply our custom X Y window position
+	pattern = hook::pattern("FF 15 ? ? ? ? 56 53 57 8D 45 EC 50");
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), SetWindowPos_Hook, PATCH_CALL);
+
+	// Same as before
+	pattern = hook::pattern("FF 15 ? ? ? ? 8B 0D ? ? ? ? 6A 01");
+	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), MoveWindow_Hook, PATCH_CALL);
 }

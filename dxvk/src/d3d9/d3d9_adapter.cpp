@@ -10,6 +10,7 @@
 #include "../util/util_ratio.h"
 
 #include <cfloat>
+#include <log.h>
 
 namespace dxvk {
 
@@ -811,6 +812,19 @@ namespace dxvk {
         
         return a.RefreshRate < b.RefreshRate;
     });
+
+    // Log display modes for troubleshooting
+    if (re4t::cfg->bVerboseLog)
+    {
+        spd::log()->info("+------------+------------+");
+        spd::log()->info("| D3D9Adapter::CacheModes |");
+        spd::log()->info("+------------+------------+");
+        for (std::vector<D3DDISPLAYMODEEX>::iterator it = m_modes.begin(); it != m_modes.end(); ++it) {
+            D3DDISPLAYMODEEX mode = *it;
+            spd::log()->info("| {:<5}x {:<5} {:>7} Hz |", mode.Width, mode.Height, mode.RefreshRate);
+        }
+        spd::log()->info("+------------+------------+");
+    }
   }
 
 }

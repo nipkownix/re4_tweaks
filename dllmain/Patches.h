@@ -22,6 +22,7 @@ namespace re4t
 		void ConsoleWnd();
 		void D3D9Hook();
 		void DebugDisplay();
+		void DisplayModeFix();
 		void DisplayTweaks();
 		void ExceptionHandler();
 		void FrameRateFixes();

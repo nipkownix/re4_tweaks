@@ -472,7 +472,10 @@ void cfgMenuRender()
 						if (ImGui::Checkbox("DisableVsync", &re4t::cfg->bDisableVsync))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
+
+							// Trigger resolution change to make apply the new v-sync option
+							bio4::D3D_SetupResolution(*bio4::g_D3D::Width_1, *bio4::g_D3D::Height_1);
+							bio4::ScreenReSize(0x200, 0x1C0);
 						}
 
 						ImGui_ItemSeparator();
@@ -557,29 +560,15 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Allows game to use non - 60Hz refresh rates in fullscreen, fixing the black screen issue people have when starting the game.");
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui_ItemSeparator2();
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-						ImGui::Text("CustomRefreshRate");
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-						ImGui::PushItemWidth(100 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 						ImGui::BeginDisabled(!re4t::cfg->bFixDisplayMode);
-						ImGui::InputInt("Hz", &re4t::cfg->iCustomRefreshRate);
-						ImGui::EndDisabled();
-						ImGui::PopItemWidth();
-
-						if (ImGui::IsItemEdited())
+						if (ImGui::Checkbox("OnlyShowHighestRefreshRates", &re4t::cfg->bOnlyShowHighestRefreshRates))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
 							NeedsToRestart = true;
 						}
-
-						ImGui::Spacing();
-
-						ImGui::TextWrapped("Determines a custom refresh rate for the game to use.");
-						ImGui::TextWrapped("Requires FixDisplayMode to be enabled.");
-						ImGui::TextWrapped("-1 will make it try to use the current refresh rate as reported by Windows.");
+						ImGui::TextWrapped("When using FixDisplayMode, only display the highest refresh rate available for each resolution in the game's config menu.");
+						ImGui::EndDisabled();
 					}
 
 					// OverrideLaserColor
@@ -742,13 +731,37 @@ void cfgMenuRender()
 						if (ImGui::Checkbox("WindowBorderless", &re4t::cfg->bWindowBorderless))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
+
+							// Trigger resolution change to apply changes
+							if (!*bio4::g_D3D::Fullscreen)
+							{
+								bio4::D3D_SetupResolution(*bio4::g_D3D::Width_1, *bio4::g_D3D::Height_1);
+								bio4::ScreenReSize(0x200, 0x1C0);
+							}
 						}
 
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Whether to use a borderless-window when using windowed-mode.");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui_ItemSeparator2();
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						if (ImGui::Checkbox("EnableWindowResize", &re4t::cfg->bEnableWindowResize))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+
+							// Trigger resolution change to apply changes
+							if (!*bio4::g_D3D::Fullscreen)
+							{
+								bio4::D3D_SetupResolution(*bio4::g_D3D::Width_1, *bio4::g_D3D::Height_1);
+								bio4::ScreenReSize(0x200, 0x1C0);
+							}
+						}
+
+						ImGui::TextWrapped("When playing in windowed mode, allow the game window to be resized by dragging the window borders.");
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui_ItemSeparator2();
@@ -766,7 +779,19 @@ void cfgMenuRender()
 						ImGui::EndDisabled();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("RememberWindowPos", &re4t::cfg->bRememberWindowPos);
+						if (ImGui::Checkbox("RememberWindowPos", &re4t::cfg->bRememberWindowPos))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+
+							if (re4t::cfg->bRememberWindowPos)
+							{
+								RECT rect;
+								GetWindowRect(hWindow, &rect);
+
+								re4t::cfg->iWindowPositionX = rect.left;
+								re4t::cfg->iWindowPositionY = rect.top;
+							}
+						}
 						ImGui::TextWrapped("Remember the last window position. This automatically updates the \"X Pos\" and \"Y Pos\" values above.");
 					}
 

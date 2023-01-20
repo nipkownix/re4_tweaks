@@ -36,7 +36,7 @@ public:
 	bool bRemove16by10BlackBars = true;
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
-	int iCustomRefreshRate = -1;
+	bool bOnlyShowHighestRefreshRates = false;
 	bool bOverrideLaserColor = false;
 	bool bRainbowLaser = false;
 	int iLaserR = 255;
@@ -51,6 +51,7 @@ public:
 	bool bUseEnhancedGCBlur = true;
 	bool bEnableGCScopeBlur = true;
 	bool bWindowBorderless = false;
+	bool bEnableWindowResize = false;
 	int iWindowPositionX = -1;
 	int iWindowPositionY = -1;
 	bool bRememberWindowPos = false;

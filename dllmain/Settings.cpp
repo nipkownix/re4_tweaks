@@ -130,7 +130,7 @@ void ReadSettingsIni(std::wstring ini_path)
 
 		re4t::cfg->bFixDPIScale = ini.getBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 		re4t::cfg->bFixDisplayMode = ini.getBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-		re4t::cfg->iCustomRefreshRate = ini.getInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		re4t::cfg->bOnlyShowHighestRefreshRates = ini.getBool("DISPLAY", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates);
 		re4t::cfg->bOverrideLaserColor = ini.getBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
 		re4t::cfg->bRainbowLaser = ini.getBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
@@ -165,6 +165,7 @@ void ReadSettingsIni(std::wstring ini_path)
 
 		re4t::cfg->bEnableGCScopeBlur = ini.getBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
 		re4t::cfg->bWindowBorderless = ini.getBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		re4t::cfg->bEnableWindowResize = ini.getBool("DISPLAY", "EnableWindowResize", re4t::cfg->bEnableWindowResize);
 		re4t::cfg->iWindowPositionX = ini.getInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		re4t::cfg->iWindowPositionY = ini.getInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		re4t::cfg->bRememberWindowPos = ini.getBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
@@ -600,7 +601,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
 		ini.setBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 		ini.setBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-		ini.setInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		ini.setBool("DISPLAY", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates);
 		ini.setBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
 		ini.setBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
@@ -622,6 +623,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		ini.setBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
 		ini.setBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		ini.setBool("DISPLAY", "EnableWindowResize", re4t::cfg->bEnableWindowResize);
 		ini.setInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		ini.setInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		ini.setBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
@@ -936,7 +938,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", re4t::cfg->bFixDPIScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", re4t::cfg->bFixDisplayMode ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RainbowLaser", re4t::cfg->bRainbowLaser ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LaserR", re4t::cfg->iLaserR);
@@ -956,6 +958,7 @@ void re4t_cfg::LogSettings()
 
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", re4t::cfg->bWindowBorderless ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableWindowResize", re4t::cfg->bEnableWindowResize ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", re4t::cfg->iWindowPositionX);
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", re4t::cfg->iWindowPositionY);
 	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", re4t::cfg->bRememberWindowPos ? "true" : "false");

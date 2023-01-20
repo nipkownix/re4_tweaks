@@ -665,6 +665,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\wrappers\wrappers.cpp" />
+    <ClCompile Include="DisplayModeFix.cpp" />
     <ClCompile Include="FrameRateFixes.cpp" />
     <ClCompile Include="AudioTweaks.cpp" />
     <ClCompile Include="AutoUpdater.cpp" />
