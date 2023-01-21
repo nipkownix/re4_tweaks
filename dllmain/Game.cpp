@@ -530,6 +530,12 @@ IDSystem* IDSystemPtr()
 	return IDSystem_ptr;
 }
 
+MercID* mercId_ptr = nullptr;
+MercID* mercIdPtr()
+{
+	return mercId_ptr;
+}
+
 FADE_WORK(*FadeWork_ptr)[4];
 FADE_WORK* FadeWorkPtr(FADE_NO no)
 {
@@ -996,6 +1002,10 @@ bool re4t::init::Game()
 	// pointer to IDSystem::setTime
 	pattern = hook::pattern("E8 ? ? ? ? FE 46 01 5F 5E 8B E5 ");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__setTime);
+
+	// pointer to mercId
+	pattern = hook::pattern("83 C4 18 6A 60 B9");
+	mercId_ptr = *pattern.count(1).get(0).get<MercID*>(6);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
