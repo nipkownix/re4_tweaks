@@ -169,6 +169,8 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->iWindowPositionX = ini.getInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		re4t::cfg->iWindowPositionY = ini.getInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		re4t::cfg->bRememberWindowPos = ini.getBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+		re4t::cfg->bSmallerLifeMeter = ini.getBool("DISPLAY", "SmallerLifeMeter", re4t::cfg->bSmallerLifeMeter);
+		re4t::cfg->bSmallerActionPrompts = ini.getBool("DISPLAY", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts);
 
 		// AUDIO
 		re4t::cfg->iVolumeMaster = ini.getInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
@@ -627,6 +629,8 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		ini.setInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		ini.setBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+		ini.setBool("DISPLAY", "SmallerLifeMeter", re4t::cfg->bSmallerLifeMeter);
+		ini.setBool("DISPLAY", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts);
 
 		// AUDIO
 		ini.setInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
@@ -962,6 +966,8 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", re4t::cfg->iWindowPositionX);
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", re4t::cfg->iWindowPositionY);
 	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", re4t::cfg->bRememberWindowPos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SmallerLifeMeter", re4t::cfg->bSmallerLifeMeter ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// AUDIO

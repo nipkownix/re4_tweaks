@@ -577,6 +577,9 @@
     <ClCompile Include="DisplayModeFix.cpp">
       <Filter>dllmain</Filter>
     </ClCompile>
+    <ClCompile Include="HUDTweaks.cpp">
+      <Filter>dllmain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\injector\include\injector\assembly.hpp">
@@ -1634,6 +1637,12 @@
     </ClInclude>
     <ClInclude Include="..\external\simpleini\SimpleIni.h">
       <Filter>external\simpleini</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\cockpit.h">
+      <Filter>dllmain\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="HUDTweaks.h">
+      <Filter>dllmain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

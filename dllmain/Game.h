@@ -12,6 +12,7 @@
 #include "SDK/global.h"
 #include "SDK/snd.h"
 #include "SDK/ID.h"
+#include "SDK/cockpit.h"
 #include "SDK/message.h"
 #include "SDK/title.h"
 #include "SDK/light.h"
@@ -87,6 +88,7 @@ uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
 IDSystem* IDSystemPtr();
+MercID* mercIdPtr();
 FADE_WORK* FadeWorkPtr(FADE_NO no);
 IDSystem* IDSystemPtr();
 extern double* fGPUUsagePtr;

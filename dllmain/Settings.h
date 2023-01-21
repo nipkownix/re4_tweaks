@@ -55,6 +55,9 @@ public:
 	int iWindowPositionX = -1;
 	int iWindowPositionY = -1;
 	bool bRememberWindowPos = false;
+	bool bSmallerLifeMeter = false;
+	bool bSmallerActionPrompts = false;
+	bool bHideZoomControlHints = false;
 
 	// AUDIO
 	int iVolumeMaster = 100;
@@ -132,7 +135,6 @@ public:
 	bool bSkipMenuFades = false;
 	bool bSpeedUpQuitGame = true;
 	bool bAlwaysShowOriginalTitleBackground = false;
-	bool bHideZoomControlHints = false;
 	bool bFixSilencedHandgunDescription = true;
 	bool bEnableDebugMenu = false;
 	bool bShowGameOutput = false;

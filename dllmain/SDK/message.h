@@ -96,8 +96,29 @@ struct FONT_TEX
 };
 assert_size(FONT_TEX, 0x64);
 
-struct MessageControl
+enum LAYOUT_TYPE
 {
+	LAYOUT_CAPTION = 0x0,
+	LAYOUT_ACT_BTN = 0x1,
+	LAYOUT_SUBSCRN = 0x2,
+	LAYOUT_MEMCARD = 0x3,
+	LAYOUT_OPERATOR = 0x4,
+	LAYOUT_SYSTEM = 0x5,
+	LAYOUT_SHOP_LIST = 0x6,
+	LAYOUT_FILE = 0x7,
+	LAYOUT_MANUAL = 0x8,
+	LAYOUT_NUM = 0x9,
+};
+
+class MessageControl;
+typedef void(__thiscall* MessageControl__setFontSize_Fn)(MessageControl* thisptr, int wk, int16_t font_w, int16_t font_h);
+typedef void(__thiscall* MessageControl__setLayout_Fn)(MessageControl* thisptr, int wk, LAYOUT_TYPE type);
+extern MessageControl__setFontSize_Fn MessageControl__setFontSize;
+extern MessageControl__setLayout_Fn MessageControl__setLayout;
+
+class MessageControl
+{
+public:
 	void* __vftable;
 	int8_t m_sel_sav_4;
 	struct Message m_Msg_8[16];
@@ -105,6 +126,17 @@ struct MessageControl
 	uint32_t m_state_1018;
 	FONT_TEX m_mTex[4][2];
 	float m_stop_133C;
+
+	inline void setFontSize(int wk, int16_t font_w, int16_t font_h)
+	{
+		return MessageControl__setFontSize(this, wk, font_w, font_h);
+	}
+
+	inline void setLayout(int wk, LAYOUT_TYPE type)
+	{
+		return MessageControl__setLayout(this, wk, type);
+	}
 };
 assert_size(MessageControl, 0x1340);
 
+extern MessageControl* cMes;

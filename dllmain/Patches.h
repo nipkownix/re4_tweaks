@@ -32,6 +32,7 @@ namespace re4t
 		void Gameplay();
 		void HandleLimits();
 		void HDProject();
+		void HUDTweaks();
 		void KeyboardMouseTweaks();
 		void MathReimpl();
 		void Misc();
