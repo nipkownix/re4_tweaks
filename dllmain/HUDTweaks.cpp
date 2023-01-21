@@ -72,6 +72,8 @@ void ShrinkLifeMeter()
 	};
 
 	ApplyHUDEdits(IDC_LIFE_METER, SmallLifeMeter, sizeof(SmallLifeMeter) / sizeof(*SmallLifeMeter));
+	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x += 26.0f;
+	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y -= 5.0f;
 }
                 
 void ShrinkPRLGauge()
