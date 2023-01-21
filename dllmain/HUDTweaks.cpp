@@ -172,8 +172,8 @@ void re4t::init::HUDTweaks()
 {
 	// Life meter HUD tweaks
 	{
-		auto pattern = hook::pattern("C7 06 00 00 00 00 E8 ? ? ? ? 5E");
-		struct LifeMeter__roomInit_hook
+		auto pattern = hook::pattern("56 50 B9 ? ? ? ?  E8 ? ? ? ? 80 26 F7");
+		struct BulletInfo__roomInit_hook
 		{
 			void operator()(injector::reg_pack& regs)
 			{
@@ -189,12 +189,12 @@ void re4t::init::HUDTweaks()
 				}
 
 				// Code we overwrote
-				*(uint32_t*)regs.esi = 0;
+				regs.ecx = (uint32_t)IDSystemPtr();
 			}
-		}; injector::MakeInline<LifeMeter__roomInit_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		}; injector::MakeInline<BulletInfo__roomInit_hook>(pattern.count(1).get(0).get<uint32_t>(2), pattern.count(1).get(0).get<uint32_t>(7));
 
 		pattern = hook::pattern("8B ? ? 51 50 B9 ? ? ? ? E8 ? ? ? ? EB");
-		struct bulletInfo__move_hook
+		struct BulletInfo__move_hook
 		{
 			void operator()(injector::reg_pack& regs)
 			{
@@ -204,7 +204,7 @@ void re4t::init::HUDTweaks()
 				// Code we overwrote
 				regs.ecx = (uint32_t)IDSystemPtr();
 			}
-		}; injector::MakeInline<bulletInfo__move_hook>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(10));
+		}; injector::MakeInline<BulletInfo__move_hook>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(10));
 	}
 
 	// Shrink action button prompts
