@@ -416,37 +416,6 @@ void re4t::init::QTEfixes()
 			}; injector::MakeInline<BouldersQTE>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 		}
 
-		// Knifing El Gigante's parasite
-		{
-			// First
-			auto pattern = hook::pattern("FF 86 ? ? ? ? 0F B6 96 ? ? ? ? 8B 04 95 ? ? ? ? 53");
-			struct ElGiganteParasite1
-			{
-				void operator()(injector::reg_pack& regs)
-				{
-					if (re4t::cfg->bFixQTE && !(re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE))
-						*(int32_t*)(regs.esi + 0x414) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
-					else
-						*(int32_t*)(regs.esi + 0x414) += 1;
-				}
-			};
-			injector::MakeInline<ElGiganteParasite1>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-			
-			// Second
-			pattern = hook::pattern("FF 86 ? ? ? ? 57 56 E8 ? ? ? ? 83 C4 ? 85 C0 0F 84");
-			struct ElGiganteParasite2
-			{
-				void operator()(injector::reg_pack& regs)
-				{
-					if (re4t::cfg->bFixQTE && !(re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE))
-						*(int32_t*)(regs.esi + 0x428) += (int32_t)(1 / GlobalPtr()->deltaTime_70);
-					else
-						*(int32_t*)(regs.esi + 0x428) += 1;
-				}
-			};
-			injector::MakeInline<ElGiganteParasite2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-		}
-
 		// Climbing up after the minecart ride
 		{
 			auto pattern = hook::pattern("D9 86 ? ? ? ? 8B 0D ? ? ? ? D8 61 ? D9 9E ? ? ? ? 6A");
