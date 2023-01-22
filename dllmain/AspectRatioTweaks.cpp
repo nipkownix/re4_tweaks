@@ -3,6 +3,7 @@
 #include "ConsoleWnd.h"
 #include "Game.h"
 #include "Settings.h"
+#include "HUDTweaks.h"
 
 bool bIsUltrawide;
 bool bIs16by10;
@@ -200,6 +201,8 @@ void re4t::init::AspectRatioTweaks()
 				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
 			}
+
+			re4t::HUDTweaks::ToggleSideAlignHUD();
 
 			*(int32_t*)(ptrResMovAddr) = regs.eax;
 		}
