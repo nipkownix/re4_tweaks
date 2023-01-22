@@ -107,9 +107,9 @@ void ShrinkBulletInfo()
 {
 	static const HUDEditData SmallBulletInfo[] = {
 		// still not sure what these 3 are...
-		//{ 4, DEF, DEF, 40.8f, 15.12f },
 		//{ 6, DEF, -1.0f, 47.75f, 47.75f },
 		//{ 11, DEF, DEF, 16.5f, 20.5f },
+		{ 4, -6.5f, -1.2f, 44.4602f, 16.4731f },
 		{ 12, -6.9f, 7.5f, 36.5f, 19.388f },
 		{ 3,  -6.6f, 8.7f, 34.0195f, 25.386f },
 		{ 2,  -12.1f, 0.7f, 24.23f, 29.3415f },
