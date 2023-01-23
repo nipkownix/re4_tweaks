@@ -55,7 +55,10 @@ public:
 	int iWindowPositionX = -1;
 	int iWindowPositionY = -1;
 	bool bRememberWindowPos = false;
-	bool bSmallerLifeMeter = false;
+	bool bRepositionHUD = false;
+	float fHUDOffsetX = 0.0f;
+	float fHUDOffsetY = 0.0f;
+	bool bSmallerHUD = false;
 	bool bSmallerActionPrompts = false;
 	bool bHideZoomControlHints = false;
 

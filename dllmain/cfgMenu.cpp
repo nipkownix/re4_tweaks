@@ -507,7 +507,7 @@ void cfgMenuRender()
 						if (ImGui::Checkbox("SideAlignHUD", &re4t::cfg->bSideAlignHUD))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							re4t::HUDTweaks::ToggleSideAlignHUD();
+							re4t::HUDTweaks::ResetLifeMeter();
 						}
 
 						ImGui::TextWrapped("Moves the HUD to the right side of the screen.");
@@ -801,17 +801,52 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Remember the last window position. This automatically updates the \"X Pos\" and \"Y Pos\" values above.");
 					}
 
-					if ((OptionsFilter.PassFilter("SmallerLifeMeter SmallerActionPrompts HUD") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					if ((OptionsFilter.PassFilter("RepositionHUD Offset") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
-						//SmallerLifeMeter 
 						ImGui_ColumnSwitch();
 
-						if (ImGui::Checkbox("SmallerLifeMeter", &re4t::cfg->bSmallerLifeMeter))
+						// Reposition HUD
+						if (ImGui::Checkbox("RepositionHUD", &re4t::cfg->bRepositionHUD))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
-							re4t::HUDTweaks::ToggleSmallLifeMeter();
+							if (re4t::cfg->bRepositionHUD)
+								re4t::HUDTweaks::UpdateHUDOffsets();
+							else if (re4t::cfg->fHUDOffsetX || re4t::cfg->fHUDOffsetY)
+								re4t::HUDTweaks::ResetLifeMeter();
 						}
+						ImGui_ItemSeparator();
 
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Move the life meter HUD relative to its default position.");
+						ImGui::TextWrapped("(Hold Ctrl to make larger adjustments)");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::BeginDisabled(!re4t::cfg->bRepositionHUD);
+						ImGui::PushItemWidth(150 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+						if (ImGui::InputFloat("X Offset", &re4t::cfg->fHUDOffsetX, 0.1f, 1.0f))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::HUDTweaks::UpdateHUDOffsets();
+						}
+						if (ImGui::InputFloat("Y Offset", &re4t::cfg->fHUDOffsetY, 0.1f, 1.0f))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::HUDTweaks::UpdateHUDOffsets();
+						}
+						ImGui::PopItemWidth();
+						ImGui::EndDisabled();
+					}
+
+					if ((OptionsFilter.PassFilter("SmallerHUD SmallerActionPrompts") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						//SmallerHUD 
+						if (ImGui::Checkbox("SmallerHUD", &re4t::cfg->bSmallerHUD))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::HUDTweaks::ResetLifeMeter();
+						}
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));

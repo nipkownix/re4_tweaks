@@ -202,7 +202,7 @@ void re4t::init::AspectRatioTweaks()
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
 			}
 
-			re4t::HUDTweaks::ToggleSideAlignHUD();
+			re4t::HUDTweaks::ResetLifeMeter();
 
 			*(int32_t*)(ptrResMovAddr) = regs.eax;
 		}

@@ -4,7 +4,7 @@ namespace re4t
 {
 	namespace HUDTweaks
 	{
-		void ToggleSmallLifeMeter();
-		void ToggleSideAlignHUD();
+		void ResetLifeMeter();
+		void UpdateHUDOffsets();
 	}
 }

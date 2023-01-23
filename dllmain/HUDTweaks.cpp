@@ -7,6 +7,9 @@
 
 extern bool isQTEactive();
 
+float fDefaultHUDPosX;
+float fDefaultHUDPosY;
+
 struct HUDEditData
 {
 	uint8_t unitNo;
@@ -30,7 +33,7 @@ void ApplyHUDEdits(ID_CLASS idClass, const HUDEditData* data, int size)
 void ShrinkLifeMeter()
 {
 	static const HUDEditData SmallLifeMeter[] = {
-		{ 0,  DEF, -136.0f, DEF, DEF },
+		{ 0,  217.0f + 26.0f, -130.0f - 11.0f, DEF, DEF },
 		{ 1,  37.2f, DEF, DEF, DEF },
 		{ 40, -15.0f, -16.0f, DEF, DEF },
 		{ 25, -15.0f, -9.2f, 10.0f, 20.0f },
@@ -72,8 +75,6 @@ void ShrinkLifeMeter()
 	};
 
 	ApplyHUDEdits(IDC_LIFE_METER, SmallLifeMeter, sizeof(SmallLifeMeter) / sizeof(*SmallLifeMeter));
-	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x += 26.0f;
-	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y -= 5.0f;
 }
                 
 void ShrinkPRLGauge()
@@ -122,27 +123,14 @@ void ShrinkBulletInfo()
 	ApplyHUDEdits(IDC_BLLT_ICON, SmallBulletInfo, sizeof(SmallBulletInfo) / sizeof(*SmallBulletInfo));
 }
 
-void ResetLifeMeter()
-{
-	IDSystemPtr()->kill(0xFF, IDC_LIFE_METER);
-	IDSystemPtr()->kill(0xFF, IDC_BLLT_ICON);
-	IDSystemPtr()->kill(0xFF, IDC_LASER_GAUGE);
-	Cckpt->m_LifeMeter_0.roomInit();
-	Cckpt->m_BlltInfo_6C.roomInit();
-}
-
-void re4t::HUDTweaks::ToggleSmallLifeMeter()
+void re4t::HUDTweaks::ResetLifeMeter()
 {
 	if (IDSystemPtr()->setCk(IDC_LIFE_METER))
 	{
-		if (re4t::cfg->bSmallerLifeMeter)
-		{
-			ShrinkLifeMeter();
-			ShrinkPRLGauge();
-			ShrinkBulletInfo();
-		}
-		else
-			ResetLifeMeter();
+		IDSystemPtr()->kill(0xFF, IDC_LIFE_METER);
+		IDSystemPtr()->kill(0xFF, IDC_LASER_GAUGE);
+		Cckpt->m_LifeMeter_0.roomInit();
+		Cckpt->m_BlltInfo_6C.roomInit();
 	}
 }
 
@@ -150,21 +138,22 @@ void re4t::HUDTweaks::ToggleSmallLifeMeter()
 extern bool bIsUltrawide, bIs16by10;
 extern float fGameDisplayAspectRatio;
 
-void SideAlignHud()
+void SideAlignHUD()
 {
 	float fHudPosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) / 2.0f;
 	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x += fHudPosOffset;
 }
 
-void re4t::HUDTweaks::ToggleSideAlignHUD()
+void OffsetHUD()
+{
+	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x = fDefaultHUDPosX + re4t::cfg->fHUDOffsetX;
+	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y = fDefaultHUDPosY + re4t::cfg->fHUDOffsetY;
+}
+
+void re4t::HUDTweaks::UpdateHUDOffsets()
 {
 	if (IDSystemPtr()->setCk(IDC_LIFE_METER))
-	{
-		if ((re4t::cfg->bSideAlignHUD && bIsUltrawide) || (re4t::cfg->bRemove16by10BlackBars && bIs16by10))
-			SideAlignHud();
-		else
-			ResetLifeMeter();
-	}
+		OffsetHUD();
 }
 
 void re4t::init::HUDTweaks()
@@ -176,16 +165,24 @@ void re4t::init::HUDTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				// Side align life meter for ultrawide
-				if ((re4t::cfg->bSideAlignHUD && bIsUltrawide) || (re4t::cfg->bRemove16by10BlackBars && bIs16by10))
-					SideAlignHud();
-
 				// Shrink the size of the life meter HUD
-				if (re4t::cfg->bSmallerLifeMeter)
+				if (re4t::cfg->bSmallerHUD)
 				{
 					ShrinkLifeMeter();
 					ShrinkPRLGauge();
 				}
+
+				// Side align life meter for ultrawide
+				if ((re4t::cfg->bSideAlignHUD && bIsUltrawide) || (re4t::cfg->bRemove16by10BlackBars && bIs16by10))
+					SideAlignHUD();
+
+				// Save the default HUD position
+				fDefaultHUDPosX = IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x;
+				fDefaultHUDPosY = IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y;
+
+				// Reposition the HUD
+				if (re4t::cfg->bRepositionHUD)
+					OffsetHUD();
 
 				// Code we overwrote
 				regs.ecx = (uint32_t)IDSystemPtr();
@@ -197,7 +194,7 @@ void re4t::init::HUDTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (re4t::cfg->bSmallerLifeMeter)
+				if (re4t::cfg->bSmallerHUD)
 					ShrinkBulletInfo();
 
 				// Code we overwrote
