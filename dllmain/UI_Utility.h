@@ -54,14 +54,14 @@ void ImGui_SetHotkeyComboThread(std::string* cfgHotkey);
 void ImGui_SetHotkeyThread(std::string* cfgHotkey);
 
 bool ImGui_ButtonSameLine(const char* label, bool samelinecheck = true, 
-	float offset = 0.0f, const ImVec2 size = ImVec2(0, 0));
+	float offset = 0.0f, const ImVec2& size = ImVec2(0, 0));
 
 bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCol,
-	const ImVec4& inactiveCol, MenuTab tabID, const char* icon, const ImColor iconColor,
-	const ImColor textColor, const ImVec2& size = ImVec2(0, 0));
+	const ImVec4& inactiveCol, MenuTab tabID, const char* icon, const ImColor& iconColor,
+	const ImColor& textColor, const ImVec2& size = ImVec2(0, 0));
 bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& activeCol,
-	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor iconColor,
-	const ImColor textColor, const ImVec2& size = ImVec2(0, 0), const bool samelinecheck = true);
+	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor& iconColor,
+	const ImColor& textColor, const ImVec2& size = ImVec2(0, 0), const bool samelinecheck = true);
 
 bool ImGui_BufferingBar(const char* label, float value, const ImVec2& size_arg, const ImU32& bg_col, const ImU32& fg_col);
 bool ImGui_Spinner(const char* label, float radius, int thickness, const ImU32& color);

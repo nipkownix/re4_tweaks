@@ -65,7 +65,7 @@ struct EndSceneHook
 
 	float _cur_monitor_dpi = 1.0f;
 
-	ImFont* ESP_font;
+	ImFont* ESP_font = nullptr;
 
 	ImGuiContext* _imgui_context = nullptr;
 };
