@@ -5,7 +5,7 @@
 #include "Settings.h"
 #include "HUDTweaks.h"
 
-extern bool isQTEactive();
+extern bool isQTEactive(); // QTEFixes.cpp
 
 float fDefaultHUDPosX;
 float fDefaultHUDPosY;
@@ -33,7 +33,7 @@ void ApplyHUDEdits(ID_CLASS idClass, const HUDEditData* data, int size)
 void ShrinkLifeMeter()
 {
 	static const HUDEditData SmallLifeMeter[] = {
-		{ 0,  217.0f + 26.0f, -130.0f - 11.0f, DEF, DEF },
+		{ 0,  243.0f, -141.0f, DEF, DEF },
 		{ 1,  37.2f, DEF, DEF, DEF },
 		{ 40, -15.0f, -16.0f, DEF, DEF },
 		{ 25, -15.0f, -9.2f, 10.0f, 20.0f },
@@ -172,7 +172,7 @@ void re4t::init::HUDTweaks()
 					ShrinkPRLGauge();
 				}
 
-				// Side align life meter for ultrawide
+				// Side align HUD for ultrawide and 16:10
 				if ((re4t::cfg->bSideAlignHUD && bIsUltrawide) || (re4t::cfg->bRemove16by10BlackBars && bIs16by10))
 					SideAlignHUD();
 
@@ -219,14 +219,14 @@ void re4t::init::HUDTweaks()
 					};
 
 					static const int QTEUnitNo[] = {
-						184, 185, 188, 186, 187, 190, 191, // mashing prompt
+						184, 185, 188, 186, 187, 190, 191, // mashing
 						134, 135, 137, 139, 140, 149, 150, 153, 154, // QTE type 1
 						8, 9, 10, 17, 25, 35, 36, 41, 42, 49, 50, 117, 152 // QTE type 2
 					};
 
 					static const float scale = 0.90f;
 
-					// Ganado grab
+					// Grab prompts
 					if (FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_PL_CATCHED)))
 					{
 						IDSystemPtr()->unitPtr(6u, IDC_ACT_BUTTON)->pos0_94.y = -90.5f; // button anchor
@@ -238,7 +238,7 @@ void re4t::init::HUDTweaks()
 							tex->size0_H_E0 *= scale;
 						}
 					}
-					// QTEs
+					// QTE prompts
 					else if (isQTEactive())
 					{
 						for (int i = 0; i < sizeof(QTEUnitNo) / sizeof(*QTEUnitNo); ++i)
