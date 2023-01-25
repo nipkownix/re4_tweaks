@@ -10,14 +10,14 @@ extern bool isQTEactive(); // QTEFixes.cpp
 float fDefaultHUDPosX;
 float fDefaultHUDPosY;
 
+#define DEF FLT_MIN
 struct HUDEditData
 {
 	uint8_t unitNo;
-	float posX, posY;
-	float sizeW, sizeH;
+	float posX = DEF, posY = DEF;
+	float sizeW = DEF, sizeH = DEF;
 };
 
-#define DEF FLT_MIN
 void ApplyHUDEdits(ID_CLASS idClass, const HUDEditData* data, int size)
 {
 	for (int i = 0; i < size; ++i)
@@ -30,96 +30,92 @@ void ApplyHUDEdits(ID_CLASS idClass, const HUDEditData* data, int size)
 	}
 }
 
+void ShrinkIDClass(ID_CLASS idClass, float scale)
+{
+	ID_UNIT* tex = IDSystemPtr()->m_IdUnit_50;
+	for (int i = 0; i < IDSystemPtr()->m_maxId_0; ++i)
+	{
+		if (tex->classNo_2 == idClass && tex->texId_78 != 0xFF)
+		{
+			tex->size0_W_DC *= scale;
+			tex->size0_H_E0 *= scale;
+		}
+
+		tex++;
+	}
+}
+
 void ShrinkLifeMeter()
 {
 	static const HUDEditData SmallLifeMeter[] = {
-		{ 0,  243.0f, -141.0f, DEF, DEF },
-		{ 1,  37.2f, DEF, DEF, DEF },
-		{ 40, -15.0f, -16.0f, DEF, DEF },
-		{ 25, -15.0f, -9.2f, 10.0f, 20.0f },
-		{ 5,  -5.0f, -9.2f, 10.0f, 20.0f },
-		{ 6,  5.0f, -9.2f, 10.0f, 20.0f },
-		{ 2,  -4.8f, -1.6f, 52.8f, 52.8f },
-		{ 48, -13.15f, -12.6f, 37.2f, 37.2f },
-		{ 13, -13.4f, -13.7f, 29.92f, 29.92f },
-		{ 16, -19.9f, DEF, DEF, DEF },
-		{ 30, -6.6f, -1.1f, 48.85f, 48.85f },
-		{ 14, -13.4f, -13.7f, 29.92f, 29.92f },
-		{ 9,  -13.6f,  -12.6f, DEF, DEF },
-		{ 3, -1.7f, -0.6f, DEF, DEF },
-		{ 10, DEF, DEF, 32.5f, 32.5f },
-		{ 11, DEF, DEF, 32.5f, 32.5f },
-		{ 12, DEF, DEF, 32.5f, 32.5f },
-		{ 41, 8.1f, 14.9f, 50.6f, 50.6f },
-		{ 57, 8.1f, 14.9f, 50.6f, 50.6f },
-		{ 24, 8.9f, -36.7f, 36.84f, 19.955f },
-		{ 28, 0.475f, -37.6f, 51.7165f, 17.9f },
-		{ 50, -14.7f, -15.3f, 31.82f, 31.82f },
-		{ 8,  -5.25f, -19.8f, 76.202f, 72.79f },
-		{ 29, 13.1f, -39.8f, 27.3f, 13.26f },
-		{ 51, -12.6f, -14.0f, 30.52f, 30.52f },
-		{ 59, -0.4f, -39.95f, 52.085f, 12.984f },
-		{ 60, 2.8f, -40.4f, 48.425f, 12.665f },
-		{ 58, 9.4f, -40.75f, 34.498f, 12.478f },
-		{ 15, 0.0f, DEF, 107.03f, 67.32f },
-		{ 26, -19.5f, -21.3f, 50.025f, 50.025f },
-		{ 49, DEF, -29.0f, 1.64f, 8.2f },
-		{ 23, DEF, 24.1f, 1.723f, 10.104f },
-		{ 62, -12.712f, -12.712f, 31.8f, 31.8f },
-		{ 63, -12.712f, -12.712f, 31.8f, 31.8f },
-		{ 64, -12.712f, -12.712f, 31.8f, 31.8f },
-		{ 55, -12.712f, -12.712f, 37.87f, 37.87f },
-		{ 56, -12.712f, -12.712f, 37.87f, 37.87f },
-		{ 53, -12.788f, -12.7f, 35.6f, 35.6f },
-		{ 52, -12.788f, -12.7f, 35.6f, 35.6f }
+		{ 0, 232.97f, -140.5f },
+		{ 1,  30.4f, 36.4f },
+		{ 16, -10.7f, -21.0f },
+		{ 49, DEF, -28.9f },
+		{ 4, 33.1f, 34.1f },
+		{ 26, -9.0f, -23.0f },
+		{ 27, 9.4f, -1.2f },
+		{ 30, -6.7f, -0.3f },
+		{ 40, 2.2f, -1.4f },
+		{ 3, 6.2f, DEF },
+		{ 2, 3.4f, -1.8f },
+		{ 54, 2.8f, -2.7f },
+		{ 48, 2.8f, -2.7f },
+		{ 9, 2.8f, -2.7f },
+		{ 23, DEF, 24.5f },
+		// names
+		{ 24, 18.1f, -37.1f },
+		{ 28, 9.3f, -38.0f },
+		{ 29, 22.1f, -40.4f },
+		{ 59, 7.9f, -40.0f },
+		{ 60, 11.8f, -40.2f },
+		{ 58, 18.1f, -40.2f },
+		// ammo digits
+		{ 25, -6.0f, -9.2f, 10.0f, 20.0f },
+		{ 5,  4.0f, -9.2f, 10.0f, 20.0f },
+		{ 6,  14.0f, -9.2f, 10.0f, 20.0f },
 	};
 
+	ShrinkIDClass(IDC_LIFE_METER, 0.7484f); 
 	ApplyHUDEdits(IDC_LIFE_METER, SmallLifeMeter, sizeof(SmallLifeMeter) / sizeof(*SmallLifeMeter));
 }
-                
+
 void ShrinkPRLGauge()
 {
 	static const HUDEditData SmallPRLGauge[] = {
-		{ 21, -3.6f, -6.4f, DEF, DEF },
-		{ 22, -3.6f, -6.4f, DEF, DEF },
-		{ 23, -4.0f, -5.3f, 50.5f, 50.5f },
-		{ 34, -1.2f, -17.9f, 2.125f, 5.1f },
-		{ 38, 2.75f, 1.0f, 13.0f, 13.0f },
-		{ 32, DEF, DEF, 24.0f, 24.0f },
-		{ 37, -9.0f, -11.1f, 16.0f, 10.0f },
-		{ 35, -13.3f, -13.0f, 1.8f, 4.8f },
-		{ 41, -9.0f, -11.1f, 16.0f, 10.0f },
-		{ 29, DEF, DEF, 19.0f, 19.0f },
-		{ 36, -16.9f, -0.394f, 2.1f, 9.45f },
-		{ 26, DEF, DEF, 19.0f, 19.0f },
-		{ 27, DEF, DEF, 19.0f, 19.0f },
-		{ 30, DEF, DEF, 19.0f, 19.0f },
-		{ 39, -9.0f, -11.1f, 16.0f, 10.0f },
-		{ 33, -11.0f, 11.5f, 1.75f, 9.0f },
-		{ 40, 2.75f, 1.0f, 13.0f, 13.0f },
-		{ 28, DEF, DEF, 19.0f, 19.0f },
-		{ 31, DEF, DEF, 19.0f, 19.0f }
+		{ 0, -1.2f, 1.0f },
+		{ 34, -0.6f, -19.2f },
+		{ 35, -12.6f, -12.7f },
+		{ 36, -15.2f, -0.7f },
+		{ 33, -10.8f, 9.2f },
+		{ 38, 3.7f, 1.3f },
+		{ 40, 3.7f, 1.3f },
+		{ 21, -3.3f, -5.9f },
+		{ 22, -3.3f, -5.9f },
+		{ 23, -3.7f, -5.0f },
 	};
 
+	ShrinkIDClass(IDC_LASER_GAUGE, 0.7484f);
 	ApplyHUDEdits(IDC_LASER_GAUGE, SmallPRLGauge, sizeof(SmallPRLGauge) / sizeof(*SmallPRLGauge));
 }
-              
+
 void ShrinkBulletInfo()
 {
 	static const HUDEditData SmallBulletInfo[] = {
-		{ 6, -6.3f, -1.1f, 49.8f, 49.8f },
-		{ 11, -13.3f, 0.5f, 23.232f, 29.568f },
-		{ 4, -6.5f, -1.2f, 44.4602f, 16.4731f },
-		{ 12, -6.9f, 7.5f, 36.5f, 19.388f },
-		{ 3,  -6.6f, 8.7f, 34.0195f, 25.386f },
-		{ 2,  -12.1f, 0.7f, 24.23f, 29.3415f },
-		{ 5,  -6.9f, -1.7f, 45.879f, 9.324f },
-		{ 7,  -7.0f, 8.2f, 36.0f, 28.5f },
-		{ 8,  -5.0f, 8.4f, 30.5f, 20.33f },
-		{ 9,  -6.7f, -1.0f, 46.48f, 8.13f },
-		{ 13, -9.2f, 4.3f, 33.0f, 33.0f }
+		{ 6,  -6.7f, -0.1f, 49.39f, 49.39f},
+		{ 4,  -6.3f, -1.0f },
+		{ 11, -14.9f, 2.4f },
+		{ 12, -7.5f, 9.2f },
+		{ 3,  -7.0f, 10.6f },
+		{ 2,  -12.4f, 2.0f },
+		{ 5,  -7.3f, -0.8f },
+		{ 7,  -7.4f, 10.0f },
+		{ 8,  -5.5f, 10.3f },
+		{ 9,  -6.7f, -0.9f },
+		{ 13, -9.9f, 5.6f }
 	};
 
+	ShrinkIDClass(IDC_BLLT_ICON, 0.7484f);
 	ApplyHUDEdits(IDC_BLLT_ICON, SmallBulletInfo, sizeof(SmallBulletInfo) / sizeof(*SmallBulletInfo));
 }
 
@@ -203,7 +199,7 @@ void re4t::init::HUDTweaks()
 		}; injector::MakeInline<BulletInfo__move_hook>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(10));
 	}
 
-	// Shrink action button prompts
+	// ShrinkIDClass action button prompts
 	{
 		auto pattern = hook::pattern("03 C2 50 B9 ? ? ? ? E8 ? ? ? ? C7");
 		static uint32_t* g_IDSystemSetException = *pattern.count(1).get(0).get<uint32_t*>(15);
@@ -213,54 +209,13 @@ void re4t::init::HUDTweaks()
 			{
 				if (re4t::cfg->bSmallerActionPrompts)
 				{
-					static const int GrabUnitNo[] = {
-						45, 33, 57, 63, 84, 91, // mouse
-						33, 44, 58, 57, 63, 84, 91 // joystick
-					};
+					ShrinkIDClass(IDC_ACT_BUTTON, 0.9f);
 
-					static const int QTEUnitNo[] = {
-						184, 185, 188, 186, 187, 190, 191, // mashing
-						134, 135, 137, 139, 140, 149, 150, 153, 154, // QTE type 1
-						8, 9, 10, 17, 25, 35, 36, 41, 42, 49, 50, 117, 152 // QTE type 2
-					};
-
-					static const float scale = 0.90f;
-
-					// Grab prompts
-					if (FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_PL_CATCHED)))
-					{
-						IDSystemPtr()->unitPtr(6u, IDC_ACT_BUTTON)->pos0_94.y = -90.5f; // button anchor
-
-						for (int i = 0; i < sizeof(GrabUnitNo) / sizeof(*GrabUnitNo); ++i)
-						{
-							ID_UNIT* tex = IDSystemPtr()->unitPtr2(GrabUnitNo[i], IDC_ACT_BUTTON);
-							tex->size0_W_DC *= scale;
-							tex->size0_H_E0 *= scale;
-						}
-					}
-					// QTE prompts
-					else if (isQTEactive())
-					{
-						for (int i = 0; i < sizeof(QTEUnitNo) / sizeof(*QTEUnitNo); ++i)
-						{
-							ID_UNIT* tex = IDSystemPtr()->unitPtr2(QTEUnitNo[i], IDC_ACT_BUTTON);
-							tex->size0_W_DC *= scale;
-							tex->size0_H_E0 *= scale;
-						}
-					}
-					// Interact prompts
-					else
-					{
-						// button anchor
-						IDSystemPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.x = -55.8f;
-						IDSystemPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.y = -148.1f;
-						// button texture
-						IDSystemPtr()->unitPtr2(181, IDC_ACT_BUTTON)->size0_W_DC *= scale;
-						IDSystemPtr()->unitPtr2(181, IDC_ACT_BUTTON)->size0_H_E0 *= scale;
-						// button glow
-						IDSystemPtr()->unitPtr2(182, IDC_ACT_BUTTON)->size0_W_DC *= scale;
-						IDSystemPtr()->unitPtr2(182, IDC_ACT_BUTTON)->size0_H_E0 *= scale;
-					}
+					// grab prompt anchor
+					IDSystemPtr()->unitPtr(6u, IDC_ACT_BUTTON)->pos0_94.y = -90.5f;
+					// interact prompt anchor
+					IDSystemPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.x = -55.8f;
+					IDSystemPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.y = -148.1f;
 				}
 
 				// Code we overwrote
