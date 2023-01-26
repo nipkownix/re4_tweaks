@@ -40,7 +40,6 @@ void ShrinkIDClass(ID_CLASS idClass, float scale)
 			tex->size0_W_DC *= scale;
 			tex->size0_H_E0 *= scale;
 		}
-
 		tex++;
 	}
 }
@@ -199,7 +198,7 @@ void re4t::init::HUDTweaks()
 		}; injector::MakeInline<BulletInfo__move_hook>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(10));
 	}
 
-	// ShrinkIDClass action button prompts
+	// Shrink action button prompts
 	{
 		auto pattern = hook::pattern("03 C2 50 B9 ? ? ? ? E8 ? ? ? ? C7");
 		static uint32_t* g_IDSystemSetException = *pattern.count(1).get(0).get<uint32_t*>(15);
