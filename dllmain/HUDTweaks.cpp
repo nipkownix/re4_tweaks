@@ -5,11 +5,6 @@
 #include "Settings.h"
 #include "HUDTweaks.h"
 
-extern bool isQTEactive(); // QTEFixes.cpp
-
-float fDefaultHUDPosX;
-float fDefaultHUDPosY;
-
 #define DEF FLT_MIN
 struct HUDEditData
 {
@@ -118,17 +113,6 @@ void ShrinkBulletInfo()
 	ApplyHUDEdits(IDC_BLLT_ICON, SmallBulletInfo, sizeof(SmallBulletInfo) / sizeof(*SmallBulletInfo));
 }
 
-void re4t::HUDTweaks::ResetLifeMeter()
-{
-	if (IDSystemPtr()->setCk(IDC_LIFE_METER))
-	{
-		IDSystemPtr()->kill(0xFF, IDC_LIFE_METER);
-		IDSystemPtr()->kill(0xFF, IDC_LASER_GAUGE);
-		Cckpt->m_LifeMeter_0.roomInit();
-		Cckpt->m_BlltInfo_6C.roomInit();
-	}
-}
-
  // AspectRatioTweaks.cpp
 extern bool bIsUltrawide, bIs16by10;
 extern float fGameDisplayAspectRatio;
@@ -138,6 +122,9 @@ void SideAlignHUD()
 	float fHudPosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) / 2.0f;
 	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x += fHudPosOffset;
 }
+
+float fDefaultHUDPosX;
+float fDefaultHUDPosY;
 
 void OffsetHUD()
 {
@@ -149,6 +136,17 @@ void re4t::HUDTweaks::UpdateHUDOffsets()
 {
 	if (IDSystemPtr()->setCk(IDC_LIFE_METER))
 		OffsetHUD();
+}
+
+void re4t::HUDTweaks::ResetLifeMeter()
+{
+	if (IDSystemPtr()->setCk(IDC_LIFE_METER))
+	{
+		IDSystemPtr()->kill(0xFF, IDC_LIFE_METER);
+		IDSystemPtr()->kill(0xFF, IDC_LASER_GAUGE);
+		Cckpt->m_LifeMeter_0.roomInit();
+		Cckpt->m_BlltInfo_6C.roomInit();
+	}
 }
 
 void re4t::init::HUDTweaks()
