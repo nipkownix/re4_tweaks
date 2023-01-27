@@ -717,7 +717,10 @@ bool UI_IDInspector::Render(bool WindowMode)
 			ImGui::EndCombo();
 		}
 		if (ImGui::IsItemHovered())
-			IDClassIdx = std::clamp(IDClassIdx - (int)(ImGui::GetIO().MouseWheel), 0, IM_ARRAYSIZE(IDClassNames) - 1);
+		{
+			IDClassIdx -= (int)ImGui::GetIO().MouseWheel;
+			IDClassIdx = std::clamp(IDClassIdx, 0, IM_ARRAYSIZE(IDClassNames) - 1);
+		}
 		ImGui::PopItemWidth();
 
 		ImGui::Separator();
@@ -728,7 +731,7 @@ bool UI_IDInspector::Render(bool WindowMode)
 			if (!selectedId)
 			{
 				selectedId = unitPtrs[0];
-				undoCopy = *selectedId;;
+				undoCopy = *selectedId;
 			}
 
 			static bool tableView = false;
@@ -759,7 +762,7 @@ bool UI_IDInspector::Render(bool WindowMode)
 
 				for (size_t i = 0; i < unitPtrs.size(); ++i)
 				{
-					if (!unitPtrs[i]->pParent_68 || unitPtrs[i]->pParent_68->classNo_2 != unitPtrs[i]->classNo_2)
+					if (unitPtrs[i]->pParent_68 == nullptr || unitPtrs[i]->pParent_68->classNo_2 != unitPtrs[i]->classNo_2)
 						DrawTree(i);
 				}
 
@@ -871,9 +874,14 @@ bool UI_IDInspector::Render(bool WindowMode)
 				ImGui::EndTable();
 			}
 		
+			ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
+
 			bool visible = selectedId->be_flag_0 & ID_BE_FLAG_VISIBLE;
 			if (ImGui::Checkbox("Visible", &visible))
 				selectedId->be_flag_0 ^= ID_BE_FLAG_VISIBLE;
+
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("(Hold Ctrl to make faster edits)").x - 10.0f);
+			ImGui::Text("(Hold Ctrl to make faster edits)");
 
 			static bool maintainAspectRatio = true;
 
@@ -881,23 +889,23 @@ bool UI_IDInspector::Render(bool WindowMode)
 
 			ImGui::PushItemWidth(140 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
 
-			ImGui::InputFloat("posX", &selectedId->pos0_94.x, 0.1f, 1.5f, "%.4f");
+			ImGui::InputFloat("posX", &selectedId->pos0_94.x, 0.1f, 1.0f, "%.4f");
 
 			ImGui::SameLine(200);
 			float origW = selectedId->size0_W_DC;
-			if (ImGui::InputFloat("sizeW", &selectedId->size0_W_DC, 0.1f, 2.0f, "%.4f"))
+			if (ImGui::InputFloat("sizeW", &selectedId->size0_W_DC, 0.1f, 1.0f, "%.4f"))
 				if (maintainAspectRatio)
 					selectedId->size0_H_E0 *= selectedId->size0_W_DC / origW;
 
-			ImGui::InputFloat("posY", &selectedId->pos0_94.y, 0.1f, 1.5f, "%.4f");
+			ImGui::InputFloat("posY", &selectedId->pos0_94.y, 0.1f, 1.0f, "%.4f");
 
 			ImGui::SameLine(200);
 			float origH = selectedId->size0_H_E0;
-			if (ImGui::InputFloat("sizeH", &selectedId->size0_H_E0, 0.1f, 2.0f, "%.4f"))
+			if (ImGui::InputFloat("sizeH", &selectedId->size0_H_E0, 0.1f, 1.0f, "%.4f"))
 				if (maintainAspectRatio)
 					selectedId->size0_W_DC *= selectedId->size0_H_E0 / origH;
 
-			ImGui::InputFloat("posZ", &selectedId->pos0_94.z, 0.1f, 1.5f, "%.4f");
+			ImGui::InputFloat("posZ", &selectedId->pos0_94.z, 0.1f, 1.0f, "%.4f");
 
 			ImGui::PopItemWidth();
 

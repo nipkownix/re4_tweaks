@@ -79,16 +79,8 @@ enum ID_BE_FLAG
 	ID_BE_FLAG_VISIBLE = 0x8
 };
 
-struct ID_FILE_HEADER
-{
-	char Version_0[4];
-	uint8_t GroupNo_4;
-	uint8_t UnitNum_5;
-	uint8_t dummy_6[2];
-};
-assert_size(ID_FILE_HEADER, 0x8);
-
 class IDSystem;
+struct ID_FILE_HEADER;
 enum ID_CLASS;
 typedef void(__thiscall* IDSystem__set_Fn)(IDSystem* thisptr, ID_FILE_HEADER* pData, uint8_t markNo, ID_CLASS classNo, uint8_t otType, uint8_t otNo, uint32_t Attr);
 typedef ID_UNIT* (__thiscall* IDSystem__unitPtr_Fn)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
@@ -210,3 +202,94 @@ struct MercID
 assert_size(MercID, 0x6C);
 
 extern MercID* MercID_ptr;
+
+struct ID_FILE_HEADER
+{
+	char Version_0[4];
+	uint8_t GroupNo_4;
+	uint8_t UnitNum_5;
+	uint8_t dummy_6[2];
+};
+assert_size(ID_FILE_HEADER, 8);
+
+struct ID_DATA_V1
+{
+	uint32_t be_flag_0;
+	uint8_t markNo_4;
+	uint8_t unitNo_5;
+	uint8_t levelNo_6;
+	uint8_t parentNo_7;
+	uint8_t rowNo_8;
+	uint8_t type_9;
+	uint8_t Id_A;
+	uint8_t texId_B;
+	uint8_t pos_flag_C;
+	uint8_t loop_flag_D;
+	uint8_t size_flag_E;
+	uint8_t rot_flag_F;
+	uint8_t rev_flag_10;
+	Vec pos0_14;
+	Vec ver_20[4];
+	float size0_W_50;
+	float size0_H_54;
+	uint8_t col0_R_58;
+	uint8_t col0_G_59;
+	uint8_t col0_B_5A;
+	uint8_t col0_A_5B;
+	Vec rot0_5C;
+	uint8_t blend_type_68;
+	uint8_t trans_type_69;
+	uint8_t maskId_6A;
+	uint8_t tex_flag_6B;
+	uint8_t pow_6C;
+	FUNC_PATH_PTR* pPath_70;
+	B_SPLINE_3_PTR* pBSpline_74;
+	HERMITE_1_PTR* pScurve_78;
+	HERMITE_1_PTR* pSizeCurve_7C;
+	HERMITE_1_PTR* pAlphaCurve_80;
+	HERMITE_1_PTR* pRotCurve_84;
+};
+assert_size(ID_DATA_V1, 0x88);
+
+struct ID_DATA_V2
+{
+	uint32_t be_flag_0;
+	uint8_t markNo_4;
+	uint8_t unitNo_5;
+	uint8_t levelNo_6;
+	uint8_t parentNo_7;
+	uint8_t rowNo_8;
+	uint8_t type_9;
+	uint8_t Id_A;
+	uint8_t texId_B;
+	uint8_t pos_flag_C;
+	uint8_t loop_flag_D;
+	uint8_t size_flag_E;
+	uint8_t rot_flag_F;
+	uint8_t rev_flag_10;
+	Vec pos0_14;
+	Vec ver_20[4];
+	float size0_W_50;
+	float size0_H_54;
+	uint8_t col0_R_58;
+	uint8_t col0_G_59;
+	uint8_t col0_B_5A;
+	uint8_t col0_A_5B;
+	uint8_t col1_R_5C;
+	uint8_t col1_G_5D;
+	uint8_t col1_B_5E;
+	uint8_t col1_A_5F;
+	Vec rot0_60;
+	uint8_t blend_type_6C;
+	uint8_t trans_type_6D;
+	uint8_t maskId_6E;
+	uint8_t tex_flag_6F;
+	uint8_t pow_70;
+	FUNC_PATH_PTR* pPath_74;
+	B_SPLINE_3_PTR* pBSpline_78;
+	HERMITE_1_PTR* pScurve_7C;
+	HERMITE_1_PTR* pSizeCurve_80;
+	HERMITE_1_PTR* pAlphaCurve_84;
+	HERMITE_1_PTR* pRotCurve_88;
+};
+assert_size(ID_DATA_V2, 0x8C);
