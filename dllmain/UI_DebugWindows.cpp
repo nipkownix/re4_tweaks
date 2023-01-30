@@ -1252,7 +1252,7 @@ bool UI_AreaJump::Render(bool WindowMode)
 		{
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Room").x - 10.0f);
 			std::string curRoomStr = RoomDisplayString(curStage, curRoomIdx);
-			if (ImGui::BeginCombo("Room", curRoomStr.c_str()))
+			if (ImGui::BeginCombo("Room", curRoomStr.c_str(), ImGuiComboFlags_HeightLarge))
 			{
 				for (int i = 0; i < stage->nData_0; i++)
 				{

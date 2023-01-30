@@ -2796,7 +2796,7 @@ void Trainer_RenderUI(int columnCount)
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushTextWrapPos();
-				ImGui::Text("Tool for manipulating the game's HUD objects.");
+				ImGui::Text("Tool for manipulating the game's UI objects.");
 				ImGui::PopTextWrapPos();
 			}
 
