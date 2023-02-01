@@ -224,14 +224,12 @@ void __cdecl OSReport_hook(const char* msg, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
+    spd::log()->info("OSReport: {}", buffer);
     con.gameLog("OSReport: %s", buffer);
 }
 
 void OSPanic_nullsub_hook(const char* file, int line, const char* message, ...)
 {
-    if (!re4t::cfg->bShowGameOutput)
-        return;
-
     va_list args;
     char buffer[1024];
 
@@ -246,14 +244,12 @@ void OSPanic_nullsub_hook(const char* file, int line, const char* message, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
+    spd::log()->error("OSPanic: File: {}, Line: {}, Message: {}", file, line, buffer);
     con.gameLog("OSPanic: File: %s, Line: %d, Message: %s", file, line, buffer);
 }
 
 void cLog__err_nullsubver_hook(uint32_t flag, uint32_t errId, char* mes, ...)
 {
-    if (!re4t::cfg->bShowGameOutput)
-        return;
-
     va_list args;
     char buffer[1024];
 
@@ -268,14 +264,12 @@ void cLog__err_nullsubver_hook(uint32_t flag, uint32_t errId, char* mes, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
+    spd::log()->error("cLog::err: Flag: {}, errId: {}, Message: {}", flag, errId, buffer);
     con.gameLog("cLog::err: Flag: %d, errId: %d, Message: %s", flag, errId, buffer);
 }
 
 void cLog__err_1_hook(int a1, int a2, const char* message, ...)
 {
-    if (!re4t::cfg->bShowGameOutput)
-        return;
-
     va_list args;
     char buffer[1024];
 
@@ -290,6 +284,7 @@ void cLog__err_1_hook(int a1, int a2, const char* message, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
+    spd::log()->error("cLog::err_1: {}", buffer);
     con.gameLog("cLog::err_1: %s", buffer);
 }
 
