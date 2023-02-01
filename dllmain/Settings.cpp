@@ -546,7 +546,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		std::wstring iniPath = rootPath + wrapperName + L".ini";
 
 		#ifdef VERBOSE
-		con.log("Writing main settings to: %s", WstrToStr(iniPath));
+		con.log("Writing main settings to: %s", WstrToStr(iniPath).c_str());
 		#endif
 
 		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
@@ -737,6 +737,8 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		// Save main .ini file
 		ini.writeIni();
+
+		re4t::cfg->HasUnsavedChanges = false;
 	}
 
 	// trainer.ini-only settings
@@ -744,7 +746,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		std::wstring iniPath = rootPath + L"re4_tweaks\\trainer.ini";
 
 		#ifdef VERBOSE
-		con.log("Writing trainer settings to: %s", WstrToStr(iniPath));
+		con.log("Writing trainer settings to: %s", WstrToStr(iniPath).c_str());
 		#endif
 
 		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
@@ -914,11 +916,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		// Save trainer .ini file
 		ini.writeIni();
-
-		return;
 	}
-
-	re4t::cfg->HasUnsavedChanges = false;
 }
 
 void re4t_cfg::LogSettings()

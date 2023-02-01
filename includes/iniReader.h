@@ -16,11 +16,8 @@ class iniReader
 {
 public:
     // Use .ini path/filename from parameter
-    iniReader(const std::wstring& filename)
+    iniReader(const std::wstring& filename) : inipath(filename)
     {
-        // Store the ini path
-        inipath = filename;
-
         // Read and parse the INI file
         m_ini.LoadFile(filename.c_str());
     }

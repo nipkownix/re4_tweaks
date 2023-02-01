@@ -179,7 +179,6 @@ std::unordered_map<int, std::string> EmNames =
 	{0x0F, "Boat"},
 	{0x11, "Zealot"},
 	{0x12, "Ganado"},
-	{0x13, "Ganado"},
 	{0x13, "Ganado / Merchant"},
 	{0x14, "Zealot / Merchant"},
 	{0x15, "Ganado"},
