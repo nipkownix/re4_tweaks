@@ -97,7 +97,7 @@ void re4t::init::QTEfixes()
 	// Automatic QTEs
 	{
 		// QTEactive pointer
-		auto pattern = hook::pattern("c6 05 ? ? ? ? ? e8 ? ? ? ? 83 c4 ? 84 c0 0f 84");
+		auto pattern = hook::pattern("C6 05 ? ? ? ? ? E8 ? ? ? ? 83 C4 ? 84 C0 0F 84");
 		ptrQTEactive = *pattern.count(1).get(0).get<uint32_t*>(2);
 
 		// Hook cActionButton_checkButton
@@ -111,7 +111,7 @@ void re4t::init::QTEfixes()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				if (re4t::cfg->bDisableQTE && (!re4t::cfg->bAutomaticMashingQTE || re4t::cfg->bAutomaticMashingQTE))
+				if (re4t::cfg->bDisableQTE)
 				{
 					if (isAutoQTE || isQTEactive())
 						regs.ef &= ~(1 << regs.zero_flag);
@@ -151,7 +151,7 @@ void re4t::init::QTEfixes()
 			pattern = hook::pattern("E8 ? ? ? ? 83 C4 10 85 C0 74 06 FF 86 ? ? ? ? 57");
 			InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyTrgCheck_hook);
 
-			// Second
+			// Third
 			pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 85 C0 74 ? 8B 15 ? ? ? ? 8A 82");
 			InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyTrgCheck_hook);
 		}
@@ -386,7 +386,7 @@ void re4t::init::QTEfixes()
 					// Get pointer to the timer float where the new time is going to be written
 					float* timer = (float*)(regs.esi + regs.eax * 0x8 + 0xA0);
 
-					// Write 0 if needed, otherwise write what the game calcualted
+					// Write 0 if needed, otherwise write what the game calculated
 					if (re4t::cfg->bDisableQTE || re4t::cfg->bAutomaticMashingQTE)
 						*timer = 0.0f;
 					else
