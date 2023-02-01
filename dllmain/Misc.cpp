@@ -1207,52 +1207,6 @@ void re4t::init::Misc()
 		spd::log()->info("SpeedUpQuitGame enabled");
 	}
 
-	// Hide zoom control hints from the weapon scope and binocular HUDs
-	{
-		auto pattern = hook::pattern("80 B8 C0 4F 00 00 0E 56 57 8B F9 0F");
-		struct IdScope__move_HideZoomHints
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				if (re4t::cfg->bHideZoomControlHints)
-				{
-					IDSystemPtr()->unitPtr(0x20u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x21u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-
-					IdScope* thisptr = (IdScope*)regs.ecx;
-					thisptr->m_zoom_disp_C = 0; // hides the text
-				}
-
-				// Code we overwrote
-				if (GlobalPtr()->weapon_no_4FC0 == 14)
-					regs.ef |= (1 << regs.zero_flag);
-				else
-					regs.ef &= ~(1 << regs.zero_flag);
-			}
-		}; injector::MakeInline<IdScope__move_HideZoomHints>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
-
-		pattern = hook::pattern("F7 81 1C 50 00 00 00 10 00 00");
-		struct IdBinocular__move_HideZoomHints
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				bool isEvent = FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_EVENT));
-				if (re4t::cfg->bHideZoomControlHints || isEvent)
-				{
-					IDSystemPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-					regs.ef &= ~(1 << regs.zero_flag);
-				}
-				else
-				{
-					IDSystemPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
-					regs.ef |= (1 << regs.zero_flag);
-				}
-			}
-		}; injector::MakeInline<IdBinocular__move_HideZoomHints>(pattern.count(2).get(1).get<uint32_t>(0), pattern.count(2).get(1).get<uint32_t>(10));
-	}
-
 	// Enable what was leftover from the dev's debug menu (called "ToolMenu")
 	re4t::init::ToolMenu();
 	if (re4t::cfg->bEnableDebugMenu)

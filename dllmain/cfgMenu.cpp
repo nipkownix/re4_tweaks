@@ -12,6 +12,7 @@
 #include "UI_Utility.h"
 #include "Trainer.h"
 #include "AudioTweaks.h"
+#include "HUDTweaks.h"
 #include "../dxvk/src/config.h"
 
 bool bCfgMenuOpen = false;
@@ -503,7 +504,12 @@ void cfgMenuRender()
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 						ImGui::BeginDisabled(!re4t::cfg->bUltraWideAspectSupport);
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SideAlignHUD", &re4t::cfg->bSideAlignHUD);
+						if (ImGui::Checkbox("SideAlignHUD", &re4t::cfg->bSideAlignHUD))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::HUDTweaks::ResetLifeMeter();
+						}
+
 						ImGui::TextWrapped("Moves the HUD to the right side of the screen.");
 
 						ImGui::Spacing();
@@ -793,6 +799,80 @@ void cfgMenuRender()
 							}
 						}
 						ImGui::TextWrapped("Remember the last window position. This automatically updates the \"X Pos\" and \"Y Pos\" values above.");
+					}
+
+					if ((OptionsFilter.PassFilter("RepositionHUD Offset") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						// Reposition HUD
+						if (ImGui::Checkbox("RepositionHUD", &re4t::cfg->bRepositionHUD))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							if (re4t::cfg->bRepositionHUD)
+								re4t::HUDTweaks::UpdateHUDOffsets();
+							else if (re4t::cfg->fHUDOffsetX || re4t::cfg->fHUDOffsetY)
+								re4t::HUDTweaks::ResetLifeMeter();
+						}
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Move the life meter HUD relative to its default position.");
+						ImGui::TextWrapped("(Hold Ctrl to make larger adjustments)");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::BeginDisabled(!re4t::cfg->bRepositionHUD);
+						ImGui::PushItemWidth(150 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+						if (ImGui::InputFloat("X Offset", &re4t::cfg->fHUDOffsetX, 0.1f, 1.0f))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::HUDTweaks::UpdateHUDOffsets();
+						}
+						if (ImGui::InputFloat("Y Offset", &re4t::cfg->fHUDOffsetY, 0.1f, 1.0f))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::HUDTweaks::UpdateHUDOffsets();
+						}
+						ImGui::PopItemWidth();
+						ImGui::EndDisabled();
+					}
+
+					if ((OptionsFilter.PassFilter("SmallerHUD SmallerActionPrompts") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						//SmallerHUD 
+						if (ImGui::Checkbox("SmallerHUD", &re4t::cfg->bSmallerHUD))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							re4t::HUDTweaks::ResetLifeMeter();
+						}
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Makes the life meter HUD smaller.");
+
+						// SmallerActionPrompts
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SmallerActionPrompts", &re4t::cfg->bSmallerActionPrompts);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Makes interact button and QTE prompts smaller.");
+					}
+
+					// HideZoomControlHints 
+					if ((OptionsFilter.PassFilter("HideZoomControlHints Rifle Scope Binoculars") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("HideZoomControlHints", &re4t::cfg->bHideZoomControlHints);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Hides zoom control reminders from the weapon scope and binocular HUDs.");
 					}
 
 					ImGui_ColumnFinish();
@@ -1694,19 +1774,6 @@ void cfgMenuRender()
 						ImGui::TextWrapped("After beating the game, force the game to always show the original main menu background image of Leon and Ashley.");
 					}
 
-					// HideZoomControlHints 
-					if ((OptionsFilter.PassFilter("HideZoomControlHints Rifle Scope Binoculars") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
-					{
-						ImGui_ColumnSwitch();
-
-						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("HideZoomControlHints", &re4t::cfg->bHideZoomControlHints);
-
-						ImGui_ItemSeparator();
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Hide zoom control reminders from the weapon scope and binocular HUDs.");
-					}
-
 					// FixSilencedHandgunDescription
 					if ((OptionsFilter.PassFilter("FixSilencedHandgunDescription Silencer") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
@@ -1750,7 +1817,7 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window. (F2 by default)");					
+						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window. (F2 by default)");
 					}
 
 					ImGui_ColumnFinish();

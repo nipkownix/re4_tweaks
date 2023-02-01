@@ -97,6 +97,8 @@ void Init_Main()
 	// Fixes FPS-related issues
 	re4t::init::FrameRateFixes();
 
+	re4t::init::HUDTweaks();
+
 	re4t::init::Gameplay();
 
 	re4t::init::Misc();

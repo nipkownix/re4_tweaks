@@ -15,7 +15,6 @@ cPlayer__subScrCheck_Fn cPlayer__subScrCheck = nullptr; // extern inside player.
 j_j_j_FadeSet_Fn j_j_j_FadeSet = nullptr; // extern inside fade.h
 uint32_t* cSofdec = nullptr;
 
-
 // light.h externs
 cLightMgr* LightMgr = nullptr;
 cLightMgr__setEnv_Fn cLightMgr__setEnv = nullptr;
@@ -46,8 +45,19 @@ cSatMgr* EatMgr = nullptr;
 // ID.h externs
 IDSystem__set_Fn IDSystem__set = nullptr;
 IDSystem__unitPtr_Fn IDSystem__unitPtr = nullptr;
+IDSystem__unitPtr2_Fn IDSystem__unitPtr2 = nullptr;
 IDSystem__kill_Fn IDSystem__kill = nullptr;
 IDSystem__setTime_Fn IDSystem__setTime = nullptr;
+
+// Cockpit.h externs
+Cockpit* Cckpt = nullptr;
+LifeMeter__roomInit_Fn LifeMeter__roomInit = nullptr;
+BulletInfo__roomInit_Fn BulletInfo__roomInit = nullptr;
+
+// message.h externs
+MessageControl* cMes = nullptr;
+MessageControl__setFontSize_Fn MessageControl__setFontSize = nullptr;
+MessageControl__setLayout_Fn MessageControl__setLayout = nullptr;
 
 // roomdata.h externs
 cRoomData* RoomData = nullptr;
@@ -529,6 +539,12 @@ IDSystem* IDSystemPtr()
 	return IDSystem_ptr;
 }
 
+MercID* mercId_ptr = nullptr;
+MercID* mercIdPtr()
+{
+	return mercId_ptr;
+}
+
 FADE_WORK(*FadeWork_ptr)[4];
 FADE_WORK* FadeWorkPtr(FADE_NO no)
 {
@@ -988,6 +1004,10 @@ bool re4t::init::Game()
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__unitPtr);
 
+	// pointer to IDSystem::unitPtr2
+	pattern = hook::pattern("E8 ? ? ? ? D9 ? ? ? ? ? D9 98 98 00 00 00 EB");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__unitPtr2);
+
 	// pointer to IDSystem::kill
 	pattern = hook::pattern("E8 ? ? ? ? 68 99 00 00 00 68 FF 00 00 00 B9 ? ? ? ? E8 ? ? ? ? 8B 46 20 8B");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__kill);
@@ -995,6 +1015,19 @@ bool re4t::init::Game()
 	// pointer to IDSystem::setTime
 	pattern = hook::pattern("E8 ? ? ? ? FE 46 01 5F 5E 8B E5 ");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__setTime);
+
+	// pointer to mercId
+	pattern = hook::pattern("83 C4 18 6A 60 B9");
+	mercId_ptr= *pattern.count(1).get(0).get<MercID*>(6);
+
+	// pointer to cMes
+	pattern = hook::pattern("51 52 6A 04 B9 ? ? ? ? 8B F0 E8");
+	cMes = *pattern.count(1).get(0).get<MessageControl*>(5);
+	// pointer to MessageControl::setFontSize
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(11)).as_int(), MessageControl__setFontSize);
+	// pointer to MessageControl::setLayout
+	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 53 53 52 C7");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), MessageControl__setLayout);
 
 	// pointer to EmMgr (instance of cManager<cEm>)
 	pattern = hook::pattern("81 E1 01 02 00 00 83 F9 01 75 ? 50 B9 ? ? ? ? E8");
@@ -1129,6 +1162,15 @@ bool re4t::init::Game()
 	// joyFireOn ptr
 	pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 8E D8 07 00 00 8B 49 34 E8 ? ? ? ? 84 C0 0F ? ? ? ? ? 8B");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), bio4::joyFireOn);
+
+	// Cockpit ptr
+	pattern = hook::pattern("FF FE FF FF B9");
+	Cckpt = *pattern.count(1).get(0).get<Cockpit*>(5);
+	// Lifemeter::RoomInit
+	pattern = hook::pattern("66 C7 86 BD 00 00 00 00 00 E8");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int(), LifeMeter__roomInit);
+	// BulletInfo::RoomInit
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(17)).as_int(), BulletInfo__roomInit);
 
 	// SubScreenOpen funcptr
 	pattern = hook::pattern("55 8B EC A1 ? ? ? ? B9 ? ? ? ? 85 88");
