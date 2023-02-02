@@ -1014,6 +1014,8 @@ bool re4t::init::Game()
 	IdSys_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
 	pattern = hook::pattern("8D 48 FF 80 F9 01 77 ? C7 ? ? ? ? ? EB");
 	IdSub_ptr = *pattern.count(1).get(0).get<IDSystem*>(10);
+	pattern = hook::pattern("83 C4 08 B9 ? ? ? ? 39");
+	IdNum_ptr = *pattern.count(1).get(0).get<IDSystem*>(4);
 	pattern = hook::pattern("83 C4 18 6A 60 B9");
 	mercId_ptr = *pattern.count(1).get(0).get<MercID*>(6);
 	pattern = hook::pattern("E8 ? ? ? ? 6A 29 68 FE 00 00 00 B9");
