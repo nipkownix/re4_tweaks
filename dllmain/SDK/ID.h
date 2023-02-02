@@ -84,10 +84,12 @@ struct ID_FILE_HEADER;
 enum ID_CLASS;
 typedef void(__thiscall* IDSystem__set_Fn)(IDSystem* thisptr, ID_FILE_HEADER* pData, uint8_t markNo, ID_CLASS classNo, uint8_t otType, uint8_t otNo, uint32_t Attr);
 typedef ID_UNIT* (__thiscall* IDSystem__unitPtr_Fn)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
+typedef ID_UNIT* (__thiscall* IDSystem__unitPtr2_Fn)(IDSystem* thisptr, uint8_t unitNo, ID_CLASS classNo);
 typedef void (__thiscall* IDSystem__kill_Fn)(IDSystem* thisptr, uint8_t markNo, ID_CLASS classNo);
-typedef void(__thiscall* IDSystem__setTime_Fn)(IDSystem* thisptr, ID_UNIT* pParent, __int16 time);
+typedef void(__thiscall* IDSystem__setTime_Fn)(IDSystem* thisptr, ID_UNIT* pParent, uint16_t time);
 extern IDSystem__set_Fn IDSystem__set;
 extern IDSystem__unitPtr_Fn IDSystem__unitPtr;
+extern IDSystem__unitPtr2_Fn IDSystem__unitPtr2;
 extern IDSystem__kill_Fn IDSystem__kill;
 extern IDSystem__setTime_Fn IDSystem__setTime;
 
@@ -108,9 +110,21 @@ public:
 		return IDSystem__set(this, pData, markNo, classNo, otType, otNo, Attr);
 	}
 
+	inline bool setCk(ID_CLASS classNo)
+	{
+		return ((0x80000000 >> (classNo & 0x1F)) & this->m_set_flag_C[(uint8_t)classNo >> 5]) != 0;
+	}
+
+	// markNo are assigned to ID objects intended to be manipulated by the game's code
 	inline ID_UNIT* unitPtr(uint8_t markNo, ID_CLASS classNo)
 	{
 		return IDSystem__unitPtr(this, markNo, classNo);
+	}
+
+	// most ID objects lack a markNo. use this to retrieve them by their unitNo instead
+	inline ID_UNIT* unitPtr2(uint8_t unitNo, ID_CLASS classNo)
+	{
+		return IDSystem__unitPtr2(this, unitNo, classNo);
 	}
 
 	inline void kill(uint8_t markNo, ID_CLASS classNo)
@@ -118,7 +132,7 @@ public:
 		return IDSystem__kill(this, markNo, classNo);
 	}
 
-	inline void setTime(ID_UNIT* pParent, __int16 time)
+	inline void setTime(ID_UNIT* pParent, uint16_t time)
 	{
 		return IDSystem__setTime(this, pParent, time);
 	}

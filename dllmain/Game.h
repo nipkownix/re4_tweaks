@@ -12,6 +12,7 @@
 #include "SDK/global.h"
 #include "SDK/snd.h"
 #include "SDK/ID.h"
+#include "SDK/cockpit.h"
 #include "SDK/message.h"
 #include "SDK/title.h"
 #include "SDK/light.h"
@@ -91,7 +92,6 @@ IDSystem* IdSubPtr();
 IDSystem* IdNumPtr();
 MercID* mercIdPtr();
 FADE_WORK* FadeWorkPtr(FADE_NO no);
-IDSystem* IdSysPtr();
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 

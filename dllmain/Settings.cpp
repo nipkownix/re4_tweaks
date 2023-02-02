@@ -169,6 +169,11 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->iWindowPositionX = ini.getInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		re4t::cfg->iWindowPositionY = ini.getInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		re4t::cfg->bRememberWindowPos = ini.getBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+		re4t::cfg->bRepositionHUD = ini.getBool("DISPLAY", "RepositionHUD", re4t::cfg->bRepositionHUD);
+		re4t::cfg->fHUDOffsetX = ini.getFloat("DISPLAY", "HUDOffsetX", re4t::cfg->fHUDOffsetX);
+		re4t::cfg->fHUDOffsetY = ini.getFloat("DISPLAY", "HUDOffsetY", re4t::cfg->fHUDOffsetY);
+		re4t::cfg->bSmallerHUD = ini.getBool("DISPLAY", "SmallerHUD", re4t::cfg->bSmallerHUD);
+		re4t::cfg->bSmallerActionPrompts = ini.getBool("DISPLAY", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts);
 
 		// AUDIO
 		re4t::cfg->iVolumeMaster = ini.getInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
@@ -546,7 +551,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		std::wstring iniPath = rootPath + wrapperName + L".ini";
 
 		#ifdef VERBOSE
-		con.log("Writing main settings to: %s", WstrToStr(iniPath));
+		con.log("Writing main settings to: %s", WstrToStr(iniPath).c_str());
 		#endif
 
 		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
@@ -627,6 +632,11 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		ini.setInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		ini.setBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+		ini.setBool("DISPLAY", "RepositionHUD", re4t::cfg->bRepositionHUD);
+		ini.setFloat("DISPLAY", "HUDOffsetX", re4t::cfg->fHUDOffsetX);
+		ini.setFloat("DISPLAY", "HUDOffsetY", re4t::cfg->fHUDOffsetY);
+		ini.setBool("DISPLAY", "SmallerHUD", re4t::cfg->bSmallerHUD);
+		ini.setBool("DISPLAY", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts);
 
 		// AUDIO
 		ini.setInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
@@ -737,6 +747,8 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		// Save main .ini file
 		ini.writeIni();
+
+		re4t::cfg->HasUnsavedChanges = false;
 	}
 
 	// trainer.ini-only settings
@@ -744,7 +756,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		std::wstring iniPath = rootPath + L"re4_tweaks\\trainer.ini";
 
 		#ifdef VERBOSE
-		con.log("Writing trainer settings to: %s", WstrToStr(iniPath));
+		con.log("Writing trainer settings to: %s", WstrToStr(iniPath).c_str());
 		#endif
 
 		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
@@ -914,11 +926,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		// Save trainer .ini file
 		ini.writeIni();
-
-		return;
 	}
-
-	re4t::cfg->HasUnsavedChanges = false;
 }
 
 void re4t_cfg::LogSettings()
@@ -962,6 +970,11 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", re4t::cfg->iWindowPositionX);
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", re4t::cfg->iWindowPositionY);
 	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", re4t::cfg->bRememberWindowPos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RepositionHUD", re4t::cfg->bRepositionHUD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "HUDOffsetX", re4t::cfg->fHUDOffsetX);
+	spd::log()->info("| {:<30} | {:>15} |", "HUDOffsetY", re4t::cfg->fHUDOffsetY);
+	spd::log()->info("| {:<30} | {:>15} |", "SmallerHUD", re4t::cfg->bSmallerHUD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// AUDIO

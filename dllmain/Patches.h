@@ -32,6 +32,7 @@ namespace re4t
 		void Gameplay();
 		void HandleLimits();
 		void HDProject();
+		void HUDTweaks();
 		void KeyboardMouseTweaks();
 		void MathReimpl();
 		void Misc();
@@ -65,7 +66,7 @@ struct EndSceneHook
 
 	float _cur_monitor_dpi = 1.0f;
 
-	ImFont* ESP_font;
+	ImFont* ESP_font = nullptr;
 
 	ImGuiContext* _imgui_context = nullptr;
 };
