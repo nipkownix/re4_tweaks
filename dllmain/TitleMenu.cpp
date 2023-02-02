@@ -223,8 +223,8 @@ void re4t::init::TitleMenu()
 					IdSysPtr()->setTime(tex, 0); // fade in
 				}
 
-				IdSysPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-				IdSysPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->unitPtr(5u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->unitPtr(6u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
 			}
 
 			static void exitLevelMenu()
@@ -246,9 +246,9 @@ void re4t::init::TitleMenu()
 					IdSysPtr()->setTime(tex, 0);
 				}
 
-				IdSysPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->unitPtr(5u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
 				IdSysPtr()->setTime(IdSysPtr()->unitPtr(0x5u, IDC_OPTION_BG), 0);
-				IdSysPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->unitPtr(6u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
 				IdSysPtr()->setTime(IdSysPtr()->unitPtr(0x6u, IDC_OPTION_BG), 0);
 			}
 

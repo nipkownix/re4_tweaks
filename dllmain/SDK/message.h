@@ -139,4 +139,4 @@ public:
 };
 assert_size(MessageControl, 0x1340);
 
-extern MessageControl* cMes;
+MessageControl* MessageControlPtr(); // Game.cpp

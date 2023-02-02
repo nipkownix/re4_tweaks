@@ -496,9 +496,9 @@ bool UI_IDInspector::Init()
 	GLOBAL_WK* pG = GlobalPtr();
 	if (pG)
 	{
-		// default to IDC_TITLE when opening ID inspector at the title menu
-		if (pG->curRoomId_4FAC == 0x120)
-			IDClassIdx = 6;
+		// default to IDC_LIFE_METER outside the title menu
+		if (pG->curRoomId_4FAC != 0x120)
+			IDClassIdx = 5;
 	}
 	return true;
 }
@@ -582,10 +582,10 @@ bool UI_IDInspector::Render(bool WindowMode)
 	bool retVal = true; // set to false on window close
 
 	static const char* IDClassNames[] = {
-		"IDC_LIFE_METER", "IDC_BLLT_ICON", "IDC_LASER_GAUGE ", "IDC_ACT_BUTTON", "IDC_EVENT", "IDC_EVENT (MERCS)", "IDC_TITLE", "IDC_TITLE_MENU_0",
-		"IDC_TITLE_MENU_1", "IDC_OPTION", "IDC_OPTION_BG", "IDC_SCOPE", "IDC_BINOCULAR", "IDC_CINESCO", "IDC_COUNT_DOWN", "IDC_EXAMINE",
-		"IDC_DATA", "IDC_DEAD", "IDC_CONTINUE", "IDC_MSG_WINDOW", "IDC_WIP", "IDC_SUB_MISSION",
-		"IDC_GAUGE", "IDC_CAMERA_BATTERY",
+		"IDC_TITLE", "IDC_TITLE_MENU_0", "IDC_TITLE_MENU_1", "IDC_OPTION", "IDC_OPTION_BG",
+		"IDC_LIFE_METER", "IDC_BLLT_ICON", "IDC_LASER_GAUGE ", "IDC_ACT_BUTTON", "IDC_EVENT", "IDC_EVENT (MERCS)", "IDC_GAUGE", "IDC_SCOPE",
+		"IDC_BINOCULAR", "IDC_CINESCO", "IDC_COUNT_DOWN", "IDC_DEAD", "IDC_CONTINUE", "IDC_MSG_WINDOW", "IDC_WIP", "IDC_SUB_MISSION", "IDC_CAMERA_BATTERY", 
+		"IDC_EXAMINE", "IDC_DATA",
 		/*"IDC_SSCRN_MAIN_MENU",*/ "IDC_SSCRN_BACK_GROUND", "IDC_SSCRN_PESETA", "IDC_SSCRN_CONFIRM", "IDC_SSCRN_ETC", "IDC_SSCRN_NEAR_0", "IDC_SSCRN_NEAR_1",
 		"IDC_SSCRN_NEAR_2", "IDC_SSCRN_NEAR_3", "IDC_SSCRN_0", "IDC_SSCRN_1", "IDC_SSCRN_2", "IDC_SSCRN_3", "IDC_SSCRN_FAR_0", "IDC_SSCRN_FAR_1",
 		"IDC_SSCRN_FAR_2", "IDC_SSCRN_FAR_3", "IDC_SSCRN_CKPT_0", "IDC_SSCRN_CKPT_1", "IDC_SSCRN_CKPT_2", "IDC_SSCRN_CKPT_3",
@@ -603,30 +603,30 @@ bool UI_IDInspector::Render(bool WindowMode)
 
 		switch (IDClassIdx)
 		{
-		case  0: idClass = IDC_LIFE_METER; break;
-		case  1: idClass = IDC_BLLT_ICON; break;
-		case  2: idClass = IDC_LASER_GAUGE; break;
-		case  3: idClass = IDC_ACT_BUTTON; break;
-		case  4: idClass = IDC_EVENT; break;
-		case  5: idClass = IDC_EVENT; curIDSystem = &mercIdPtr()->_idSys; break;
-		case  6: idClass = IDC_TITLE; break;
-		case  7: idClass = IDC_TITLE_MENU_0; break;
-		case  8: idClass = IDC_TITLE_MENU_1; break;
-		case  9: idClass = IDC_OPTION; break;
-		case 10: idClass = IDC_OPTION_BG; break;
-		case 11: idClass = IDC_SCOPE; break;
-		case 12: idClass = IDC_BINOCULAR; break;
-		case 13: idClass = IDC_CINESCO; break;
-		case 14: idClass = IDC_COUNT_DOWN; break;
-		case 15: idClass = IDC_EXAMINE; break;
-		case 16: idClass = IDC_DATA; curIDSystem = IdSubPtr(); break;
-		case 17: idClass = IDC_DEAD; break;
-		case 18: idClass = IDC_CONTINUE; break;
-		case 19: idClass = IDC_MSG_WINDOW; break;
-		case 20: idClass = IDC_WIP; break;
-		case 21: idClass = IDC_SUB_MISSION; break;
-		case 22: idClass = IDC_GAUGE; curIDSystem = &mercIdPtr()->_idSys; break;
-		case 23: idClass = IDC_CAMERA_BATTERY_MB; break;
+		case  0: idClass = IDC_TITLE; break;
+		case  1: idClass = IDC_TITLE_MENU_0; break;
+		case  2: idClass = IDC_TITLE_MENU_1; break;
+		case  3: idClass = IDC_OPTION; break;
+		case  4: idClass = IDC_OPTION_BG; break;
+		case  5: idClass = IDC_LIFE_METER; break;
+		case  6: idClass = IDC_BLLT_ICON; break;
+		case  7: idClass = IDC_LASER_GAUGE; break;
+		case  8: idClass = IDC_ACT_BUTTON; break;
+		case  9: idClass = IDC_EVENT; break;
+		case 10: idClass = IDC_EVENT; curIDSystem = &mercIdPtr()->_idSys; break;
+		case 11: idClass = IDC_GAUGE; curIDSystem = &mercIdPtr()->_idSys; break;
+		case 12: idClass = IDC_SCOPE; break;
+		case 13: idClass = IDC_BINOCULAR; break;
+		case 14: idClass = IDC_CINESCO; break;
+		case 15: idClass = IDC_COUNT_DOWN; break;
+		case 16: idClass = IDC_DEAD; break;
+		case 17: idClass = IDC_CONTINUE; break;
+		case 18: idClass = IDC_MSG_WINDOW; break;
+		case 19: idClass = IDC_WIP; break;
+		case 20: idClass = IDC_SUB_MISSION; break;
+		case 21: idClass = IDC_CAMERA_BATTERY_MB; break;
+		case 22: idClass = IDC_EXAMINE; curIDSystem = IdSubPtr(); break;
+		case 23: idClass = IDC_DATA; curIDSystem = IdSubPtr(); break;
 		case 24: idClass = IDC_SSCRN_BACK_GROUND; curIDSystem = IdSubPtr(); break;
 		case 25: idClass = IDC_SSCRN_PESETA; curIDSystem = IdSubPtr(); break;
 		case 26: idClass = IDC_SSCRN_CONFIRM; curIDSystem = IdSubPtr(); break;

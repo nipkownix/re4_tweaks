@@ -17,7 +17,7 @@ void ApplyHUDEdits(ID_CLASS idClass, const HUDEditData* data, int size)
 {
 	for (int i = 0; i < size; ++i)
 	{
-		ID_UNIT* tex = IDSystemPtr()->unitPtr2(data[i].unitNo, idClass);
+		ID_UNIT* tex = IdSysPtr()->unitPtr2(data[i].unitNo, idClass);
 		if (data[i].posX != DEF) tex->pos0_94.x = data[i].posX;
 		if (data[i].posY != DEF) tex->pos0_94.y = data[i].posY;
 		if (data[i].sizeW != DEF) tex->size0_W_DC = data[i].sizeW;
@@ -27,8 +27,8 @@ void ApplyHUDEdits(ID_CLASS idClass, const HUDEditData* data, int size)
 
 void ShrinkIDClass(ID_CLASS idClass, float scale)
 {
-	ID_UNIT* tex = IDSystemPtr()->m_IdUnit_50;
-	for (int i = 0; i < IDSystemPtr()->m_maxId_0; ++i)
+	ID_UNIT* tex = IdSysPtr()->m_IdUnit_50;
+	for (int i = 0; i < IdSysPtr()->m_maxId_0; ++i)
 	{
 		if (tex->classNo_2 == idClass && tex->texId_78 != 0xFF)
 		{
@@ -120,7 +120,7 @@ extern float fGameDisplayAspectRatio;
 void SideAlignHUD()
 {
 	float fHudPosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) / 2.0f;
-	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x += fHudPosOffset;
+	IdSysPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x += fHudPosOffset;
 }
 
 float fDefaultHUDPosX;
@@ -128,22 +128,22 @@ float fDefaultHUDPosY;
 
 void OffsetHUD()
 {
-	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x = fDefaultHUDPosX + re4t::cfg->fHUDOffsetX;
-	IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y = fDefaultHUDPosY + re4t::cfg->fHUDOffsetY;
+	IdSysPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x = fDefaultHUDPosX + re4t::cfg->fHUDOffsetX;
+	IdSysPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y = fDefaultHUDPosY + re4t::cfg->fHUDOffsetY;
 }
 
 void re4t::HUDTweaks::UpdateHUDOffsets()
 {
-	if (IDSystemPtr()->setCk(IDC_LIFE_METER))
+	if (IdSysPtr()->setCk(IDC_LIFE_METER))
 		OffsetHUD();
 }
 
 void re4t::HUDTweaks::ResetLifeMeter()
 {
-	if (IDSystemPtr()->setCk(IDC_LIFE_METER))
+	if (IdSysPtr()->setCk(IDC_LIFE_METER))
 	{
-		IDSystemPtr()->kill(0xFF, IDC_LIFE_METER);
-		IDSystemPtr()->kill(0xFF, IDC_LASER_GAUGE);
+		IdSysPtr()->kill(0xFF, IDC_LIFE_METER);
+		IdSysPtr()->kill(0xFF, IDC_LASER_GAUGE);
 		Cckpt->m_LifeMeter_0.roomInit();
 		Cckpt->m_BlltInfo_6C.roomInit();
 	}
@@ -170,15 +170,15 @@ void re4t::init::HUDTweaks()
 					SideAlignHUD();
 
 				// Save the default HUD position
-				fDefaultHUDPosX = IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x;
-				fDefaultHUDPosY = IDSystemPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y;
+				fDefaultHUDPosX = IdSysPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.x;
+				fDefaultHUDPosY = IdSysPtr()->unitPtr(0u, IDC_LIFE_METER)->pos0_94.y;
 
 				// Reposition the HUD
 				if (re4t::cfg->bRepositionHUD)
 					OffsetHUD();
 
 				// Code we overwrote
-				regs.ecx = (uint32_t)IDSystemPtr();
+				regs.ecx = (uint32_t)IdSysPtr();
 			}
 		}; injector::MakeInline<BulletInfo__roomInit_hook>(pattern.count(1).get(0).get<uint32_t>(2), pattern.count(1).get(0).get<uint32_t>(7));
 
@@ -191,7 +191,7 @@ void re4t::init::HUDTweaks()
 					ShrinkBulletInfo();
 
 				// Code we overwrote
-				regs.ecx = (uint32_t)IDSystemPtr();
+				regs.ecx = (uint32_t)IdSysPtr();
 			}
 		}; injector::MakeInline<BulletInfo__move_hook>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(10));
 	}
@@ -209,10 +209,10 @@ void re4t::init::HUDTweaks()
 					ShrinkIDClass(IDC_ACT_BUTTON, 0.9f);
 
 					// grab prompt anchor
-					IDSystemPtr()->unitPtr(6u, IDC_ACT_BUTTON)->pos0_94.y = -90.5f;
+					IdSysPtr()->unitPtr(6u, IDC_ACT_BUTTON)->pos0_94.y = -90.5f;
 					// interact prompt anchor
-					IDSystemPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.x = -55.8f;
-					IDSystemPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.y = -148.1f;
+					IdSysPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.x = -55.8f;
+					IdSysPtr()->unitPtr(0x20u, IDC_ACT_BUTTON)->pos0_94.y = -148.1f;
 				}
 
 				// Code we overwrote
@@ -226,10 +226,10 @@ void re4t::init::HUDTweaks()
 			void operator()(injector::reg_pack& regs)
 			{
 				if (re4t::cfg->bSmallerActionPrompts)
-					cMes->setFontSize(1, 21, 29); // default font size: 23 x 32
+					MessageControlPtr()->setFontSize(1, 21, 29); // default font size: 23 x 32
 
 				// Code we overwrote
-				regs.ecx = (uint32_t)cMes;
+				regs.ecx = (uint32_t)MessageControlPtr();
 			}
 		}; injector::MakeInline<cActionButton__disp_hook>(pattern.count(1).get(0).get<uint32_t>(4), pattern.count(1).get(0).get<uint32_t>(9));
 	}
@@ -243,8 +243,8 @@ void re4t::init::HUDTweaks()
 			{
 				if (re4t::cfg->bHideZoomControlHints)
 				{
-					IDSystemPtr()->unitPtr(0x20u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x21u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x20u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x21u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
 
 					IdScope* thisptr = (IdScope*)regs.ecx;
 					thisptr->m_zoom_disp_C = 0; // hides the text
@@ -266,14 +266,14 @@ void re4t::init::HUDTweaks()
 				bool isEvent = FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_EVENT));
 				if (re4t::cfg->bHideZoomControlHints || isEvent)
 				{
-					IDSystemPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
 					regs.ef &= ~(1 << regs.zero_flag);
 				}
 				else
 				{
-					IDSystemPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
 					regs.ef |= (1 << regs.zero_flag);
 				}
 			}

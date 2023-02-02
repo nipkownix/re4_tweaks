@@ -139,6 +139,21 @@ public:
 };
 assert_size(IDSystem, 0x58);
 
+struct MercID
+{
+	uint32_t _eff_0;
+	uint32_t _uwf_4[3];
+	uint32_t* _addr_10;
+	IDSystem _idSys;
+};
+assert_size(MercID, 0x6C);
+
+// Game.cpp
+IDSystem* IdSysPtr();
+IDSystem* IdSubPtr();
+IDSystem* IdNumPtr();
+MercID* mercIdPtr();
+
 enum ID_CLASS
 {
 	IDC_SSCRN_MAIN_MENU = 0x0,
@@ -210,17 +225,6 @@ struct IdScope : IDApplication
 	bool m_zoom_disp_C;
 };
 assert_size(IdScope, 0x10);
-
-struct MercID
-{
-	uint32_t _eff_0;
-	uint32_t _uwf_4[3];
-	uint32_t* _addr_10;
-	IDSystem _idSys;
-};
-assert_size(MercID, 0x6C);
-
-extern MercID* MercID_ptr;
 
 struct ID_FILE_HEADER
 {
