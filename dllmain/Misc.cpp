@@ -1216,8 +1216,8 @@ void re4t::init::Misc()
 			{
 				if (re4t::cfg->bHideZoomControlHints)
 				{
-					IDSystemPtr()->unitPtr(0x20u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x21u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x20u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x21u, IDC_SCOPE)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
 
 					IdScope* thisptr = (IdScope*)regs.ecx;
 					thisptr->m_zoom_disp_C = 0; // hides the text
@@ -1239,14 +1239,14 @@ void re4t::init::Misc()
 				bool isEvent = FlagIsSet(GlobalPtr()->flags_STATUS_0_501C, uint32_t(Flags_STATUS::STA_EVENT));
 				if (re4t::cfg->bHideZoomControlHints || isEvent)
 				{
-					IDSystemPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
 					regs.ef &= ~(1 << regs.zero_flag);
 				}
 				else
 				{
-					IDSystemPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
-					IDSystemPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x30u, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+					IdSysPtr()->unitPtr(0x1Bu, IDC_BINOCULAR)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
 					regs.ef |= (1 << regs.zero_flag);
 				}
 			}

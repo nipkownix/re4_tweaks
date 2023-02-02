@@ -524,10 +524,22 @@ TITLE_WORK* TitleWorkPtr()
 	return TitleWork_ptr;
 }
 
-IDSystem* IDSystem_ptr = nullptr;
-IDSystem* IDSystemPtr()
+IDSystem* IdSys_ptr = nullptr;
+IDSystem* IdSysPtr()
 {
-	return IDSystem_ptr;
+	return IdSys_ptr;
+}
+
+IDSystem* IdSub_ptr = nullptr;
+IDSystem* IdSubPtr()
+{
+	return IdSub_ptr;
+}
+
+IDSystem* IdNum_ptr = nullptr;
+IDSystem* IdNumPtr()
+{
+	return IdNum_ptr;
 }
 
 MercID* mercId_ptr = nullptr;
@@ -983,10 +995,6 @@ bool re4t::init::Game()
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 E8 ? ? ? ? 8B 0D ? ? ? ? F7 81 ? ? ? ? ? ? ? ? 74");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::KeyStop);
 
-	// Pointer to IDSystem
-	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
-	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
-
 	// pointer to IDSystem::set
 	pattern = hook::pattern("E8 ? ? ? ? 6A 29 68 FE 00 00 00 B9");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__set);
@@ -1002,6 +1010,18 @@ bool re4t::init::Game()
 	// pointer to IDSystem::setTime
 	pattern = hook::pattern("E8 ? ? ? ? FE 46 01 5F 5E 8B E5 ");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__setTime);
+
+	// pointer to IdSys
+	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
+	IdSys_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
+
+	// pointer to IdSub
+	pattern = hook::pattern("8D 48 FF 80 F9 01 77 ? C7 ? ? ? ? ? EB");
+	IdSub_ptr = *pattern.count(1).get(0).get<IDSystem*>(10);
+
+	// pointer to IdNum
+	pattern = hook::pattern("83 C4 08 B9 ? ? ? ? 39");
+	IdNum_ptr = *pattern.count(1).get(0).get<IDSystem*>(4);
 
 	// pointer to mercId
 	pattern = hook::pattern("83 C4 18 6A 60 B9");

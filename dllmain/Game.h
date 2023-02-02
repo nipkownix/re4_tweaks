@@ -86,10 +86,12 @@ cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
-IDSystem* IDSystemPtr();
+IDSystem* IdSysPtr();
+IDSystem* IdSubPtr();
+IDSystem* IdNumPtr();
 MercID* mercIdPtr();
 FADE_WORK* FadeWorkPtr(FADE_NO no);
-IDSystem* IDSystemPtr();
+IDSystem* IdSysPtr();
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 

@@ -11,7 +11,7 @@ void __cdecl titleLoop_hook(TITLE_WORK* pT)
 	if (UIPause)
 		return;
 
-	ID_UNIT* tex = IDSystemPtr()->unitPtr(0x6u, IDC_TITLE);
+	ID_UNIT* tex = IdSysPtr()->unitPtr(0x6u, IDC_TITLE);
 
 	if (re4t::cfg->bRestoreAnalogTitleScroll)
 	{
@@ -210,7 +210,7 @@ void re4t::init::TitleMenu()
 
 				for (int i = 0; i < 4; ++i)
 				{
-					ID_UNIT* tex = IDSystemPtr()->unitPtr(i + 1, IDC_OPTION_BG);
+					ID_UNIT* tex = IdSysPtr()->unitPtr(i + 1, IDC_OPTION_BG);
 
 					texId_orig[i] = tex->texId_78;
 					texW_orig[i] = tex->size0_W_DC;
@@ -220,11 +220,11 @@ void re4t::init::TitleMenu()
 					tex->size0_W_DC = texW[i];
 					tex->size0_H_E0 = 14;
 					tex->pos0_94.y -= 14;
-					IDSystemPtr()->setTime(tex, 0); // fade in
+					IdSysPtr()->setTime(tex, 0); // fade in
 				}
 
-				IDSystemPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
-				IDSystemPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 &= ~ID_BE_FLAG_VISIBLE;
 			}
 
 			static void exitLevelMenu()
@@ -237,19 +237,19 @@ void re4t::init::TitleMenu()
 
 				for (int i = 0; i < 4; ++i)
 				{
-					ID_UNIT* tex = IDSystemPtr()->unitPtr(i + 1, IDC_OPTION_BG);
+					ID_UNIT* tex = IdSysPtr()->unitPtr(i + 1, IDC_OPTION_BG);
 
 					tex->texId_78 = texId_orig[i];
 					tex->size0_W_DC = texW_orig[i];
 					tex->size0_H_E0 = texH_orig[i];
 					tex->pos0_94.y += 14;
-					IDSystemPtr()->setTime(tex, 0);
+					IdSysPtr()->setTime(tex, 0);
 				}
 
-				IDSystemPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
-				IDSystemPtr()->setTime(IDSystemPtr()->unitPtr(0x5u, IDC_OPTION_BG), 0);
-				IDSystemPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
-				IDSystemPtr()->setTime(IDSystemPtr()->unitPtr(0x6u, IDC_OPTION_BG), 0);
+				IdSysPtr()->unitPtr(0x5u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->setTime(IdSysPtr()->unitPtr(0x5u, IDC_OPTION_BG), 0);
+				IdSysPtr()->unitPtr(0x6u, IDC_OPTION_BG)->be_flag_0 |= ID_BE_FLAG_VISIBLE;
+				IdSysPtr()->setTime(IdSysPtr()->unitPtr(0x6u, IDC_OPTION_BG), 0);
 			}
 
 			// replaces most of the input code in titleAda routine 5

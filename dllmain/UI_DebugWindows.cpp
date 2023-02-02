@@ -582,16 +582,15 @@ bool UI_IDInspector::Render(bool WindowMode)
 	bool retVal = true; // set to false on window close
 
 	static const char* IDClassNames[] = {
-		"IDC_LIFE_METER", "IDC_BLLT_ICON", "IDC_LASER_GAUGE ", "IDC_ACT_BUTTON", "IDC_EVENT", "IDC_EVENT (MERCS)", "IDC_TITLE", "IDC_TITLE_MENU",
-		"IDC_PRICE_01|IDC_SSCRN_FAR_0", "IDC_PRICE_02|IDC_TITLE", "IDC_PRICE_00|IDC_ACT_BUTTON",
-		"IDC_OPTION", "IDC_OPTION_BG", "IDC_SCOPE", "IDC_BINOCULAR", "IDC_CINESCO", "IDC_COUNT_DOWN", "IDC_EXAMINE",
+		"IDC_LIFE_METER", "IDC_BLLT_ICON", "IDC_LASER_GAUGE ", "IDC_ACT_BUTTON", "IDC_EVENT", "IDC_EVENT (MERCS)", "IDC_TITLE", "IDC_TITLE_MENU_0",
+		"IDC_TITLE_MENU_1", "IDC_OPTION", "IDC_OPTION_BG", "IDC_SCOPE", "IDC_BINOCULAR", "IDC_CINESCO", "IDC_COUNT_DOWN", "IDC_EXAMINE",
 		"IDC_DATA", "IDC_DEAD", "IDC_CONTINUE", "IDC_MSG_WINDOW", "IDC_WIP", "IDC_SUB_MISSION",
 		"IDC_GAUGE", "IDC_CAMERA_BATTERY",
 		/*"IDC_SSCRN_MAIN_MENU",*/ "IDC_SSCRN_BACK_GROUND", "IDC_SSCRN_PESETA", "IDC_SSCRN_CONFIRM", "IDC_SSCRN_ETC", "IDC_SSCRN_NEAR_0", "IDC_SSCRN_NEAR_1",
 		"IDC_SSCRN_NEAR_2", "IDC_SSCRN_NEAR_3", "IDC_SSCRN_0", "IDC_SSCRN_1", "IDC_SSCRN_2", "IDC_SSCRN_3", "IDC_SSCRN_FAR_0", "IDC_SSCRN_FAR_1",
 		"IDC_SSCRN_FAR_2", "IDC_SSCRN_FAR_3", "IDC_SSCRN_CKPT_0", "IDC_SSCRN_CKPT_1", "IDC_SSCRN_CKPT_2", "IDC_SSCRN_CKPT_3",
 		"IDC_NUM_00", "IDC_NUM_61", "IDC_PRICE_00", "IDC_PRICE_01", "IDC_PRICE_02", "IDC_PRICE_03", "IDC_PRICE_04", "IDC_TOOL",
-		"IDC_NUM_00|IDC_SSCRN_BACK_GROUND", "IDC_NUM_00|IDC_SSCRN_ETC|IDC_SSCRN_CONFIRM",
+		"IDC_UNK_41", "IDC_UNK_47", "IDC_UNK_AA", "IDC_UNK_A0",
 		"IDC_ANY"
 	};
 
@@ -600,7 +599,7 @@ bool UI_IDInspector::Render(bool WindowMode)
 		unitPtrs.clear();
 
 		ID_CLASS idClass = IDC_ANY;
-		bool isMercs = false;
+		curIDSystem = IdSysPtr();
 
 		switch (IDClassIdx)
 		{
@@ -609,61 +608,60 @@ bool UI_IDInspector::Render(bool WindowMode)
 		case  2: idClass = IDC_LASER_GAUGE; break;
 		case  3: idClass = IDC_ACT_BUTTON; break;
 		case  4: idClass = IDC_EVENT; break;
-		case  5: idClass = IDC_EVENT; isMercs = true; break;
+		case  5: idClass = IDC_EVENT; curIDSystem = &mercIdPtr()->_idSys; break;
 		case  6: idClass = IDC_TITLE; break;
-		case  7: idClass = IDC_TITLE_MENU; break;
-		case  8: idClass = (ID_CLASS)(IDC_PRICE_01 | IDC_SSCRN_FAR_0); break;
-		case  9: idClass = (ID_CLASS)(IDC_PRICE_02 | IDC_TITLE); break;
-		case 10: idClass = (ID_CLASS)(IDC_PRICE_00 | IDC_ACT_BUTTON); break;
-		case 11: idClass = IDC_OPTION; break;
-		case 12: idClass = IDC_OPTION_BG; break;
-		case 13: idClass = IDC_SCOPE; break;
-		case 14: idClass = IDC_BINOCULAR; break;
-		case 15: idClass = IDC_CINESCO; break;
-		case 16: idClass = IDC_COUNT_DOWN; break;
-		case 17: idClass = IDC_EXAMINE; break;
-		case 18: idClass = IDC_DATA; break;
-		case 19: idClass = IDC_DEAD; break;
-		case 20: idClass = IDC_CONTINUE; break;
-		case 21: idClass = IDC_MSG_WINDOW; break;
-		case 22: idClass = IDC_WIP; break;
-		case 23: idClass = IDC_SUB_MISSION; break;
-		case 24: idClass = IDC_GAUGE; break;
-		case 25: idClass = IDC_CAMERA_BATTERY_MB; break;
-		case 26: idClass = IDC_SSCRN_BACK_GROUND; break;
-		case 27: idClass = IDC_SSCRN_PESETA; break;
-		case 28: idClass = IDC_SSCRN_CONFIRM; break;
-		case 29: idClass = IDC_SSCRN_ETC; break;
-		case 30: idClass = IDC_SSCRN_NEAR_0; break;
-		case 31: idClass = IDC_SSCRN_NEAR_1; break;
-		case 32: idClass = IDC_SSCRN_NEAR_2; break;
-		case 33: idClass = IDC_SSCRN_NEAR_3; break;
-		case 34: idClass = IDC_SSCRN_0; break;
-		case 35: idClass = IDC_SSCRN_1; break;
-		case 36: idClass = IDC_SSCRN_2; break;
-		case 37: idClass = IDC_SSCRN_3; break;
-		case 38: idClass = IDC_SSCRN_FAR_0; break;
-		case 39: idClass = IDC_SSCRN_FAR_1; break;
-		case 40: idClass = IDC_SSCRN_FAR_2; break;
-		case 41: idClass = IDC_SSCRN_FAR_3; break;
-		case 42: idClass = IDC_SSCRN_CKPT_0; break;
-		case 43: idClass = IDC_SSCRN_CKPT_1; break;
-		case 44: idClass = IDC_SSCRN_CKPT_2; break;
-		case 45: idClass = IDC_SSCRN_CKPT_3; break;
-		case 46: idClass = IDC_NUM_00; break;
-		case 47: idClass = IDC_NUM_61; break;
-		case 48: idClass = IDC_PRICE_00; break;
-		case 49: idClass = IDC_PRICE_01; break;
-		case 50: idClass = IDC_PRICE_02; break;
-		case 51: idClass = IDC_PRICE_03; break;
-		case 52: idClass = IDC_PRICE_04; break;
-		case 53: idClass = IDC_TOOL; break;
-		case 54: idClass = (ID_CLASS)(IDC_NUM_00 | IDC_SSCRN_BACK_GROUND); break;
-		case 55: idClass = (ID_CLASS)(IDC_NUM_00 | IDC_SSCRN_ETC | IDC_SSCRN_CONFIRM); break;
+		case  7: idClass = IDC_TITLE_MENU_0; break;
+		case  8: idClass = IDC_TITLE_MENU_1; break;
+		case  9: idClass = IDC_OPTION; break;
+		case 10: idClass = IDC_OPTION_BG; break;
+		case 11: idClass = IDC_SCOPE; break;
+		case 12: idClass = IDC_BINOCULAR; break;
+		case 13: idClass = IDC_CINESCO; break;
+		case 14: idClass = IDC_COUNT_DOWN; break;
+		case 15: idClass = IDC_EXAMINE; break;
+		case 16: idClass = IDC_DATA; curIDSystem = IdSubPtr(); break;
+		case 17: idClass = IDC_DEAD; break;
+		case 18: idClass = IDC_CONTINUE; break;
+		case 19: idClass = IDC_MSG_WINDOW; break;
+		case 20: idClass = IDC_WIP; break;
+		case 21: idClass = IDC_SUB_MISSION; break;
+		case 22: idClass = IDC_GAUGE; curIDSystem = &mercIdPtr()->_idSys; break;
+		case 23: idClass = IDC_CAMERA_BATTERY_MB; break;
+		case 24: idClass = IDC_SSCRN_BACK_GROUND; curIDSystem = IdSubPtr(); break;
+		case 25: idClass = IDC_SSCRN_PESETA; curIDSystem = IdSubPtr(); break;
+		case 26: idClass = IDC_SSCRN_CONFIRM; curIDSystem = IdSubPtr(); break;
+		case 27: idClass = IDC_SSCRN_ETC; curIDSystem = IdSubPtr(); break;
+		case 28: idClass = IDC_SSCRN_NEAR_0; curIDSystem = IdSubPtr(); break;
+		case 29: idClass = IDC_SSCRN_NEAR_1; curIDSystem = IdSubPtr(); break;
+		case 30: idClass = IDC_SSCRN_NEAR_2; curIDSystem = IdSubPtr(); break;
+		case 31: idClass = IDC_SSCRN_NEAR_3; curIDSystem = IdSubPtr(); break;
+		case 32: idClass = IDC_SSCRN_0; curIDSystem = IdSubPtr(); break;
+		case 33: idClass = IDC_SSCRN_1; curIDSystem = IdSubPtr(); break;
+		case 34: idClass = IDC_SSCRN_2; curIDSystem = IdSubPtr(); break;
+		case 35: idClass = IDC_SSCRN_3; curIDSystem = IdSubPtr(); break;
+		case 36: idClass = IDC_SSCRN_FAR_0; curIDSystem = IdSubPtr(); break;
+		case 37: idClass = IDC_SSCRN_FAR_1; curIDSystem = IdSubPtr(); break;
+		case 38: idClass = IDC_SSCRN_FAR_2; curIDSystem = IdSubPtr(); break;
+		case 39: idClass = IDC_SSCRN_FAR_3; curIDSystem = IdSubPtr(); break;
+		case 40: idClass = IDC_SSCRN_CKPT_0; curIDSystem = IdSubPtr(); break;
+		case 41: idClass = IDC_SSCRN_CKPT_1; curIDSystem = IdSubPtr(); break;
+		case 42: idClass = IDC_SSCRN_CKPT_2; curIDSystem = IdSubPtr(); break;
+		case 43: idClass = IDC_SSCRN_CKPT_3; curIDSystem = IdSubPtr(); break;
+		case 44: idClass = IDC_NUM_00; curIDSystem = IdNumPtr(); break;
+		case 45: idClass = IDC_NUM_61; curIDSystem = IdNumPtr(); break;
+		case 46: idClass = IDC_PRICE_00; curIDSystem = IdSubPtr(); break;
+		case 47: idClass = IDC_PRICE_01; curIDSystem = IdSubPtr(); break;
+		case 48: idClass = IDC_PRICE_02; curIDSystem = IdSubPtr(); break;
+		case 49: idClass = IDC_PRICE_03; curIDSystem = IdSubPtr(); break;
+		case 50: idClass = IDC_PRICE_04; curIDSystem = IdSubPtr(); break;
+		case 51: idClass = IDC_TOOL; break;
+		case 52: idClass = IDC_UNK_41; break;
+		case 53: idClass = IDC_UNK_47; break;
+		case 54: idClass = IDC_UNK_AA; break;
+		case 55: idClass = IDC_UNK_A0; break;
 		case 56: idClass = IDC_ANY;
 		}
 
-		curIDSystem = isMercs ? &mercIdPtr()->_idSys : IDSystemPtr();
 		ID_UNIT* tex = curIDSystem->m_IdUnit_50;
 
 		for (int i = 0; i < curIDSystem->m_maxId_0; ++i)
@@ -880,8 +878,8 @@ bool UI_IDInspector::Render(bool WindowMode)
 			if (ImGui::Checkbox("Visible", &visible))
 				selectedId->be_flag_0 ^= ID_BE_FLAG_VISIBLE;
 
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("(Hold Ctrl to make faster edits)").x - 10.0f);
-			ImGui::Text("(Hold Ctrl to make faster edits)");
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("(Hold Ctrl to make larger adjustments)").x - 10.0f);
+			ImGui::Text("(Hold Ctrl to make larger adjustments)");
 
 			static bool maintainAspectRatio = true;
 
