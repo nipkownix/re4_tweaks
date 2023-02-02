@@ -1248,6 +1248,10 @@ void Trainer_Update()
 			CamXYZbackup[1] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
 			CamXYZbackup[2] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
 
+			// Update camera Y coord - our patched freecam no longer orbits, making same position result in camera being lowered
+			// As a workaround we'll just increase Y coord to roughly above player char
+			CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3] += 2000.f;
+
 			// Backup original collision flags and then unset collision-enabled bit
 			if (!pl_atariInfoFlagSet)
 			{
