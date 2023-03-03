@@ -64,6 +64,15 @@ void UI_NewGlobalsViewer()
 	bImGuiUIFocus = true;
 }
 
+void UI_NewIDInspector()
+{
+	static int id = 0;
+	std::string windowTitle = "ID Inspector " + std::to_string(id++);
+	NewWindows.push_back(new UI_IDInspector(windowTitle));
+
+	bImGuiUIFocus = false;
+}
+
 void UI_NewAreaJump()
 {
 	static int id = 0;

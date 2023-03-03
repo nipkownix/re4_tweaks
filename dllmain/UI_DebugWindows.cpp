@@ -3,6 +3,8 @@
 #include "Settings.h"
 #include "SDK/room_jmp.h"
 #include "SDK/filter00.h"
+#include "ConsoleWnd.h"
+#include <FAhashes.h>
 
 void UI_Window::UpdateWindowTitle()
 {
@@ -489,6 +491,475 @@ bool UI_EmManager::Render(bool WindowMode)
 	return retVal;
 }
 
+bool UI_IDInspector::Init()
+{
+	GLOBAL_WK* pG = GlobalPtr();
+	if (pG)
+	{
+		// default to IDC_LIFE_METER outside the title menu
+		if (pG->curRoomId_4FAC != 0x120)
+			IDClassIdx = 5;
+	}
+	return true;
+}
+
+void UI_IDInspector::DrawTree(int idx)
+{
+	ID_UNIT* node = unitPtrs[idx];
+
+	std::vector<int> childrenNos = {};
+	for (size_t i = idx; i < unitPtrs.size(); ++i)
+	{
+		if (unitPtrs[i]->parentNo_6 == node->unitNo_1)
+			childrenNos.push_back(i);
+	}
+	bool hasChildren = childrenNos.size() > 0;
+
+	ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding;
+
+	bool selected = selectedId == unitPtrs[idx];
+	if (selected)
+		treeFlags |= ImGuiTreeNodeFlags_Selected;
+
+	if (hasChildren)
+		treeFlags |= ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+	else
+		treeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+	char label[32];
+	sprintf(label, node->texId_78 == 0xFF ? "Anchor %d" : "Tex %d", node->unitNo_1);
+
+	ImGui::TableNextRow();
+
+	// unitNo
+	ImGui::TableNextColumn();
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 0.0f));
+	bool open = ImGui::TreeNodeEx(label, treeFlags);
+	ImGui::PopStyleVar();
+
+	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+	{
+		selectedId = node;
+		undoCopy = *selectedId;;
+	}
+
+	// markNo
+	ImGui::TableNextColumn();
+	if (node->markNo_3 != 0xFF)
+		ImGui::Text("%Xh", node->markNo_3);
+	else
+		ImGui::TextDisabled("--");
+
+	// texId
+	ImGui::TableNextColumn();
+	if (node->texId_78 != 0xFF)
+		ImGui::Text("%d", node->texId_78);
+	else
+		ImGui::TextDisabled("--");
+
+	// size
+	ImGui::TableNextColumn();
+	if (node->size0_H_E0 > 0)
+		ImGui::Text("%.0f x %.0f", node->size0_W_DC, node->size0_H_E0);
+	else
+		ImGui::TextDisabled("--");
+
+	if (hasChildren && open)
+	{
+		for (size_t i = 0; i < childrenNos.size(); ++i)
+		{
+			DrawTree(childrenNos[i]);
+		}
+
+		ImGui::Unindent(3.0f);
+		ImGui::TreePop();
+		ImGui::Indent(3.0f);
+	}
+}
+
+bool UI_IDInspector::Render(bool WindowMode)
+{
+	bool retVal = true; // set to false on window close
+
+	static const char* IDClassNames[] = {
+		"IDC_TITLE", "IDC_TITLE_MENU_0", "IDC_TITLE_MENU_1", "IDC_OPTION", "IDC_OPTION_BG",
+		"IDC_LIFE_METER", "IDC_BLLT_ICON", "IDC_LASER_GAUGE ", "IDC_ACT_BUTTON", "IDC_EVENT", "IDC_EVENT (MERCS)", "IDC_GAUGE", "IDC_SCOPE",
+		"IDC_BINOCULAR", "IDC_CINESCO", "IDC_COUNT_DOWN", "IDC_DEAD", "IDC_CONTINUE", "IDC_MSG_WINDOW", "IDC_WIP", "IDC_SUB_MISSION", "IDC_CAMERA_BATTERY", 
+		"IDC_EXAMINE", "IDC_DATA",
+		/*"IDC_SSCRN_MAIN_MENU",*/ "IDC_SSCRN_BACK_GROUND", "IDC_SSCRN_PESETA", "IDC_SSCRN_CONFIRM", "IDC_SSCRN_ETC", "IDC_SSCRN_NEAR_0", "IDC_SSCRN_NEAR_1",
+		"IDC_SSCRN_NEAR_2", "IDC_SSCRN_NEAR_3", "IDC_SSCRN_0", "IDC_SSCRN_1", "IDC_SSCRN_2", "IDC_SSCRN_3", "IDC_SSCRN_FAR_0", "IDC_SSCRN_FAR_1",
+		"IDC_SSCRN_FAR_2", "IDC_SSCRN_FAR_3", "IDC_SSCRN_CKPT_0", "IDC_SSCRN_CKPT_1", "IDC_SSCRN_CKPT_2", "IDC_SSCRN_CKPT_3",
+		"IDC_NUM_00", "IDC_NUM_61", "IDC_PRICE_00", "IDC_PRICE_01", "IDC_PRICE_02", "IDC_PRICE_03", "IDC_PRICE_04", "IDC_TOOL",
+		"IDC_UNK_41", "IDC_UNK_47", "IDC_UNK_AA", "IDC_UNK_A0",
+		"IDC_ANY"
+	};
+
+	auto updateUnitPtrs = [&]()
+	{
+		unitPtrs.clear();
+
+		ID_CLASS idClass = IDC_ANY;
+		curIDSystem = IdSysPtr();
+
+		switch (IDClassIdx)
+		{
+		case  0: idClass = IDC_TITLE; break;
+		case  1: idClass = IDC_TITLE_MENU_0; break;
+		case  2: idClass = IDC_TITLE_MENU_1; break;
+		case  3: idClass = IDC_OPTION; break;
+		case  4: idClass = IDC_OPTION_BG; break;
+		case  5: idClass = IDC_LIFE_METER; break;
+		case  6: idClass = IDC_BLLT_ICON; break;
+		case  7: idClass = IDC_LASER_GAUGE; break;
+		case  8: idClass = IDC_ACT_BUTTON; break;
+		case  9: idClass = IDC_EVENT; break;
+		case 10: idClass = IDC_EVENT; curIDSystem = &mercIdPtr()->_idSys; break;
+		case 11: idClass = IDC_GAUGE; curIDSystem = &mercIdPtr()->_idSys; break;
+		case 12: idClass = IDC_SCOPE; break;
+		case 13: idClass = IDC_BINOCULAR; break;
+		case 14: idClass = IDC_CINESCO; break;
+		case 15: idClass = IDC_COUNT_DOWN; break;
+		case 16: idClass = IDC_DEAD; break;
+		case 17: idClass = IDC_CONTINUE; break;
+		case 18: idClass = IDC_MSG_WINDOW; break;
+		case 19: idClass = IDC_WIP; break;
+		case 20: idClass = IDC_SUB_MISSION; break;
+		case 21: idClass = IDC_CAMERA_BATTERY_MB; break;
+		case 22: idClass = IDC_EXAMINE; curIDSystem = IdSubPtr(); break;
+		case 23: idClass = IDC_DATA; curIDSystem = IdSubPtr(); break;
+		case 24: idClass = IDC_SSCRN_BACK_GROUND; curIDSystem = IdSubPtr(); break;
+		case 25: idClass = IDC_SSCRN_PESETA; curIDSystem = IdSubPtr(); break;
+		case 26: idClass = IDC_SSCRN_CONFIRM; curIDSystem = IdSubPtr(); break;
+		case 27: idClass = IDC_SSCRN_ETC; curIDSystem = IdSubPtr(); break;
+		case 28: idClass = IDC_SSCRN_NEAR_0; curIDSystem = IdSubPtr(); break;
+		case 29: idClass = IDC_SSCRN_NEAR_1; curIDSystem = IdSubPtr(); break;
+		case 30: idClass = IDC_SSCRN_NEAR_2; curIDSystem = IdSubPtr(); break;
+		case 31: idClass = IDC_SSCRN_NEAR_3; curIDSystem = IdSubPtr(); break;
+		case 32: idClass = IDC_SSCRN_0; curIDSystem = IdSubPtr(); break;
+		case 33: idClass = IDC_SSCRN_1; curIDSystem = IdSubPtr(); break;
+		case 34: idClass = IDC_SSCRN_2; curIDSystem = IdSubPtr(); break;
+		case 35: idClass = IDC_SSCRN_3; curIDSystem = IdSubPtr(); break;
+		case 36: idClass = IDC_SSCRN_FAR_0; curIDSystem = IdSubPtr(); break;
+		case 37: idClass = IDC_SSCRN_FAR_1; curIDSystem = IdSubPtr(); break;
+		case 38: idClass = IDC_SSCRN_FAR_2; curIDSystem = IdSubPtr(); break;
+		case 39: idClass = IDC_SSCRN_FAR_3; curIDSystem = IdSubPtr(); break;
+		case 40: idClass = IDC_SSCRN_CKPT_0; curIDSystem = IdSubPtr(); break;
+		case 41: idClass = IDC_SSCRN_CKPT_1; curIDSystem = IdSubPtr(); break;
+		case 42: idClass = IDC_SSCRN_CKPT_2; curIDSystem = IdSubPtr(); break;
+		case 43: idClass = IDC_SSCRN_CKPT_3; curIDSystem = IdSubPtr(); break;
+		case 44: idClass = IDC_NUM_00; curIDSystem = IdNumPtr(); break;
+		case 45: idClass = IDC_NUM_61; curIDSystem = IdNumPtr(); break;
+		case 46: idClass = IDC_PRICE_00; curIDSystem = IdSubPtr(); break;
+		case 47: idClass = IDC_PRICE_01; curIDSystem = IdSubPtr(); break;
+		case 48: idClass = IDC_PRICE_02; curIDSystem = IdSubPtr(); break;
+		case 49: idClass = IDC_PRICE_03; curIDSystem = IdSubPtr(); break;
+		case 50: idClass = IDC_PRICE_04; curIDSystem = IdSubPtr(); break;
+		case 51: idClass = IDC_TOOL; break;
+		case 52: idClass = IDC_UNK_41; break;
+		case 53: idClass = IDC_UNK_47; break;
+		case 54: idClass = IDC_UNK_AA; break;
+		case 55: idClass = IDC_UNK_A0; break;
+		case 56: idClass = IDC_ANY;
+		}
+
+		ID_UNIT* tex = curIDSystem->m_IdUnit_50;
+
+		for (int i = 0; i < curIDSystem->m_maxId_0; ++i)
+		{
+			if (tex->classNo_2 == idClass)
+				unitPtrs.push_back(tex);
+
+			++tex;
+		}
+	};
+
+	const float min_x = 400.0f * esHook._cur_monitor_dpi;
+	const float min_y = 75.0f * esHook._cur_monitor_dpi;
+
+	const float max_x = 400.0f * esHook._cur_monitor_dpi;
+	const float max_y = 750.0f * esHook._cur_monitor_dpi;
+
+	ImGui::SetNextWindowSizeConstraints(ImVec2(min_x, min_y), ImVec2(max_x, max_y));
+
+	ImGui::SetNextWindowBgAlpha(backgroundOpacity); // Background transparency
+
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
+
+	ImGui::Begin(windowTitle.c_str(), &retVal, window_flags);
+	{
+		updateUnitPtrs();
+
+		ImGui::Separator();
+
+		ImGui::PushItemWidth(225 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+		if (ImGui::BeginCombo("ID_CLASS", IDClassNames[IDClassIdx], ImGuiComboFlags_HeightLarge))
+		{
+			for (int i = 0; i < IM_ARRAYSIZE(IDClassNames); ++i)
+			{
+				bool selected = false;
+				if (ImGui::Selectable(IDClassNames[i], &selected))
+				{
+					if (selected)
+					{
+						IDClassIdx = i;
+
+						updateUnitPtrs();
+						if (!unitPtrs.empty())
+						{
+							selectedId = unitPtrs[0];
+							undoCopy = *selectedId;;
+						}
+					}
+				}
+			}
+			ImGui::EndCombo();
+		}
+		if (ImGui::IsItemHovered())
+		{
+			IDClassIdx -= (int)ImGui::GetIO().MouseWheel;
+			IDClassIdx = std::clamp(IDClassIdx, 0, IM_ARRAYSIZE(IDClassNames) - 1);
+		}
+		ImGui::PopItemWidth();
+
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
+
+		if (!unitPtrs.empty())
+		{
+			if (!selectedId)
+			{
+				selectedId = unitPtrs[0];
+				undoCopy = *selectedId;
+			}
+
+			static bool tableView = false;
+			static ImVec4 activeCol = ImColor(150, 10, 40, 255);
+			static ImVec4 inactiveCol = ImColor(31, 30, 31, 0);
+			ImGui::PushStyleColor(ImGuiCol_Button, !tableView ? activeCol : inactiveCol);
+			if (ImGui::Button("Tree view"))
+				tableView = false;
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, tableView ? activeCol : inactiveCol);
+			if (ImGui::Button("Table view"))
+				tableView = true;
+			ImGui::PopStyleColor();
+
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY
+				|  ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_RowBg;
+
+			ImVec2 outerSize = ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing() * 14.5f);
+			if (!tableView && ImGui::BeginTable("##IDTreeView", 4, tableFlags, outerSize))
+			{
+				ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+				ImGui::TableSetupColumn("unitNo", ImGuiTableColumnFlags_WidthFixed, 155.0f);
+				ImGui::TableSetupColumn("markNo", ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("texId",  ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("size",   ImGuiTableColumnFlags_WidthFixed, 0.0f);
+				ImGui::TableHeadersRow();
+
+				for (size_t i = 0; i < unitPtrs.size(); ++i)
+				{
+					if (unitPtrs[i]->pParent_68 == nullptr || unitPtrs[i]->pParent_68->classNo_2 != unitPtrs[i]->classNo_2)
+						DrawTree(i);
+				}
+
+				ImGui::EndTable();
+			}
+
+			tableFlags |= ImGuiTableFlags_ScrollX | ImGuiTableFlags_Reorderable;
+			// todo: add support for sorting by column
+			//tableFlags |= ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SortTristate | ImGuiTableFlags_SortMulti
+			if (tableView && ImGui::BeginTable("##IDTable", 11, tableFlags, outerSize))
+			{
+				ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+				ImGui::TableSetupColumn("unitNo",      ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("markNo",      ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("texId",       ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("parentNo",    ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("parentClass", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+				ImGui::TableSetupColumn("levelNo",     ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("rowNo",       ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("type",        ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("texNo",       ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				//ImGui::TableSetupColumn("color",       ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("loop_flag",   ImGuiTableColumnFlags_WidthFixed, 50.0f);
+				ImGui::TableSetupColumn("size",        ImGuiTableColumnFlags_WidthFixed, 0.0f);
+				ImGui::TableHeadersRow();
+
+				for (size_t i = 0; i < unitPtrs.size(); i++)
+				{
+					bool selected = unitPtrs[i] == selectedId;
+
+					ImGui::TableNextRow();
+
+					// unitNo
+					ImGui::TableNextColumn();
+					if (ImGui::Selectable(std::to_string(unitPtrs[i]->unitNo_1).c_str(), &selected, ImGuiSelectableFlags_SpanAllColumns))
+					{
+						if (selected)
+						{
+							selectedId = unitPtrs[i];
+							undoCopy = *selectedId;;
+						}
+					}
+
+					// markNo
+					ImGui::TableNextColumn();
+					if (unitPtrs[i]->markNo_3 != 0xFF)
+						ImGui::Text("%Xh", unitPtrs[i]->markNo_3);
+					else
+						ImGui::TextDisabled("--");
+
+					// texId
+					ImGui::TableNextColumn();
+					if (unitPtrs[i]->texId_78 != 0xFF)
+						ImGui::Text("%d", unitPtrs[i]->texId_78);
+					else
+						ImGui::TextDisabled("--");
+
+					// parentNo
+					ImGui::TableNextColumn();
+					if (unitPtrs[i]->parentNo_6 != 0xFF)
+						ImGui::Text("%d", unitPtrs[i]->parentNo_6);
+					else
+						ImGui::TextDisabled("--");
+
+					// classNo
+					ImGui::TableNextColumn();
+					if (unitPtrs[i]->pParent_68)
+						ImGui::Text("%d", unitPtrs[i]->pParent_68->classNo_2);
+					else
+						ImGui::TextDisabled("--");
+
+					// levelNo
+					ImGui::TableNextColumn();
+					ImGui::Text("%d", unitPtrs[i]->levelNo_5);
+
+					// rowNo
+					ImGui::TableNextColumn();
+					ImGui::Text("%d", unitPtrs[i]->rowNo_7);
+
+					// type
+					ImGui::TableNextColumn();
+					ImGui::Text("%d", unitPtrs[i]->type_4);
+
+					// texNo
+					ImGui::TableNextColumn();
+					ImGui::Text("%d", unitPtrs[i]->texNo_7A);
+
+					// color
+					// fixme: has a weird clipping issue with frozen column headers
+					//ImGui::TableNextColumn();
+					//ImU32 cellBGCol = ImGui::GetColorU32(ImVec4(
+					//	unitPtrs[i]->col_R_F4 / 255.0f,
+					//	unitPtrs[i]->col_G_F8 / 255.0f,
+					//	unitPtrs[i]->col_B_FC / 255.0f,
+					//	unitPtrs[i]->col_A_100 / 255.0f));
+					//ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cellBGCol);
+
+					// loop_flag
+					ImGui::TableNextColumn();
+					ImGui::Text("%d", unitPtrs[i]->loop_flag_87);
+
+					// size
+					ImGui::TableNextColumn();
+					if (unitPtrs[i]->size0_H_E0 > 0)
+						ImGui::Text("%.0fx%.0f", unitPtrs[i]->size0_W_DC, unitPtrs[i]->size0_H_E0);
+					else
+						ImGui::TextDisabled("--");
+				}
+				ImGui::EndTable();
+			}
+		
+			ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
+
+			bool visible = selectedId->be_flag_0 & ID_BE_FLAG_VISIBLE;
+			if (ImGui::Checkbox("Visible", &visible))
+				selectedId->be_flag_0 ^= ID_BE_FLAG_VISIBLE;
+
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("(Hold Ctrl to make larger adjustments)").x - 10.0f);
+			ImGui::Text("(Hold Ctrl to make larger adjustments)");
+
+			static bool maintainAspectRatio = true;
+
+			ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
+
+			ImGui::PushItemWidth(140 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+
+			ImGui::InputFloat("posX", &selectedId->pos0_94.x, 0.1f, 1.0f, "%.4f");
+
+			ImGui::SameLine(200);
+			float origW = selectedId->size0_W_DC;
+			if (ImGui::InputFloat("sizeW", &selectedId->size0_W_DC, 0.1f, 1.0f, "%.4f"))
+				if (maintainAspectRatio)
+					selectedId->size0_H_E0 *= selectedId->size0_W_DC / origW;
+
+			ImGui::InputFloat("posY", &selectedId->pos0_94.y, 0.1f, 1.0f, "%.4f");
+
+			ImGui::SameLine(200);
+			float origH = selectedId->size0_H_E0;
+			if (ImGui::InputFloat("sizeH", &selectedId->size0_H_E0, 0.1f, 1.0f, "%.4f"))
+				if (maintainAspectRatio)
+					selectedId->size0_W_DC *= selectedId->size0_H_E0 / origH;
+
+			ImGui::InputFloat("posZ", &selectedId->pos0_94.z, 0.1f, 1.0f, "%.4f");
+
+			ImGui::PopItemWidth();
+
+			ImGui::SameLine(200);
+			ImGui::Checkbox("Maintain aspect ratio", &maintainAspectRatio);
+
+			ImGui::Dummy(ImVec2(10, 5 * esHook._cur_monitor_dpi));
+			if (ImGui::Button("Undo"))
+				*selectedId = undoCopy;
+
+			ImGui::SameLine();
+			if (ImGui::Button("Reset Time"))
+				curIDSystem->setTime(selectedId, 0); // useful for resetting animated textures
+
+			ImGui::PushItemWidth(200 * re4t::cfg->fFontSizeScale * esHook._cur_monitor_dpi);
+
+			ImGui::SameLine(175);
+			ImVec4 color0 = ImGui::ColorConvertU32ToFloat4(selectedId->col0_A_EF << 24 | selectedId->col0_B_EE << 16 | selectedId->col0_G_ED << 8 | selectedId->col0_R_EC);
+			ImGuiColorEditFlags colorPickerFlags = ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop |
+				ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_PickerHueBar | ImGuiColorEditFlags_AlphaBar;
+			if (ImGui::ColorEdit4("##IDcolorpicker0", (float*)&color0, colorPickerFlags))
+			{
+				uint32_t converted = ImGui::ColorConvertFloat4ToU32(color0);
+				selectedId->col0_A_EF = (converted >> 24) & 0xFF;
+				selectedId->col0_B_EE = (converted >> 16) & 0xFF;
+				selectedId->col0_G_ED = (converted >> 8) & 0xFF;
+				selectedId->col0_R_EC = converted & 0xFF;
+			}
+
+			// for textures that oscillate between two colors
+			// editing color1 without the proper flags causes textures to disappear, so hide this unless we know the texture supports it
+			if (selectedId->col1_R_F0 || selectedId->col1_G_F1 || selectedId->col1_B_F2 || selectedId->col1_A_F3)
+			{
+				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 167);
+				ImVec4 color1 = ImGui::ColorConvertU32ToFloat4(selectedId->col1_A_F3 << 24 | selectedId->col1_B_F2 << 16 | selectedId->col1_G_F1 << 8 | selectedId->col1_R_F0);
+				if (ImGui::ColorEdit4("##IDcolorpicker1", (float*)&color1, colorPickerFlags))
+				{
+					uint32_t converted = ImGui::ColorConvertFloat4ToU32(color1);
+					selectedId->col1_A_F3 = (converted >> 24) & 0xFF;
+					selectedId->col1_B_F2 = (converted >> 16) & 0xFF;
+					selectedId->col1_G_F1 = (converted >> 8) & 0xFF;
+					selectedId->col1_R_F0 = converted & 0xFF;
+				}
+			}
+
+			ImGui::PopItemWidth();
+		}
+		else
+			selectedId = nullptr;
+
+		ImGui::End();
+	}
+
+	return retVal;
+}
+
 bool UI_Globals::Render(bool WindowMode)
 {
 	cRoomJmp_data* test = cRoomJmp_data::get();
@@ -779,7 +1250,7 @@ bool UI_AreaJump::Render(bool WindowMode)
 		{
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Room").x - 10.0f);
 			std::string curRoomStr = RoomDisplayString(curStage, curRoomIdx);
-			if (ImGui::BeginCombo("Room", curRoomStr.c_str()))
+			if (ImGui::BeginCombo("Room", curRoomStr.c_str(), ImGuiComboFlags_HeightLarge))
 			{
 				for (int i = 0; i < stage->nData_0; i++)
 				{

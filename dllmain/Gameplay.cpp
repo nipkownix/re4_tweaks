@@ -354,10 +354,10 @@ void re4t::init::Gameplay()
 						break;
 					}
 
-					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->texId_78 = 164;
-					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
-					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->texId_78 = 164;
-					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
+					IdSysPtr()->unitPtr(0x1u, IDC_TITLE_MENU_0)->texId_78 = 164;
+					IdSysPtr()->unitPtr(0x1u, IDC_TITLE_MENU_0)->size0_W_DC = texW;
+					IdSysPtr()->unitPtr(0x2u, IDC_TITLE_MENU_0)->texId_78 = 164;
+					IdSysPtr()->unitPtr(0x2u, IDC_TITLE_MENU_0)->size0_W_DC = texW;
 				}
 
 				// Code we overwrote

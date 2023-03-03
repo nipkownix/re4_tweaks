@@ -55,7 +55,6 @@ LifeMeter__roomInit_Fn LifeMeter__roomInit = nullptr;
 BulletInfo__roomInit_Fn BulletInfo__roomInit = nullptr;
 
 // message.h externs
-MessageControl* cMes = nullptr;
 MessageControl__setFontSize_Fn MessageControl__setFontSize = nullptr;
 MessageControl__setLayout_Fn MessageControl__setLayout = nullptr;
 
@@ -533,10 +532,28 @@ TITLE_WORK* TitleWorkPtr()
 	return TitleWork_ptr;
 }
 
-IDSystem* IDSystem_ptr = nullptr;
-IDSystem* IDSystemPtr()
+MessageControl* cMes_ptr = nullptr;
+MessageControl* MessageControlPtr()
 {
-	return IDSystem_ptr;
+	return cMes_ptr;
+}
+
+IDSystem* IdSys_ptr = nullptr;
+IDSystem* IdSysPtr()
+{
+	return IdSys_ptr;
+}
+
+IDSystem* IdSub_ptr = nullptr;
+IDSystem* IdSubPtr()
+{
+	return IdSub_ptr;
+}
+
+IDSystem* IdNum_ptr = nullptr;
+IDSystem* IdNumPtr()
+{
+	return IdNum_ptr;
 }
 
 MercID* mercId_ptr = nullptr;
@@ -992,40 +1009,30 @@ bool re4t::init::Game()
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 08 E8 ? ? ? ? 8B 0D ? ? ? ? F7 81 ? ? ? ? ? ? ? ? 74");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::KeyStop);
 
-	// Pointer to IDSystem
+	// IDSystem ptrs
 	pattern = hook::pattern("B9 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9");
-	IDSystem_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
-
-	// pointer to IDSystem::set
+	IdSys_ptr = *pattern.count(1).get(0).get<IDSystem*>(1);
+	pattern = hook::pattern("8D 48 FF 80 F9 01 77 ? C7 ? ? ? ? ? EB");
+	IdSub_ptr = *pattern.count(1).get(0).get<IDSystem*>(10);
+	pattern = hook::pattern("83 C4 08 B9 ? ? ? ? 39");
+	IdNum_ptr = *pattern.count(1).get(0).get<IDSystem*>(4);
+	pattern = hook::pattern("83 C4 18 6A 60 B9");
+	mercId_ptr = *pattern.count(1).get(0).get<MercID*>(6);
 	pattern = hook::pattern("E8 ? ? ? ? 6A 29 68 FE 00 00 00 B9");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__set);
-
-	// pointer to IDSystem::unitPtr
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 8B C8 D9 81 94 00 00 00 8B");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__unitPtr);
-
-	// pointer to IDSystem::unitPtr2
 	pattern = hook::pattern("E8 ? ? ? ? D9 ? ? ? ? ? D9 98 98 00 00 00 EB");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__unitPtr2);
-
-	// pointer to IDSystem::kill
 	pattern = hook::pattern("E8 ? ? ? ? 68 99 00 00 00 68 FF 00 00 00 B9 ? ? ? ? E8 ? ? ? ? 8B 46 20 8B");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__kill);
-
-	// pointer to IDSystem::setTime
 	pattern = hook::pattern("E8 ? ? ? ? FE 46 01 5F 5E 8B E5 ");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), IDSystem__setTime);
 
-	// pointer to mercId
-	pattern = hook::pattern("83 C4 18 6A 60 B9");
-	mercId_ptr= *pattern.count(1).get(0).get<MercID*>(6);
-
-	// pointer to cMes
+	// MessageControl ptrs
 	pattern = hook::pattern("51 52 6A 04 B9 ? ? ? ? 8B F0 E8");
-	cMes = *pattern.count(1).get(0).get<MessageControl*>(5);
-	// pointer to MessageControl::setFontSize
+	cMes_ptr = *pattern.count(1).get(0).get<MessageControl*>(5);
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(11)).as_int(), MessageControl__setFontSize);
-	// pointer to MessageControl::setLayout
 	pattern = hook::pattern("E8 ? ? ? ? 8B ? ? ? ? ? 53 53 52 C7");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0)).as_int(), MessageControl__setLayout);
 

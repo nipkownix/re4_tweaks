@@ -2779,6 +2779,27 @@ void Trainer_RenderUI(int columnCount)
 				FilterTool->Render(false);
 			}
 
+			// HUDEditor
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("%s  ID Inspector", ICON_FA_BINOCULARS);
+
+				ImGui::SameLine();
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new ID Inspector window").x - 15.0f, 0.0f));
+				ImGui::SameLine();
+				if (ImGui::Button("Open new ID Inspector window"))
+					UI_NewIDInspector();
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::PushTextWrapPos();
+				ImGui::Text("Tool for manipulating the game's UI objects.");
+				ImGui::PopTextWrapPos();
+			}
+
 			ImGui_ColumnFinish();
 			ImGui::EndTable();
 		}

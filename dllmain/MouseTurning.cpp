@@ -107,7 +107,10 @@ bool __cdecl KeyOnCheck_hook(KEY_BTN a1)
 	switch (LastUsedDevice()) {
 		case InputDevices::DinputController:
 		case InputDevices::XinputController:
-			ret = bio4::KeyOnCheck_0(a1);
+			//if (re4t::cfg->bAnalogTurning && isTurning)
+			//	ret = true;
+			//else
+				ret = bio4::KeyOnCheck_0(a1);
 			break;
 		case InputDevices::Keyboard:
 		case InputDevices::Mouse:
