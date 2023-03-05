@@ -121,12 +121,109 @@ void re4t::init::ControllerTweaks()
 		spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
 	}
 
-	// Fix type III controls melee range firing bug
+	// Smooth analog turning
+	// makes left stick movement similar to the 'Classic' control schemes found in later REs
+	{
+		// pl_R1_Walk
+		auto pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? 8B ? ? ? ? ? D9");
+		static float* cPlayer__SPEED_WALK_TURN = *pattern.count(1).get(0).get<float*>(28);
+		struct WalkTurnHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				const float fDeadZone = 0.30f;
+
+				if (isController() && re4t::cfg->bSmoothAnalogTurning)
+				{
+					if (abs(*fAnalogLX) > fDeadZone)
+					{
+						if (*fAnalogLX > 0.0f)
+							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN * ((*fAnalogLX - fDeadZone) / (1.0f - fDeadZone));
+						else
+							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN * -((*fAnalogLX + fDeadZone) / (1.0f - fDeadZone));
+					}
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
+				{
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN;
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
+				{
+					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN;
+				}
+			}
+		}; injector::MakeInline<WalkTurnHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(82));
+
+		// pl_R1_Run
+		pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? D9 86 A4 00 00 00 8B ? ? ? ? ? D9");
+		static float* cPlayer__SPEED_RUN_TURN = *pattern.count(1).get(0).get<float*>(31);
+		static const float pl_speed2_xxx_1216 = 1.1f;
+		struct RunTurnHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				const float fDeadZone = 0.30f;
+
+				if (isController() && re4t::cfg->bSmoothAnalogTurning)
+				{
+					if (abs(*fAnalogLX) > fDeadZone)
+					{
+						if (*fAnalogLX > 0.0f)
+							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * ((*fAnalogLX - fDeadZone) / (1.0f - fDeadZone)) * pl_speed2_xxx_1216;
+						else
+							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * -((*fAnalogLX + fDeadZone) / (1.0f - fDeadZone)) * pl_speed2_xxx_1216;
+					}
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
+				{
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
+				{
+					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
+				}
+			}
+		}; injector::MakeInline<RunTurnHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(83));
+
+		// p1_R1_Back
+		// FrameRateFixes: Fix character backwards turning speed
+		pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? D9 86 A4 00 00 00 D8");
+		struct WalkTurnHookNoDeadzone
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (isController() && re4t::cfg->bSmoothAnalogTurning)
+				{
+					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
+					if (*fAnalogLX > 0.0f)
+						PlayerPtr()->ang_A0.y -= deltaTime * *cPlayer__SPEED_WALK_TURN * (*fAnalogLX / 1.0f);
+					else
+						PlayerPtr()->ang_A0.y += deltaTime * *cPlayer__SPEED_WALK_TURN * -(*fAnalogLX / 1.0f);
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
+				{
+					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
+					PlayerPtr()->ang_A0.y -= deltaTime * *cPlayer__SPEED_WALK_TURN;
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
+				{
+					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
+					PlayerPtr()->ang_A0.y += deltaTime * *cPlayer__SPEED_WALK_TURN;
+				}
+			}
+		}; injector::MakeInline<WalkTurnHookNoDeadzone>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(62));
+
+		// p1_R1_KlauserAttack
+		pattern = hook::pattern("8B ? ? ? ? ? 8B C1 83 E0 04 33 D2 33 DB");
+		injector::MakeInline<WalkTurnHookNoDeadzone>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(72));
+	}
+
+	// Fix joyFireOn bug with type III controls
 	// When using type III config, knocking an enemy into a vulnerable state while in melee range with them interrupts your gunfire until you release the trigger
-	// joyFireOn() already checked for this, but only for type II config. QLOC must have overlooked this when adding type III config to UHD.
+	// We just need to update joyFireOn's existing check for type II controls to check for type III controls as well
 	{
 		auto pattern = hook::pattern("8B ? ? ? ? ? 38 41 ? 74");
-		struct JoyFireOn_Type3Fix
+		struct joyFireOn_TypeIIIFix
 		{
 			void operator()(injector::reg_pack& regs)
 			{
@@ -135,6 +232,6 @@ void re4t::init::ControllerTweaks()
 				else
 					regs.ef &= ~(1 << regs.zero_flag);
 			}
-		}; injector::MakeInline<JoyFireOn_Type3Fix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
+		}; injector::MakeInline<joyFireOn_TypeIIIFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 	}
 }

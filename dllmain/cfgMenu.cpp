@@ -1245,6 +1245,20 @@ void cfgMenuRender()
 							re4t::cfg->fXinputDeadzone = 1.0f;
 					}
 
+					// SmoothAnalogTurning
+					if ((OptionsFilter.PassFilter("SmoothAnalogTurning") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SmoothAnalogTurning", &re4t::cfg->bSmoothAnalogTurning);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Enables smooth turning with the left analog stick, similar to the 'Classic' control schemes found in later Resident Evils.");
+						ImGui::TextWrapped("Best paired with minimal to no deadzone.");
+					}
+
 					// AllowReloadWithoutAiming_controller
 					if ((OptionsFilter.PassFilter("AllowReloadWithoutAiming") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{

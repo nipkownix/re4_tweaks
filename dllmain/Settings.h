@@ -99,6 +99,7 @@ public:
 	float fXinputDeadzone = 0.4f;
 	bool bAllowReloadWithoutAiming_controller = false;
 	bool bReloadWithoutZoom_controller = false;
+	bool bSmoothAnalogTurning = false;
 
 	// FRAME RATE
 	bool bFixFallingItemsSpeed = true;
