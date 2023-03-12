@@ -16,6 +16,8 @@ float* fAnalogLY;
 float* fAnalogRX;
 float* fAnalogRY;
 
+int RawAnalogLX;
+
 void re4t::init::ControllerTweaks()
 {
 	// Aiming speed
@@ -61,6 +63,21 @@ void re4t::init::ControllerTweaks()
 
 		pattern = hook::pattern("0F B7 05 ? ? ? ? 50 51 E8 ? ? ? ? 0F B7 46 ? D9 5E");
 		g_XInputDeadzone_RS = (int*)*pattern.count(1).get(0).get<uint32_t>(3);
+
+		// Capture the pre-deadzone values of the joystick inputs
+		pattern = hook::pattern("0F B7 ? ? ? ? ? 0F B7 46 BC 52");
+		struct StoreRawAnalog
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				RawAnalogLX = *(int16_t*)(regs.esi - 0x44);
+				//RawAnalogLY = *(int16_t*)(regs.esi - 0x42);
+				//RawAnalogRX = *(int16_t*)(regs.esi - 0x40);
+				//RawAnalogRY = *(int16_t*)(regs.esi - 0x3E);
+				// Code we overwrote
+				regs.edx = *g_XInputDeadzone_LS;
+			}
+		}; injector::MakeInline<StoreRawAnalog>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 		// Get pointers to the floats sub_964490 use for checking if the sticks are moving.
 		// (Are these the origins of the AnalogR*_ and AnalogL*_ values?)
@@ -121,71 +138,73 @@ void re4t::init::ControllerTweaks()
 		spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
 	}
 
-	// Smooth analog turning
-	// makes left stick movement similar to the 'Classic' control schemes found in later REs
+	// Smooth analog turning, similar to RE5's type A/B controls
 	{
 		// pl_R1_Walk
 		auto pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? 8B ? ? ? ? ? D9");
-		static float* cPlayer__SPEED_WALK_TURN = *pattern.count(1).get(0).get<float*>(28);
+		static const float LXDeadZone = 0.30f;
+		static const float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
 		struct WalkTurnHook
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				const float fDeadZone = 0.30f;
-
 				if (isController() && re4t::cfg->bSmoothAnalogTurning)
 				{
-					if (abs(*fAnalogLX) > fDeadZone)
+					float deltaAnalogLX = RawAnalogLX / 32767.0f; // use RawAnalog so we can establish a deadzone independent of Xinput override
+					if (abs(deltaAnalogLX) > LXDeadZone)
 					{
-						if (*fAnalogLX > 0.0f)
-							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN * ((*fAnalogLX - fDeadZone) / (1.0f - fDeadZone));
+						float turnSpeed = cPlayer__SPEED_WALK_TURN * std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .15f), 1.0f);
+
+						if (deltaAnalogLX > 0.0f)
+							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
 						else
-							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN * -((*fAnalogLX + fDeadZone) / (1.0f - fDeadZone));
+							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * turnSpeed;
 					}
 				}
 				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
 				{
-					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN;
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 				}
 				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
 				{
-					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_WALK_TURN;
+					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
 				}
 			}
 		}; injector::MakeInline<WalkTurnHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(82));
 
 		// pl_R1_Run
 		pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? D9 86 A4 00 00 00 8B ? ? ? ? ? D9");
-		static float* cPlayer__SPEED_RUN_TURN = *pattern.count(1).get(0).get<float*>(31);
+		static const float cPlayer__SPEED_RUN_TURN = cPlayer__SPEED_WALK_TURN; // calculation is identical to walk turn
 		static const float pl_speed2_xxx_1216 = 1.1f;
 		struct RunTurnHook
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				const float fDeadZone = 0.30f;
-
 				if (isController() && re4t::cfg->bSmoothAnalogTurning)
 				{
-					if (abs(*fAnalogLX) > fDeadZone)
+					float deltaAnalogLX = RawAnalogLX / 32767.0f;
+					if (abs(deltaAnalogLX) > LXDeadZone)
 					{
-						if (*fAnalogLX > 0.0f)
-							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * ((*fAnalogLX - fDeadZone) / (1.0f - fDeadZone)) * pl_speed2_xxx_1216;
+						float turnSpeed = cPlayer__SPEED_RUN_TURN *  std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .15f), 1.0f) * pl_speed2_xxx_1216;
+
+						if (deltaAnalogLX > 0.0f)
+							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
 						else
-							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * -((*fAnalogLX + fDeadZone) / (1.0f - fDeadZone)) * pl_speed2_xxx_1216;
-					}
+							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * turnSpeed;
+}
 				}
 				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
 				{
-					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
 				}
 				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
 				{
-					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * *cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
+					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
 				}
 			}
 		}; injector::MakeInline<RunTurnHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(83));
 
-		// p1_R1_Back
+		// pl_R1_Back
 		// FrameRateFixes: Fix character backwards turning speed
 		pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? D9 86 A4 00 00 00 D8");
 		struct WalkTurnHookNoDeadzone
@@ -194,26 +213,25 @@ void re4t::init::ControllerTweaks()
 			{
 				if (isController() && re4t::cfg->bSmoothAnalogTurning)
 				{
-					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
-					if (*fAnalogLX > 0.0f)
-						PlayerPtr()->ang_A0.y -= deltaTime * *cPlayer__SPEED_WALK_TURN * (*fAnalogLX / 1.0f);
-					else
-						PlayerPtr()->ang_A0.y += deltaTime * *cPlayer__SPEED_WALK_TURN * -(*fAnalogLX / 1.0f);
+					float deltaAnalogLX = RawAnalogLX / 32767.0f;
+					float turnSpeed = cPlayer__SPEED_WALK_TURN * std::min((deltaAnalogLX / (1.0f - .15f)), 1.0f);
+
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
 				}
 				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
 				{
 					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
-					PlayerPtr()->ang_A0.y -= deltaTime * *cPlayer__SPEED_WALK_TURN;
+					PlayerPtr()->ang_A0.y -= deltaTime * cPlayer__SPEED_WALK_TURN;
 				}
 				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
 				{
 					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
-					PlayerPtr()->ang_A0.y += deltaTime * *cPlayer__SPEED_WALK_TURN;
+					PlayerPtr()->ang_A0.y += deltaTime * cPlayer__SPEED_WALK_TURN;
 				}
 			}
 		}; injector::MakeInline<WalkTurnHookNoDeadzone>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(62));
 
-		// p1_R1_KlauserAttack
+		// pl_R1_KlauserAttack
 		pattern = hook::pattern("8B ? ? ? ? ? 8B C1 83 E0 04 33 D2 33 DB");
 		injector::MakeInline<WalkTurnHookNoDeadzone>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(72));
 	}

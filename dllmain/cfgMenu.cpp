@@ -1255,8 +1255,7 @@ void cfgMenuRender()
 						ImGui_ItemSeparator();
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-						ImGui::TextWrapped("Enables smooth turning with the left analog stick, similar to the 'Classic' control schemes found in later Resident Evils.");
-						ImGui::TextWrapped("Best paired with minimal to no deadzone.");
+						ImGui::TextWrapped("Use analog directional input to turn when moving forwards and backwards, similar to Resident Evil 5's type A/B controls.");
 					}
 
 					// AllowReloadWithoutAiming_controller

@@ -1481,8 +1481,9 @@ void re4t::init::FrameRateFixes()
 		}; injector::MakeInline<cR305Shutter__close_hook_2>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 	}
 
-	// Fix character backwards turning speed (continued from ControllerTweaks.cpp)
-	// is pl_R1_Crouch even used anywhere in the game? I suspect it is leftover code
+	// Fix character backwards turning speed
+	// (SmoothAnalogTurning in ControllerTweaks.cpp changes the pattern match counts here)
+	// is pl_R1_Crouch even used in the game anywhere? I suspect it's leftover code from RE3.5
 	{
 		struct TurnSpeedSubtract
 		{
