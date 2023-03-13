@@ -1568,6 +1568,19 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Changes sprint key to act like a toggle instead of needing to be held.");
 					}
 
+					// DisableAutomaticReload
+					if ((OptionsFilter.PassFilter("DisableAutomaticReload") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("DisableAutomaticReload", &re4t::cfg->bDisableAutomaticReload);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Disables automatic reload when firing a weapon that's out of ammo.");
+					}
+
 					// RifleScreenShake
 					if ((OptionsFilter.PassFilter("RifleScreenShake") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{

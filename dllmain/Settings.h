@@ -121,6 +121,7 @@ public:
 	bool bAllowSellingHandgunSilencer = true;
 	bool bBalancedChicagoTypewriter = false;
 	bool bUseSprintToggle = false;
+	bool bDisableAutomaticReload = false;
 	bool bRifleScreenShake = false;
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
