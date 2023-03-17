@@ -255,6 +255,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bAllowSellingHandgunSilencer = ini.getBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 		re4t::cfg->bBalancedChicagoTypewriter = ini.getBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 		re4t::cfg->bUseSprintToggle = ini.getBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+		re4t::cfg->bDisableAutomaticReload = ini.getBool("GAMEPLAY", "DisableAutomaticReload", re4t::cfg->bDisableAutomaticReload);
 		re4t::cfg->bRifleScreenShake = ini.getBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 		re4t::cfg->bDisableQTE = ini.getBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 		re4t::cfg->bAutomaticMashingQTE = ini.getBool("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
@@ -703,6 +704,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 		ini.setBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 		ini.setBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+		ini.setBool("GAMEPLAY", "DisableAutomaticReload", re4t::cfg->bDisableAutomaticReload);
 		ini.setBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 		ini.setBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 		ini.setBool("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
@@ -1054,6 +1056,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableAutomaticReload", re4t::cfg->bDisableAutomaticReload ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE ? "true" : "false");

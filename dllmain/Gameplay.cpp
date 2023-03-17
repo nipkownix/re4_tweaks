@@ -455,6 +455,30 @@ void re4t::init::Gameplay()
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, PATCH_JUMP);
 	}
 
+	// Disable Automatic Reload
+	{
+		auto pattern = hook::pattern("8B 86 D8 07 00 00 8B 48 34 8B 11 8B 42 4C FF D0");
+		struct DisableReloadCheck
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (PlayerPtr()->Wep_7D8->m_pWep_34->reloadable() && !re4t::cfg->bDisableAutomaticReload)
+					regs.ef &= ~(1 << regs.zero_flag);
+				else
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		};
+		// for Handguns, Matilda, TMP, Shotguns
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(0).get<uint32_t>(0), pattern.count(5).get(0).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(1).get<uint32_t>(0), pattern.count(5).get(1).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(2).get<uint32_t>(0), pattern.count(5).get(2).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(4).get<uint32_t>(0), pattern.count(5).get(4).get<uint32_t>(18));
+		// for Rifles, Mine Thrower
+		pattern = hook::pattern("8B 8E D8 07 00 00 8B 49 34 8B 11 8B 42 4C FF");
+		injector::MakeInline<DisableReloadCheck>(pattern.count(3).get(1).get<uint32_t>(0), pattern.count(3).get(1).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(3).get(2).get<uint32_t>(0), pattern.count(3).get(2).get<uint32_t>(18));
+	}
+
 	// Limit the Matilda to one three round burst per trigger pull
 	{
 		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 8B 96 D8 07 00 00 8B 4A 34 E8");
