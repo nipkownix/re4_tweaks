@@ -1245,6 +1245,19 @@ void cfgMenuRender()
 							re4t::cfg->fXinputDeadzone = 1.0f;
 					}
 
+					// SmoothAnalogTurning
+					if ((OptionsFilter.PassFilter("SmoothAnalogTurning") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SmoothAnalogTurning", &re4t::cfg->bSmoothAnalogTurning);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Use analog directional input to turn when moving forwards and backwards, similar to Resident Evil 5's type A/B controls.");
+					}
+
 					// AllowReloadWithoutAiming_controller
 					if ((OptionsFilter.PassFilter("AllowReloadWithoutAiming") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{

@@ -16,6 +16,8 @@ float* fAnalogLY;
 float* fAnalogRX;
 float* fAnalogRY;
 
+int RawAnalogLX;
+
 void re4t::init::ControllerTweaks()
 {
 	// Aiming speed
@@ -61,6 +63,21 @@ void re4t::init::ControllerTweaks()
 
 		pattern = hook::pattern("0F B7 05 ? ? ? ? 50 51 E8 ? ? ? ? 0F B7 46 ? D9 5E");
 		g_XInputDeadzone_RS = (int*)*pattern.count(1).get(0).get<uint32_t>(3);
+
+		// Capture the pre-deadzone values of the joystick inputs
+		pattern = hook::pattern("0F B7 ? ? ? ? ? 0F B7 46 BC 52");
+		struct StoreRawAnalog
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				RawAnalogLX = *(int16_t*)(regs.esi - 0x44);
+				//RawAnalogLY = *(int16_t*)(regs.esi - 0x42);
+				//RawAnalogRX = *(int16_t*)(regs.esi - 0x40);
+				//RawAnalogRY = *(int16_t*)(regs.esi - 0x3E);
+				// Code we overwrote
+				regs.edx = *g_XInputDeadzone_LS;
+			}
+		}; injector::MakeInline<StoreRawAnalog>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(7));
 
 		// Get pointers to the floats sub_964490 use for checking if the sticks are moving.
 		// (Are these the origins of the AnalogR*_ and AnalogL*_ values?)
@@ -121,12 +138,110 @@ void re4t::init::ControllerTweaks()
 		spd::log()->info("{} -> XInput deadzone changes applied", __FUNCTION__);
 	}
 
-	// Fix type III controls melee range firing bug
+	// Smooth analog turning, similar to RE5's type A/B controls
+	{
+		// pl_R1_Walk
+		auto pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? 8B ? ? ? ? ? D9");
+		static const float LXDeadZone = 0.30f;
+		static const float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
+		struct WalkTurnHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (isController() && re4t::cfg->bSmoothAnalogTurning)
+				{
+					float deltaAnalogLX = RawAnalogLX / 32767.0f; // use RawAnalog so we can establish a deadzone independent of Xinput override
+					if (abs(deltaAnalogLX) > LXDeadZone)
+					{
+						float turnSpeed = cPlayer__SPEED_WALK_TURN * std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .15f), 1.0f);
+
+						if (deltaAnalogLX > 0.0f)
+							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
+						else
+							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * turnSpeed;
+					}
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
+				{
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
+				{
+					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
+				}
+			}
+		}; injector::MakeInline<WalkTurnHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(82));
+
+		// pl_R1_Run
+		pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? D9 86 A4 00 00 00 8B ? ? ? ? ? D9");
+		static const float cPlayer__SPEED_RUN_TURN = cPlayer__SPEED_WALK_TURN; // calculation is identical to walk turn
+		static const float pl_speed2_xxx_1216 = 1.1f;
+		struct RunTurnHook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (isController() && re4t::cfg->bSmoothAnalogTurning)
+				{
+					float deltaAnalogLX = RawAnalogLX / 32767.0f;
+					if (abs(deltaAnalogLX) > LXDeadZone)
+					{
+						float turnSpeed = cPlayer__SPEED_RUN_TURN *  std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .15f), 1.0f) * pl_speed2_xxx_1216;
+
+						if (deltaAnalogLX > 0.0f)
+							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
+						else
+							PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * turnSpeed;
+}
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
+				{
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
+				{
+					PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * cPlayer__SPEED_RUN_TURN * pl_speed2_xxx_1216;
+				}
+			}
+		}; injector::MakeInline<RunTurnHook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(83));
+
+		// pl_R1_Back
+		// FrameRateFixes: Fix character backwards turning speed
+		pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? D9 86 A4 00 00 00 D8");
+		struct WalkTurnHookNoDeadzone
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (isController() && re4t::cfg->bSmoothAnalogTurning)
+				{
+					float deltaAnalogLX = RawAnalogLX / 32767.0f;
+					float turnSpeed = cPlayer__SPEED_WALK_TURN * std::min((deltaAnalogLX / (1.0f - .15f)), 1.0f);
+
+					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
+				{
+					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
+					PlayerPtr()->ang_A0.y -= deltaTime * cPlayer__SPEED_WALK_TURN;
+				}
+				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT)
+				{
+					float deltaTime = re4t::cfg->bFixTurningSpeed ? GlobalPtr()->deltaTime_70 : 1.0f;
+					PlayerPtr()->ang_A0.y += deltaTime * cPlayer__SPEED_WALK_TURN;
+				}
+			}
+		}; injector::MakeInline<WalkTurnHookNoDeadzone>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(62));
+
+		// pl_R1_KlauserAttack
+		pattern = hook::pattern("8B ? ? ? ? ? 8B C1 83 E0 04 33 D2 33 DB");
+		injector::MakeInline<WalkTurnHookNoDeadzone>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(72));
+	}
+
+	// Fix joyFireOn bug with type III controls
 	// When using type III config, knocking an enemy into a vulnerable state while in melee range with them interrupts your gunfire until you release the trigger
-	// joyFireOn() already checked for this, but only for type II config. QLOC must have overlooked this when adding type III config to UHD.
+	// We just need to update joyFireOn's existing check for type II controls to check for type III controls as well
 	{
 		auto pattern = hook::pattern("8B ? ? ? ? ? 38 41 ? 74");
-		struct JoyFireOn_Type3Fix
+		struct joyFireOn_TypeIIIFix
 		{
 			void operator()(injector::reg_pack& regs)
 			{
@@ -135,6 +250,6 @@ void re4t::init::ControllerTweaks()
 				else
 					regs.ef &= ~(1 << regs.zero_flag);
 			}
-		}; injector::MakeInline<JoyFireOn_Type3Fix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
+		}; injector::MakeInline<joyFireOn_TypeIIIFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 	}
 }
