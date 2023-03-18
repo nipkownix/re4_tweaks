@@ -43,7 +43,6 @@ namespace dxvk {
     this->maxFrameRate                  = config.getOption<int32_t>     ("d3d9.maxFrameRate",                  0);
     this->presentInterval               = config.getOption<int32_t>     ("d3d9.presentInterval",               -1);
     this->shaderModel                   = config.getOption<int32_t>     ("d3d9.shaderModel",                   3);
-    this->evictManagedOnUnlock          = config.getOption<bool>        ("d3d9.evictManagedOnUnlock",          false);
     this->dpiAware                      = config.getOption<bool>        ("d3d9.dpiAware",                      true);
     this->strictConstantCopies          = config.getOption<bool>        ("d3d9.strictConstantCopies",          false);
     this->strictPow                     = config.getOption<bool>        ("d3d9.strictPow",                     true);
@@ -56,6 +55,7 @@ namespace dxvk {
     this->supportDFFormats              = config.getOption<bool>        ("d3d9.supportDFFormats",              true);
     this->supportX4R4G4B4               = config.getOption<bool>        ("d3d9.supportX4R4G4B4",               true);
     this->supportD32                    = config.getOption<bool>        ("d3d9.supportD32",                    true);
+    this->useD32forD24                  = config.getOption<bool>        ("d3d9.useD32forD24",                  false);
     this->disableA8RT                   = config.getOption<bool>        ("d3d9.disableA8RT",                   false);
     this->invariantPosition             = config.getOption<bool>        ("d3d9.invariantPosition",             true);
     this->memoryTrackTest               = config.getOption<bool>        ("d3d9.memoryTrackTest",               false);
@@ -63,25 +63,17 @@ namespace dxvk {
     this->enableDialogMode              = config.getOption<bool>        ("d3d9.enableDialogMode",              false);
     this->forceSamplerTypeSpecConstants = config.getOption<bool>        ("d3d9.forceSamplerTypeSpecConstants", false);
     this->forceSwapchainMSAA            = config.getOption<int32_t>     ("d3d9.forceSwapchainMSAA",            -1);
+    this->forceSampleRateShading        = config.getOption<bool>        ("d3d9.forceSampleRateShading",        false);
     this->forceAspectRatio              = config.getOption<std::string> ("d3d9.forceAspectRatio",              "");
-    this->allowDoNotWait                = config.getOption<bool>        ("d3d9.allowDoNotWait",                true);
     this->allowDiscard                  = config.getOption<bool>        ("d3d9.allowDiscard",                  true);
     this->enumerateByDisplays           = config.getOption<bool>        ("d3d9.enumerateByDisplays",           true);
     this->longMad                       = config.getOption<bool>        ("d3d9.longMad",                       false);
     this->tearFree                      = config.getOption<Tristate>    ("d3d9.tearFree",                      Tristate::Auto);
-    this->alphaTestWiggleRoom           = config.getOption<bool>        ("d3d9.alphaTestWiggleRoom",           false);
     this->apitraceMode                  = config.getOption<bool>        ("d3d9.apitraceMode",                  false);
     this->deviceLocalConstantBuffers    = config.getOption<bool>        ("d3d9.deviceLocalConstantBuffers",    false);
     this->allowDirectBufferMapping      = config.getOption<bool>        ("d3d9.allowDirectBufferMapping",      true);
     this->seamlessCubes                 = config.getOption<bool>        ("d3d9.seamlessCubes",                 false);
-
-    // If we are not Nvidia, enable general hazards.
-    this->generalHazards = adapter != nullptr
-                        && !adapter->matchesDriver(
-                            DxvkGpuVendor::Nvidia,
-                            VK_DRIVER_ID_NVIDIA_PROPRIETARY_KHR,
-                            0, 0);
-    applyTristate(this->generalHazards, config.getOption<Tristate>("d3d9.generalHazards", Tristate::Auto));
+    this->textureMemory                 = config.getOption<int32_t>     ("d3d9.textureMemory",                100) << 20;
 
     std::string floatEmulation = Config::toLower(config.getOption<std::string>("d3d9.floatEmulation", "auto"));
     if (floatEmulation == "strict") {
@@ -92,12 +84,11 @@ namespace dxvk {
       d3d9FloatEmulation = D3D9FloatEmulation::Enabled;
     } else {
       bool hasMulz = adapter != nullptr
-                  && adapter->matchesDriver(DxvkGpuVendor::Amd,
-                                            VK_DRIVER_ID_MESA_RADV,
-                                            VK_MAKE_VERSION(21, 99, 99),
-                                            0);
+                  && adapter->matchesDriver(VK_DRIVER_ID_MESA_RADV, 0, 0);
       d3d9FloatEmulation = hasMulz ? D3D9FloatEmulation::Strict : D3D9FloatEmulation::Enabled;
     }
+
+    this->shaderDumpPath = env::getEnvVar("DXVK_SHADER_DUMP_PATH");
   }
 
 }

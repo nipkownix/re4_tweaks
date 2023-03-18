@@ -390,6 +390,7 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Enables the use of the DXVK-based vulkan renderer, which provides better performance on newer hardware.");
+						ImGui::TextWrapped("(Not recommended on older GPUs)");
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
@@ -422,16 +423,6 @@ void cfgMenuRender()
 						}
 
 						ImGui::TextWrapped("Shows the name of the GPU and the driver version.");
-
-						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
-
-						if (ImGui::Checkbox("DisableAsync", &re4t::dxvk::cfg->bDisableAsync))
-						{
-							re4t::cfg->HasUnsavedChanges = true;
-							NeedsToRestart = true;
-						}
-
-						ImGui::TextWrapped("Disables asynchronous shader compilation. Not recommended.");
 
 						ImGui::EndDisabled();
 					}

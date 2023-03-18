@@ -108,7 +108,6 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::dxvk::cfg->bShowFPS = ini.getBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
 		re4t::dxvk::cfg->bShowGPULoad = ini.getBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
 		re4t::dxvk::cfg->bShowDeviceInfo = ini.getBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
-		re4t::dxvk::cfg->bDisableAsync = ini.getBool("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
 
 		re4t::dxvk::cfg->DXVK_HUD = ini.getString("VULKAN", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
 		re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = ini.getString("VULKAN", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
@@ -595,7 +594,6 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
 		ini.setBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
 		ini.setBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
-		ini.setBool("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
 
 		// DISPLAY
 		ini.setFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);

@@ -63,6 +63,10 @@ namespace dxvk {
       // Fixes sampler leaks in UE3 games w/ mip streaming
       // eg. Borderlands 2
       key.MipmapLodBias = std::round(key.MipmapLodBias * 2.0f) / 2.0f;
+
+      // RE4 workaround. Without this, textures look slightly blurrier when compared to native D3D9.
+      // (Might only be an issue on Nvidia, for some reason?)
+      key.MipmapLodBias -= 0.5;
     }
 
     if (key.AddressU != D3DTADDRESS_BORDER

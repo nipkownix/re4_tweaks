@@ -8,7 +8,6 @@ public:
 	bool bShowFPS = false;
 	bool bShowGPULoad = false;
 	bool bShowDeviceInfo = false;
-	bool bDisableAsync = false;
 
 	std::string DXVK_HUD = ""; // Will override the previous HUD options if set in the ini.
 	std::string DXVK_FILTER_DEVICE_NAME = "";

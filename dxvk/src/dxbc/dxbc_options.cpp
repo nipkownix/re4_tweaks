@@ -2,7 +2,6 @@
 
 #include "dxbc_options.h"
 
-
 namespace dxvk {
 
     struct D3D11Options {
@@ -15,27 +14,18 @@ namespace dxvk {
         /// than once.
         bool dcSingleUseMode;
 
-        /// Enables workaround to replace NaN render target
-        /// outputs with zero
-        bool enableRtOutputNanFixup;
-
-        /// Enables out-of-bounds access check for constant
-        /// buffers. Workaround for a few broken games that
-        /// access random data inside their shaders.
-        bool constantBufferRangeCheck;
-
         /// Zero-initialize workgroup memory
         ///
         /// Workargound for games that don't initialize
         /// TGSM in compute shaders before reading it.
         bool zeroInitWorkgroupMemory;
 
-        /// Force thread-group shared memory barriers
+        /// Force thread-group shared memory accesses to be volatile
         ///
         /// Workaround for compute shaders that read and
         /// write from the same shared memory location
         /// without explicit synchronization.
-        bool forceTgsmBarriers;
+        bool forceVolatileTgsmAccess;
 
         /// Use relaxed memory barriers
         ///
@@ -61,6 +51,11 @@ namespace dxvk {
         /// Enforces anisotropic filtering with the
         /// given anisotropy value for all samplers.
         int32_t samplerAnisotropy;
+
+        /// Mipmap LOD bias
+        ///
+        /// Enforces the given LOD bias for all samplers.
+        float samplerLodBias;
 
         /// Declare vertex positions in shaders as invariant
         bool invariantPosition;
@@ -98,6 +93,11 @@ namespace dxvk {
         /// for a single window that may interfere with each other.
         bool deferSurfaceCreation;
 
+        /// Enables sample rate shading by interpolating fragment shader
+        /// inputs at the sample location rather than pixel center,
+        /// unless otherwise specified by the application.
+        bool forceSampleRateShading;
+
         /// Forces the sample count of all textures to be 1, and
         /// performs the required shader and resolve fixups.
         bool disableMsaa;
@@ -106,11 +106,17 @@ namespace dxvk {
         /// in cached system memory. Enabled automatically when recording
         /// an api trace.
         uint32_t cachedDynamicResources;
+
+        /// Always lock immediate context on every API call. May be
+        /// useful for debugging purposes or when applications have
+        /// race conditions.
+        bool enableContextLock;
+
+        /// Shader dump path
+        std::string shaderDumpPath;
     };
 
 }
-
-
 
 namespace dxvk {
   
@@ -127,20 +133,17 @@ namespace dxvk {
 
     useDepthClipWorkaround
       = !devFeatures.extDepthClipEnable.depthClipEnable;
-    useStorageImageReadWithoutFormat
-      = devFeatures.core.features.shaderStorageImageReadWithoutFormat;
     useSubgroupOpsForAtomicCounters
-      = (devInfo.coreSubgroup.supportedStages     & VK_SHADER_STAGE_COMPUTE_BIT)
-     && (devInfo.coreSubgroup.supportedOperations & VK_SUBGROUP_FEATURE_BALLOT_BIT);
-    useDemoteToHelperInvocation
-      = (devFeatures.extShaderDemoteToHelperInvocation.shaderDemoteToHelperInvocation);
-    useSubgroupOpsForEarlyDiscard
-      = (devInfo.coreSubgroup.subgroupSize >= 4)
-     && (devInfo.coreSubgroup.supportedStages     & VK_SHADER_STAGE_FRAGMENT_BIT)
-     && (devInfo.coreSubgroup.supportedOperations & VK_SUBGROUP_FEATURE_BALLOT_BIT);
-    useSdivForBufferIndex
-      = adapter->matchesDriver(DxvkGpuVendor::Nvidia, VK_DRIVER_ID_NVIDIA_PROPRIETARY_KHR, 0, 0);
-    
+      = (devInfo.vk11.subgroupSupportedStages     & VK_SHADER_STAGE_COMPUTE_BIT)
+     && (devInfo.vk11.subgroupSupportedOperations & VK_SUBGROUP_FEATURE_BALLOT_BIT);
+
+    VkFormatFeatureFlags2 r32Features
+      = device->getFormatFeatures(VK_FORMAT_R32_SFLOAT).optimal
+      & device->getFormatFeatures(VK_FORMAT_R32_UINT).optimal
+      & device->getFormatFeatures(VK_FORMAT_R32_SINT).optimal;
+
+    supportsTypedUavLoadR32 = (r32Features & VK_FORMAT_FEATURE_2_STORAGE_READ_WITHOUT_FORMAT_BIT);
+
     switch (device->config().useRawSsbo) {
       case Tristate::Auto:  minSsboAlignment = devInfo.core.properties.limits.minStorageBufferOffsetAlignment; break;
       case Tristate::True:  minSsboAlignment =  4u; break;
@@ -148,34 +151,26 @@ namespace dxvk {
     }
     
     invariantPosition        = options.invariantPosition;
-    enableRtOutputNanFixup   = options.enableRtOutputNanFixup;
     zeroInitWorkgroupMemory  = options.zeroInitWorkgroupMemory;
-    forceTgsmBarriers        = options.forceTgsmBarriers;
+    forceVolatileTgsmAccess  = options.forceVolatileTgsmAccess;
     disableMsaa              = options.disableMsaa;
-    dynamicIndexedConstantBufferAsSsbo = options.constantBufferRangeCheck;
+    forceSampleRateShading   = options.forceSampleRateShading;
+    enableSampleShadingInterlock = device->features().extFragmentShaderInterlock.fragmentShaderSampleInterlock;
 
-    // Disable subgroup early discard on Nvidia because it may hurt performance
-    if (adapter->matchesDriver(DxvkGpuVendor::Nvidia, VK_DRIVER_ID_NVIDIA_PROPRIETARY_KHR, 0, 0))
-      useSubgroupOpsForEarlyDiscard = false;
-    
     // Figure out float control flags to match D3D11 rules
     if (options.floatControls) {
-      if (devInfo.khrShaderFloatControls.shaderSignedZeroInfNanPreserveFloat32)
+      if (devInfo.vk12.shaderSignedZeroInfNanPreserveFloat32)
         floatControl.set(DxbcFloatControlFlag::PreserveNan32);
-      if (devInfo.khrShaderFloatControls.shaderSignedZeroInfNanPreserveFloat64)
+      if (devInfo.vk12.shaderSignedZeroInfNanPreserveFloat64)
         floatControl.set(DxbcFloatControlFlag::PreserveNan64);
 
-      if (devInfo.khrShaderFloatControls.denormBehaviorIndependence != VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE) {
-        if (devInfo.khrShaderFloatControls.shaderDenormFlushToZeroFloat32)
+      if (devInfo.vk12.denormBehaviorIndependence != VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE) {
+        if (devInfo.vk12.shaderDenormFlushToZeroFloat32)
           floatControl.set(DxbcFloatControlFlag::DenormFlushToZero32);
-        if (devInfo.khrShaderFloatControls.shaderDenormPreserveFloat64)
+        if (devInfo.vk12.shaderDenormPreserveFloat64)
           floatControl.set(DxbcFloatControlFlag::DenormPreserve64);
       }
     }
-
-    if (!devInfo.khrShaderFloatControls.shaderSignedZeroInfNanPreserveFloat32
-     || adapter->matchesDriver(DxvkGpuVendor::Amd, VK_DRIVER_ID_MESA_RADV_KHR, 0, VK_MAKE_VERSION(20, 3, 0)))
-      enableRtOutputNanFixup = true;
   }
   
 }

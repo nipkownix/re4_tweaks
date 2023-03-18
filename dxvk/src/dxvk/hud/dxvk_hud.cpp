@@ -22,6 +22,7 @@ namespace dxvk::hud {
     m_rsState.depthBiasEnable   = VK_FALSE;
     m_rsState.conservativeMode  = VK_CONSERVATIVE_RASTERIZATION_MODE_DISABLED_EXT;
     m_rsState.sampleCount       = VK_SAMPLE_COUNT_1_BIT;
+    m_rsState.flatShading       = VK_FALSE;
 
     m_blendMode.enableBlending  = VK_TRUE;
     m_blendMode.colorSrcFactor  = VK_BLEND_FACTOR_ONE;
@@ -42,6 +43,7 @@ namespace dxvk::hud {
     addItem<HudSubmissionStatsItem>("submissions", -1, device);
     addItem<HudDrawCallStatsItem>("drawcalls", -1, device);
     addItem<HudPipelineStatsItem>("pipelines", -1, device);
+    addItem<HudDescriptorStatsItem>("descriptors", -1, device);
     addItem<HudMemoryStatsItem>("memory", -1, device);
     addItem<HudCsThreadItem>("cs", -1, device);
     addItem<HudGpuLoadItem>("gpuload", -1, device);
@@ -65,7 +67,6 @@ namespace dxvk::hud {
           VkExtent2D        surfaceSize) {
     this->setupRendererState(ctx, surfaceFormat, surfaceSize);
     this->renderHudElements(ctx);
-    this->resetRendererState(ctx);
   }
   
   
@@ -78,7 +79,10 @@ namespace dxvk::hud {
     const Rc<DxvkContext>&  ctx,
           VkSurfaceFormatKHR surfaceFormat,
           VkExtent2D        surfaceSize) {
-    bool isSrgb = imageFormatInfo(surfaceFormat.format)->flags.test(DxvkFormatFlag::ColorSpaceSrgb);
+    VkColorSpaceKHR colorSpace = surfaceFormat.colorSpace;
+
+    if (lookupFormatInfo(surfaceFormat.format)->flags.test(DxvkFormatFlag::ColorSpaceSrgb))
+      colorSpace = VK_COLOR_SPACE_PASS_THROUGH_EXT;
 
     VkViewport viewport;
     viewport.x = 0.0f;
@@ -96,13 +100,8 @@ namespace dxvk::hud {
     ctx->setRasterizerState(m_rsState);
     ctx->setBlendMode(0, m_blendMode);
 
-    ctx->setSpecConstant(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, isSrgb);
+    ctx->setSpecConstant(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, colorSpace);
     m_renderer.beginFrame(ctx, surfaceSize, m_scale);
-  }
-
-
-  void Hud::resetRendererState(const Rc<DxvkContext>& ctx) {
-    ctx->setSpecConstant(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0);
   }
 
 

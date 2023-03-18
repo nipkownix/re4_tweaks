@@ -39,7 +39,7 @@ static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 
 				// Save cache
 				std::ofstream out(cachePath, std::ios::binary);
-				out.write(reinterpret_cast<char*>(&dxvk_cache_data[0]), dxvk_cache_size);
+				out.write(reinterpret_cast<const char*>(&dxvk_cache_data[0]), dxvk_cache_size);
 				out.close();
 			}
 

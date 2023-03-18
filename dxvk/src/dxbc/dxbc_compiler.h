@@ -162,6 +162,8 @@ namespace dxvk {
     uint32_t builtinViewportId    = 0;
     uint32_t builtinInvocationId  = 0;
     uint32_t invocationCount      = 0;
+
+    bool needsOutputSetup = false;
   };
   
   
@@ -180,11 +182,9 @@ namespace dxvk {
     uint32_t builtinSampleMaskOut = 0;
     uint32_t builtinLayer         = 0;
     uint32_t builtinViewportId    = 0;
+    uint32_t builtinInnerCoverageId = 0;
     
-    uint32_t builtinLaneId        = 0;
-    uint32_t killState            = 0;
-
-    uint32_t specRsSampleCount    = 0;
+    uint32_t pushConstantId       = 0;
   };
   
   
@@ -348,24 +348,12 @@ namespace dxvk {
     DxbcResourceType type;
     uint32_t typeId;
     uint32_t varId;
-    uint32_t specId;
     uint32_t stride;
-    uint32_t align;
+    uint32_t coherence;
+    bool isSsbo;
   };
   
 
-  /**
-   * \brief SPIR-V extension set
-   * 
-   * Keeps track of which optional SPIR-V extensions
-   * are enabled so that any required setup code is
-   * only run once. 
-   */
-  struct DxbcSpirvExtensions {
-    bool shaderViewportIndexLayer = false;
-  };
-
-  
   /**
    * \brief DXBC to SPIR-V shader compiler
    * 
@@ -424,7 +412,7 @@ namespace dxvk {
     ///////////////////////////////////////////////////////
     // Resource slot description for the shader. This will
     // be used to map D3D11 bindings to DXVK bindings.
-    std::vector<DxvkResourceSlot> m_resourceSlots;
+    std::vector<DxvkBindingInfo> m_bindings;
     
     ////////////////////////////////////////////////
     // Temporary r# vector registers with immediate
@@ -464,7 +452,10 @@ namespace dxvk {
     std::array<DxbcSampler,         16> m_samplers;
     std::array<DxbcShaderResource, 128> m_textures;
     std::array<DxbcUav,             64> m_uavs;
-    
+
+    bool m_hasGloballyCoherentUav = false;
+    bool m_hasRasterizerOrderedUav = false;
+
     ///////////////////////////////////////////////
     // Control flow information. Stores labels for
     // currently active if-else blocks and loops.
@@ -486,15 +477,17 @@ namespace dxvk {
     ////////////////////////////////////////////////////
     // Per-vertex input and output blocks. Depending on
     // the shader stage, these may be declared as arrays.
-    uint32_t m_perVertexIn  = 0;
-    uint32_t m_perVertexOut = 0;
-    
-    uint32_t m_clipDistances = 0;
-    uint32_t m_cullDistances = 0;
+    uint32_t m_positionIn     = 0;
+    uint32_t m_positionOut    = 0;
+
+    uint32_t m_clipDistances  = 0;
+    uint32_t m_cullDistances  = 0;
     
     uint32_t m_primitiveIdIn  = 0;
     uint32_t m_primitiveIdOut = 0;
-    
+
+    uint32_t m_pointSizeOut   = 0;
+
     //////////////////////////////////////////////////
     // Immediate constant buffer. If defined, this is
     // an array of four-component uint32 vectors.
@@ -518,7 +511,6 @@ namespace dxvk {
     ///////////////////////////////////////////////////
     // Entry point description - we'll need to declare
     // the function ID and all input/output variables.
-    std::vector<uint32_t> m_entryPointInterfaces;
     uint32_t              m_entryPointId = 0;
     
     ////////////////////////////////////////////
@@ -535,10 +527,6 @@ namespace dxvk {
     DxbcCompilerGsPart m_gs;
     DxbcCompilerPsPart m_ps;
     DxbcCompilerCsPart m_cs;
-
-    /////////////////////////////
-    // Enabled SPIR-V extensions
-    DxbcSpirvExtensions m_extensions;
 
     //////////////////////
     // Global state stuff
@@ -584,8 +572,7 @@ namespace dxvk {
     void emitDclConstantBufferVar(
             uint32_t                regIdx,
             uint32_t                numConstants,
-      const char*                   name,
-            bool                    asSsbo);
+      const char*                   name);
     
     void emitDclSampler(
       const DxbcShaderInstruction&  ins);
@@ -729,6 +716,9 @@ namespace dxvk {
       const DxbcShaderInstruction&  ins);
     
     void emitInterpolate(
+      const DxbcShaderInstruction&  ins);
+    
+    void emitSparseCheckAccess(
       const DxbcShaderInstruction&  ins);
     
     void emitTextureQuery(
@@ -901,6 +891,16 @@ namespace dxvk {
             DxbcRegisterValue       value,
             DxbcOpModifiers         modifiers);
     
+    ///////////////////////////
+    // Sparse feedback methods
+    uint32_t emitExtractSparseTexel(
+            uint32_t          texelTypeId,
+            uint32_t          resultId);
+
+    void emitStoreSparseFeedback(
+      const DxbcRegister&     feedbackRegister,
+            uint32_t          resultId);
+
     ////////////////////////////////
     // Pointer manipulation methods
     DxbcRegisterPointer emitArrayAccess(
@@ -947,7 +947,8 @@ namespace dxvk {
     DxbcRegisterValue emitRawBufferLoad(
       const DxbcRegister&           operand,
             DxbcRegisterValue       elementIndex,
-            DxbcRegMask             writeMask);
+            DxbcRegMask             writeMask,
+            uint32_t&               sparseFeedbackId);
     
     void emitRawBufferStore(
       const DxbcRegister&           operand,
@@ -1018,21 +1019,12 @@ namespace dxvk {
       const DxbcRegister&           reg,
             DxbcRegisterValue       value);
     
-    ////////////////////////////////////////
-    // Spec constant declaration and access
-    uint32_t emitNewSpecConstant(
-            DxvkSpecConstantId      specId,
-            DxbcScalarType          type,
-            uint32_t                value,
-      const char*                   name);
-
     ////////////////////////////
     // Input/output preparation
     void emitInputSetup();
     void emitInputSetup(uint32_t vertexCount);
     
     void emitOutputSetup();
-    void emitOutputMapping();
     void emitOutputDepthClamp();
     
     void emitInitWorkgroupMemory();
@@ -1088,12 +1080,9 @@ namespace dxvk {
     void emitClipCullLoad(
             DxbcSystemValue         sv,
             uint32_t                srcArray);
-    
-    ///////////////////////////////
-    // Some state checking methods
-    uint32_t emitUavWriteTest(
-      const DxbcBufferInfo&         uav);
-    
+
+    void emitPointSizeStore();
+
     //////////////////////////////////////
     // Common function definition methods
     void emitInit();
@@ -1164,10 +1153,6 @@ namespace dxvk {
     void emitDclInputArray(
             uint32_t          vertexCount);
     
-    void emitDclInputPerVertex(
-            uint32_t          vertexCount,
-      const char*             varName);
-    
     uint32_t emitDclClipCullDistanceArray(
             uint32_t          length,
             spv::BuiltIn      builtIn,
@@ -1182,7 +1167,7 @@ namespace dxvk {
     uint32_t emitSamplePosArray();
     
     void emitFloatControl();
-    
+
     ///////////////////////////////
     // Variable definition methods
     uint32_t emitNewVariable(
@@ -1199,10 +1184,8 @@ namespace dxvk {
     uint32_t emitBuiltinTessLevelInner(
             spv::StorageClass storageClass);
 
-    ////////////////////////////////
-    // Extension enablement methods
-    void enableShaderViewportIndexLayer();
-    
+    uint32_t emitPushConstants();
+
     ////////////////
     // Misc methods
     DxbcCfgBlock* cfgFindBlock(
@@ -1245,6 +1228,10 @@ namespace dxvk {
 
     bool caseBlockIsFallthrough() const;
 
+    uint32_t getUavCoherence(
+            uint32_t                registerId,
+            DxbcUavFlags            flags);
+
     ///////////////////////////
     // Type definition methods
     uint32_t getScalarTypeId(
@@ -1258,8 +1245,9 @@ namespace dxvk {
     
     uint32_t getPointerTypeId(
       const DxbcRegisterInfo& type);
-    
-    uint32_t getPerVertexBlockId();
+
+    uint32_t getSparseResultTypeId(
+            uint32_t baseType);
 
     uint32_t getFunctionId(
             uint32_t          functionNr);
