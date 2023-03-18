@@ -359,7 +359,7 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				if (re4t::cfg->bFixRetryLoadMouseSelector)
 				{
-					if (*(int32_t*)ptrRetryLoadDLGstate != 1)
+					if (ptrRetryLoadDLGstate && *(int32_t*)ptrRetryLoadDLGstate != 1)
 					{
 						*(int32_t*)(regs.edi + 0x160) = regs.ecx;
 					}
