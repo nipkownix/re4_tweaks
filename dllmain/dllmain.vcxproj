@@ -66,7 +66,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>..\dxvk\include\libdisplay-info\lib\debug;..\external\freetype\lib\debug_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\dxvk\include\libdisplay-info\lib\debug_static;..\external\freetype\lib\debug_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freetype.lib;wininet.lib;urlmon.lib;libdisplay-info_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -98,7 +98,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <Link>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>..\wrappers\x86.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>..\dxvk\include\libdisplay-info\lib\release;..\external\freetype\lib\release_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\dxvk\include\libdisplay-info\lib\release_static;..\external\freetype\lib\release_static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freetype.lib;wininet.lib;urlmon.lib;libdisplay-info_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
