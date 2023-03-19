@@ -153,7 +153,7 @@ void re4t::init::ControllerTweaks()
 					float deltaAnalogLX = RawAnalogLX / 32767.0f; // use RawAnalog so we can establish a deadzone independent of Xinput override
 					if (abs(deltaAnalogLX) > LXDeadZone)
 					{
-						float turnSpeed = cPlayer__SPEED_WALK_TURN * std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .15f), 1.0f);
+						float turnSpeed = 1.4f * cPlayer__SPEED_WALK_TURN * std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .10f), 1.0f);
 
 						if (deltaAnalogLX > 0.0f)
 							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
@@ -185,7 +185,7 @@ void re4t::init::ControllerTweaks()
 					float deltaAnalogLX = RawAnalogLX / 32767.0f;
 					if (abs(deltaAnalogLX) > LXDeadZone)
 					{
-						float turnSpeed = cPlayer__SPEED_RUN_TURN *  std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .15f), 1.0f) * pl_speed2_xxx_1216;
+						float turnSpeed = 1.4f * cPlayer__SPEED_RUN_TURN *  std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .10f), 1.0f) * pl_speed2_xxx_1216;
 
 						if (deltaAnalogLX > 0.0f)
 							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
@@ -214,7 +214,7 @@ void re4t::init::ControllerTweaks()
 				if (isController() && re4t::cfg->bSmoothAnalogTurning)
 				{
 					float deltaAnalogLX = RawAnalogLX / 32767.0f;
-					float turnSpeed = cPlayer__SPEED_WALK_TURN * std::min((deltaAnalogLX / (1.0f - .15f)), 1.0f);
+					float turnSpeed = 1.4f * cPlayer__SPEED_WALK_TURN * std::min((deltaAnalogLX / (1.0f - .10f)), 1.0f);
 
 					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
 				}
