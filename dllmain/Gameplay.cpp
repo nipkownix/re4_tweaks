@@ -283,12 +283,27 @@ void re4t::init::Gameplay()
 	if (re4t::cfg->bEnableNTSCMode)
 	{
 		// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
-		auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
-		Patch(pattern.count(1).get(0).get<uint32_t>(0), { 0xB2, 0x01, 0x90 }); // GamePointInit, { mov dl, 1 }
+		auto pattern = hook::pattern("05 7C 15 00 00 6A 00 89 81 94 4F 00 00");
+		struct GamePointInit_NormalGameRank
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				*(uint32_t*)(regs.ecx + 0x4F94) = SystemSavePtr()->language_8 == 1 || re4t::cfg->bEnableNTSCMode ? 5500 : 3500;
+			}
+		}; injector::MakeInline<GamePointInit_NormalGameRank>(pattern.count(1).get(0).get<uint32_t>(7), pattern.count(1).get(0).get<uint32_t>(13));
 
 		// Assignment Ada: increased difficulty (4500->6500)
-		pattern = hook::pattern("66 39 B1 ? ? 00 00 75 10");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // GameAddPoint
+		pattern = hook::pattern("8B ? ? ? ? ? 80 7E 08 01 74");
+		struct GameAddPoint_AAdaGameRank
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (SystemSavePtr()->language_8 == 1 || re4t::cfg->bEnableNTSCMode)
+					regs.ef |= (1 << regs.zero_flag);
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<GameAddPoint_AAdaGameRank>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
 		// Shooting range: increased bottle cap score requirements (1000->3000)
 		pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
