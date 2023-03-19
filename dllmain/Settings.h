@@ -143,6 +143,7 @@ public:
 	bool bFixSilencedHandgunDescription = true;
 	bool bEnableDebugMenu = false;
 	bool bShowGameOutput = false;
+	bool bSaveGameOutput = false;
 	bool bEnableModExpansion = false;
 	bool bForceETSApplyScale = false;
   

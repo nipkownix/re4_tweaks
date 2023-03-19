@@ -1835,6 +1835,11 @@ void cfgMenuRender()
 
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						ImGui::TextWrapped("Displays the game's original logs/debug output into a console window. (F2 by default)");
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("SaveGameOutput", &re4t::cfg->bSaveGameOutput);
+						ImGui::TextWrapped("Save the game's output messages to \"game_output.log\".");
 					}
 
 					ImGui_ColumnFinish();

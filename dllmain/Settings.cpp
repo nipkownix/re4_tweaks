@@ -273,6 +273,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bSpeedUpQuitGame = ini.getBool("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
 		re4t::cfg->bEnableDebugMenu = ini.getBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 		re4t::cfg->bShowGameOutput = ini.getBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
+		re4t::cfg->bShowGameOutput = ini.getBool("MISC", "SaveGameOutput", re4t::cfg->bSaveGameOutput);
 		re4t::cfg->bEnableModExpansion = ini.getBool("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 		re4t::cfg->bForceETSApplyScale = ini.getBool("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 		re4t::cfg->bAlwaysShowOriginalTitleBackground = ini.getBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
@@ -721,6 +722,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 		ini.setBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 		ini.setBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
+		ini.setBool("MISC", "SaveGameOutput", re4t::cfg->bSaveGameOutput);
 		ini.setBool("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
 		ini.setBool("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
 		// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
@@ -1075,6 +1077,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ShowGameOutput", re4t::cfg->bShowGameOutput ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SaveGameOutput", re4t::cfg->bSaveGameOutput ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AlwaysShowOriginalTitleBg", re4t::cfg->bAlwaysShowOriginalTitleBackground ? "true" : "false");
