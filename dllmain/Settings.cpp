@@ -112,13 +112,13 @@ void ReadSettingsIni(std::wstring ini_path, setType type)
 	if ((type == MAIN) || (type == ALL))
 	{
 		// VULKAN
-		re4t::dxvk::cfg->bUseVulkanRenderer = ini.getBool("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
-		re4t::dxvk::cfg->bShowFPS = ini.getBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
-		re4t::dxvk::cfg->bShowGPULoad = ini.getBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
-		re4t::dxvk::cfg->bShowDeviceInfo = ini.getBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
+		re4t::dxvk::cfg->bUseVulkanRenderer = ini.getBool("RENDERER", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+		re4t::dxvk::cfg->bShowFPS = ini.getBool("RENDERER", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+		re4t::dxvk::cfg->bShowGPULoad = ini.getBool("RENDERER", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+		re4t::dxvk::cfg->bShowDeviceInfo = ini.getBool("RENDERER", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
 
-		re4t::dxvk::cfg->DXVK_HUD = ini.getString("VULKAN", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
-		re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = ini.getString("VULKAN", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
+		re4t::dxvk::cfg->DXVK_HUD = ini.getString("RENDERER", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
+		re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = ini.getString("RENDERER", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
 
 		// DISPLAY
 		re4t::cfg->fFOVAdditional = ini.getFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
@@ -600,10 +600,10 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		iniReader ini(iniPath);
 
 		// VULKAN
-		ini.setBool("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
-		ini.setBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
-		ini.setBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
-		ini.setBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
+		ini.setBool("RENDERER", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+		ini.setBool("RENDERER", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+		ini.setBool("RENDERER", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+		ini.setBool("RENDERER", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
 
 		// DISPLAY
 		ini.setFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);

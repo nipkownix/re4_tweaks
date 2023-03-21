@@ -3,8 +3,7 @@
 
 class dxvk_cfg {
 public:
-
-	bool bUseVulkanRenderer = true;
+	bool bUseVulkanRenderer = false;
 	bool bShowFPS = false;
 	bool bShowGPULoad = false;
 	bool bShowDeviceInfo = false;
