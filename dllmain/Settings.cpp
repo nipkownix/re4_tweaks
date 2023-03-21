@@ -89,7 +89,14 @@ void re4t_cfg::ParseHotkeys()
 	Trainer_ParseKeyCombos();
 }
 
-void ReadSettingsIni(std::wstring ini_path)
+enum setType
+{
+	MAIN,
+	TRAINER,
+	ALL
+};
+
+void ReadSettingsIni(std::wstring ini_path, setType type)
 {
 	iniReader ini(ini_path);
 
@@ -102,6 +109,7 @@ void ReadSettingsIni(std::wstring ini_path)
 	re4t::cfg->HasUnsavedChanges = false;
 	
 	// Main .ini file
+	if ((type == MAIN) || (type == ALL))
 	{
 		// VULKAN
 		re4t::dxvk::cfg->bUseVulkanRenderer = ini.getBool("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
@@ -273,7 +281,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bSpeedUpQuitGame = ini.getBool("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
 		re4t::cfg->bEnableDebugMenu = ini.getBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 		re4t::cfg->bShowGameOutput = ini.getBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
-		re4t::cfg->bShowGameOutput = ini.getBool("MISC", "SaveGameOutput", re4t::cfg->bSaveGameOutput);
+		re4t::cfg->bSaveGameOutput = ini.getBool("MISC", "SaveGameOutput", re4t::cfg->bSaveGameOutput);
 		re4t::cfg->bEnableModExpansion = ini.getBool("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 		re4t::cfg->bForceETSApplyScale = ini.getBool("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 		re4t::cfg->bAlwaysShowOriginalTitleBackground = ini.getBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
@@ -329,6 +337,7 @@ void ReadSettingsIni(std::wstring ini_path)
 	}
 
 	// Trainer .ini file
+	if ((type == TRAINER) || (type == ALL))
 	{
 		// TRAINER
 		re4t::cfg->bTrainerEnable = ini.getBool("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
@@ -499,12 +508,12 @@ void re4t_cfg::ReadSettings()
 {
 	// Read default settings file first
 	std::wstring sDefaultIniPath = rootPath + wrapperName + L".ini";
-	ReadSettingsIni(sDefaultIniPath);
+	ReadSettingsIni(sDefaultIniPath, setType::MAIN);
 
 	// Try reading in trainer.ini settings
 	std::wstring sTrainerIniPath = rootPath + L"re4_tweaks\\trainer.ini";
 	if (std::filesystem::exists(sTrainerIniPath))
-		ReadSettingsIni(sTrainerIniPath);
+		ReadSettingsIni(sTrainerIniPath, setType::TRAINER);
 
 	// Try reading any setting override files
 	auto override_path = rootPath + sSettingOverridesPath;
@@ -532,7 +541,7 @@ void re4t_cfg::ReadSettings()
 
 	// Process override INIs
 	for (const auto& path : override_inis)
-		ReadSettingsIni(path.wstring());
+		ReadSettingsIni(path.wstring(), setType::ALL);
 
 	// Special case for HDProject settings
 	if (re4t::cfg->bIsUsingHDProject)
@@ -773,8 +782,8 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 			const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
 
-			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\settings.ini"))
-				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
+			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini"))
+				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini", iniPath, copyOptions);
 		}
 
 		// Try to remove read-only flag is it is set, for some reason.
