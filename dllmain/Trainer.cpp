@@ -310,13 +310,60 @@ void __cdecl GameAddPoint_Hook(LVADD type)
 	GameAddPoint_orig(type);
 }
 
-bool(__cdecl* cameraHitCheck_orig)(Vec *pCross, Vec *pNorm, Vec p0, Vec p1);
-bool __cdecl cameraHitCheck_hook(Vec *pCross, Vec *pNorm, Vec p0, Vec p1)
+void(__fastcall* CameraQuasiFPS__hitCheck)(CameraQuasiFPS* thisptr, void* unused, Mtx pl_mat, QFPS_OFFSET* p_offset, CAMERA_POINT* p_aim);
+void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unused, Mtx pl_mat, QFPS_OFFSET* p_offset, CAMERA_POINT* p_aim)
 {
-	if (re4t::cfg->bTrainerEnableFreeCam)
-		return false;
-	else
-		return cameraHitCheck_orig(pCross, pNorm, p0, p1);
+	// CameraQuasiFPS::hitCheck gets called right after camera values are calculated inside ::calcOffset
+	// Our freecam isn't interested in collision, so it's a very convenient place to override things :^)
+
+	if (!re4t::cfg->bTrainerEnableFreeCam)
+	{
+		CameraQuasiFPS__hitCheck(thisptr, unused, pl_mat, p_offset, p_aim);
+		return;
+	}
+
+	// Override results of calcOffset
+	{
+		// Remove orbit offset from camera
+		p_aim->Campos_0 = Vec();
+	
+		// Recalculate target direction, fixes issues with it being biased toward one Y axis direction, and "sticking" at certain angles
+		void MTXRotRad(Mtx m, char axis, float rad); // MathReimpl.cpp
+		void MTXMultVecSR(const Mtx m, const Vec * v, Vec * out); // MathReimpl.cpp
+
+		Mtx m;
+		MTXRotRad(m, 'y', fFreeCam_direction);
+
+		// Smooth out Y axis movement, but only if CamSmooth is disabled/very low
+		static float fFreeCam_depression_prev = 0;
+		if (Game_GetCameraSmoothness() > 0) // CamSmooth already enabled, use value without smoothing
+			fFreeCam_depression_prev = fFreeCam_depression;
+		else
+		{
+#if 1
+			// Smooth out y axis by tracking previous frame value
+			// Same method game uses to smooth X axis in CameraQuasiFPS::move (at 0x59E27A in 1.1.0)
+			const float ud_rate = 0.6f;
+			const float ud_rate_inv = 1.0 - ud_rate;
+			float dep_inv = fFreeCam_depression * ud_rate_inv;
+			fFreeCam_depression_prev = (fFreeCam_depression_prev * ud_rate) + dep_inv;
+#else
+			// Smooth out y axis by using the average of previous frame value + new value
+			// Should make the Y axis rotation increase toward the new value each frame, rather than being immediately set to it
+			// (above method seems to work better, but figured it was worth leaving this as an example...)
+			fFreeCam_depression_prev = (fFreeCam_depression_prev + fFreeCam_depression) / 2;
+#endif
+		}
+		p_aim->Target_C.x = 0;
+		p_aim->Target_C.y = sin(fFreeCam_depression_prev);
+		p_aim->Target_C.z = cos(fFreeCam_depression_prev);
+		MTXMultVecSR(m, &p_aim->Target_C, &p_aim->Target_C);
+	}
+
+	p_aim->Roll_18 = p_offset->m_roll_24;
+	p_aim->Fovy_1C = p_offset->m_fovy_28;
+	if (p_aim->Fovy_1C <= 0)
+		p_aim->Fovy_1C = 50;
 }
 
 bool ShowDebugTrgHint = false;
@@ -983,58 +1030,23 @@ void Trainer_Init()
 
 	// Free cam
 	{
-		// Hook cameraHitCheck to disable hit detection
-		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 20 84 C0 74 2A");
-		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_orig);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_hook, PATCH_JUMP);
+		// Hook CameraQuasiFPS::hitCheck to remove collision & camera orbit offset
+		auto pattern = hook::pattern("52 8D 85 ? ? ? ? 50 8D 4D ? 51 8B CB E8");
+		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck_Hook, PATCH_JUMP);
 
-		// Redirect m_direction_ratio_208 and m_depression_ratio_204 when using free cam
-		pattern = hook::pattern("D9 83 ? ? ? ? DA E9 89 85 ? ? ? ? DF E0");
-		struct calcOffset_direction
+		pattern = hook::pattern("05 94 00 00 00 50 8B CE E8 ? ? ? ? 8B 0D");
+		struct cBlock__checkv_hook
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				float direction;
-
+				// Check against camera position instead of player pos if freecam is enabled
 				if (re4t::cfg->bTrainerEnableFreeCam)
-					direction = fFreeCam_direction;
+					regs.eax = (uint32_t)&CamCtrl->m_camera_38.Campos_0;
 				else
-					direction = CamCtrl->m_QuasiFPS_278.m_direction_ratio_208;
-
-				__asm {fld direction}
+					regs.eax += 0x94; // orig code
 			}
-		}; injector::MakeInline<calcOffset_direction>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? 51 D9 1C ? 8D 85 ? ? ? ? 6A ? 50");
-		injector::MakeInline<calcOffset_direction>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? D9 EE D9 C0 DD EA DF E0 DD D9 F6 C4 ? 7A ? 8B 75");
-		struct calcOffset_depression
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				float depression;
-
-				if (re4t::cfg->bTrainerEnableFreeCam)
-					depression = fFreeCam_depression;
-				else
-					depression = CamCtrl->m_QuasiFPS_278.m_depression_ratio_204;
-
-				__asm {fld depression}
-			}
-		}; injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? D8 D9 DF E0 F6 C4 ? 0F 85");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? 52 D9 9D ? ? ? ? 51 D9 85 ? ? ? ? 8D 45");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? D8 D9 DF E0 F6 C4 ? 0F 8A ? ? ? ? DD D8 8D 95");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
-		pattern = hook::pattern("D9 83 ? ? ? ? 52 DC 0D ? ? ? ? 51 8D 45 ? D9 9D");
-		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		}; injector::MakeInline<cBlock__checkv_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
 
 	// Hook DebugTrg stub to use our reimplemented version
@@ -1135,36 +1147,32 @@ void Trainer_Update()
 			float movSpeed = 140.0f * re4t::cfg->fTrainerNumMoveSpeed;
 
 			// Cam directions
-			float LookX = -GlobalPtr()->Camera_74.Look_D0.x * movSpeed;
-			float LookY = -GlobalPtr()->Camera_74.Look_D0.y * movSpeed;
-			float LookZ = -GlobalPtr()->Camera_74.Look_D0.z * movSpeed;
+			Vec& Look = GlobalPtr()->Camera_74.Look_D0;
+			Vec& Right = GlobalPtr()->Camera_74.Right_DC;
+
+			Vec Move;
 
 			// Forwards
 			if (pInput->is_key_down(0x68)) //VK_NUMPAD_8
-			{
-				player->pos_94.x += LookX;
-				player->pos_94.z += LookZ;
-			}
+				Move -= Look;
 
 			// Backwards
 			if (pInput->is_key_down(0x62)) //VK_NUMPAD_2
-			{
-				player->pos_94.x -= LookX;
-				player->pos_94.z -= LookZ;
-			}
+				Move += Look;
 
 			// Left
 			if (pInput->is_key_down(0x64)) //VK_NUMPAD_4
-			{
-				player->pos_94.x += LookZ;
-				player->pos_94.z -= LookX;
-			}
+				Move -= Right;
 
 			// Right
 			if (pInput->is_key_down(0x66)) //VK_NUMPAD_6
+				Move += Right;
+
+			if (Move.x != 0.0f || Move.y != 0.0f || Move.z != 0.0f)
 			{
-				player->pos_94.x -= LookZ;
-				player->pos_94.z += LookX;
+				Move.normalize();
+
+				player->pos_94 += (Move * movSpeed);
 			}
 
 			// Up
@@ -1227,7 +1235,8 @@ void Trainer_Update()
 		fFreeCam_direction -= dir_delta;
 		fFreeCam_depression += dep_delta;
 
-		fFreeCam_depression = std::clamp(fFreeCam_depression, -2.33f, 2.33f);
+		// Clamp to a tiny bit below (M_PI / 2) to prevent some camera weirdness
+		fFreeCam_depression = std::clamp(fFreeCam_depression, -1.56f, 1.56f);
 
 		// Flag and backup
 		bool isFlagSet = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL));
@@ -1238,6 +1247,10 @@ void Trainer_Update()
 			CamXYZbackup[0] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
 			CamXYZbackup[1] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
 			CamXYZbackup[2] = CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
+
+			// Update camera Y coord - our patched freecam no longer orbits, making same position result in camera being lowered
+			// As a workaround we'll just increase Y coord to roughly above player char
+			CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3] += 2000.f;
 
 			// Backup original collision flags and then unset collision-enabled bit
 			if (!pl_atariInfoFlagSet)
@@ -1257,12 +1270,17 @@ void Trainer_Update()
 				ashley->atari_2B4.m_flag_1A &= ~(SAT_SCA_ENABLE | SAT_OBA_ENABLE); // map collision | em collision
 			}
 
+			// Override camera smoothness
+			// (users will be able to override this if they change smoothness in cfgMenu tho... oh well, it's not a bug, it's a feature :)
+			Game_SetCameraSmoothness(0);
+
 			// Set pl stop flag
 			FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL), true);
 			stopPlFlagSet = true;
 		}
 
 		// Input handling
+		bool isPressingAimBtn = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_KAMAE) == (uint64_t)KEY_BTN::KEY_KAMAE);
 		bool isPressingFwd = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_FORWARD) == (uint64_t)KEY_BTN::KEY_FORWARD);
 		bool isPressingBack = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_BACK) == (uint64_t)KEY_BTN::KEY_BACK);
 		bool isPressingLeft = ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_LEFT) == (uint64_t)KEY_BTN::KEY_LEFT);
@@ -1294,44 +1312,47 @@ void Trainer_Update()
 			movSpeed *= 2.0f;
 
 		// Directions
-		float LookX = -GlobalPtr()->Camera_74.Look_D0.x * movSpeed;
-		float LookY = -GlobalPtr()->Camera_74.Look_D0.y * movSpeed;
-		float LookZ = -GlobalPtr()->Camera_74.Look_D0.z * movSpeed;
+		Vec& Look = GlobalPtr()->Camera_74.Look_D0;
+		Vec& Right = GlobalPtr()->Camera_74.Right_DC;
 
 		float* X = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
 		float* Y = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
 		float* Z = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
 
-		// Forwards
-		if (isPressingFwd)
-		{
-			*X += LookX;
-			*Y += LookY;
-			*Z += LookZ;
-		}
+		Vec Move;
 
-		// Backwards
-		if (isPressingBack)
+		// If aim button is pressed then game will set KEY_FORWARD etc buttons based on mouse movement, guess aim mode must be relying on those
+		// For now we'll prevent checking KEY_FORWARD if aim is pressed, to get rid of the weird movement pattern it activates
+		// More info at https://github.com/nipkownix/re4_tweaks/pull/437#issuecomment-1386479475
+		// TODO: maybe could be worth adding our own code to update position based on actual mouse movement, to help make subtle adjustments to position
+		if (!isPressingAimBtn)
 		{
-			*X -= LookX;
-			*Y -= LookY;
-			*Z -= LookZ;
-		}
+			// Forwards
+			if (isPressingFwd)
+				Move -= Look; // look is inverted from forward position, subtract it to move forward...
 
-		// Left
-		if (isPressingLeft)
-		{
-			*X += LookZ;
-			*Z -= LookX;
-		}
+			// Backwards
+			if (isPressingBack)
+				Move += Look;
 
-		// Right
-		if (isPressingRight)
-		{
-			// TODO: these values are a bit off from (Camera_74.Right_DC * movSpeed), but only by a tiny amount
-			// The difference doesn't really seem to matter, but maybe this would be more accurate to use the Right_DC values instead..
-			*X -= LookZ;
-			*Z += LookX;
+			// Left
+			if (isPressingLeft)
+				Move -= Right;
+
+			// Right
+			if (isPressingRight)
+				Move += Right;
+
+			// normalize our move direction before applying it, to prevent diagonal movement from speeding up movement
+			// (normalize breaks if vec.x / .y / .z are all 0, so check that a button was pressed first...)
+			if (isPressingFwd || isPressingBack || isPressingLeft || isPressingRight)
+			{
+				Move.normalize();
+
+				*X += (Move.x * movSpeed);
+				*Y += (Move.y * movSpeed);
+				*Z += (Move.z * movSpeed);
+			}
 		}
 
 		// Up
@@ -1393,6 +1414,9 @@ void Trainer_Update()
 		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3] = CamXYZbackup[0];
 		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3] = CamXYZbackup[1];
 		CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3] = CamXYZbackup[2];
+
+		// Restore camera smoothness to users setting...
+		Game_SetCameraSmoothness(re4t::cfg->fCameraSmoothing / 100.0f);
 
 		FlagSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL), false);
 		stopPlFlagSet = false;

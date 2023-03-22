@@ -6,10 +6,74 @@
 static_assert( sizeof(mytype) <= (size), "Size of " #mytype " is greater than " #size "!" ); \
 static_assert( sizeof(mytype) >= (size), "Size of " #mytype " is less than "    #size "!" )
 
-typedef struct tagVec // PS2 seems to refer to these via the tag names
+struct Vec // aka tagVec, Point3d
 {
-	float x, y, z;
-} Vec, *VecPtr, Point3d, *Point3dPtr;
+public:
+    float x, y, z;
+    Vec() : x(0.f), y(0.f), z(0.f) {}
+    Vec(float x, float y, float z) : x(x), y(y), z(z) {}
+
+    // Overload syntactic sugar
+    Vec operator+(const Vec& vector) const
+    {
+        return Vec(x + vector.x, y + vector.y, z + vector.z);
+    }
+
+    void operator+=(const Vec& vector)
+    {
+        x += vector.x;
+        y += vector.y;
+        z += vector.z;
+    }
+
+    Vec operator-(const Vec& vector) const
+    {
+        return Vec(x - vector.x, y - vector.y, z - vector.z);
+    }
+
+    void operator-=(const Vec& vector)
+    {
+        x -= vector.x;
+        y -= vector.y;
+        z -= vector.z;
+    }
+
+    Vec operator*(const Vec& vector) const
+    {
+        return Vec(x * vector.x, y * vector.y, z * vector.z);
+    }
+
+    Vec operator*(const float& value) const
+    {
+        return Vec(x * value, y * value, z * value);
+    }
+
+    void operator*=(const float& value)
+    {
+        x *= value;
+        y *= value;
+        z *= value;
+    }
+
+    Vec operator/(const Vec& vector) const
+    {
+        return Vec(x / vector.x, y / vector.y, z / vector.z);
+    }
+
+    Vec operator/(const float& value) const
+    {
+        return Vec(x / value, y / value, z / value);
+    }
+
+    void operator/=(const float& value)
+    {
+        x /= value;
+        y /= value;
+        z /= value;
+    }
+
+    void normalize(); // MathReimpl.cpp
+};
 assert_size(Vec, 0xC);
 
 struct SVEC
