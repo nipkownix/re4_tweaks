@@ -142,8 +142,9 @@ void re4t::init::ControllerTweaks()
 	{
 		// pl_R1_Walk
 		auto pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? 8B ? ? ? ? ? D9");
-		static const float LXDeadZone = 0.30f;
 		static const float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
+		static const float AnalogMultiplier = 1.4f; // increase max turn speed when using analog input to smooth out the transition to stationary turning
+		static const float LXDeadZone = 0.2f; // RE5 has a small horizontal deadzone when moving forwards but not backwards
 		struct WalkTurnHook
 		{
 			void operator()(injector::reg_pack& regs)
@@ -153,7 +154,8 @@ void re4t::init::ControllerTweaks()
 					float deltaAnalogLX = RawAnalogLX / 32767.0f; // use RawAnalog so we can establish a deadzone independent of Xinput override
 					if (abs(deltaAnalogLX) > LXDeadZone)
 					{
-						float turnSpeed = 1.4f * cPlayer__SPEED_WALK_TURN * std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .10f), 1.0f);
+						// overriding Xinput changes the threshold where stationary turning begins, let's cap the response curve to make max turn speed consistent for deadzone override values <0.5
+						float turnSpeed = AnalogMultiplier * cPlayer__SPEED_WALK_TURN * pow(std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - 0.1f), 1.0f), 2.0f);
 
 						if (deltaAnalogLX > 0.0f)
 							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
@@ -185,7 +187,7 @@ void re4t::init::ControllerTweaks()
 					float deltaAnalogLX = RawAnalogLX / 32767.0f;
 					if (abs(deltaAnalogLX) > LXDeadZone)
 					{
-						float turnSpeed = 1.4f * cPlayer__SPEED_RUN_TURN *  std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - .10f), 1.0f) * pl_speed2_xxx_1216;
+						float turnSpeed = AnalogMultiplier * cPlayer__SPEED_RUN_TURN *  pow(std::min((abs(deltaAnalogLX) - LXDeadZone) / (1.0f - LXDeadZone - 0.1f), 1.0f), 2.0f) * pl_speed2_xxx_1216;
 
 						if (deltaAnalogLX > 0.0f)
 							PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
@@ -214,9 +216,12 @@ void re4t::init::ControllerTweaks()
 				if (isController() && re4t::cfg->bSmoothAnalogTurning)
 				{
 					float deltaAnalogLX = RawAnalogLX / 32767.0f;
-					float turnSpeed = 1.4f * cPlayer__SPEED_WALK_TURN * std::min((deltaAnalogLX / (1.0f - .10f)), 1.0f);
+					float turnSpeed = AnalogMultiplier * cPlayer__SPEED_WALK_TURN * pow(std::min((abs(deltaAnalogLX) / (1.0f - 0.1f)), 1.0f), 2.0f);
 
-					PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
+					if (deltaAnalogLX > 0.0f)
+						PlayerPtr()->ang_A0.y -= GlobalPtr()->deltaTime_70 * turnSpeed;
+					else
+						PlayerPtr()->ang_A0.y += GlobalPtr()->deltaTime_70 * turnSpeed;
 				}
 				else if ((Key_btn_on() & (uint64_t)KEY_BTN::KEY_RIGHT) == (uint64_t)KEY_BTN::KEY_RIGHT)
 				{
