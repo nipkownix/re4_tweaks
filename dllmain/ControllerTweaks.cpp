@@ -143,7 +143,7 @@ void re4t::init::ControllerTweaks()
 		// pl_R1_Walk
 		auto pattern = hook::pattern("8B C1 83 E0 04 33 D2 0B C2 74 ? 8B ? ? ? ? ? D9");
 		static const float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
-		static const float AnalogMultiplier = 1.4f; // increase max turn speed when using analog input to smooth out the transition to stationary turning
+		static const float AnalogMultiplier = 1.6f; // increase max turn speed when using analog input to smooth out the transition to stationary turning
 		static const float LXDeadZone = 0.2f; // RE5 has a small horizontal deadzone when moving forwards but not backwards
 		struct WalkTurnHook
 		{
