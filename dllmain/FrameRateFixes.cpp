@@ -1545,10 +1545,10 @@ void re4t::init::FrameRateFixes()
 				if (fMercsDeltaTimer >= 1.0F)
 				{
 					fMercsDeltaTimer -= 1.0F;
-					regs.ef |= (1 << regs.zero_flag); // call j_GameAddPoint(LVADD_TIMECOUNT);
+					regs.ef &= ~(1 << regs.zero_flag); // call j_GameAddPoint(LVADD_TIMECOUNT);
 				}
 				else
-					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.zero_flag);
 			}
 		}; injector::MakeInline<MercsModeFPSFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 	}
