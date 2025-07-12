@@ -978,7 +978,7 @@ void Trainer_Init()
 				// Disable the flag that is set when Ashley is trapped
 				if (re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh)
 				{	
-					GlobalPtr()->flags_STATUS_2_5024[0] &= ~0x20000000;
+					FlagSet(GlobalPtr()->flags_STATUS_2_5024, uint32_t(Flags_STATUS::STA_PL_CHECK2), false);
 					regs.eax = (uint32_t)PlayerPtr();
 				}
 			}
