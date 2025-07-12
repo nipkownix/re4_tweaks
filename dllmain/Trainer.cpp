@@ -975,8 +975,12 @@ void Trainer_Init()
 				regs.eax = (uint32_t)AshleyPtr();
 
 				// Make game check for Leon's position against itself, instead of checking against Ashley's position.
+				// Disable the flag that is set when Ashley is trapped
 				if (re4t::cfg->bTrainerAllowEnterDoorsWithoutAsh)
+				{	
+					GlobalPtr()->flags_STATUS_2_5024[0] &= ~0x20000000;
 					regs.eax = (uint32_t)PlayerPtr();
+				}
 			}
 		}; injector::MakeInline<CheckAshleyActive_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
