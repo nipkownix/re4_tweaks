@@ -3,59 +3,18 @@ name: CI
 on:
   push:
     branches:
-      - '**'
+      - "**"
   pull_request:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 
 jobs:
-  build-debug:
-    name: Build Debug
-    runs-on: windows-2025
-
-    steps:
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d_%H%M%S')" >> $env:GITHUB_OUTPUT
-
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Build Debug
-        run: |
-          msbuild re4_tweaks.sln /p:Configuration=Debug /p:PostBuildEventUseInBuild=false
-
-      - name: Create default configuration file
-        shell: bash
-        run: |
-          cp settings/settings.ini dinput8.ini
-          cp settings/trainer_settings.ini trainer.ini
-
-      - name: Copy game data files
-        shell: bash
-        run: |
-          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Debug/re4_tweaks/
-          cp -r dist/Bin32/re4_tweaks/ Debug/
-          cp dinput8.ini Debug/
-          cp trainer.ini Debug/re4_tweaks/
-
-      - name: Upload Debug
-        uses: actions/upload-artifact@v4
-        with:
-          path: |
-            Debug/re4_tweaks/
-            Debug/dinput8.dll
-            Debug/dinput8.ini
-            Debug/dinput8.pdb
-          name: re4_tweaks_debug_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
-
-  build-release:
-    name: Build Release
+  build:
+    strategy:
+      matrix:
+        build-type: [Debug, Release]
+    name: Build ${{ matrix.build-type }}
     runs-on: windows-2025
 
     steps:
@@ -72,33 +31,35 @@ jobs:
 
       - name: Remove VERBOSE
         shell: bash
+        if: matrix.build-type == 'Release'
         run: |
           sed -i "s/#define VERBOSE//" dllmain/dllmain.h
 
-      - name: Build Release
+      - name: Build ${{ matrix.build-type }}
         run: |
-          msbuild re4_tweaks.sln /p:Configuration=Release /p:PostBuildEventUseInBuild=false
+          msbuild re4_tweaks.sln /p:Configuration=${{ matrix.build-type }} /p:PostBuildEventUseInBuild=false
 
       - name: Create default configuration file
         shell: bash
+        working-directory: ./${{ matrix.build-type }}
         run: |
-          cp settings/settings.ini dinput8.ini
-          cp settings/trainer_settings.ini trainer.ini
+          mkdir re4_tweaks
+          cp ../settings/settings.ini ./dinput8.ini
+          cp ../settings/trainer_settings.ini ./re4_tweaks/trainer.ini
 
       - name: Copy game data files
         shell: bash
+        working-directory: ./${{ matrix.build-type }}
         run: |
-          cp -r external/EnglishSubtitleData/Bin32/re4_tweaks/ Release/re4_tweaks/
-          cp -r dist/Bin32/re4_tweaks/ Release/
-          cp dinput8.ini Release/
-          cp trainer.ini Release/re4_tweaks/
+          cp -r ../external/EnglishSubtitleData/Bin32/re4_tweaks/ ./
+          cp -r ../dist/Bin32/re4_tweaks/ ./
 
-      - name: Upload Release
+      - name: Upload ${{ matrix.build-type }}
         uses: actions/upload-artifact@v4
         with:
           path: |
-            Release/re4_tweaks/
-            Release/dinput8.dll
-            Release/dinput8.ini
-            Release/dinput8.pdb
-          name: re4_tweaks_release_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
+            ${{ matrix.build-type }}/re4_tweaks/
+            ${{ matrix.build-type }}/dinput8.dll
+            ${{ matrix.build-type }}/dinput8.ini
+            ${{ matrix.build-type }}/dinput8.pdb
+          name: re4_tweaks_${{ matrix.build-type }}_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
