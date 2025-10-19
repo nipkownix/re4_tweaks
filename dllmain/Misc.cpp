@@ -561,13 +561,13 @@ void re4t::init::Misc()
 		auto pattern = hook::pattern("E8 ? ? ? ? 85 C0 74 ? 81 A6 ? ? ? ? ? ? ? ? C7 86 ? ? ? ? ? ? ? ? 5E");
 
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), joyKamae_orig);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), joyKamae_Hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), joyKamae_Hook, HookType::Jump);
 
 		// cPlayer::keyReload -> Makes the game enter the reload routine if a condition is met.
 		pattern = hook::pattern("E8 ? ? ? ? 84 C0 74 3A 8B 86 ? ? ? ? 39 58 ? 74 ? 8B 40");
 
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cPlayer__keyReload_orig);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cPlayer__keyReload_hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cPlayer__keyReload_hook, HookType::Jump);
 
 		// PlReloadDirect is used to skip the camera change when you press the aim button (checked in cPlayer::isKamae)
 		pattern = hook::pattern("80 3D ? ? ? ? ? 74 ? 3C ? 74 ? 3C ? 74 ? B8 ? ? ? ? C3");
@@ -1315,7 +1315,7 @@ void re4t::init::Misc()
 		}; injector::MakeInline<SsItemExamine__move_SavecItem>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
 		pattern = hook::pattern("68 84 00 02 00 51 53");
 		ReadCall(pattern.count(1).get(0).get<uint8_t>(13), MesSet);
-		InjectHook(pattern.count(1).get(0).get<uint32_t>(13), SsItemExamine__move_MesSet_hook, PATCH_CALL);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(13), SsItemExamine__move_MesSet_hook, HookType::Call);
 	}
 
 	// Allow physics to apply to tactical vest outfit
@@ -1364,7 +1364,7 @@ void re4t::init::Misc()
 		auto pattern = hook::pattern("0F B6 8E 56 06 00 00 83 C4 ? 50 51 E8");
 
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr_Hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xC)).as_int(), GetEtcFlgPtr_Hook, HookType::Jump);
 
 		spd::log()->info("GetEtcFlgPtr hook applied");
 	}

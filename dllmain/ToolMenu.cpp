@@ -446,7 +446,7 @@ void re4t::init::ToolMenu()
 		// Hook eprintf to add screen-drawing to it, like the GC debug has
 		// (required for debug-menu to be able to draw itself)
 		pattern = hook::pattern("55 8B EC 8B 4D ? 8D 45 ? 50 51 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D C3");
-		InjectHook(pattern.count(1).get(0).get<uint32_t>(0), eprintf_Hook, PATCH_JUMP);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(0), eprintf_Hook, HookType::Jump);
 
 		// Hook titleInit to make it load dbgFont for us
 		pattern = hook::pattern("C6 05 ? ? ? ? ? E8 ? ? ? ? D9 05");

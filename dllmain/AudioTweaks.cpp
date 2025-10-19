@@ -102,7 +102,7 @@ void re4t::init::AudioTweaks()
 	// Hook mwPlySetOutVol so we can override FMV volume, and store mwply handle to allow updating volume during runtime
 	pattern = hook::pattern("6A 9C 56 E8 ? ? ? ?");
 	ReadCall(pattern.count(1).get(0).get<uint32_t>(3), mwPlySetOutVol);
-	InjectHook(pattern.count(1).get(0).get<uint32_t>(3), mwPlySetOutVol_Hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(3), mwPlySetOutVol_Hook, HookType::Call);
 
 	// Fetch addr of SND_STR structs
 	pattern = hook::pattern("6B C0 5C 05 ? ? ? ? 5D C3");
@@ -126,7 +126,7 @@ void re4t::init::AudioTweaks()
 
 	// Hook SndCall call inside knife_r3_fire10 to allow restoring original GC knife sound effect
 	pattern = hook::pattern("83 C0 ? 50 6A 03 6A 01 E8");
-	InjectHook(pattern.count(1).get(0).get<uint32_t>(8), knife_r3_fire10_SndCall_Hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(8), knife_r3_fire10_SndCall_Hook, HookType::Call);
 
 	// Silence armored Ashley
 	{

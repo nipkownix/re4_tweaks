@@ -778,7 +778,7 @@ void re4t::init::FrameRateFixes()
 		// OpenBoxMain
 		pattern = hook::pattern("E8 ? ? ? ? 83 C4 18 5D E9 ? ? ? ? 3D ? ? ? ? 75 1A 6A FF 6A 36");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OpenBoxMain_orig);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OpenBoxMain_hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OpenBoxMain_hook, HookType::Jump);
 	}
 
 	// Walls/etc/etc
@@ -1584,12 +1584,12 @@ void re4t::init::FrameRateFixes()
 	auto pattern = hook::pattern("8B 4F 08 50 8D 55 ? 52 89 4D ? E8 ? ? ? ?"); // AddOtModelPosRadius
 	auto caller = pattern.count(2).get(1).get<uint8_t>(0xB);
 	ReadCall(caller, collision_sphere_hexahedron);
-	InjectHook(caller, collision_sphere_hexahedron_Hook, PATCH_CALL);
+	InjectHook(caller, collision_sphere_hexahedron_Hook, HookType::Call);
 
 	pattern = hook::pattern("39 91 80 84 00 00 0F 85 ? ? ? ? E8 ? ? ? ?"); // gameStageInit
 	caller = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
 	ReadCall(caller, NowLoadingOff);
-	InjectHook(caller, NowLoadingOff_Hook, PATCH_JUMP);
+	InjectHook(caller, NowLoadingOff_Hook, HookType::Jump);
 
 	pattern = hook::pattern("D8 D1 DF E0 DD D9 F6 C4 41 75 ? D9 C0 D9 EE DA E9 DF E0 F6 C4 44 7A");
 
