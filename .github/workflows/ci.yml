@@ -18,9 +18,15 @@ jobs:
     runs-on: windows-2025
 
     steps:
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d_%H%M%S')" >> $env:GITHUB_OUTPUT
+      - name: Set variables for artifact names
+        id: vars
+        shell: bash
+        run: |
+          echo "type=${{ matrix.build-type }}" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+          echo "date=$(date +'%Y-%m-%d_%H%M%S')" >> $GITHUB_OUTPUT
+          GIT_REF=${{ github.head_ref || github.ref_name }}
+          # Replace illegal file system characters in branch name
+          echo "git_ref=${GIT_REF//[\":<>|*?\/\\]/_}" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v5
         with:
@@ -62,4 +68,4 @@ jobs:
             ${{ matrix.build-type }}/dinput8.dll
             ${{ matrix.build-type }}/dinput8.ini
             ${{ matrix.build-type }}/dinput8.pdb
-          name: re4_tweaks_${{ matrix.build-type }}_${{ github.head_ref || github.ref_name }}_${{ steps.date.outputs.date }}
+          name: re4_tweaks_${{ steps.vars.outputs.type }}_${{ steps.vars.outputs.git_ref }}_${{ steps.vars.outputs.date }}
