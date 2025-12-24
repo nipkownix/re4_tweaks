@@ -8,7 +8,7 @@
 #include <injector\hooking.hpp>
 #include <injector\assembly.hpp>
 #include <injector\utility.hpp>
-#include <Patterns.h>
+#include "SectionedPatterns.h"
 #include <MemoryMgr.h>
 #include <log.h>
 #include <filesystem>
