@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "ConsoleWnd.h"
 #include "SDK/filter00.h"
+#include "Sections.h"
 #include <deque>
 
 std::string gameVersion;
