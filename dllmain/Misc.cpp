@@ -1219,7 +1219,7 @@ void re4t::init::Misc()
 	// Add Handgun silencer to merchant sell list
 	if (re4t::cfg->bAllowSellingHandgunSilencer)
 	{
-		auto pattern = re4t::pattern("DB 00 AC 0D 01 00 FF FF 00 00 00 00 00 00 00 00 00 00 0B 01", {".data"});
+		auto pattern = hook::pattern("DB 00 AC 0D 01 00 FF FF 00 00 00 00 00 00 00 00 00 00 0B 01");
 
 		struct PRICE_INFO // name from PS2/VR
 		{
@@ -1238,7 +1238,7 @@ void re4t::init::Misc()
 		g_item_price_tbl_130[2].valid_4 = 0;
 
 		// Add 1 to price table count
-		pattern = re4t::pattern("83 00 00 00 78 00 00 00", {".data"});
+		pattern = hook::pattern("83 00 00 00 78 00 00 00");
 		uint32_t* g_item_price_tbl_num = pattern.count(1).get(0).get<uint32_t>(0);
 		*g_item_price_tbl_num += 1;
 
@@ -1371,7 +1371,7 @@ void re4t::init::Misc()
 
 	// Patch reference to non-existent st7_0.rel to point to st6_0.rel instead, allows loading into R7XX rooms
 	{
-		auto pattern = re4t::pattern("73 74 37 5F 30 2E 72 65", {".rdata"});
+		auto pattern = hook::pattern("73 74 37 5F 30 2E 72 65");
 		Patch(pattern.count(1).get(0).get<uint8_t>(2), uint8_t('6'));
 
 		spd::log()->info("st7_0 -> st6_0 patch applied");

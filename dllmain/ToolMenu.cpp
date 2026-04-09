@@ -375,7 +375,7 @@ void GetToolMenuPointers()
 	FlagEdit_die = (decltype(FlagEdit_die))pattern.count(1).get(0).get<uint8_t>(0);
 	FlagEdit_Backup_pG = *(uint32_t**)pattern.count(1).get(0).get<uint8_t>(0x14);
 
-	pattern = re4t::pattern("FF FF FF FF FF FF 00 00 FF 00", {".data"});
+	pattern = hook::pattern("FF FF FF FF FF FF 00 00 FF 00");
 	DbgFontColorArray = pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("99 56 8B 35 ? ? ? ? 89 55");

@@ -311,7 +311,7 @@ void re4t::init::Gameplay()
 
 		// Shooting range: use NTSC strings for the game rules note
 		// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
-		pattern = re4t::pattern("? 00 01 00 46 00 01 00", {".data"});
+		pattern = hook::pattern("? 00 01 00 46 00 01 00");
 		file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
 		// update the note's message index whenever we load into r22c
 		pattern = hook::pattern("89 41 78 83 C1 7C E8");
