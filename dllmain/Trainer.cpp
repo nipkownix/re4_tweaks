@@ -1035,6 +1035,25 @@ void Trainer_Init()
 
 		pattern = hook::pattern("D9 83 ? ? ? ? 52 DC 0D ? ? ? ? 51 8D 45 ? D9 9D");
 		injector::MakeInline<calcOffset_depression>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+
+		// Makes the camera use the default offsets even if the player is paired with ashley, which fixes the pitch problems when they're paired
+		pattern = hook::pattern("A9 00 00 00 20 74 09 C6 86 B4 01 00 00 01");
+		struct UnpairAshley
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (re4t::cfg->bTrainerEnableFreeCam)
+					regs.ef |= (1 << regs.zero_flag);
+
+				else
+				{
+					if (regs.eax & 0x20000000)
+					{
+						regs.ef &= ~(1 << regs.zero_flag);
+					}
+				}
+			}
+		}; injector::MakeInline<UnpairAshley>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 	}
 
 	// Hook DebugTrg stub to use our reimplemented version
