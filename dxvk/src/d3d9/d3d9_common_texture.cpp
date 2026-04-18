@@ -4,6 +4,7 @@
 #include "d3d9_device.h"
 
 #include "../util/util_shared_res.h"
+#include "../util/util_win32_compat.h"
 
 #include <algorithm>
 
@@ -11,24 +12,27 @@ namespace dxvk {
 
   D3D9CommonTexture::D3D9CommonTexture(
           D3D9DeviceEx*             pDevice,
+          IUnknown*                 pInterface,
     const D3D9_COMMON_TEXTURE_DESC* pDesc,
           D3DRESOURCETYPE           ResourceType,
           HANDLE*                   pSharedHandle)
-    : m_device(pDevice), m_desc(*pDesc), m_type(ResourceType) {
+    : m_device(pDevice), m_desc(*pDesc), m_type(ResourceType), m_d3d9Interop(pInterface, this) {
     if (m_desc.Format == D3D9Format::Unknown)
       m_desc.Format = (m_desc.Usage & D3DUSAGE_DEPTHSTENCIL)
                     ? D3D9Format::D32
                     : D3D9Format::X8R8G8B8;
+
+    m_exposedMipLevels = m_desc.MipLevels;
+
+    if (m_desc.Usage & D3DUSAGE_AUTOGENMIPMAP)
+      m_exposedMipLevels = 1;
 
     for (uint32_t i = 0; i < m_dirtyBoxes.size(); i++) {
       AddDirtyBox(nullptr, i);
     }
 
     if (m_desc.Pool != D3DPOOL_DEFAULT) {
-      const uint32_t subresources = CountSubresources();
-      for (uint32_t i = 0; i < subresources; i++) {
-        SetNeedsUpload(i, true);
-      }
+      SetAllNeedUpload();
       if (pSharedHandle) {
         throw DxvkError("D3D9: Incompatible pool type for texture sharing.");
       }
@@ -38,9 +42,12 @@ namespace dxvk {
 
     m_mapMode        = DetermineMapMode();
     m_shadow         = DetermineShadowState();
+    m_upgradedToD32f = ConvertFormatUnfixed(m_desc.Format).FormatColor != m_mapping.FormatColor &&
+                       (m_mapping.FormatColor == VK_FORMAT_D32_SFLOAT_S8_UINT || m_mapping.FormatColor == VK_FORMAT_D32_SFLOAT);
     m_supportsFetch4 = DetermineFetch4Compatibility();
 
-    if (m_mapMode == D3D9_COMMON_TEXTURE_MAP_MODE_BACKED) {
+    const bool createImage = m_desc.Pool != D3DPOOL_SYSTEMMEM && m_desc.Pool != D3DPOOL_SCRATCH && m_desc.Format != D3D9Format::NULL_FORMAT;
+    if (createImage) {
       bool plainSurface = m_type == D3DRTYPE_SURFACE &&
                           !(m_desc.Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL));
 
@@ -67,25 +74,30 @@ namespace dxvk {
       CreateSampleView(0);
 
       if (!IsManaged()) {
-        m_size = m_image->memSize();
+        m_size = m_image->memory().length();
         if (!m_device->ChangeReportedMemory(-m_size))
           throw DxvkError("D3D9: Reporting out of memory from tracking.");
       }
     }
 
-    if (m_mapMode == D3D9_COMMON_TEXTURE_MAP_MODE_SYSTEMMEM)
-      CreateBuffers();
+    for (uint32_t i = 0; i < CountSubresources(); i++) {
+      m_memoryOffset[i] = m_totalSize;
+      m_totalSize += GetMipSize(i);
+    }
 
-    m_exposedMipLevels = m_desc.MipLevels;
-
-    if (m_desc.Usage & D3DUSAGE_AUTOGENMIPMAP)
-      m_exposedMipLevels = 1;
+    // Initialization is handled by D3D9Initializer
+    if (m_mapMode == D3D9_COMMON_TEXTURE_MAP_MODE_UNMAPPABLE)
+      m_data = m_device->GetAllocator()->Alloc(m_totalSize);
+    else if (m_mapMode != D3D9_COMMON_TEXTURE_MAP_MODE_NONE && m_desc.Pool != D3DPOOL_DEFAULT)
+      CreateBuffer(false);
   }
 
 
   D3D9CommonTexture::~D3D9CommonTexture() {
     if (m_size != 0)
       m_device->ChangeReportedMemory(m_size);
+
+    m_device->RemoveMappedTexture(this);
   }
 
 
@@ -166,18 +178,32 @@ namespace dxvk {
   }
 
 
-  bool D3D9CommonTexture::CreateBufferSubresource(UINT Subresource) {
-    if (m_buffers[Subresource] != nullptr)
-      return false;
+  void* D3D9CommonTexture::GetData(UINT Subresource) {
+    if (unlikely(m_buffer != nullptr))
+      return m_buffer->mapPtr(m_memoryOffset[Subresource]);
+
+    m_data.Map();
+    uint8_t* ptr = reinterpret_cast<uint8_t*>(m_data.Ptr());
+    ptr += m_memoryOffset[Subresource];
+    return ptr;
+  }
+
+
+  void D3D9CommonTexture::CreateBuffer(bool Initialize) {
+    if (likely(m_buffer != nullptr))
+      return;
 
     DxvkBufferCreateInfo info;
-    info.size   = GetMipSize(Subresource);
+    info.size   = m_totalSize;
     info.usage  = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
                 | VK_BUFFER_USAGE_TRANSFER_DST_BIT
                 | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    info.stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    info.stages = VK_PIPELINE_STAGE_TRANSFER_BIT
+                | VK_PIPELINE_STAGE_HOST_BIT;
     info.access = VK_ACCESS_TRANSFER_READ_BIT
-                | VK_ACCESS_TRANSFER_WRITE_BIT;
+                | VK_ACCESS_TRANSFER_WRITE_BIT
+                | VK_ACCESS_HOST_WRITE_BIT
+                | VK_ACCESS_HOST_READ_BIT;
 
     if (m_mapping.ConversionFormatInfo.FormatType != D3D9ConversionFormat_None) {
       info.usage  |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
@@ -188,10 +214,17 @@ namespace dxvk {
                                   | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
                                   | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
 
-    m_buffers[Subresource] = m_device->GetDXVKDevice()->createBuffer(info, memType);
-    m_mappedSlices[Subresource] = m_buffers[Subresource]->getSliceHandle();
+    m_buffer = m_device->GetDXVKDevice()->createBuffer(info, memType);
 
-    return true;
+    if (Initialize) {
+      if (m_data) {
+        m_data.Map();
+        std::memcpy(m_buffer->mapPtr(0), m_data.Ptr(), m_totalSize);
+      } else {
+        std::memset(m_buffer->mapPtr(0), 0, m_totalSize);
+      }
+    }
+    m_data = {};
   }
 
 
@@ -199,12 +232,12 @@ namespace dxvk {
     const UINT MipLevel = Subresource % m_desc.MipLevels;
 
     const DxvkFormatInfo* formatInfo = m_mapping.FormatColor != VK_FORMAT_UNDEFINED
-      ? imageFormatInfo(m_mapping.FormatColor)
+      ? lookupFormatInfo(m_mapping.FormatColor)
       : m_device->UnsupportedFormatInfo(m_desc.Format);
 
     const VkExtent3D mipExtent = util::computeMipLevelExtent(
       GetExtent(), MipLevel);
-    
+
     const VkExtent3D blockCount = util::computeBlockCount(
       mipExtent, formatInfo->blockSize);
 
@@ -263,7 +296,7 @@ namespace dxvk {
     // The image must be marked as mutable if it can be reinterpreted
     // by a view with a different format. Depth-stencil formats cannot
     // be reinterpreted in Vulkan, so we'll ignore those.
-    auto formatProperties = imageFormatInfo(m_mapping.FormatColor);
+    auto formatProperties = lookupFormatInfo(m_mapping.FormatColor);
 
     bool isMutable     = m_mapping.FormatSrgb != VK_FORMAT_UNDEFINED;
     bool isColorFormat = (formatProperties->aspectMask & VK_IMAGE_ASPECT_COLOR_BIT) != 0;
@@ -275,21 +308,30 @@ namespace dxvk {
       imageInfo.viewFormats     = m_mapping.Formats;
     }
 
+    const bool hasAttachmentFeedbackLoops =
+      m_device->GetDXVKDevice()->features().extAttachmentFeedbackLoopLayout.attachmentFeedbackLoopLayout;
+    const bool isRT = m_desc.Usage & D3DUSAGE_RENDERTARGET;
+    const bool isDS = m_desc.Usage & D3DUSAGE_DEPTHSTENCIL;
+    const bool isAutoGen = m_desc.Usage & D3DUSAGE_AUTOGENMIPMAP;
+
     // Are we an RT, need to gen mips or an offscreen plain surface?
-    if (m_desc.Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_AUTOGENMIPMAP) || TryOffscreenRT) {
+    if (isRT || isAutoGen || TryOffscreenRT) {
       imageInfo.usage  |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
       imageInfo.stages |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
       imageInfo.access |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
                        |  VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     }
 
-    if (m_desc.Usage & D3DUSAGE_DEPTHSTENCIL) {
+    if (isDS) {
       imageInfo.usage  |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
       imageInfo.stages |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
                        |  VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
       imageInfo.access |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
                        |  VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     }
+
+    if (ResourceType == D3DRTYPE_TEXTURE && (isRT || isDS) && hasAttachmentFeedbackLoops)
+      imageInfo.usage |= VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT;
 
     if (ResourceType == D3DRTYPE_CUBETEXTURE)
       imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
@@ -362,53 +404,54 @@ namespace dxvk {
   BOOL D3D9CommonTexture::CheckImageSupport(
     const DxvkImageCreateInfo*  pImageInfo,
           VkImageTiling         Tiling) const {
-    const Rc<DxvkAdapter> adapter = m_device->GetDXVKDevice()->adapter();
+    DxvkFormatQuery formatQuery = { };
+    formatQuery.format = pImageInfo->format;
+    formatQuery.type = pImageInfo->type;
+    formatQuery.tiling = Tiling;
+    formatQuery.usage = pImageInfo->usage;
+    formatQuery.flags = pImageInfo->flags;
+
+    auto properties = m_device->GetDXVKDevice()->getFormatLimits(formatQuery);
     
-    VkImageFormatProperties formatProps = { };
-    
-    VkResult status = adapter->imageFormatProperties(
-      pImageInfo->format, pImageInfo->type, Tiling,
-      pImageInfo->usage, pImageInfo->flags, formatProps);
-    
-    if (status != VK_SUCCESS)
+    if (!properties)
       return FALSE;
     
-    return (pImageInfo->extent.width  <= formatProps.maxExtent.width)
-        && (pImageInfo->extent.height <= formatProps.maxExtent.height)
-        && (pImageInfo->extent.depth  <= formatProps.maxExtent.depth)
-        && (pImageInfo->numLayers     <= formatProps.maxArrayLayers)
-        && (pImageInfo->mipLevels     <= formatProps.maxMipLevels)
-        && (pImageInfo->sampleCount    & formatProps.sampleCounts);
+    return (pImageInfo->extent.width  <= properties->maxExtent.width)
+        && (pImageInfo->extent.height <= properties->maxExtent.height)
+        && (pImageInfo->extent.depth  <= properties->maxExtent.depth)
+        && (pImageInfo->numLayers     <= properties->maxArrayLayers)
+        && (pImageInfo->mipLevels     <= properties->maxMipLevels)
+        && (pImageInfo->sampleCount    & properties->sampleCounts);
   }
 
 
   VkImageUsageFlags D3D9CommonTexture::EnableMetaCopyUsage(
           VkFormat              Format,
           VkImageTiling         Tiling) const {
-    VkFormatFeatureFlags requestedFeatures = 0;
+    VkFormatFeatureFlags2 requestedFeatures = 0;
 
     if (Format == VK_FORMAT_D16_UNORM || Format == VK_FORMAT_D32_SFLOAT)
-      requestedFeatures |= VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+      requestedFeatures |= VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT;
 
     if (Format == VK_FORMAT_R16_UNORM || Format == VK_FORMAT_R32_SFLOAT)
-      requestedFeatures |=  VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
+      requestedFeatures |=  VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT;
 
-    if (requestedFeatures == 0)
+    if (!requestedFeatures)
       return 0;
 
     // Enable usage flags for all supported and requested features
-    VkFormatProperties properties = m_device->GetDXVKDevice()->adapter()->formatProperties(Format);
+    DxvkFormatFeatures properties = m_device->GetDXVKDevice()->getFormatFeatures(Format);
 
     requestedFeatures &= Tiling == VK_IMAGE_TILING_OPTIMAL
-      ? properties.optimalTilingFeatures
-      : properties.linearTilingFeatures;
+      ? properties.optimal
+      : properties.linear;
     
     VkImageUsageFlags requestedUsage = 0;
     
-    if (requestedFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+    if (requestedFeatures & VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT)
       requestedUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     
-    if (requestedFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT)
+    if (requestedFeatures & VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT)
       requestedUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     return requestedUsage;
@@ -446,8 +489,10 @@ namespace dxvk {
     
     // Filter out unnecessary flags. Transfer operations
     // are handled by the backend in a transparent manner.
+    // Feedback loops are handled by hazard tracking.
     Usage &= ~(VK_IMAGE_USAGE_TRANSFER_DST_BIT
-             | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+             | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+             | VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT);
     
     // Ignore sampled bit in case the image was created with
     // an image flag that only allows attachment usage
@@ -477,6 +522,20 @@ namespace dxvk {
     return VK_IMAGE_LAYOUT_GENERAL;
   }
 
+  D3D9_COMMON_TEXTURE_MAP_MODE D3D9CommonTexture::DetermineMapMode() const {
+    if (m_desc.Format == D3D9Format::NULL_FORMAT)
+      return D3D9_COMMON_TEXTURE_MAP_MODE_NONE;
+
+#ifdef D3D9_ALLOW_UNMAPPING
+    if (m_device->GetOptions()->textureMemory != 0 && m_desc.Pool != D3DPOOL_DEFAULT)
+      return D3D9_COMMON_TEXTURE_MAP_MODE_UNMAPPABLE;
+#endif
+
+    if (m_desc.Pool == D3DPOOL_SYSTEMMEM || m_desc.Pool == D3DPOOL_SCRATCH)
+      return D3D9_COMMON_TEXTURE_MAP_MODE_SYSTEMMEM;
+
+    return D3D9_COMMON_TEXTURE_MAP_MODE_BACKED;
+  }
 
   void D3D9CommonTexture::ExportImageInfo() {
     /* From MSDN:
@@ -541,7 +600,7 @@ namespace dxvk {
     viewInfo.format    = m_mapping.ConversionFormatInfo.FormatColor != VK_FORMAT_UNDEFINED
                        ? PickSRGB(m_mapping.ConversionFormatInfo.FormatColor, m_mapping.ConversionFormatInfo.FormatSrgb, Srgb)
                        : PickSRGB(m_mapping.FormatColor, m_mapping.FormatSrgb, Srgb);
-    viewInfo.aspect    = imageFormatInfo(viewInfo.format)->aspectMask;
+    viewInfo.aspect    = lookupFormatInfo(viewInfo.format)->aspectMask;
     viewInfo.swizzle   = m_mapping.Swizzle;
     viewInfo.usage     = UsageFlags;
     viewInfo.type      = GetImageViewTypeFromResourceType(m_type, Layer);
@@ -606,5 +665,14 @@ namespace dxvk {
       m_sampleView.Srgb = CreateView(AllLayers, Lod, VK_IMAGE_USAGE_SAMPLED_BIT, true);
   }
 
+
+  const Rc<DxvkBuffer>& D3D9CommonTexture::GetBuffer() {
+    return m_buffer;
+  }
+
+
+  DxvkBufferSlice D3D9CommonTexture::GetBufferSlice(UINT Subresource) {
+    return DxvkBufferSlice(GetBuffer(), m_memoryOffset[Subresource], GetMipSize(Subresource));
+  }
 
 }

@@ -485,8 +485,8 @@ void re4t::init::MathReimpl()
 			pattern = hook::pattern("56 8D 55 ? 52 56 E8 ? ? ? ? 8B 4D ? 83 C4 ? 5F");
 			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(6)).as_int();
 
-			InjectHook(caller, VECAdd, PATCH_JUMP);
-			InjectHook(caller_0, VECAdd, PATCH_JUMP);
+			InjectHook(caller, VECAdd, HookType::Jump);
+			InjectHook(caller_0, VECAdd, HookType::Jump);
 		}
 
 		// VECSubtract
@@ -498,8 +498,8 @@ void re4t::init::MathReimpl()
 			pattern = hook::pattern("8D 0C 40 8D 14 8B 57 52 E8 ? ? ? ? 8D 45");
 			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(8)).as_int();
 
-			InjectHook(caller, VECSubtract, PATCH_JUMP);
-			InjectHook(caller_0, VECSubtract, PATCH_JUMP);
+			InjectHook(caller, VECSubtract, HookType::Jump);
+			InjectHook(caller_0, VECSubtract, HookType::Jump);
 		}
 
 		// VECScale
@@ -511,8 +511,8 @@ void re4t::init::MathReimpl()
 			pattern = hook::pattern("8B 7D ? 51 8D 4D ? D9 1C ? 51 50 E8");
 			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
 
-			InjectHook(caller, VECScale, PATCH_JUMP);
-			InjectHook(caller_0, VECScale, PATCH_JUMP);
+			InjectHook(caller, VECScale, HookType::Jump);
+			InjectHook(caller_0, VECScale, HookType::Jump);
 		}
 
 		// VECNormalize
@@ -522,9 +522,9 @@ void re4t::init::MathReimpl()
 			ReadCall(caller, PSVECNormalize);
 
 			if (sse1)
-				InjectHook(caller, VECNormalize_SSE1, PATCH_JUMP);
+				InjectHook(caller, VECNormalize_SSE1, HookType::Jump);
 			else
-				InjectHook(caller, VECNormalize, PATCH_JUMP);
+				InjectHook(caller, VECNormalize, HookType::Jump);
 		}
 
 		// VECDotProduct
@@ -536,8 +536,8 @@ void re4t::init::MathReimpl()
 			pattern = hook::pattern("8D 55 ? 52 8D 45 ? 50 E8 ? ? ? ? D8 1D");
 			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(8)).as_int();
 
-			InjectHook(caller, VECDotProduct, PATCH_JUMP);
-			InjectHook(caller_0, VECDotProduct, PATCH_JUMP);
+			InjectHook(caller, VECDotProduct, HookType::Jump);
+			InjectHook(caller_0, VECDotProduct, HookType::Jump);
 		}
 
 		// VECCrossProduct
@@ -551,13 +551,13 @@ void re4t::init::MathReimpl()
 
 			if (sse1)
 			{
-				InjectHook(caller, VECCrossProduct_SSE1, PATCH_JUMP);
-				InjectHook(caller_0, VECCrossProduct_SSE1, PATCH_JUMP);
+				InjectHook(caller, VECCrossProduct_SSE1, HookType::Jump);
+				InjectHook(caller_0, VECCrossProduct_SSE1, HookType::Jump);
 			}
 			else
 			{
-				InjectHook(caller, VECCrossProduct, PATCH_JUMP);
-				InjectHook(caller_0, VECCrossProduct, PATCH_JUMP);
+				InjectHook(caller, VECCrossProduct, HookType::Jump);
+				InjectHook(caller_0, VECCrossProduct, HookType::Jump);
 			}
 		}
 
@@ -574,8 +574,8 @@ void re4t::init::MathReimpl()
 			pattern = hook::pattern("D9 45 ? 8B 55 ? DD 5D ? 8D 4D ? 51 52 E8");
 			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xE)).as_int();
 
-			InjectHook(caller, VECSquareDistance, PATCH_JUMP);
-			InjectHook(caller_0, VECSquareDistance, PATCH_JUMP);
+			InjectHook(caller, VECSquareDistance, HookType::Jump);
+			InjectHook(caller_0, VECSquareDistance, HookType::Jump);
 		}
 
 		// GetDistance (VECSquareDistance with reversed params...)
@@ -588,8 +588,8 @@ void re4t::init::MathReimpl()
 			pattern = hook::pattern("D9 5D ? D9 5D ? D9 5D ? D9 5D ? E8 ? ? ? ? D9 45 ? 83 C4 08");
 			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
 
-			InjectHook(caller, GetDistance_new, PATCH_JUMP);
-			InjectHook(caller_0, GetDistance_new, PATCH_JUMP);
+			InjectHook(caller, GetDistance_new, HookType::Jump);
+			InjectHook(caller_0, GetDistance_new, HookType::Jump);
 		}
 
 		// VECSquareMag
@@ -601,8 +601,8 @@ void re4t::init::MathReimpl()
 			pattern = hook::pattern("E8 ? ? ? ? 8D 45 ? 50 E8 ? ? ? ? D9 5D ? 8D 4D ? 51 8D 55");
 			auto caller_0 = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
 
-			InjectHook(caller, VECSquareMag, PATCH_JUMP);
-			InjectHook(caller_0, VECSquareMag, PATCH_JUMP);
+			InjectHook(caller, VECSquareMag, HookType::Jump);
+			InjectHook(caller_0, VECSquareMag, HookType::Jump);
 		}
 
 		// VECDistance
@@ -612,9 +612,9 @@ void re4t::init::MathReimpl()
 			ReadCall(caller, PSVECDistance);
 
 			if (sse1)
-				InjectHook(caller, VECDistance_SSE1, PATCH_JUMP);
+				InjectHook(caller, VECDistance_SSE1, HookType::Jump);
 			else
-				InjectHook(caller, VECDistance, PATCH_JUMP);
+				InjectHook(caller, VECDistance, HookType::Jump);
 		}
 
 		// GetDistance3 (VECDistance with reversed params...)
@@ -624,9 +624,9 @@ void re4t::init::MathReimpl()
 			ReadCall(caller, GetDistance3);
 
 			if (sse1)
-				InjectHook(caller, GetDistance3_SSE1, PATCH_JUMP);
+				InjectHook(caller, GetDistance3_SSE1, HookType::Jump);
 			else
-				InjectHook(caller, GetDistance3_new, PATCH_JUMP);
+				InjectHook(caller, GetDistance3_new, HookType::Jump);
 		}
 
 		// MTXMultVec
@@ -635,7 +635,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xB)).as_int();
 			ReadCall(caller, PSMTXMultVec);
 
-			InjectHook(caller, MTXMultVec, PATCH_JUMP);
+			InjectHook(caller, MTXMultVec, HookType::Jump);
 		}
 
 		// MTXMultVecSR
@@ -644,7 +644,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xF)).as_int();
 			ReadCall(caller, PSMTXMultVecSR);
 
-			InjectHook(caller, MTXMultVecSR, PATCH_JUMP);
+			InjectHook(caller, MTXMultVecSR, HookType::Jump);
 		}
 
 		// SQRTF - replacing this seems to fix the low-fps r104s00 cutscene issue?
@@ -653,7 +653,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
 			ReadCall(caller, SQRTF);
 			if (sse1)
-				InjectHook(caller, SQRTF_new, PATCH_JUMP);
+				InjectHook(caller, SQRTF_new, HookType::Jump);
 		}
 
 		// MTXConcat
@@ -662,7 +662,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
 			ReadCall(caller, PSMTXConcat);
 			if (sse1)
-				InjectHook(caller, MTXConcat, PATCH_JUMP);
+				InjectHook(caller, MTXConcat, HookType::Jump);
 		}
 
 		// MTXTranspose
@@ -671,7 +671,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(8)).as_int();
 			ReadCall(caller, PSMTXTranspose);
 			if (sse1)
-				InjectHook(caller, MTXTranspose, PATCH_JUMP);
+				InjectHook(caller, MTXTranspose, HookType::Jump);
 		}
 
 		// MTXScale
@@ -680,7 +680,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xB)).as_int();
 			ReadCall(caller, PSMTXScale);
 			if (sse1)
-				InjectHook(caller, MTXScale, PATCH_JUMP);
+				InjectHook(caller, MTXScale, HookType::Jump);
 		}
 
 		// MTXScaleApply
@@ -689,9 +689,9 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xA)).as_int();
 			ReadCall(caller, PSMTXScaleApply);
 			if (sse1)
-				InjectHook(caller, MTXScaleApply_SSE, PATCH_JUMP);
+				InjectHook(caller, MTXScaleApply_SSE, HookType::Jump);
 			else
-				InjectHook(caller, MTXScaleApply, PATCH_JUMP);
+				InjectHook(caller, MTXScaleApply, HookType::Jump);
 		}
 
 		// MTXIdentity
@@ -705,8 +705,8 @@ void re4t::init::MathReimpl()
 
 			if (sse1)
 			{
-				InjectHook(caller, MTXIdentity, PATCH_JUMP);
-				InjectHook(caller_0, MTXIdentity, PATCH_JUMP);
+				InjectHook(caller, MTXIdentity, HookType::Jump);
+				InjectHook(caller_0, MTXIdentity, HookType::Jump);
 			}
 		}
 
@@ -716,7 +716,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(9)).as_int();
 			ReadCall(caller, PSMTXRotTrig);
 			if (sse1)
-				InjectHook(caller, MTXRotTrig, PATCH_JUMP);
+				InjectHook(caller, MTXRotTrig, HookType::Jump);
 		}
 
 		// MTXRotRad
@@ -725,7 +725,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(3)).as_int();
 			ReadCall(caller, PSMTXRotRad);
 			if (sse1)
-				InjectHook(caller, MTXRotRad, PATCH_JUMP);
+				InjectHook(caller, MTXRotRad, HookType::Jump);
 		}
 
 		// MTXRotAxisRad
@@ -734,7 +734,7 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xE)).as_int();
 			ReadCall(caller, PSMTXRotAxisRad);
 			if (sse1) // calls into VECNormalize_SSE1
-				InjectHook(caller, MTXRotAxisRad, PATCH_JUMP);
+				InjectHook(caller, MTXRotAxisRad, HookType::Jump);
 		}
 
 		// MTXCopy
@@ -743,9 +743,9 @@ void re4t::init::MathReimpl()
 			auto caller = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(5)).as_int();
 			ReadCall(caller, PSMTXCopy);
 			if (sse1)
-				InjectHook(caller, MTXCopy_SSE, PATCH_JUMP);
+				InjectHook(caller, MTXCopy_SSE, HookType::Jump);
 			else
-				InjectHook(caller, MTXCopy, PATCH_JUMP);
+				InjectHook(caller, MTXCopy, HookType::Jump);
 		}
 	}
 }

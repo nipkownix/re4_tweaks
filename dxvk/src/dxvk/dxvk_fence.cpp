@@ -7,11 +7,8 @@ namespace dxvk {
           DxvkDevice*           device,
     const DxvkFenceCreateInfo&  info)
   : m_vkd(device->vkd()), m_info(info) {
-    if (!device->features().khrTimelineSemaphore.timelineSemaphore)
-      throw DxvkError("Timeline semaphores not supported");
-
-    VkSemaphoreTypeCreateInfoKHR typeInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO_KHR };
-    typeInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE_KHR;
+    VkSemaphoreTypeCreateInfo typeInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
+    typeInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
     typeInfo.initialValue = info.initialValue;
     
     VkExportSemaphoreCreateInfo exportInfo = { VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO };
@@ -59,50 +56,73 @@ namespace dxvk {
         Logger::warn(str::format("Importing semaphores of type ", info.sharedType, " not supported by device"));
       }
     }
-
-    m_thread = dxvk::thread([this] { run(); });
   }
 
 
   DxvkFence::~DxvkFence() {
-    m_stop.store(true);
-    m_thread.join();
-
+    if (m_thread.joinable()) {
+      {
+        std::unique_lock<dxvk::mutex> lock(m_mutex);
+        m_running = false;
+        m_condVar.notify_one();
+      }
+      m_thread.join();
+    }
     m_vkd->vkDestroySemaphore(m_vkd->device(), m_semaphore, nullptr);
   }
 
 
   void DxvkFence::enqueueWait(uint64_t value, DxvkFenceEvent&& event) {
-    std::unique_lock<dxvk::mutex> lock(m_mutex);
-
-    if (value > m_lastValue.load())
+    if (value > getValue()) {
+      std::unique_lock<dxvk::mutex> lock(m_mutex);
       m_queue.emplace(value, std::move(event));
-    else
+
+      if (!m_running) {
+        m_running = true;
+        m_thread = dxvk::thread([this] { run(); });
+      } else {
+        m_condVar.notify_one();
+      }
+      lock.unlock();
+    } else {
       event();
+    }
   }
-  
+
+  void DxvkFence::wait(uint64_t value) {
+    VkSemaphoreWaitInfo waitInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO };
+    waitInfo.semaphoreCount = 1;
+    waitInfo.pSemaphores = &m_semaphore;
+    waitInfo.pValues = &value;
+    VkResult vr = m_vkd->vkWaitSemaphores(
+      m_vkd->device(), &waitInfo, ~0ull);
+
+    if (vr != VK_SUCCESS) {
+      Logger::err(str::format("Failed to wait for semaphore: ", vr));
+    }
+  }
 
   void DxvkFence::run() {
     uint64_t value = 0ull;
 
-    VkSemaphoreWaitInfoKHR waitInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO_KHR };
+    VkSemaphoreWaitInfo waitInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO };
     waitInfo.semaphoreCount = 1;
     waitInfo.pSemaphores = &m_semaphore;
     waitInfo.pValues = &value;
 
-    while (!m_stop.load()) {
+    while (true) {
       std::unique_lock<dxvk::mutex> lock(m_mutex);
+
+      m_condVar.wait(lock, [&]() { return !m_queue.empty() || !m_running; });
 
       // Query actual semaphore value and start from there, so that
       // we can skip over large increments in the semaphore value
-      VkResult vr = m_vkd->vkGetSemaphoreCounterValueKHR(m_vkd->device(), m_semaphore, &value);
+      VkResult vr = m_vkd->vkGetSemaphoreCounterValue(m_vkd->device(), m_semaphore, &value);
 
       if (vr != VK_SUCCESS) {
         Logger::err(str::format("Failed to query semaphore value: ", vr));
         return;
       }
-
-      m_lastValue.store(value);
 
       // Signal all enqueued events whose value is not greater than
       // the current semaphore value
@@ -111,8 +131,11 @@ namespace dxvk {
         m_queue.pop();
       }
 
-      if (m_stop)
+      if (!m_running)
         return;
+
+      if (m_queue.empty())
+        continue;
 
       lock.unlock();
 
@@ -123,7 +146,7 @@ namespace dxvk {
       // be fall back to a busy-wait loop on some drivers.
       value += 1;
 
-      vr = m_vkd->vkWaitSemaphoresKHR(
+      vr = m_vkd->vkWaitSemaphores(
         m_vkd->device(), &waitInfo, 10'000'000ull);
 
       if (vr != VK_SUCCESS && vr != VK_TIMEOUT) {
@@ -131,6 +154,15 @@ namespace dxvk {
         return;
       }
     }
+  }
+
+  uint64_t DxvkFence::getValue() {
+    uint64_t value = 0;
+    VkResult vr = m_vkd->vkGetSemaphoreCounterValue(m_vkd->device(), m_semaphore, &value);
+    if (vr != VK_SUCCESS) {
+      Logger::err(str::format("Failed to query semaphore value: ", vr));
+    }
+    return value;
   }
 
   HANDLE DxvkFence::sharedHandle() const {

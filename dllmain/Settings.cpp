@@ -89,7 +89,14 @@ void re4t_cfg::ParseHotkeys()
 	Trainer_ParseKeyCombos();
 }
 
-void ReadSettingsIni(std::wstring ini_path)
+enum setType
+{
+	MAIN,
+	TRAINER,
+	ALL
+};
+
+void ReadSettingsIni(std::wstring ini_path, setType type)
 {
 	iniReader ini(ini_path);
 
@@ -102,16 +109,16 @@ void ReadSettingsIni(std::wstring ini_path)
 	re4t::cfg->HasUnsavedChanges = false;
 	
 	// Main .ini file
+	if ((type == MAIN) || (type == ALL))
 	{
 		// VULKAN
-		re4t::dxvk::cfg->bUseVulkanRenderer = ini.getBool("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
-		re4t::dxvk::cfg->bShowFPS = ini.getBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
-		re4t::dxvk::cfg->bShowGPULoad = ini.getBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
-		re4t::dxvk::cfg->bShowDeviceInfo = ini.getBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
-		re4t::dxvk::cfg->bDisableAsync = ini.getBool("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
+		re4t::dxvk::cfg->bUseVulkanRenderer = ini.getBool("RENDERER", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+		re4t::dxvk::cfg->bShowFPS = ini.getBool("RENDERER", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+		re4t::dxvk::cfg->bShowGPULoad = ini.getBool("RENDERER", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+		re4t::dxvk::cfg->bShowDeviceInfo = ini.getBool("RENDERER", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
 
-		re4t::dxvk::cfg->DXVK_HUD = ini.getString("VULKAN", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
-		re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = ini.getString("VULKAN", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
+		re4t::dxvk::cfg->DXVK_HUD = ini.getString("RENDERER", "DXVK_HUD", re4t::dxvk::cfg->DXVK_HUD);
+		re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME = ini.getString("RENDERER", "DXVK_FILTER_DEVICE_NAME", re4t::dxvk::cfg->DXVK_FILTER_DEVICE_NAME);
 
 		// DISPLAY
 		re4t::cfg->fFOVAdditional = ini.getFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
@@ -134,7 +141,7 @@ void ReadSettingsIni(std::wstring ini_path)
 
 		re4t::cfg->bFixDPIScale = ini.getBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 		re4t::cfg->bFixDisplayMode = ini.getBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-		re4t::cfg->iCustomRefreshRate = ini.getInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		re4t::cfg->bOnlyShowHighestRefreshRates = ini.getBool("DISPLAY", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates);
 		re4t::cfg->bOverrideLaserColor = ini.getBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
 		re4t::cfg->bRainbowLaser = ini.getBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
@@ -169,9 +176,15 @@ void ReadSettingsIni(std::wstring ini_path)
 
 		re4t::cfg->bEnableGCScopeBlur = ini.getBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
 		re4t::cfg->bWindowBorderless = ini.getBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		re4t::cfg->bEnableWindowResize = ini.getBool("DISPLAY", "EnableWindowResize", re4t::cfg->bEnableWindowResize);
 		re4t::cfg->iWindowPositionX = ini.getInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		re4t::cfg->iWindowPositionY = ini.getInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		re4t::cfg->bRememberWindowPos = ini.getBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+		re4t::cfg->bRepositionHUD = ini.getBool("DISPLAY", "RepositionHUD", re4t::cfg->bRepositionHUD);
+		re4t::cfg->fHUDOffsetX = ini.getFloat("DISPLAY", "HUDOffsetX", re4t::cfg->fHUDOffsetX);
+		re4t::cfg->fHUDOffsetY = ini.getFloat("DISPLAY", "HUDOffsetY", re4t::cfg->fHUDOffsetY);
+		re4t::cfg->bSmallerHUD = ini.getBool("DISPLAY", "SmallerHUD", re4t::cfg->bSmallerHUD);
+		re4t::cfg->bSmallerActionPrompts = ini.getBool("DISPLAY", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts);
 
 		// AUDIO
 		re4t::cfg->iVolumeMaster = ini.getInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
@@ -228,6 +241,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bOverrideXinputDeadzone = ini.getBool("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
 		re4t::cfg->fXinputDeadzone = ini.getFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
 		re4t::cfg->fXinputDeadzone = fmin(fmax(re4t::cfg->fXinputDeadzone, 0.0f), 3.5f); // limit between 0.0 - 3.5
+		re4t::cfg->bSmoothAnalogTurning = ini.getBool("CONTROLLER", "SmoothAnalogTurning", re4t::cfg->bSmoothAnalogTurning);
 		re4t::cfg->bAllowReloadWithoutAiming_controller = ini.getBool("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
 		re4t::cfg->bReloadWithoutZoom_controller = ini.getBool("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
 
@@ -252,6 +266,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bAllowSellingHandgunSilencer = ini.getBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 		re4t::cfg->bBalancedChicagoTypewriter = ini.getBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 		re4t::cfg->bUseSprintToggle = ini.getBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+		re4t::cfg->bDisableAutomaticReload = ini.getBool("GAMEPLAY", "DisableAutomaticReload", re4t::cfg->bDisableAutomaticReload);
 		re4t::cfg->bRifleScreenShake = ini.getBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 		re4t::cfg->bDisableQTE = ini.getBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 		re4t::cfg->bAutomaticMashingQTE = ini.getBool("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
@@ -270,6 +285,7 @@ void ReadSettingsIni(std::wstring ini_path)
 		re4t::cfg->bSpeedUpQuitGame = ini.getBool("MISC", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame);
 		re4t::cfg->bEnableDebugMenu = ini.getBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 		re4t::cfg->bShowGameOutput = ini.getBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
+		re4t::cfg->bSaveGameOutput = ini.getBool("MISC", "SaveGameOutput", re4t::cfg->bSaveGameOutput);
 		re4t::cfg->bEnableModExpansion = ini.getBool("MISC", "EnableModExpansion", re4t::cfg->bEnableModExpansion);
 		re4t::cfg->bForceETSApplyScale = ini.getBool("MISC", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale);
 		re4t::cfg->bAlwaysShowOriginalTitleBackground = ini.getBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
@@ -325,6 +341,7 @@ void ReadSettingsIni(std::wstring ini_path)
 	}
 
 	// Trainer .ini file
+	if ((type == TRAINER) || (type == ALL))
 	{
 		// TRAINER
 		re4t::cfg->bTrainerEnable = ini.getBool("TRAINER", "Enable", re4t::cfg->bTrainerEnable);
@@ -495,12 +512,12 @@ void re4t_cfg::ReadSettings()
 {
 	// Read default settings file first
 	std::wstring sDefaultIniPath = rootPath + wrapperName + L".ini";
-	ReadSettingsIni(sDefaultIniPath);
+	ReadSettingsIni(sDefaultIniPath, setType::MAIN);
 
 	// Try reading in trainer.ini settings
 	std::wstring sTrainerIniPath = rootPath + L"re4_tweaks\\trainer.ini";
 	if (std::filesystem::exists(sTrainerIniPath))
-		ReadSettingsIni(sTrainerIniPath);
+		ReadSettingsIni(sTrainerIniPath, setType::TRAINER);
 
 	// Try reading any setting override files
 	auto override_path = rootPath + sSettingOverridesPath;
@@ -528,7 +545,7 @@ void re4t_cfg::ReadSettings()
 
 	// Process override INIs
 	for (const auto& path : override_inis)
-		ReadSettingsIni(path.wstring());
+		ReadSettingsIni(path.wstring(), setType::ALL);
 
 	// Special case for HDProject settings
 	if (re4t::cfg->bIsUsingHDProject)
@@ -549,7 +566,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		std::wstring iniPath = rootPath + wrapperName + L".ini";
 
 		#ifdef VERBOSE
-		con.log("Writing main settings to: %s", WstrToStr(iniPath));
+		con.log("Writing main settings to: %s", WstrToStr(iniPath).c_str());
 		#endif
 
 		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
@@ -587,11 +604,10 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		iniReader ini(iniPath);
 
 		// VULKAN
-		ini.setBool("VULKAN", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
-		ini.setBool("VULKAN", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
-		ini.setBool("VULKAN", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
-		ini.setBool("VULKAN", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
-		ini.setBool("VULKAN", "DisableAsync", re4t::dxvk::cfg->bDisableAsync);
+		ini.setBool("RENDERER", "UseVulkanRenderer", re4t::dxvk::cfg->bUseVulkanRenderer);
+		ini.setBool("RENDERER", "ShowFPS", re4t::dxvk::cfg->bShowFPS);
+		ini.setBool("RENDERER", "ShowGPULoad", re4t::dxvk::cfg->bShowGPULoad);
+		ini.setBool("RENDERER", "ShowDeviceInfo", re4t::dxvk::cfg->bShowDeviceInfo);
 
 		// DISPLAY
 		ini.setFloat("DISPLAY", "FOVAdditional", re4t::cfg->fFOVAdditional);
@@ -605,7 +621,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("DISPLAY", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars);
 		ini.setBool("DISPLAY", "FixDPIScale", re4t::cfg->bFixDPIScale);
 		ini.setBool("DISPLAY", "FixDisplayMode", re4t::cfg->bFixDisplayMode);
-		ini.setInt("DISPLAY", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+		ini.setBool("DISPLAY", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates);
 		ini.setBool("DISPLAY", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor);
 		ini.setBool("DISPLAY", "RainbowLaser", re4t::cfg->bRainbowLaser);
 
@@ -627,9 +643,15 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		ini.setBool("DISPLAY", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur);
 		ini.setBool("DISPLAY", "WindowBorderless", re4t::cfg->bWindowBorderless);
+		ini.setBool("DISPLAY", "EnableWindowResize", re4t::cfg->bEnableWindowResize);
 		ini.setInt("DISPLAY", "WindowPositionX", re4t::cfg->iWindowPositionX);
 		ini.setInt("DISPLAY", "WindowPositionY", re4t::cfg->iWindowPositionY);
 		ini.setBool("DISPLAY", "RememberWindowPos", re4t::cfg->bRememberWindowPos);
+		ini.setBool("DISPLAY", "RepositionHUD", re4t::cfg->bRepositionHUD);
+		ini.setFloat("DISPLAY", "HUDOffsetX", re4t::cfg->fHUDOffsetX);
+		ini.setFloat("DISPLAY", "HUDOffsetY", re4t::cfg->fHUDOffsetY);
+		ini.setBool("DISPLAY", "SmallerHUD", re4t::cfg->bSmallerHUD);
+		ini.setBool("DISPLAY", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts);
 
 		// AUDIO
 		ini.setInt("AUDIO", "VolumeMaster", re4t::cfg->iVolumeMaster);
@@ -670,6 +692,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("CONTROLLER", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone);
 		ini.setBool("CONTROLLER", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone);
 		ini.setFloat("CONTROLLER", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
+		ini.setBool("CONTROLLER", "SmoothAnalogTurning", re4t::cfg->bSmoothAnalogTurning);
 		ini.setBool("CONTROLLER", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller);
 		ini.setBool("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
 
@@ -694,6 +717,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("GAMEPLAY", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer);
 		ini.setBool("GAMEPLAY", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter);
 		ini.setBool("GAMEPLAY", "UseSprintToggle", re4t::cfg->bUseSprintToggle);
+		ini.setBool("GAMEPLAY", "DisableAutomaticReload", re4t::cfg->bDisableAutomaticReload);
 		ini.setBool("GAMEPLAY", "RifleScreenShake", re4t::cfg->bRifleScreenShake);
 		ini.setBool("GAMEPLAY", "DisableQTE", re4t::cfg->bDisableQTE);
 		ini.setBool("GAMEPLAY", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE);
@@ -712,6 +736,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("MISC", "AlwaysShowOriginalTitleBackground", re4t::cfg->bAlwaysShowOriginalTitleBackground);
 		ini.setBool("MISC", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu);
 		ini.setBool("MISC", "ShowGameOutput", re4t::cfg->bShowGameOutput);
+		ini.setBool("MISC", "SaveGameOutput", re4t::cfg->bSaveGameOutput);
 		ini.setBool("MISC", "HideZoomControlHints", re4t::cfg->bHideZoomControlHints);
 		ini.setBool("MISC", "FixSilencedHandgunDescription", re4t::cfg->bFixSilencedHandgunDescription);
 		// Not writing EnableModExpansion / ForceETSApplyScale back to users INI in case those were enabled by a mod override INI (which the user might want to remove later)
@@ -740,6 +765,8 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		// Save main .ini file
 		ini.writeIni();
+
+		re4t::cfg->HasUnsavedChanges = false;
 	}
 
 	// trainer.ini-only settings
@@ -747,7 +774,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		std::wstring iniPath = rootPath + L"re4_tweaks\\trainer.ini";
 
 		#ifdef VERBOSE
-		con.log("Writing trainer settings to: %s", WstrToStr(iniPath));
+		con.log("Writing trainer settings to: %s", WstrToStr(iniPath).c_str());
 		#endif
 
 		// Copy the default .ini to folder if one doesn't exist, just so we can keep comments and descriptions intact.
@@ -760,8 +787,8 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 			const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
 
-			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\settings.ini"))
-				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\settings.ini", iniPath, copyOptions);
+			if (std::filesystem::exists(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini"))
+				std::filesystem::copy(rootPath + L"re4_tweaks\\default_settings\\trainer_settings.ini", iniPath, copyOptions);
 		}
 
 		// Try to remove read-only flag is it is set, for some reason.
@@ -917,11 +944,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 
 		// Save trainer .ini file
 		ini.writeIni();
-
-		return;
 	}
-
-	re4t::cfg->HasUnsavedChanges = false;
 }
 
 void re4t_cfg::LogSettings()
@@ -942,7 +965,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "Remove16by10BlackBars", re4t::cfg->bRemove16by10BlackBars ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDPIScale", re4t::cfg->bFixDPIScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixDisplayMode", re4t::cfg->bFixDisplayMode ? "true" : "false");
-	spd::log()->info("| {:<30} | {:>15} |", "CustomRefreshRate", re4t::cfg->iCustomRefreshRate);
+	spd::log()->info("| {:<30} | {:>15} |", "OnlyShowHighestRefreshRates", re4t::cfg->bOnlyShowHighestRefreshRates ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideLaserColor", re4t::cfg->bOverrideLaserColor ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RainbowLaser", re4t::cfg->bRainbowLaser ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "LaserR", re4t::cfg->iLaserR);
@@ -962,9 +985,15 @@ void re4t_cfg::LogSettings()
 
 	spd::log()->info("| {:<30} | {:>15} |", "EnableGCScopeBlur", re4t::cfg->bEnableGCScopeBlur ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowBorderless", re4t::cfg->bWindowBorderless ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "EnableWindowResize", re4t::cfg->bEnableWindowResize ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionX", re4t::cfg->iWindowPositionX);
 	spd::log()->info("| {:<30} | {:>15} |", "WindowPositionY", re4t::cfg->iWindowPositionY);
 	spd::log()->info("| {:<30} | {:>15} |", "RememberWindowPos", re4t::cfg->bRememberWindowPos ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "RepositionHUD", re4t::cfg->bRepositionHUD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "HUDOffsetX", re4t::cfg->fHUDOffsetX);
+	spd::log()->info("| {:<30} | {:>15} |", "HUDOffsetY", re4t::cfg->fHUDOffsetY);
+	spd::log()->info("| {:<30} | {:>15} |", "SmallerHUD", re4t::cfg->bSmallerHUD ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SmallerActionPrompts", re4t::cfg->bSmallerActionPrompts ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
 
 	// AUDIO
@@ -1013,6 +1042,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "RemoveExtraXinputDeadzone", re4t::cfg->bRemoveExtraXinputDeadzone ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "OverrideXinputDeadzone", re4t::cfg->bOverrideXinputDeadzone ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "XinputDeadzone", re4t::cfg->fXinputDeadzone);
+	spd::log()->info("| {:<30} | {:>15} |", "SmoothAnalogTurning", re4t::cfg->bSmoothAnalogTurning ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AllowReloadWithoutAiming", re4t::cfg->bAllowReloadWithoutAiming_controller ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller ? "true" : "false");
 	spd::log()->info("+--------------------------------+-----------------+");
@@ -1041,6 +1071,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "AllowSellingHandgunSilencer", re4t::cfg->bAllowSellingHandgunSilencer ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "BalancedChicagoTypewriter", re4t::cfg->bBalancedChicagoTypewriter ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "UseSprintToggle", re4t::cfg->bUseSprintToggle ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "DisableAutomaticReload", re4t::cfg->bDisableAutomaticReload ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "RifleScreenShake", re4t::cfg->bRifleScreenShake ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "DisableQTE", re4t::cfg->bDisableQTE ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AutomaticMashingQTE", re4t::cfg->bAutomaticMashingQTE ? "true" : "false");
@@ -1061,6 +1092,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("| {:<30} | {:>15} |", "SpeedUpQuitGame", re4t::cfg->bSpeedUpQuitGame ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableDebugMenu", re4t::cfg->bEnableDebugMenu ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ShowGameOutput", re4t::cfg->bShowGameOutput ? "true" : "false");
+	spd::log()->info("| {:<30} | {:>15} |", "SaveGameOutput", re4t::cfg->bSaveGameOutput ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "EnableModExpansion", re4t::cfg->bEnableModExpansion ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "ForceETSApplyScale", re4t::cfg->bForceETSApplyScale ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "AlwaysShowOriginalTitleBg", re4t::cfg->bAlwaysShowOriginalTitleBackground ? "true" : "false");

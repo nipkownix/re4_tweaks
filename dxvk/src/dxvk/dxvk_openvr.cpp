@@ -6,7 +6,6 @@
 #endif
 
 #include <openvr/openvr.hpp>
-#include "../../../dllmain/Settings.h"
 
 using VR_InitInternalProc        = vr::IVRSystem* (VR_CALLTYPE *)(vr::EVRInitError*, vr::EVRApplicationType);
 using VR_ShutdownInternalProc    = void  (VR_CALLTYPE *)();
@@ -24,7 +23,7 @@ namespace dxvk {
   VrInstance VrInstance::s_instance;
 
   VrInstance:: VrInstance() {
-    m_no_vr = true;
+    m_no_vr = env::getEnvVar("DXVK_NO_VR") == "1";
   }
   VrInstance::~VrInstance() { }
 

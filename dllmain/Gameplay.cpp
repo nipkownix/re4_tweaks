@@ -3,6 +3,7 @@
 #include "dllmain.h"
 #include "ConsoleWnd.h"
 #include "Game.h"
+#include "Sections.h"
 #include "Settings.h"
 #include "input.hpp"
 
@@ -283,12 +284,27 @@ void re4t::init::Gameplay()
 	if (re4t::cfg->bEnableNTSCMode)
 	{
 		// Normal mode and Separate Ways: increased starting difficulty (3500->5500)
-		auto pattern = hook::pattern("8A 50 ? FE CA 0F B6 C2");
-		Patch(pattern.count(1).get(0).get<uint32_t>(0), { 0xB2, 0x01, 0x90 }); // GamePointInit, { mov dl, 1 }
+		auto pattern = hook::pattern("05 7C 15 00 00 6A 00 89 81 94 4F 00 00");
+		struct GamePointInit_NormalGameRank
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				*(uint32_t*)(regs.ecx + 0x4F94) = SystemSavePtr()->language_8 == 1 || re4t::cfg->bEnableNTSCMode ? 5500 : 3500;
+			}
+		}; injector::MakeInline<GamePointInit_NormalGameRank>(pattern.count(1).get(0).get<uint32_t>(7), pattern.count(1).get(0).get<uint32_t>(13));
 
 		// Assignment Ada: increased difficulty (4500->6500)
-		pattern = hook::pattern("66 39 B1 ? ? 00 00 75 10");
-		injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(7), 2); // GameAddPoint
+		pattern = hook::pattern("8B ? ? ? ? ? 80 7E 08 01 74");
+		struct GameAddPoint_AAdaGameRank
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (SystemSavePtr()->language_8 == 1 || re4t::cfg->bEnableNTSCMode)
+					regs.ef |= (1 << regs.zero_flag);
+				else
+					regs.ef &= ~(1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<GameAddPoint_AAdaGameRank>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(10));
 
 		// Shooting range: increased bottle cap score requirements (1000->3000)
 		pattern = hook::pattern("8B F9 8A ? ? 8B ? ? FE C9");
@@ -296,7 +312,7 @@ void re4t::init::Gameplay()
 
 		// Shooting range: use NTSC strings for the game rules note
 		// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
-		pattern = hook::pattern("? 00 01 00 46 00 01 00");
+		pattern = hook::pattern(re4t::sections::data, "? 00 01 00 46 00 01 00");
 		file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
 		// update the note's message index whenever we load into r22c
 		pattern = hook::pattern("89 41 78 83 C1 7C E8");
@@ -354,10 +370,10 @@ void re4t::init::Gameplay()
 						break;
 					}
 
-					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->texId_78 = 164;
-					IDSystemPtr()->unitPtr(0x1u, IDC_TITLE_MENU)->size0_W_DC = texW;
-					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->texId_78 = 164;
-					IDSystemPtr()->unitPtr(0x2u, IDC_TITLE_MENU)->size0_W_DC = texW;
+					IdSysPtr()->unitPtr(0x1u, IDC_TITLE_MENU_0)->texId_78 = 164;
+					IdSysPtr()->unitPtr(0x1u, IDC_TITLE_MENU_0)->size0_W_DC = texW;
+					IdSysPtr()->unitPtr(0x2u, IDC_TITLE_MENU_0)->texId_78 = 164;
+					IdSysPtr()->unitPtr(0x2u, IDC_TITLE_MENU_0)->size0_W_DC = texW;
 				}
 
 				// Code we overwrote
@@ -452,7 +468,31 @@ void re4t::init::Gameplay()
 		auto pattern = hook::pattern("83 C4 0C E8 ? ? ? ? D9 EE 8B 06 D9 9E 44 05 00 00");
 
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, HookType::Jump);
+	}
+
+	// Disable Automatic Reload
+	{
+		auto pattern = hook::pattern("8B 86 D8 07 00 00 8B 48 34 8B 11 8B 42 4C FF D0");
+		struct DisableReloadCheck
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				if (PlayerPtr()->Wep_7D8->m_pWep_34->reloadable() && !re4t::cfg->bDisableAutomaticReload)
+					regs.ef &= ~(1 << regs.zero_flag);
+				else
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		};
+		// for Handguns, Matilda, TMP, Shotguns
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(0).get<uint32_t>(0), pattern.count(5).get(0).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(1).get<uint32_t>(0), pattern.count(5).get(1).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(2).get<uint32_t>(0), pattern.count(5).get(2).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(5).get(4).get<uint32_t>(0), pattern.count(5).get(4).get<uint32_t>(18));
+		// for Rifles, Mine Thrower
+		pattern = hook::pattern("8B 8E D8 07 00 00 8B 49 34 8B 11 8B 42 4C FF");
+		injector::MakeInline<DisableReloadCheck>(pattern.count(3).get(1).get<uint32_t>(0), pattern.count(3).get(1).get<uint32_t>(18));
+		injector::MakeInline<DisableReloadCheck>(pattern.count(3).get(2).get<uint32_t>(0), pattern.count(3).get(2).get<uint32_t>(18));
 	}
 
 	// Limit the Matilda to one three round burst per trigger pull

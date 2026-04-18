@@ -264,7 +264,7 @@ void updateDownloadApply()
 			BOOL result_moveFile1 = MoveFileExW(new_module_path1.c_str(), new_module_path2.c_str(), MOVEFILE_REPLACE_EXISTING);
 			BOOL result_moveFile2 = MoveFileExW(new_ini_path1.c_str(), new_ini_path2.c_str(), MOVEFILE_REPLACE_EXISTING);
 			
-			if (!result_moveFile1 || !result_moveFile1)
+			if (!result_moveFile1 || !result_moveFile2)
 			{
 				spd::log()->info("{} -> Failed to rename file. Not critical, continuing...", __FUNCTION__);
 

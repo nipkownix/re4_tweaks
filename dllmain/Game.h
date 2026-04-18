@@ -12,6 +12,7 @@
 #include "SDK/global.h"
 #include "SDK/snd.h"
 #include "SDK/ID.h"
+#include "SDK/cockpit.h"
 #include "SDK/message.h"
 #include "SDK/title.h"
 #include "SDK/light.h"
@@ -25,6 +26,28 @@
 #include "SDK/event.h"
 #include "SDK/GX.h"
 #include "SDK/gc_math.h"
+
+struct INIConfig
+{
+	int resolutionWidth;
+	int resolutionHeight;
+	int resolutionRefreshRate;
+	int vsync;
+	int fullscreen;
+	int adapter;
+	int shadowQuality;
+	int motionblurEnabled;
+	int ppEnabled;
+	int useHDTexture;
+	int antialiasing;
+	int anisotropy;
+	int variableframerate;
+	int subtitle;
+	int laserR;
+	int laserG;
+	int laserB;
+	int laserA;
+};
 
 struct __declspec(align(4)) DAMAGE {
 	uint8_t unk0[0x40];
@@ -42,7 +65,9 @@ extern SND_CTRL* Snd_ctrl_work;
 std::string GameVersion();
 extern int iCurPlayTime[3];
 bool GameVersionIsDebug();
-int GameVariableFrameRate();
+int GetGameVariableFrameRate();
+void SetGameVariableFrameRate(int newRate);
+INIConfig* g_INIConfig();
 int CurrentFrameRate();
 InputDevices LastUsedDevice();
 bool isController();
@@ -62,9 +87,7 @@ cPlayer* AshleyPtr();
 uint8_t* GameSavePtr();
 cEmMgr* EmMgrPtr();
 TITLE_WORK* TitleWorkPtr();
-IDSystem* IDSystemPtr();
 FADE_WORK* FadeWorkPtr(FADE_NO no);
-IDSystem* IDSystemPtr();
 extern double* fGPUUsagePtr;
 extern double* fCPUUsagePtr;
 
@@ -92,4 +115,14 @@ namespace bio4
 	extern uint8_t(__cdecl* WeaponId2WeaponNo)(ITEM_ID item_id);
 
 	extern void(__cdecl* SceSleep)(uint32_t ctr);
+
+	namespace g_D3D {
+		extern uint32_t* RefreshRate;
+		extern uint32_t* Width_1;
+		extern uint32_t* Height_1;
+		extern bool* Fullscreen;
+	}
+
+	extern void(__cdecl* D3D_SetupResolution)(int Width, int Height);
+	extern void(__cdecl* ScreenReSize)(int Width, int Height);
 }

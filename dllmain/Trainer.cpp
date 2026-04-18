@@ -1033,7 +1033,7 @@ void Trainer_Init()
 		// Hook CameraQuasiFPS::hitCheck to remove collision & camera orbit offset
 		auto pattern = hook::pattern("52 8D 85 ? ? ? ? 50 8D 4D ? 51 8B CB E8");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck_Hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck_Hook, HookType::Jump);
 
 		pattern = hook::pattern("05 94 00 00 00 50 8B CE E8 ? ? ? ? 8B 0D");
 		struct cBlock__checkv_hook
@@ -1052,7 +1052,7 @@ void Trainer_Init()
 	// Hook DebugTrg stub to use our reimplemented version
 	{
 		auto pattern = hook::pattern("83 C4 18 6A 01 E8 ? ? ? ? 83 C4 04 3C 01");
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), DebugTrg_hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), DebugTrg_hook, HookType::Jump);
 	}
 
 	// Hook GameAddPoint to override the Dynamic Difficulty Level
@@ -2801,6 +2801,27 @@ void Trainer_RenderUI(int columnCount)
 
 				static auto FilterTool = new UI_FilterTool();
 				FilterTool->Render(false);
+			}
+
+			// HUDEditor
+			{
+				ImGui_ColumnSwitch();
+
+				ImGui::TextWrapped("%s  ID Inspector", ICON_FA_BINOCULARS);
+
+				ImGui::SameLine();
+				ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open new ID Inspector window").x - 15.0f, 0.0f));
+				ImGui::SameLine();
+				if (ImGui::Button("Open new ID Inspector window"))
+					UI_NewIDInspector();
+
+				ImGui_ItemSeparator();
+
+				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+
+				ImGui::PushTextWrapPos();
+				ImGui::Text("Tool for manipulating the game's UI objects.");
+				ImGui::PopTextWrapPos();
 			}
 
 			ImGui_ColumnFinish();

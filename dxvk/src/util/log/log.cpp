@@ -83,7 +83,7 @@ namespace dxvk {
     }};
 
     iniReader ini;
-    const std::string logLevelStr = ini.getString("VULKAN", "DXVK_LOG_LEVEL", "none");
+    const std::string logLevelStr = ini.getString("RENDERER", "DXVK_LOG_LEVEL", "none");
    
     for (const auto& pair : logLevels) {
       if (logLevelStr == pair.first)

@@ -955,7 +955,7 @@ void re4t::input::init()
 			keystring = GetStrFromVK(i);
 	
 			_keyboardStringMap.insert(_keyboardStringMap.end(), std::pair<unsigned int, std::string>(i, keystring));
-			keystring = "";
+			keystring.clear();
 		}
 	
 		_keyboardStringMap[0x1B] = "ESCAPE";
@@ -1011,7 +1011,7 @@ void re4t::input::init()
 		_keyboardStringMap[0x66] = "NUMPAD_6";
 		_keyboardStringMap[0x67] = "NUMPAD_7";
 		_keyboardStringMap[0x68] = "NUMPAD_8";
-		_keyboardStringMap[0x68] = "NUMPAD_9";
+		_keyboardStringMap[0x69] = "NUMPAD_9";
 	
 		// Arrow keys
 		_keyboardStringMap[0x26] = "UP";

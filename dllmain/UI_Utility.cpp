@@ -224,7 +224,7 @@ void ImGui_SetHotkeyThread(std::string* cfgHotkey)
 }
 
 bool ImGui_ButtonSameLine(const char* label, bool samelinecheck, float offset,
-	const ImVec2 size)
+	const ImVec2& size)
 {
 	bool ret = ImGui::Button(label, size);
 
@@ -246,8 +246,8 @@ bool ImGui_ButtonSameLine(const char* label, bool samelinecheck, float offset,
 }
 
 bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCol,
-	const ImVec4& inactiveCol, MenuTab tabID, const char* icon, const ImColor iconColor,
-	const ImColor textColor, const ImVec2& size)
+	const ImVec4& inactiveCol, MenuTab tabID, const char* icon, const ImColor& iconColor,
+	const ImColor& textColor, const ImVec2& size)
 {
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
@@ -277,8 +277,8 @@ bool ImGui_TabButton(const char* btnID, const char* text, const ImVec4& activeCo
 }
 
 bool ImGui_TrainerTabButton(const char* btnID, const char* text, const ImVec4& activeCol,
-	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor iconColor,
-	const ImColor textColor, const ImVec2& size, const bool samelinecheck)
+	const ImVec4& inactiveCol, TrainerTab tabID, const char* icon, const ImColor& iconColor,
+	const ImColor& textColor, const ImVec2& size, const bool samelinecheck)
 {
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 

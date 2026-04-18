@@ -7,6 +7,7 @@ void UI_NewEmManager(int selectedEmIndex = -1);
 void UI_NewGlobalsViewer();
 void UI_NewAreaJump();
 void UI_NewFilterTool();
+void UI_NewIDInspector();
 
 class UI_Window
 {
@@ -50,6 +51,21 @@ public:
 	UI_EmManager(std::string_view title = "Em Manager", int selectedIndex = -1) : UI_Window(title), emIdx(selectedIndex) {}
 
 	bool Init() { return true; }
+	bool Render(bool WindowMode);
+};
+
+class UI_IDInspector : public UI_Window
+{
+	IDSystem* curIDSystem = nullptr;
+	std::vector<ID_UNIT*> unitPtrs = {};
+	int IDClassIdx = 0;
+	ID_UNIT* selectedId = nullptr;
+	ID_UNIT undoCopy;
+
+	void DrawTree(int idx);
+public:
+	UI_IDInspector(std::string_view title) : UI_Window(title) {}
+	bool Init();
 	bool Render(bool WindowMode);
 };
 

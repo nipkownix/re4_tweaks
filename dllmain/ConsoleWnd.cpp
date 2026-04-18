@@ -207,7 +207,7 @@ void ConsoleOutput::Render()
 
 void __cdecl OSReport_hook(const char* msg, ...)
 {
-    if (!re4t::cfg->bShowGameOutput)
+    if (!re4t::cfg->bShowGameOutput && !re4t::cfg->bSaveGameOutput)
         return;
 
     va_list args;
@@ -224,12 +224,16 @@ void __cdecl OSReport_hook(const char* msg, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
-    con.gameLog("OSReport: %s", buffer);
+    if (re4t::cfg->bShowGameOutput)
+        con.gameLog("OSReport: %s", buffer);
+
+    if (re4t::cfg->bSaveGameOutput)
+        spd::game_log()->info("OSReport: {}", buffer);
 }
 
 void OSPanic_nullsub_hook(const char* file, int line, const char* message, ...)
 {
-    if (!re4t::cfg->bShowGameOutput)
+    if (!re4t::cfg->bShowGameOutput && !re4t::cfg->bSaveGameOutput)
         return;
 
     va_list args;
@@ -246,12 +250,16 @@ void OSPanic_nullsub_hook(const char* file, int line, const char* message, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
-    con.gameLog("OSPanic: File: %s, Line: %d, Message: %s", file, line, buffer);
+    if (re4t::cfg->bShowGameOutput)
+        con.gameLog("OSPanic: File: %s, Line: %d, Message: %s", file, line, buffer);
+
+    if (re4t::cfg->bSaveGameOutput)
+        spd::log()->error("OSPanic: File: {}, Line: {}, Message: {}", file, line, buffer);
 }
 
 void cLog__err_nullsubver_hook(uint32_t flag, uint32_t errId, char* mes, ...)
 {
-    if (!re4t::cfg->bShowGameOutput)
+    if (!re4t::cfg->bShowGameOutput && !re4t::cfg->bSaveGameOutput)
         return;
 
     va_list args;
@@ -268,12 +276,16 @@ void cLog__err_nullsubver_hook(uint32_t flag, uint32_t errId, char* mes, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
-    con.gameLog("cLog::err: Flag: %d, errId: %d, Message: %s", flag, errId, buffer);
+    if (re4t::cfg->bShowGameOutput)
+        con.gameLog("cLog::err: Flag: %d, errId: %d, Message: %s", flag, errId, buffer);
+
+    if (re4t::cfg->bSaveGameOutput)
+        spd::log()->error("cLog::err: Flag: {}, errId: {}, Message: {}", flag, errId, buffer);
 }
 
 void cLog__err_1_hook(int a1, int a2, const char* message, ...)
 {
-    if (!re4t::cfg->bShowGameOutput)
+    if (!re4t::cfg->bShowGameOutput && !re4t::cfg->bSaveGameOutput)
         return;
 
     va_list args;
@@ -290,7 +302,11 @@ void cLog__err_1_hook(int a1, int a2, const char* message, ...)
         buffer[strlen(buffer) - 1] = '\0';
     }
 
-    con.gameLog("cLog::err_1: %s", buffer);
+    if (re4t::cfg->bShowGameOutput)
+        con.gameLog("cLog::err_1: %s", buffer);
+
+    if (re4t::cfg->bSaveGameOutput)
+        spd::log()->error("cLog::err_1: {}", buffer);
 }
 
 void re4t::init::ConsoleWnd()
@@ -302,14 +318,14 @@ void re4t::init::ConsoleWnd()
     // Redirect some unused logging functions to output to our console window instead.
     // May be useful for modders, or just interesting for people like me.
     auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C A1 ? ? ? ? F7 40 ? ? ? ? ? 74 2D");
-    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OSReport_hook, PATCH_JUMP);
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OSReport_hook, HookType::Jump);
 
     pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C 5F 5E 33 C0 5B 5D C3 68 ? ? ? ? E8");
-    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OSPanic_nullsub_hook, PATCH_JUMP);
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OSPanic_nullsub_hook, HookType::Jump);
 
     pattern = hook::pattern("E8 ? ? ? ? 83 C4 0C 5F 5E 5B 5D C2 04 00 B8 ? ? ? ? 66");
-    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cLog__err_nullsubver_hook, PATCH_JUMP);
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cLog__err_nullsubver_hook, HookType::Jump);
 
     pattern = hook::pattern("E8 ? ? ? ? 83 C4 10 8B 75 F8 33 DB 39 5E 48 7E 39 81");
-    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cLog__err_1_hook, PATCH_JUMP);
+    InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cLog__err_1_hook, HookType::Jump);
 }

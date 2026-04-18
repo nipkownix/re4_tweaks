@@ -778,7 +778,7 @@ void re4t::init::FrameRateFixes()
 		// OpenBoxMain
 		pattern = hook::pattern("E8 ? ? ? ? 83 C4 18 5D E9 ? ? ? ? 3D ? ? ? ? 75 1A 6A FF 6A 36");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OpenBoxMain_orig);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OpenBoxMain_hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), OpenBoxMain_hook, HookType::Jump);
 	}
 
 	// Walls/etc/etc
@@ -1482,6 +1482,8 @@ void re4t::init::FrameRateFixes()
 	}
 
 	// Fix character backwards turning speed
+	// (SmoothAnalogTurning in ControllerTweaks.cpp changes the pattern match counts here)
+	// is pl_R1_Crouch even used in the game anywhere? I suspect it's leftover code from RE3.5
 	{
 		struct TurnSpeedSubtract
 		{
@@ -1499,14 +1501,12 @@ void re4t::init::FrameRateFixes()
 
 		auto pattern = hook::pattern("D8 25 ? ? ? ? D9 ? A4 00 00 00");
 
-		// 0x7636d9 - pl_R1_Back
 		// 0x766069 - pl_R1_Crouch
 		// 0x7660b6 - pl_R1_Crouch
 		// 0x766167 - pl_R1_Crouch
 		// 0x7661b4 - pl_R1_Crouch
-		// 0x9001a3 - pl_R1_KlauserAttack
-		for (int i = 0; i < 6; i++)
-			injector::MakeInline<TurnSpeedSubtract>(pattern.count(6).get(i).get<uint32_t>(0), pattern.count(6).get(i).get<uint32_t>(6));
+		for (int i = 0; i < 4; i++)
+			injector::MakeInline<TurnSpeedSubtract>(pattern.count(4).get(i).get<uint32_t>(0), pattern.count(4).get(i).get<uint32_t>(6));
 
 		struct TurnSpeedAdd
 		{
@@ -1524,32 +1524,12 @@ void re4t::init::FrameRateFixes()
 
 		pattern = hook::pattern("D8 05 ? ? ? ? D9 ? A4 00 00 00");
 
-		// 0x7636fa - pl_R1_Back
 		// 0x76607b - pl_R1_Crouch
 		// 0x7660a4 - pl_R1_Crouch
 		// 0x766179 - pl_R1_Crouch
 		// 0x7661a2 - pl_R1_Crouch
-		for (int i = 0; i < 5; i++)
-			injector::MakeInline<TurnSpeedAdd>(pattern.count(5).get(i).get<uint32_t>(0), pattern.count(5).get(i).get<uint32_t>(6));
-
-		struct TurnSpeedLoad
-		{
-			void operator()(injector::reg_pack& regs)
-			{
-				float cPlayer__SPEED_WALK_TURN = 0.04188790545f; // game calcs this on startup, always seems to be same value
-				float newTurnSpeed = GlobalPtr()->deltaTime_70 * cPlayer__SPEED_WALK_TURN;
-
-				if (re4t::cfg->bFixTurningSpeed)
-					_asm {fld newTurnSpeed}
-				else
-					_asm {fld cPlayer__SPEED_WALK_TURN}
-			}
-		};
-
-		pattern = hook::pattern("D9 05 ? ? ? ? D8 86 A4 00 00 00 D9 9E A4 00 00 00");
-
-		// 0x9001C0 - pl_R1_KlauserAttack
-		injector::MakeInline<TurnSpeedLoad>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
+		for (int i = 0; i < 4; i++)
+			injector::MakeInline<TurnSpeedAdd>(pattern.count(4).get(i).get<uint32_t>(0), pattern.count(4).get(i).get<uint32_t>(6));
 	}
 
 	// Mercenaries: fix doubling of the village stage's passive difficulty gain in 60fps NTSC mode
@@ -1565,10 +1545,10 @@ void re4t::init::FrameRateFixes()
 				if (fMercsDeltaTimer >= 1.0F)
 				{
 					fMercsDeltaTimer -= 1.0F;
-					regs.ef |= (1 << regs.zero_flag); // call j_GameAddPoint(LVADD_TIMECOUNT);
+					regs.ef &= ~(1 << regs.zero_flag); // call j_GameAddPoint(LVADD_TIMECOUNT);
 				}
 				else
-					regs.ef &= ~(1 << regs.zero_flag);
+					regs.ef |= (1 << regs.zero_flag);
 			}
 		}; injector::MakeInline<MercsModeFPSFix>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(9));
 	}
@@ -1604,12 +1584,12 @@ void re4t::init::FrameRateFixes()
 	auto pattern = hook::pattern("8B 4F 08 50 8D 55 ? 52 89 4D ? E8 ? ? ? ?"); // AddOtModelPosRadius
 	auto caller = pattern.count(2).get(1).get<uint8_t>(0xB);
 	ReadCall(caller, collision_sphere_hexahedron);
-	InjectHook(caller, collision_sphere_hexahedron_Hook, PATCH_CALL);
+	InjectHook(caller, collision_sphere_hexahedron_Hook, HookType::Call);
 
 	pattern = hook::pattern("39 91 80 84 00 00 0F 85 ? ? ? ? E8 ? ? ? ?"); // gameStageInit
 	caller = (uint8_t*)injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(0xC)).as_int();
 	ReadCall(caller, NowLoadingOff);
-	InjectHook(caller, NowLoadingOff_Hook, PATCH_JUMP);
+	InjectHook(caller, NowLoadingOff_Hook, HookType::Jump);
 
 	pattern = hook::pattern("D8 D1 DF E0 DD D9 F6 C4 41 75 ? D9 C0 D9 EE DA E9 DF E0 F6 C4 44 7A");
 

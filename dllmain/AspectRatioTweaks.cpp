@@ -3,6 +3,7 @@
 #include "ConsoleWnd.h"
 #include "Game.h"
 #include "Settings.h"
+#include "HUDTweaks.h"
 
 bool bIsUltrawide;
 bool bIs16by10;
@@ -11,7 +12,6 @@ float fDefaultEngineWidthScale = 1280.0f;
 float fDefaultEngineAspectRatio = 1.777777791f;
 float fDefaultAspectRatio = 1.333333373f;
 float fDefaultEsp18Height = 0.375f;
-float fDefaultHudPosX = 0.0f; // 217.0f in the vanilla game, but since mods can change it, we'll just store whatever the game gives us.
 
 double fDefaultMapIconsPos = 320.0;
 double fNewMapIconsPos;
@@ -108,37 +108,6 @@ void re4t::init::AspectRatioTweaks()
 	pattern = hook::pattern("E8 ? ? ? ? 8D 4D ? 6A ? 51 E8 ? ? ? ? 8D 55 ? 52 8D 45 ? 50 8D 4D ? 51 56 E8 ? ? ? ? 8B 4D ? 33 CD");
 	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), C_MTXOrtho_cSofdec_hook);
 
-	// Hook LifeMeter::move so we can override the HUD pos
-	pattern = hook::pattern("D9 98 ? ? ? ? 0F BE 46 ? 89 45 ? 6A ? B9 ? ? ? ? DB 45");
-	struct LifeMeter__move_hook
-	{
-		void operator()(injector::reg_pack& regs)
-		{
-			// Code we replaced
-			uint32_t orig_eax = regs.eax;
-			__asm {
-				mov eax, [orig_eax]
-				fstp dword ptr[eax + 0x10C]
-			}
-
-			float* fCurHudPosX = (float*)(regs.eax - 0x1DCC);
-			
-			// Store default HUD Pos X
-			if (fDefaultHudPosX == 0.0f)
-				fDefaultHudPosX = *fCurHudPosX;
-
-			// Calculate new X pos if needed
-			if ((re4t::cfg->bSideAlignHUD && bIsUltrawide) || (re4t::cfg->bRemove16by10BlackBars && bIs16by10))
-			{
-				float fHudPosOffset = ((360.0f * fGameDisplayAspectRatio) - 640.0f) / 2.0f;
-			
-				*fCurHudPosX = fDefaultHudPosX + fHudPosOffset;
-			}
-			else
-				*fCurHudPosX = fDefaultHudPosX;
-		}
-	}; injector::MakeInline<LifeMeter__move_hook>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(6));
-
 	// Hook function that sets the BG color (bio4_AddBgColor), so we can make sure it is black when playing videos
 	pattern = hook::pattern("F6 82 ? ? ? ? ? 75 ? B9 ? ? ? ? E8 ? ? ? ? 8B 48");
 	struct AddBgColor_hook
@@ -232,6 +201,8 @@ void re4t::init::AspectRatioTweaks()
 				injector::WriteMemory(ptrEngineWidthScale, static_cast<double>(fDefaultEngineWidthScale), true);
 				injector::WriteMemory(ptrAspectRatio, static_cast<float>(fDefaultAspectRatio), true);
 			}
+
+			re4t::HUDTweaks::ResetLifeMeter();
 
 			*(int32_t*)(ptrResMovAddr) = regs.eax;
 		}

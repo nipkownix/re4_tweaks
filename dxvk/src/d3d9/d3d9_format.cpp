@@ -39,7 +39,7 @@ namespace dxvk {
         VK_IMAGE_ASPECT_COLOR_BIT };
 
       case D3D9Format::A4R4G4B4: return {
-        VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT,
+        VK_FORMAT_A4R4G4B4_UNORM_PACK16,
         VK_FORMAT_UNDEFINED,
         VK_IMAGE_ASPECT_COLOR_BIT };
 
@@ -55,7 +55,7 @@ namespace dxvk {
       case D3D9Format::A8R3G3B2: return {}; // Unsupported
 
       case D3D9Format::X4R4G4B4: return {
-        VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT,
+        VK_FORMAT_A4R4G4B4_UNORM_PACK16,
         VK_FORMAT_UNDEFINED,
         VK_IMAGE_ASPECT_COLOR_BIT };
 
@@ -167,6 +167,16 @@ namespace dxvk {
         { D3D9ConversionFormat_A2W10V10U10, 1u,
         // Convert -> float (this is a mixed snorm and unorm type)
           VK_FORMAT_R16G16B16A16_SFLOAT } };
+
+      case D3D9Format::W11V11U10: return {
+        VK_FORMAT_B10G11R11_UFLOAT_PACK32,
+        VK_FORMAT_UNDEFINED,
+        VK_IMAGE_ASPECT_COLOR_BIT,
+        { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G,
+          VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_ONE },
+        { D3D9ConversionFormat_W11V11U10, 1u,
+        // can't use B10G11R11 bc this is a snorm type
+          VK_FORMAT_R16G16B16A16_SNORM } };
 
       case D3D9Format::UYVY: return {
         VK_FORMAT_B8G8R8A8_UNORM,
@@ -434,19 +444,16 @@ namespace dxvk {
 
     // AMD do not support 24-bit depth buffers on Vulkan,
     // so we have to fall back to a 32-bit depth format.
-    m_d24s8Support = CheckImageFormatSupport(adapter, VK_FORMAT_D24_UNORM_S8_UINT,
-      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT |
-      VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
+    m_d24s8Support = !options.useD32forD24 &&
+                     CheckImageFormatSupport(adapter, VK_FORMAT_D24_UNORM_S8_UINT,
+      VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT |
+      VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT);
 
     // NVIDIA do not support 16-bit depth buffers with stencil on Vulkan,
     // so we have to fall back to a 32-bit depth format.
     m_d16s8Support = CheckImageFormatSupport(adapter, VK_FORMAT_D16_UNORM_S8_UINT,
-      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT |
-      VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
-
-    // VK_EXT_4444_formats
-    m_a4r4g4b4Support = CheckImageFormatSupport(adapter, VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT,
-      VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
+      VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT |
+      VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT);
 
     if (!m_d24s8Support)
       Logger::info("D3D9: VK_FORMAT_D24_UNORM_S8_UINT -> VK_FORMAT_D32_SFLOAT_S8_UINT");
@@ -457,9 +464,6 @@ namespace dxvk {
       else
         Logger::info("D3D9: VK_FORMAT_D16_UNORM_S8_UINT -> VK_FORMAT_D32_SFLOAT_S8_UINT");
     }
-
-    if (!m_a4r4g4b4Support)
-      Logger::warn("D3D9: VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT -> VK_FORMAT_B4G4R4A4_UNORM_PACK16");
   }
 
   D3D9_VK_FORMAT_MAPPING D3D9VkFormatTable::GetFormatMapping(
@@ -479,21 +483,10 @@ namespace dxvk {
       return D3D9_VK_FORMAT_MAPPING();
     
     if (!m_d24s8Support && mapping.FormatColor == VK_FORMAT_D24_UNORM_S8_UINT)
-      mapping.FormatColor = VK_FORMAT_D32_SFLOAT_S8_UINT;
+      mapping.FormatColor = mapping.Aspect & VK_IMAGE_ASPECT_STENCIL_BIT ? VK_FORMAT_D32_SFLOAT_S8_UINT : VK_FORMAT_D32_SFLOAT;
 
     if (!m_d16s8Support && mapping.FormatColor == VK_FORMAT_D16_UNORM_S8_UINT)
       mapping.FormatColor = m_d24s8Support ? VK_FORMAT_D24_UNORM_S8_UINT : VK_FORMAT_D32_SFLOAT_S8_UINT;
-
-    if (!m_a4r4g4b4Support && mapping.FormatColor == VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT) {
-      VkComponentSwizzle alphaSwizzle = Format == D3D9Format::A4R4G4B4
-        ? VK_COMPONENT_SWIZZLE_B
-        : VK_COMPONENT_SWIZZLE_ONE;
-
-      mapping.FormatColor = VK_FORMAT_B4G4R4A4_UNORM_PACK16;
-      mapping.Swizzle     = {
-        VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_R,
-        VK_COMPONENT_SWIZZLE_A, alphaSwizzle };
-    }
 
     return mapping;
   }
@@ -555,11 +548,11 @@ namespace dxvk {
   bool D3D9VkFormatTable::CheckImageFormatSupport(
     const Rc<DxvkAdapter>&      Adapter,
           VkFormat              Format,
-          VkFormatFeatureFlags  Features) const {
-    VkFormatProperties supported = Adapter->formatProperties(Format);
+          VkFormatFeatureFlags2  Features) const {
+    DxvkFormatFeatures supported = Adapter->getFormatFeatures(Format);
     
-    return (supported.linearTilingFeatures  & Features) == Features
-        || (supported.optimalTilingFeatures & Features) == Features;
+    return (supported.linear  & Features) == Features
+        || (supported.optimal & Features) == Features;
   }
 
 }

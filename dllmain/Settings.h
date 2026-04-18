@@ -37,7 +37,7 @@ public:
 	bool bRemove16by10BlackBars = true;
 	bool bFixDPIScale = true;
 	bool bFixDisplayMode = true;
-	int iCustomRefreshRate = -1;
+	bool bOnlyShowHighestRefreshRates = false;
 	bool bOverrideLaserColor = false;
 	bool bRainbowLaser = false;
 	int iLaserR = 255;
@@ -52,9 +52,16 @@ public:
 	bool bUseEnhancedGCBlur = true;
 	bool bEnableGCScopeBlur = true;
 	bool bWindowBorderless = false;
+	bool bEnableWindowResize = false;
 	int iWindowPositionX = -1;
 	int iWindowPositionY = -1;
 	bool bRememberWindowPos = false;
+	bool bRepositionHUD = false;
+	float fHUDOffsetX = 0.0f;
+	float fHUDOffsetY = 0.0f;
+	bool bSmallerHUD = false;
+	bool bSmallerActionPrompts = false;
+	bool bHideZoomControlHints = false;
 
 	// AUDIO
 	int iVolumeMaster = 100;
@@ -93,6 +100,7 @@ public:
 	float fXinputDeadzone = 0.4f;
 	bool bAllowReloadWithoutAiming_controller = false;
 	bool bReloadWithoutZoom_controller = false;
+	bool bSmoothAnalogTurning = false;
 
 	// FRAME RATE
 	bool bFixFallingItemsSpeed = true;
@@ -115,6 +123,7 @@ public:
 	bool bAllowSellingHandgunSilencer = true;
 	bool bBalancedChicagoTypewriter = false;
 	bool bUseSprintToggle = false;
+	bool bDisableAutomaticReload = false;
 	bool bRifleScreenShake = false;
 	bool bDisableQTE = false;
 	bool bAutomaticMashingQTE = false;
@@ -132,10 +141,10 @@ public:
 	bool bSkipMenuFades = false;
 	bool bSpeedUpQuitGame = true;
 	bool bAlwaysShowOriginalTitleBackground = false;
-	bool bHideZoomControlHints = false;
 	bool bFixSilencedHandgunDescription = true;
 	bool bEnableDebugMenu = false;
 	bool bShowGameOutput = false;
+	bool bSaveGameOutput = false;
 	bool bEnableModExpansion = false;
 	bool bForceETSApplyScale = false;
   

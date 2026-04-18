@@ -102,7 +102,7 @@ namespace dxvk {
 
   VkFormat GetPackedDepthStencilFormat(D3D9Format Format);
 
-  VkFormatFeatureFlags GetImageFormatFeatures(DWORD Usage);
+  VkFormatFeatureFlags2 GetImageFormatFeatures(DWORD Usage);
 
   VkImageUsageFlags GetImageUsageFlags(DWORD Usage);
 
@@ -110,7 +110,7 @@ namespace dxvk {
     return srgb ? srgbFormat : format;
   }
 
-  inline VkShaderStageFlagBits GetShaderStage(DxsoProgramType ProgramType) {
+  constexpr VkShaderStageFlagBits GetShaderStage(DxsoProgramType ProgramType) {
     switch (ProgramType) {
       case DxsoProgramTypes::VertexShader:  return VK_SHADER_STAGE_VERTEX_BIT;
       case DxsoProgramTypes::PixelShader:   return VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -176,14 +176,14 @@ namespace dxvk {
 
   void ConvertRect(RECT rect, VkOffset2D& offset, VkExtent2D& extent);
 
-  inline float GetDepthBufferRValue(VkFormat Format) {
+  inline float GetDepthBufferRValue(VkFormat Format, int32_t vendorId) {
     switch (Format) {
       case VK_FORMAT_D16_UNORM_S8_UINT:
       case VK_FORMAT_D16_UNORM:
-        return float(1 << 16);
+        return vendorId == 0x10de ? float(1 << 15) : float(1 << 16);
 
       case VK_FORMAT_D24_UNORM_S8_UINT:
-        return float(1 << 24);
+        return vendorId == 0x10de ? float(1 << 23) : float(1 << 24);
 
       default:
       case VK_FORMAT_D32_SFLOAT_S8_UINT:
@@ -241,7 +241,7 @@ namespace dxvk {
   }
 
   inline D3DRENDERSTATETYPE ColorWriteIndex(uint32_t i) {
-    return D3DRENDERSTATETYPE(i ? D3DRS_COLORWRITEENABLE1 + i - 1 : D3DRS_COLORWRITEENABLE);
+    return D3DRENDERSTATETYPE(i ? D3DRENDERSTATETYPE(D3DRS_COLORWRITEENABLE1 + i - 1) : D3DRS_COLORWRITEENABLE);
   }
 
   inline bool AreFormatsSimilar(D3D9Format srcFormat, D3D9Format dstFormat) {

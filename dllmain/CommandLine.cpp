@@ -198,7 +198,7 @@ void re4t::init::CommandLine()
 			{
 				paramRoomValue = std::stoul(roomNumStr, nullptr, 16);
 			}
-			catch (std::exception e)
+			catch (const std::exception&)
 			{
 				paramRoomValue = 0;
 			}
@@ -210,7 +210,7 @@ void re4t::init::CommandLine()
 			{
 				paramLoadSaveSlot = std::stol(loadNum, nullptr, 0);
 			}
-			catch (std::exception e)
+			catch (const std::exception&)
 			{
 				paramLoadSaveSlot = 0;
 			}
@@ -229,7 +229,7 @@ void re4t::init::CommandLine()
 				int difficultyLevel = std::stol(difficulty, nullptr, 0);
 				difficultyValue = GameDifficulty(difficultyLevel);
 			}
-			catch (std::exception e)
+			catch (const std::exception&)
 			{
 				// not a number? check for some common difficulties
 				if (!_wcsicmp(difficulty, L"veryeasy"))
@@ -256,7 +256,7 @@ void re4t::init::CommandLine()
 			{
 				(*paramPosition).x = std::stof(posX);
 			}
-			catch (std::exception e)
+			catch (const std::exception&)
 			{
 				(*paramPosition).x = 0;
 			}
@@ -270,7 +270,7 @@ void re4t::init::CommandLine()
 			{
 				(*paramPosition).y = std::stof(posY);
 			}
-			catch (std::exception e)
+			catch (const std::exception&)
 			{
 				(*paramPosition).y = 0;
 			}
@@ -284,7 +284,7 @@ void re4t::init::CommandLine()
 			{
 				(*paramPosition).z = std::stof(posZ);
 			}
-			catch (std::exception e)
+			catch (const std::exception&)
 			{
 				(*paramPosition).z = 0;
 			}
@@ -296,7 +296,7 @@ void re4t::init::CommandLine()
 			{
 				paramRotation = std::stof(posR);
 			}
-			catch (std::exception e)
+			catch (const std::exception&)
 			{
 				paramRotation.reset();
 			}

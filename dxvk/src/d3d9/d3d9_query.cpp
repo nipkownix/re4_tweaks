@@ -64,8 +64,11 @@ namespace dxvk {
       return S_OK;
     }
 
-    Logger::warn("D3D9Query::QueryInterface: Unknown interface query");
-    Logger::warn(str::format(riid));
+    if (logQueryInterfaceError(__uuidof(IDirect3DQuery9), riid)) {
+      Logger::warn("D3D9Query::QueryInterface: Unknown interface query");
+      Logger::warn(str::format(riid));
+    }
+
     return E_NOINTERFACE;
   }
 
@@ -101,8 +104,10 @@ namespace dxvk {
 
     if (dwIssueFlags == D3DISSUE_BEGIN) {
       if (QueryBeginnable(m_queryType)) {
-        if (m_state == D3D9_VK_QUERY_BEGUN && QueryEndable(m_queryType))
+        if (m_state == D3D9_VK_QUERY_BEGUN && QueryEndable(m_queryType)) {
+          m_resetCtr.fetch_add(1, std::memory_order_acquire);
           m_parent->End(this);
+        }
 
         m_parent->Begin(this);
 

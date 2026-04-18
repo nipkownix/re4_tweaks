@@ -92,7 +92,7 @@ void __declspec(naked) knife_r3_set40_hook()
 void re4t::init::CameraTweaks()
 {
 	auto pattern = hook::pattern("E8 ? ? ? ? D9 5D EC D9 EE D9 45 EC");
-	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CameraControl__getCameraPitch_hook, PATCH_JUMP);
+	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), CameraControl__getCameraPitch_hook, HookType::Jump);
 
 	pattern = hook::pattern("D9 05 ? ? ? ? D9 C0 DE FA D9 C9 74");
 	C_RANGE_1097 = (float*)*pattern.count(1).get(0).get<uint32_t>(2);
