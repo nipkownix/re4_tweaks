@@ -2,6 +2,7 @@
 #include "dllmain.h"
 #include "GameFlags.h"
 #include "Game.h"
+#include "Sections.h"
 #include "Settings.h"
 #include "input.hpp"
 #include "Utils.h"
@@ -375,7 +376,7 @@ void GetToolMenuPointers()
 	FlagEdit_die = (decltype(FlagEdit_die))pattern.count(1).get(0).get<uint8_t>(0);
 	FlagEdit_Backup_pG = *(uint32_t**)pattern.count(1).get(0).get<uint8_t>(0x14);
 
-	pattern = hook::pattern("FF FF FF FF FF FF 00 00 FF 00");
+	pattern = hook::pattern(re4t::sections::data, "FF FF FF FF FF FF 00 00 FF 00");
 	DbgFontColorArray = pattern.count(1).get(0).get<uint32_t>(0);
 
 	pattern = hook::pattern("99 56 8B 35 ? ? ? ? 89 55");
@@ -446,7 +447,7 @@ void re4t::init::ToolMenu()
 		// Hook eprintf to add screen-drawing to it, like the GC debug has
 		// (required for debug-menu to be able to draw itself)
 		pattern = hook::pattern("55 8B EC 8B 4D ? 8D 45 ? 50 51 68 ? ? ? ? E8 ? ? ? ? 83 C4 ? 5D C3");
-		InjectHook(pattern.count(1).get(0).get<uint32_t>(0), eprintf_Hook, PATCH_JUMP);
+		InjectHook(pattern.count(1).get(0).get<uint32_t>(0), eprintf_Hook, HookType::Jump);
 
 		// Hook titleInit to make it load dbgFont for us
 		pattern = hook::pattern("C6 05 ? ? ? ? ? E8 ? ? ? ? D9 05");

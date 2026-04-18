@@ -22,7 +22,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <LocalDebuggerCommand>$(BIO4_BIN)\bio4.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(BIO4_BIN)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -31,7 +31,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <LocalDebuggerCommand>$(BIO4_BIN)\bio4.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(BIO4_BIN)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -715,6 +715,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClCompile Include="RoomInfo.cpp" />
     <ClCompile Include="cfgMenu.cpp" />
     <ClCompile Include="HandleLimits.cpp" />
+    <ClCompile Include="Sections.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="Sofdec.cpp" />
     <ClCompile Include="FilterXXFixes.cpp" />
@@ -1096,6 +1097,7 @@ echo | set /p dummyName=#define GIT_BRANCH ^"%VAR%^" &gt;&gt; gitparams.h</Comma
     <ClInclude Include="SDK\snd.h" />
     <ClInclude Include="SDK\sscrn.h" />
     <ClInclude Include="SDK\title.h" />
+    <ClInclude Include="Sections.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Trainer.h" />

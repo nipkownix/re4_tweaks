@@ -159,11 +159,11 @@ void re4t::init::MouseTurning()
 
 	// Trigger left turn
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 8A 86");
-	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyOnCheck_hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyOnCheck_hook, HookType::Call);
 
 	// Trigger right turn
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 ? 84 C0 74 ? C7 86 ? ? ? ? ? ? ? ? 5E B8 ? ? ? ? 5B 8B E5 5D C3 53");
-	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyOnCheck_hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), KeyOnCheck_hook, HookType::Call);
 
 	// pl_R1_Turn (left and right separated) TODO: Combine them?
 	pattern = hook::pattern("A1 ? ? ? ? 83 E0 ? 33 C9 0B C1 75 ? 89 9E");

@@ -295,15 +295,15 @@ void re4t::init::WndProcHook()
 	// Hook AdjustWindowRectEx call inside sub_93A0B0 to apply our style changes
 	pattern = hook::pattern("FF 15 ? ? ? ? 8B 4D ? 2B 4D ? 8B 55");
 	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
-	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), AdjustWindowRectEx_Hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), AdjustWindowRectEx_Hook, HookType::Call);
 
 	// Hook SetWindowPos call inside sub_93A0B0 to apply our custom X Y window position
 	pattern = hook::pattern("FF 15 ? ? ? ? 56 53 57 8D 45 EC 50");
 	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
-	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), SetWindowPos_Hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), SetWindowPos_Hook, HookType::Call);
 
 	// Same as before
 	pattern = hook::pattern("FF 15 ? ? ? ? 8B 0D ? ? ? ? 6A 01");
 	injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 6);
-	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), MoveWindow_Hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint32_t>(0), MoveWindow_Hook, HookType::Call);
 }

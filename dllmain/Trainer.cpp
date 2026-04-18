@@ -986,7 +986,7 @@ void Trainer_Init()
 		// Hook cameraHitCheck to disable hit detection
 		auto pattern = hook::pattern("E8 ? ? ? ? 83 C4 20 84 C0 74 2A");
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_orig);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), cameraHitCheck_hook, HookType::Jump);
 
 		// Redirect m_direction_ratio_208 and m_depression_ratio_204 when using free cam
 		pattern = hook::pattern("D9 83 ? ? ? ? DA E9 89 85 ? ? ? ? DF E0");
@@ -1040,7 +1040,7 @@ void Trainer_Init()
 	// Hook DebugTrg stub to use our reimplemented version
 	{
 		auto pattern = hook::pattern("83 C4 18 6A 01 E8 ? ? ? ? 83 C4 04 3C 01");
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), DebugTrg_hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x5)).as_int(), DebugTrg_hook, HookType::Jump);
 	}
 
 	// Hook GameAddPoint to override the Dynamic Difficulty Level

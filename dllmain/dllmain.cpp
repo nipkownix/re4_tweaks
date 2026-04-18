@@ -5,6 +5,7 @@
 #include "ConsoleWnd.h"
 #include "Settings.h"
 #include "Game.h"
+#include "Sections.h"
 #include "input.hpp"
 #include "gitparams.h"
 #include "resource.h"
@@ -17,6 +18,9 @@ HMODULE g_module_handle = nullptr;
 void Init_Main()
 {
 	con.log("Big ironic thanks to QLOC S.A.");
+
+	// Init module sections
+	re4t::init::Sections();
 
 	// Get game pointers and version info
 	if (!re4t::init::Game())

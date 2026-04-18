@@ -3,6 +3,7 @@
 #include "dllmain.h"
 #include "ConsoleWnd.h"
 #include "Game.h"
+#include "Sections.h"
 #include "Settings.h"
 #include "input.hpp"
 
@@ -311,7 +312,7 @@ void re4t::init::Gameplay()
 
 		// Shooting range: use NTSC strings for the game rules note
 		// (only supports English for now, as only eng/ss_file_01.MDT contains the additional strings necessary for this)
-		pattern = hook::pattern("? 00 01 00 46 00 01 00");
+		pattern = hook::pattern(re4t::sections::data, "? 00 01 00 46 00 01 00");
 		file_msg_tbl_35 = pattern.count(1).get(0).get<FILE_MSG_TBL_mb>(0);
 		// update the note's message index whenever we load into r22c
 		pattern = hook::pattern("89 41 78 83 C1 7C E8");
@@ -467,7 +468,7 @@ void re4t::init::Gameplay()
 		auto pattern = hook::pattern("83 C4 0C E8 ? ? ? ? D9 EE 8B 06 D9 9E 44 05 00 00");
 
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit);
-		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, PATCH_JUMP);
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(3)).as_int(), cPlayer__weaponInit_Hook, HookType::Jump);
 	}
 
 	// Disable Automatic Reload

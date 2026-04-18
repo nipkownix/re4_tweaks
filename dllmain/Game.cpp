@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "ConsoleWnd.h"
 #include "SDK/filter00.h"
+#include "Sections.h"
 #include <deque>
 
 std::string gameVersion;
@@ -1044,7 +1045,7 @@ bool re4t::init::Game()
 	// (game doesn't store this in a global, so we need to capture it...)
 	pattern = hook::pattern("6A 0D 6A 01 6A 00 6A 00 68 BC 00 00 00 E8");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0xD), mem_calloc);
-	InjectHook(pattern.count(1).get(0).get<uint8_t>(0xD), mem_calloc_TITLE_WORK_hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint8_t>(0xD), mem_calloc_TITLE_WORK_hook, HookType::Call);
 
 	// pointer to FadeWork
 	pattern = hook::pattern("68 ? ? ? ? E8 ? ? ? ? D9 EE D9 15 ? ? ? ? 83 C4 08 ");
@@ -1053,7 +1054,7 @@ bool re4t::init::Game()
 	// Mem_free call for TITLE_WORK, so we can set to nullptr once game frees it
 	pattern = hook::pattern("56 E8 ? ? ? ? 6A 01 E8 ? ? ? ? 68 C0 01 00 00");
 	ReadCall(pattern.count(1).get(0).get<uint8_t>(0x1), Mem_free);
-	InjectHook(pattern.count(1).get(0).get<uint8_t>(0x1), Mem_free_TITLE_WORK_hook, PATCH_CALL);
+	InjectHook(pattern.count(1).get(0).get<uint8_t>(0x1), Mem_free_TITLE_WORK_hook, HookType::Call);
 
 	// LightMgr pointer
 	pattern = hook::pattern("6A 00 53 6A 00 57 B9 ? ? ? ?");
@@ -1100,7 +1101,7 @@ bool re4t::init::Game()
 	pattern = hook::pattern("74 ? B9 ? ? ? ? E8 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? E8");
 	auto cSceSys__scheduler_thunk = injector::GetBranchDestination(pattern.count(1).get(0).get<uint8_t>(17));
 	ReadCall(cSceSys__scheduler_thunk.as_int(), cSceSys__scheduler);
-	InjectHook(cSceSys__scheduler_thunk.as_int(), cSceSys__scheduler_Hook, PATCH_JUMP);
+	InjectHook(cSceSys__scheduler_thunk.as_int(), cSceSys__scheduler_Hook, HookType::Jump);
 
 	// WeaponChange funcptr
 	pattern = hook::pattern("6A 01 E8 ? ? ? ? 83 C4 04 E8 ? ? ? ? F6");

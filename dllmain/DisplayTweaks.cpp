@@ -272,7 +272,7 @@ void re4t::init::DisplayTweaks()
 		Nop(framelimiterStart, framelimiterEnd - framelimiterStart);
 
 		Patch(framelimiterStart, uint8_t(0x50)); // push eax (pass return value of EventMgr::IsAliveEvt)
-		InjectHook(framelimiterStart + 1, Framelimiter_Hook, PATCH_CALL);
+		InjectHook(framelimiterStart + 1, Framelimiter_Hook, HookType::Call);
 		Patch(framelimiterStart + 1 + 5, { 0x83, 0xc4, 0x04 }); // add esp, 4 (needed to allow WinMain to exit properly)
 
 		spd::log()->info("Framelimiter replaced");
