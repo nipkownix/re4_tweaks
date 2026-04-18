@@ -490,6 +490,8 @@ bool cPlayer__keyReload_hook()
 		}
 
 		*PlReloadDirect = reloadWithoutZoom;
+
+		bShouldReload = false;
 	}
 	else
 	{
