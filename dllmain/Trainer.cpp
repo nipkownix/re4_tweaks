@@ -861,7 +861,7 @@ void Trainer_Init()
 				// Get pointer to cEm
 				cEm* Em_ptr = (cEm*)(regs.eax);
 
-				if (re4t::cfg->bTrainerEnemyHPMultiplier)
+				if (re4t::cfg->bTrainerEnemyHPMultiplier && IsEnemy(Em_ptr->id_100))
 				{
 					float multi = 0.0f;
 					if (re4t::cfg->bTrainerRandomHPMultiplier)
@@ -886,7 +886,7 @@ void Trainer_Init()
 				// Get pointer to cEm
 				cEm* Em_ptr = (cEm*)(regs.esi);
 
-				if (re4t::cfg->bTrainerEnemyHPMultiplier)
+				if (re4t::cfg->bTrainerEnemyHPMultiplier && IsEnemy(Em_ptr->id_100))
 				{
 					float multi = 0.0f;
 					if (re4t::cfg->bTrainerRandomHPMultiplier)
@@ -911,7 +911,7 @@ void Trainer_Init()
 				// Get pointer to cEm
 				cEm* Em_ptr = (cEm*)(regs.esi);
 
-				if (re4t::cfg->bTrainerEnemyHPMultiplier)
+				if (re4t::cfg->bTrainerEnemyHPMultiplier && IsEnemy(Em_ptr->id_100))
 				{
 					float multi = 0.0f;
 					if (re4t::cfg->bTrainerRandomHPMultiplier)

@@ -583,7 +583,7 @@ bool IsGanado(int id) // same as games IsGanado func
 {
 	if (id == 0x4B || id == 0x4E)
 		return 0;
-	if ((unsigned int)(id - 0x40) <= 0xF)
+	if (id >= 0x40 && id <= 0x4F)
 		return 1;
 	if (id < 0x10)
 		return 0;
