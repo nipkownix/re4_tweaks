@@ -334,29 +334,9 @@ void __fastcall CameraQuasiFPS__hitCheck_Hook(CameraQuasiFPS* thisptr, void* unu
 		Mtx m;
 		MTXRotRad(m, 'y', fFreeCam_direction);
 
-		// Smooth out Y axis movement, but only if CamSmooth is disabled/very low
-		static float fFreeCam_depression_prev = 0;
-		if (Game_GetCameraSmoothness() > 0) // CamSmooth already enabled, use value without smoothing
-			fFreeCam_depression_prev = fFreeCam_depression;
-		else
-		{
-#if 1
-			// Smooth out y axis by tracking previous frame value
-			// Same method game uses to smooth X axis in CameraQuasiFPS::move (at 0x59E27A in 1.1.0)
-			const float ud_rate = 0.6f;
-			const float ud_rate_inv = 1.0 - ud_rate;
-			float dep_inv = fFreeCam_depression * ud_rate_inv;
-			fFreeCam_depression_prev = (fFreeCam_depression_prev * ud_rate) + dep_inv;
-#else
-			// Smooth out y axis by using the average of previous frame value + new value
-			// Should make the Y axis rotation increase toward the new value each frame, rather than being immediately set to it
-			// (above method seems to work better, but figured it was worth leaving this as an example...)
-			fFreeCam_depression_prev = (fFreeCam_depression_prev + fFreeCam_depression) / 2;
-#endif
-		}
 		p_aim->Target_C.x = 0;
-		p_aim->Target_C.y = sin(fFreeCam_depression_prev);
-		p_aim->Target_C.z = cos(fFreeCam_depression_prev);
+		p_aim->Target_C.y = sin(fFreeCam_depression);
+		p_aim->Target_C.z = cos(fFreeCam_depression);
 		MTXMultVecSR(m, &p_aim->Target_C, &p_aim->Target_C);
 	}
 
@@ -1035,6 +1015,20 @@ void Trainer_Init()
 		ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck);
 		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xE)).as_int(), CameraQuasiFPS__hitCheck_Hook, HookType::Jump);
 
+		// Disable `lr_rate` cam smoothing code when freecam enabled.
+		pattern = hook::pattern("E8 ? ? ? ? 80 ? B6 01 00 00 00");
+		struct CameraQuasiFPS__move_hook
+		{
+			void operator()(injector::reg_pack& regs)
+			{
+				// Orig code compares ebx+0x1B6 to 0, and runs some cam smoothing code if true.
+				// Hook changes it to only try comparing if freecam is disabled.
+				regs.ef &= ~(1 << regs.zero_flag);
+				if (!re4t::cfg->bTrainerEnableFreeCam && *(uint8_t*)(regs.ebx + 0x1B6) == 0)
+					regs.ef |= (1 << regs.zero_flag);
+			}
+		}; injector::MakeInline<CameraQuasiFPS__move_hook>(pattern.count(1).get(0).get<uint32_t>(5), pattern.count(1).get(0).get<uint32_t>(12));
+
 		pattern = hook::pattern("05 94 00 00 00 50 8B CE E8 ? ? ? ? 8B 0D");
 		struct cBlock__checkv_hook
 		{
@@ -1226,6 +1220,8 @@ void Trainer_Update()
 		{
 			dir_delta = *MouseDeltaX / 600.0f;
 			dep_delta = *MouseDeltaY / 600.0f;
+			dir_delta *= GlobalPtr()->deltaTime_70;
+			dep_delta *= GlobalPtr()->deltaTime_70;
 		}
 
 		// invert Y if CFG_AIM_REVERSE flag is set
@@ -1235,8 +1231,8 @@ void Trainer_Update()
 		fFreeCam_direction -= dir_delta;
 		fFreeCam_depression += dep_delta;
 
-		// Clamp to a tiny bit below (M_PI / 2) to prevent some camera weirdness
-		fFreeCam_depression = std::clamp(fFreeCam_depression, -1.56f, 1.56f);
+		// Clamp to a bit below (M_PI / 2) to prevent some camera weirdness
+		fFreeCam_depression = std::clamp(fFreeCam_depression, -1.4f, 1.4f);
 
 		// Flag and backup
 		bool isFlagSet = FlagIsSet(GlobalPtr()->flags_STOP_0_170, uint32_t(Flags_STOP::SPF_PL));
@@ -1306,7 +1302,7 @@ void Trainer_Update()
 		}
 
 		// Speed calculation
-		float movSpeed = 140.0f * re4t::cfg->fTrainerFreeCamSpeed;
+		float movSpeed = 140.0f * re4t::cfg->fTrainerFreeCamSpeed * GlobalPtr()->deltaTime_70;
 
 		if (isPressingRun)
 			movSpeed *= 2.0f;
@@ -2315,7 +2311,7 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				ImGui::TextWrapped("Key combination to toggle the \"Free Camera\"patch.");
+				ImGui::TextWrapped("Key combination to toggle the \"Free Camera\" patch.");
 				ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
 				ImGui::PushID(3);
