@@ -749,3 +749,8 @@ void re4t::init::MathReimpl()
 		}
 	}
 }
+
+void Vec::normalize()
+{
+	VECNormalize_SSE1(this, this);
+}

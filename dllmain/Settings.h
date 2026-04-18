@@ -27,6 +27,7 @@ public:
 	//=//=//
 	// DISPLAY
 	float fFOVAdditional = 0.0f;
+	float fCameraSmoothing = 100.0f;
 	bool bEnableFOV = false;
 	bool bDisableVsync = false;
 	bool bUltraWideAspectSupport = true;

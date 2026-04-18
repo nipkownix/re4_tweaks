@@ -1,4 +1,4 @@
-#include "dllmain.h"
+﻿#include "dllmain.h"
 #include "UI_DebugWindows.h"
 #include "Settings.h"
 #include "SDK/room_jmp.h"
@@ -168,7 +168,7 @@ bool UI_EmManager::Render(bool WindowMode)
 					else
 						ImGui::Text("#%d %s (type %x)", em->guid_F8, cEmMgr::EmIdToName(em->id_100).c_str(), int(em->type_101));
 
-					static Vec copyPosition = { 0 };
+					static Vec copyPosition = Vec();
 					if (ImGui::Button("Copy position"))
 						copyPosition = em->pos_94;
 
@@ -1032,6 +1032,20 @@ bool UI_Globals::Render(bool WindowMode)
 		if (globals->Rno0_20 >= int(GLOBAL_WK::Routine0::Init) && globals->Rno0_20 <= int(GLOBAL_WK::Routine0::Option))
 			ImGui::Text("Routine0: %s", routine0Names[globals->Rno0_20]);
 
+		ImGui::Text("Camera Position:");
+		float* camX = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[0][3];
+		float* camY = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[1][3];
+		float* camZ = &CamCtrl->m_QuasiFPS_278.m_pl_mat_178[2][3];
+
+		Vec camPos = Vec(*camX, *camY, *camZ);
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 10.0f);
+		if (ImGui::InputFloat3("##camPos", (float*)&camPos, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			*camX = camPos.x;
+			*camY = camPos.y;
+			*camZ = camPos.z;
+		}
+
 		ImGui::Separator();
 
 		cPlayer* player = PlayerPtr();
@@ -1046,6 +1060,7 @@ bool UI_Globals::Render(bool WindowMode)
 				ImGui::SameLine();
 				if (ImGui::Button("View##viewpl"))
 					UI_NewEmManager(playerIdx);
+				ImGui::Text("└ Player HP: %d", globals->playerHpCur_4FB4);
 			}
 		}
 
@@ -1061,18 +1076,13 @@ bool UI_Globals::Render(bool WindowMode)
 				ImGui::SameLine();
 				if (ImGui::Button("View##viewsub"))
 					UI_NewEmManager(ashleyIdx);
+				ImGui::Text("└ Ashley HP: %d", globals->subHpCur_4FB8);
 			}
 		}
 
 		ImGui::Separator();
 
 		ImGui::Text("Chapter: %d", globals->chapter_4F9A);
-
-		if (player)
-			ImGui::Text("Player HP: %d", globals->playerHpCur_4FB4);
-
-		if (ashley)
-			ImGui::Text("Ashley HP: %d", globals->subHpCur_4FB8);
 
 		static std::string diff;
 		switch (globals->gameDifficulty_847C) {
@@ -1158,7 +1168,7 @@ void UI_AreaJump::UpdateRoomInfo()
 	}
 	else
 	{
-		curRoomPosition = { 0 };
+		curRoomPosition = Vec();
 		curRoomRotation = 0;
 	};
 
