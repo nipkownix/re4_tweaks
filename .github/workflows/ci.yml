@@ -28,12 +28,12 @@ jobs:
           # Replace illegal file system characters in branch name
           echo "git_ref=${GIT_REF//[\":<>|*?\/\\]/_}" >> $GITHUB_OUTPUT
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Remove VERBOSE
         shell: bash
@@ -61,7 +61,7 @@ jobs:
           cp -r ../dist/Bin32/re4_tweaks/ ./
 
       - name: Upload ${{ matrix.build-type }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           path: |
             ${{ matrix.build-type }}/re4_tweaks/
