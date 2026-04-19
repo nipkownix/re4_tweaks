@@ -162,7 +162,10 @@ void re4t::init::AspectRatioTweaks()
 			float fNewAspectRatio = fGameDisplayAspectRatio / fDefaultAspectRatio;
 			float fNewEngineWidthScale = fNewEngineAspectRatio * fDefaultEngineWidthScale;
 
-			double fMapIconsPosOffset = 0.040 * ((double)fGameWidth - ((double)fDefaultEngineAspectRatio * (double)fGameHeight));
+			// TODO: 18.0f found manually as best fit between 16:9/16:10/32:9.
+			// Subtracting aspect ratios seems wrong, but makes sense since we want to shift by the extra space.
+			// Likely still a better way we could derive fNewMapIconsPos though.
+			double fMapIconsPosOffset = 18.0f * (fGameDisplayAspectRatio - fDefaultEngineAspectRatio);
 			fNewMapIconsPos = fDefaultMapIconsPos + fMapIconsPosOffset;
 
 			double fNewEsp18Height = 0.50068 / fNewAspectRatio;
