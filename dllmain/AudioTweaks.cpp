@@ -128,6 +128,21 @@ void re4t::init::AudioTweaks()
 	pattern = hook::pattern("83 C0 ? 50 6A 03 6A 01 E8");
 	InjectHook(pattern.count(1).get(0).get<uint32_t>(8), knife_r3_fire10_SndCall_Hook, HookType::Call);
 
+	// Nop out a bugged function call that has a small chance of causing audio issues.
+	// 
+	// Called function pushes ECX to stack then branches based on that stack variable, but the caller never sets ECX first.
+	// ECX is just leftover garbage data from either `VISetPostRetraceCallback` or Win32 `Sleep`.
+	// 
+	// Code inside the func seems to pause all active AVX tracks, in testing it never seemed to actually run.
+	// but since ECX is essentially random data there's still a chance it could trigger and cause audio issues.
+	// (forcing the code to run caused load screen music to stop playing, likely affects other music in the game too)
+	// 
+	// Possibly an uninitialized local variable (or one only assigned in debug builds)
+	// which MSVC optimized into a `push ecx` for stack allocation, leaving the comparison to read garbage?
+	// (@QLOC may want to take notice of C4700 warnings in future!)
+	pattern = hook::pattern("E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? A1 ? ? ? ? 8B");
+	Nop(pattern.count(1).get(0).get<uint8_t>(), 5);
+
 	// Silence armored Ashley
 	{
 		auto pattern = hook::pattern("83 C4 ? 80 BA ? ? ? ? 02 75 ? 83 FF ? 77 ? 0F B6 87 ? ? ? ? FF 24 85 ? ? ? ? BE");
