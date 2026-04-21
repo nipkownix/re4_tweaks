@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 
 namespace re4t
 {
@@ -16,10 +17,13 @@ namespace re4t
 			uint32_t sndCallHandle;
 			double tick;
 			bool isStopped;
+			double expiryTick;
+			int sndStopParam;
 		};
 
 		struct SndSlice
 		{
+			static constexpr double SLICE_DURATION = 1000.0 / 30.0;
 			static constexpr size_t MAX_ENTRIES = 256;
 			SndKey entries[MAX_ENTRIES];
 			size_t count = 0;
@@ -50,6 +54,17 @@ namespace re4t
 				return nullptr;
 			}
 
+			void on_expired(double now, std::function<void(SndKey*)> expiredCb)
+			{
+				for (size_t i = 0; i < count; i++)
+				{
+					if (entries[i].expiryTick == 0)
+						continue;
+					if (now - entries[i].expiryTick >= SLICE_DURATION)
+						expiredCb(&entries[i]);
+				}
+			}
+
 			bool add(const SndKey& key)
 			{
 				if (count >= MAX_ENTRIES)
@@ -62,7 +77,6 @@ namespace re4t
 		class SndDedup
 		{
 		public:
-			static constexpr double SLICE_DURATION = 1000.0 / 30.0;
 
 			// Two buffers rotated every ~33ms, duplicates are checked against both so sounds straddling a timeslice boundary are still caught.
 			// Matches in the previous buffer are only accepted if within the 33ms dedup window.
@@ -71,13 +85,16 @@ namespace re4t
 			static inline double slice_start = 0;
 
 			// Called once per frame from `Framelimiter_Hook`
-			static void Tick(double now)
+			static void Tick(double now, std::function<void(SndKey*)> expiredCb)
 			{
 				double elapsed = now - slice_start;
 
-				if (elapsed >= SLICE_DURATION)
+				buffers[0].on_expired(now, expiredCb);
+				buffers[1].on_expired(now, expiredCb);
+
+				if (elapsed >= SndSlice::SLICE_DURATION)
 				{
-					if (elapsed >= (SLICE_DURATION * 2))
+					if (elapsed >= (SndSlice::SLICE_DURATION * 2))
 					{
 						buffers[0].clear();
 						buffers[1].clear();

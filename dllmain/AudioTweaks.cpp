@@ -109,19 +109,29 @@ bool __cdecl SndStop_Hook(uint32_t id, int time)
 		match = SndDedup::buffers[SndDedup::prev()].find(id);
 	}
 
-	if (match)
+	if (match && !match->isStopped)
 	{
-		if ((now - match->tick) < SndDedup::SLICE_DURATION)
+		if ((now - match->tick) < SndSlice::SLICE_DURATION) // Sound was started less than 33ms ago?
 		{
-			// Skip SndStop calls for sounds started less than 33ms ago.
 			// Some funcs use a `if (id) { SndStop(id); } id = SndCall(x)` pattern to start playing new sounds 
 			// At 30fps this is likely intended to allow interrupting an existing sound effect.
-			// Higher framerates can sometimes run this with the same SE multiple times within 33ms
+			// but higher framerates can sometimes run this with the same SE multiple times within 33ms
 			// Stopping and restarting the same sound before it can play, causing pops/cracks in the audio.
-			// 
-			// TODO: Possible this may cause some legit SndStop calls to become skipped, could be worth gating this check behind optional setting.
+			//
+			// It's possible some legitimate non-dupe SndStop calls might still happen in the 33ms window though
+			// So instead of stopping the sound here we'll set an expiry timer to stop it in next 33ms
+			// De-duped sounds will clear the timer inside SndCall, allowing it to continue playback, while Framelimiter_Hook will handle stopping any expired sounds.
+			{
+				match->expiryTick = match->tick + SndSlice::SLICE_DURATION;
+				match->sndStopParam = time;
+			}
+
 			return false;
 		}
+
+		// More than 33ms passed since sound started, allow game to stop it:
+		match->expiryTick = 0;
+		match->sndStopParam = 0;
 		match->isStopped = true;
 	}
 
@@ -150,17 +160,19 @@ uint32_t __cdecl SndCall_Hook(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t 
 
 	// Dedupe sound if it was within last 33ms and hasn't been stopped with SndStop.
 	// (TODO: would be better if we could just check the sndCallHandle status and not return any that are stopped?)
-	if (match && (now - match->tick) < SndDedup::SLICE_DURATION && !match->isStopped)
+	if (match && (now - match->tick) < SndSlice::SLICE_DURATION && !match->isStopped)
 	{
-		// TODO: Might be better to play the sound at 0 volume rather than returning handle of prev sound
+		// TODO: be better to play the sound at 0 volume rather than returning handle of prev sound
 		// (in case game code uses handle to check when sound has ended, since this currently returns handle of the earliest trigger of this sound)
 		// Haven't found a way to force SndCall to play muted though :/
+		match->expiryTick = 0;
+		match->sndStopParam = 0;
 		return match->sndCallHandle;
 	}
 
 	uint32_t result = bio4::SndCall(blk, call_no, pos, id, flag, pMod);
 
-	SndKey key{ ret, blk, call_no, pMod, flag, result, now, false };
+	SndKey key{ ret, blk, call_no, pMod, flag, result, now, false, 0, 0 };
 	if (!SndDedup::buffers[SndDedup::current].add(key))
 	{
 		static bool hasWarned = false;
