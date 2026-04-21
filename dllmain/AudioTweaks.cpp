@@ -101,6 +101,8 @@ extern double FramelimiterPrevTicks;
 
 bool __cdecl SndStop_Hook(uint32_t id, int time)
 {
+	const double now = FramelimiterPrevTicks;
+
 	SndKey* match = SndDedup::buffers[SndDedup::current].find(id);
 	if (!match)
 	{
@@ -109,6 +111,17 @@ bool __cdecl SndStop_Hook(uint32_t id, int time)
 
 	if (match)
 	{
+		if ((now - match->tick) < SndDedup::SLICE_DURATION)
+		{
+			// Skip SndStop calls for sounds started less than 33ms ago.
+			// Some funcs use a `if (id) { SndStop(id); } id = SndCall(x)` pattern to start playing new sounds 
+			// At 30fps this is likely intended to allow interrupting an existing sound effect.
+			// Higher framerates can sometimes run this with the same SE multiple times within 33ms
+			// Stopping and restarting the same sound before it can play, causing pops/cracks in the audio.
+			// 
+			// TODO: Possible this may cause some legit SndStop calls to become skipped, could be worth gating this check behind optional setting.
+			return false;
+		}
 		match->isStopped = true;
 	}
 
