@@ -121,17 +121,27 @@ bool __cdecl SndStop_Hook(uint32_t id, int time)
 			// It's possible some legitimate non-dupe SndStop calls might still happen in the 33ms window though
 			// So instead of stopping the sound here we'll set an expiry timer to stop it in next 33ms
 			// De-duped sounds will clear the timer inside SndCall, allowing it to continue playback, while Framelimiter_Hook will handle stopping any expired sounds.
+			if (SndDedup::QueueStop(id, time, now + SndSlice::SLICE_DURATION))
 			{
-				match->expiryTick = match->tick + SndSlice::SLICE_DURATION;
-				match->sndStopParam = time;
+				// Stop is queued, skip stopping it here.
+				return false;
 			}
-
-			return false;
+			else
+			{
+				static bool hasWarned = false;
+				if (!hasWarned)
+				{
+					hasWarned = true;
+#ifdef VERBOSE
+					con.log("SndStop_Hook: exceeded %d queued stops!", SndDedup::MAX_QUEUED_STOPS);
+#endif
+					spd::log()->info("SndStop_Hook: exceeded {} queued stops!", SndDedup::MAX_QUEUED_STOPS);
+				}
+			}
 		}
 
 		// More than 33ms passed since sound started, allow game to stop it:
-		match->expiryTick = 0;
-		match->sndStopParam = 0;
+		SndDedup::CancelQueuedStop(match->sndCallHandle);
 		match->isStopped = true;
 	}
 
@@ -165,14 +175,13 @@ uint32_t __cdecl SndCall_Hook(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t 
 		// TODO: be better to play the sound at 0 volume rather than returning handle of prev sound
 		// (in case game code uses handle to check when sound has ended, since this currently returns handle of the earliest trigger of this sound)
 		// Haven't found a way to force SndCall to play muted though :/
-		match->expiryTick = 0;
-		match->sndStopParam = 0;
+		SndDedup::CancelQueuedStop(match->sndCallHandle);
 		return match->sndCallHandle;
 	}
 
 	uint32_t result = bio4::SndCall(blk, call_no, pos, id, flag, pMod);
 
-	SndKey key{ ret, blk, call_no, pMod, flag, result, now, false, 0, 0 };
+	SndKey key{ ret, blk, call_no, pMod, flag, result, now, false };
 	if (!SndDedup::buffers[SndDedup::current].add(key))
 	{
 		static bool hasWarned = false;

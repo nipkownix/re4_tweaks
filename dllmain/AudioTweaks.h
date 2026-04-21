@@ -17,8 +17,14 @@ namespace re4t
 			uint32_t sndCallHandle;
 			double tick;
 			bool isStopped;
-			double expiryTick;
+		};
+
+		struct SndQueuedStop
+		{
+			uint32_t sndCallHandle;
 			int sndStopParam;
+			double expiryTick;
+			bool active;
 		};
 
 		struct SndSlice
@@ -54,17 +60,6 @@ namespace re4t
 				return nullptr;
 			}
 
-			void on_expired(double now, std::function<void(SndKey*)> expiredCb)
-			{
-				for (size_t i = 0; i < count; i++)
-				{
-					if (entries[i].expiryTick == 0)
-						continue;
-					if (now - entries[i].expiryTick >= SLICE_DURATION)
-						expiredCb(&entries[i]);
-				}
-			}
-
 			bool add(const SndKey& key)
 			{
 				if (count >= MAX_ENTRIES)
@@ -77,21 +72,82 @@ namespace re4t
 		class SndDedup
 		{
 		public:
-
 			// Two buffers rotated every ~33ms, duplicates are checked against both so sounds straddling a timeslice boundary are still caught.
 			// Matches in the previous buffer are only accepted if within the 33ms dedup window.
 			static inline SndSlice buffers[2];
 			static inline int current = 0;
 			static inline double slice_start = 0;
 
-			// Called once per frame from `Framelimiter_Hook`
-			static void Tick(double now, std::function<void(SndKey*)> expiredCb)
+			// Deferred stops live separately from the dedup buffers so buffer rotation can't eat any pending stops.
+			static constexpr size_t MAX_QUEUED_STOPS = 256;
+			static inline SndQueuedStop queuedStops[MAX_QUEUED_STOPS];
+			static inline size_t queuedStopCount = 0;
+
+			static bool QueueStop(uint32_t sndCallHandle, int time, double expiryTick)
 			{
+				// Check if already queued
+				for (size_t i = 0; i < queuedStopCount; i++)
+				{
+					if (queuedStops[i].active && queuedStops[i].sndCallHandle == sndCallHandle)
+						return true;
+				}
+
+				// Try to reuse an inactive slot
+				for (size_t i = 0; i < queuedStopCount; i++)
+				{
+					if (!queuedStops[i].active)
+					{
+						queuedStops[i] = { sndCallHandle, time, expiryTick, true };
+						return true;
+					}
+				}
+
+				if (queuedStopCount < MAX_QUEUED_STOPS)
+				{
+					queuedStops[queuedStopCount++] = { sndCallHandle, time, expiryTick, true };
+					return true;
+				}
+
+				// No room in the queue?
+				return false;
+			}
+
+			static bool CancelQueuedStop(uint32_t sndCallHandle)
+			{
+				for (size_t i = 0; i < queuedStopCount; i++)
+				{
+					if (queuedStops[i].active && queuedStops[i].sndCallHandle == sndCallHandle)
+					{
+						queuedStops[i].active = false;
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			// Called once per frame from `Framelimiter_Hook`
+			static void Tick(double now, std::function<void(uint32_t id, int time)> stopCb)
+			{
+				// Process any queued stops
+				for (size_t i = 0; i < queuedStopCount; i++)
+				{
+					if (queuedStops[i].active && now >= queuedStops[i].expiryTick)
+					{
+						stopCb(queuedStops[i].sndCallHandle, queuedStops[i].sndStopParam);
+
+						// Mark the dedup entry so SndCall_Hook won't return this stale handle
+						SndKey* key = buffers[current].find(queuedStops[i].sndCallHandle);
+						if (!key)
+							key = buffers[prev()].find(queuedStops[i].sndCallHandle);
+						if (key)
+							key->isStopped = true;
+
+						queuedStops[i].active = false;
+					}
+				}
+
 				double elapsed = now - slice_start;
-
-				buffers[0].on_expired(now, expiredCb);
-				buffers[1].on_expired(now, expiredCb);
-
 				if (elapsed >= SndSlice::SLICE_DURATION)
 				{
 					if (elapsed >= (SndSlice::SLICE_DURATION * 2))

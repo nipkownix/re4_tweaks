@@ -155,11 +155,8 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 
 	// Update our SndCall dedupe tracker, and handle stopping any expired sounds.
 	// TODO: Move this call to a better spot.
-	re4t::AudioTweaks::SndDedup::Tick(FramelimiterPrevTicks, [](re4t::AudioTweaks::SndKey* match) {
-		match->expiryTick = 0;
-		match->sndStopParam = 0;
-		match->isStopped = true;
-		bio4::SndStop(match->sndCallHandle, match->sndStopParam);
+	re4t::AudioTweaks::SndDedup::Tick(FramelimiterPrevTicks, [](uint32_t id, int time) {
+		bio4::SndStop(id, time);
 	});
 }
 
