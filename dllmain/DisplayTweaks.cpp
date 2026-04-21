@@ -5,6 +5,7 @@
 #include "Game.h"
 #include "Settings.h"
 #include <timeapi.h>
+#include "AudioTweaks.h"
 
 uintptr_t ptrGXCopyTex;
 uintptr_t ptrAfterItemExamineHook;
@@ -151,6 +152,9 @@ void Framelimiter_Hook(uint8_t isAliveEvt_result)
 	GlobalPtr()->deltaTime_70 = float((timeElapsed / 1000) * 30.0);
 
 	SetThreadAffinityMask(curThread, prevAffinityMask);
+
+	// TODO: Move this call to a better spot.
+	re4t::AudioTweaks::SndDedup::Tick(FramelimiterPrevTicks);
 }
 
 std::recursive_mutex g_D3DMutex;
