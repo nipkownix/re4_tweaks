@@ -7,8 +7,7 @@
 #include "ConsoleWnd.h"
 
 using re4t::AudioTweaks::SndDedup;
-using re4t::AudioTweaks::SndKey;
-using re4t::AudioTweaks::SndSlice;
+using re4t::AudioTweaks::SndEntry;
 
 void(__cdecl* Snd_set_system_vol)(char flg, int16_t vol);
 void __cdecl Snd_set_system_vol_Hook(char flg, int16_t vol)
@@ -103,45 +102,31 @@ bool __cdecl SndStop_Hook(uint32_t id, int time)
 {
 	const double now = FramelimiterPrevTicks;
 
-	SndKey* match = SndDedup::buffers[SndDedup::current].find(id);
-	if (!match)
-	{
-		match = SndDedup::buffers[SndDedup::prev()].find(id);
-	}
+	SndEntry* match = SndDedup::find(id);
 
 	if (match && !match->isStopped)
 	{
-		if ((now - match->tick) < SndSlice::SLICE_DURATION) // Sound was started less than 33ms ago?
+		if ((now - match->startTick) < SndDedup::DEDUP_WINDOW)
 		{
-			// Some funcs use a `if (id) { SndStop(id); } id = SndCall(x)` pattern to start playing new sounds 
+			// Some funcs use an `if (id) { SndStop(id); } id = SndCall(x)` pattern to start playing new sounds 
 			// At 30fps this is likely intended to allow interrupting an existing sound effect.
 			// but higher framerates can sometimes run this with the same SE multiple times within 33ms
 			// Stopping and restarting the same sound before it can play, causing pops/cracks in the audio.
 			//
-			// It's possible some legitimate non-dupe SndStop calls might still happen in the 33ms window though
-			// So instead of stopping the sound here we'll set an expiry timer to stop it in next 33ms
-			// De-duped sounds will clear the timer inside SndCall, allowing it to continue playback, while Framelimiter_Hook will handle stopping any expired sounds.
-			if (SndDedup::QueueStop(id, time, now + SndSlice::SLICE_DURATION))
+			// Possible some legitimate non-dupe SndStop calls could also be happening though
+			// So instead of skipping the call entirely we'll set an expiry timer to stop it in next 33ms
+			// De-duped sounds will clear the timer inside SndCall, allowing it to continue playback, while 
+			// SndDedup::Tick will stop any expired sounds.
+			if (match->pendingStopAt == 0)
 			{
-				// Stop is queued, skip stopping it here.
-				return false;
+				match->pendingStopAt = now + SndDedup::DEDUP_WINDOW;
+				match->pendingStopParam = time;
 			}
-			else
-			{
-				static bool hasWarned = false;
-				if (!hasWarned)
-				{
-					hasWarned = true;
-#ifdef VERBOSE
-					con.log("SndStop_Hook: exceeded %d queued stops!", SndDedup::MAX_QUEUED_STOPS);
-#endif
-					spd::log()->info("SndStop_Hook: exceeded {} queued stops!", SndDedup::MAX_QUEUED_STOPS);
-				}
-			}
+			return false;
 		}
 
-		// More than 33ms passed since sound started, allow game to stop it:
-		SndDedup::CancelQueuedStop(match->sndCallHandle);
+		// Outside window: stop normally.
+		match->pendingStopAt = 0;
 		match->isStopped = true;
 	}
 
@@ -162,36 +147,33 @@ uint32_t __cdecl SndCall_Hook(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t 
 		con.log("SndCall blk %d call_no %d pos %p id %d flag %d pMod %p ret %p", blk, call_no, pos, id, flag, pMod, ret);
 #endif
 
-	SndKey* match = SndDedup::buffers[SndDedup::current].find(ret, blk, call_no, flag, pMod);
-	if (!match)
-	{
-		match = SndDedup::buffers[SndDedup::prev()].find(ret, blk, call_no, flag, pMod);
-	}
+	SndEntry* match = SndDedup::find(ret, blk, call_no, flag, pMod);
 
 	// Dedupe sound if it was within last 33ms and hasn't been stopped with SndStop.
 	// (TODO: would be better if we could just check the sndCallHandle status and not return any that are stopped?)
-	if (match && (now - match->tick) < SndSlice::SLICE_DURATION && !match->isStopped)
+	if (match && (now - match->startTick) < SndDedup::DEDUP_WINDOW && !match->isStopped)
 	{
+		// Duplicate inside the window, reuse the prior handle and cancel any pending stop on it.
 		// TODO: be better to play the sound at 0 volume rather than returning handle of prev sound
 		// (in case game code uses handle to check when sound has ended, since this currently returns handle of the earliest trigger of this sound)
 		// Haven't found a way to force SndCall to play muted though :/
-		SndDedup::CancelQueuedStop(match->sndCallHandle);
+		match->pendingStopAt = 0;
 		return match->sndCallHandle;
 	}
 
 	uint32_t result = bio4::SndCall(blk, call_no, pos, id, flag, pMod);
 
-	SndKey key{ ret, blk, call_no, pMod, flag, result, now, false };
-	if (!SndDedup::buffers[SndDedup::current].add(key))
+	SndEntry entry{ ret, blk, call_no, pMod, flag, result, now, 0.0, 0, false };
+	if (!SndDedup::add(entry))
 	{
 		static bool hasWarned = false;
 		if (!hasWarned)
 		{
 			hasWarned = true;
 #ifdef VERBOSE
-			con.log("SndCall_Hook: exceeded %d entries in a single timeslice!", SndSlice::MAX_ENTRIES);
+			con.log("SndCall_Hook: exceeded %zu entries!", SndDedup::MAX_ENTRIES);
 #endif
-			spd::log()->info("SndCall_Hook: exceeded {} entries in a single timeslice!", SndSlice::MAX_ENTRIES);
+			spd::log()->info("SndCall_Hook: exceeded {} entries!", SndDedup::MAX_ENTRIES);
 		}
 	}
 
