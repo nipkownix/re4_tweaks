@@ -2013,6 +2013,16 @@ void cfgMenuRender()
 						ImGui::Spacing();
 						ImGui::BulletText("Key combinations not supported");
 						ImGui::Spacing();
+
+						ImGui::TextWrapped("Rotate item clockwise (same as controller RB)");
+						ImGui::PushID("RotateItemRB");
+						if (ImGui::Button(re4t::cfg->sRotateItem.c_str(), ImVec2(btn_size_x, 0)))
+						{
+							re4t::cfg->HasUnsavedChanges = true;
+							CreateThreadAutoClose(0, 0, (LPTHREAD_START_ROUTINE)&ImGui_SetHotkeyThread, &re4t::cfg->sRotateItem, 0, NULL);
+						}
+						ImGui::PopID();
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 						
 						if (ImGui::BeginTable("inv flip", 2))
 						{

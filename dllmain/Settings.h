@@ -156,6 +156,7 @@ public:
 	// HOTKEYS
 	std::string sConfigMenuKeyCombo = "F1";
 	std::string sConsoleKeyCombo = "F2";
+	std::string sRotateItem = "C";
 	std::string sFlipItemUp = "HOME";
 	std::string sFlipItemDown = "END";
 	std::string sFlipItemLeft = "INSERT";
