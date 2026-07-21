@@ -300,6 +300,7 @@ void ReadSettingsIni(std::wstring ini_path, setType type)
 		// HOTKEYS
 		re4t::cfg->sConfigMenuKeyCombo = StrToUpper(ini.getString("HOTKEYS", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo));
 		re4t::cfg->sConsoleKeyCombo = StrToUpper(ini.getString("HOTKEYS", "Console", re4t::cfg->sConsoleKeyCombo));
+		re4t::cfg->sRotateItem = StrToUpper(ini.getString("HOTKEYS", "RotateItem", re4t::cfg->sRotateItem));
 		re4t::cfg->sFlipItemUp = StrToUpper(ini.getString("HOTKEYS", "FlipItemUp", re4t::cfg->sFlipItemUp));
 		re4t::cfg->sFlipItemDown = StrToUpper(ini.getString("HOTKEYS", "FlipItemDown", re4t::cfg->sFlipItemDown));
 		re4t::cfg->sFlipItemLeft = StrToUpper(ini.getString("HOTKEYS", "FlipItemLeft", re4t::cfg->sFlipItemLeft));
@@ -750,6 +751,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		// HOTKEYS
 		ini.setString("HOTKEYS", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo);
 		ini.setString("HOTKEYS", "Console", re4t::cfg->sConsoleKeyCombo);
+		ini.setString("HOTKEYS", "RotateItem", re4t::cfg->sRotateItem);
 		ini.setString("HOTKEYS", "FlipItemUp", re4t::cfg->sFlipItemUp);
 		ini.setString("HOTKEYS", "FlipItemDown", re4t::cfg->sFlipItemDown);
 		ini.setString("HOTKEYS", "FlipItemLeft", re4t::cfg->sFlipItemLeft);
@@ -1111,6 +1113,7 @@ void re4t_cfg::LogSettings()
 	spd::log()->info("+ HOTKEYS------------------------+-----------------+");
 	spd::log()->info("| {:<30} | {:>15} |", "ConfigMenu", re4t::cfg->sConfigMenuKeyCombo.data());
 	spd::log()->info("| {:<30} | {:>15} |", "Console", re4t::cfg->sConsoleKeyCombo.data());
+	spd::log()->info("| {:<30} | {:>15} |", "RotateItem", re4t::cfg->sRotateItem.data());
 	spd::log()->info("| {:<30} | {:>15} |", "FlipItemUp", re4t::cfg->sFlipItemUp.data());
 	spd::log()->info("| {:<30} | {:>15} |", "FlipItemDown", re4t::cfg->sFlipItemDown.data());
 	spd::log()->info("| {:<30} | {:>15} |", "FlipItemLeft", re4t::cfg->sFlipItemLeft.data());

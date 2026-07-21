@@ -8,6 +8,8 @@
 
 uintptr_t* ptrRifleMovAddr;
 uintptr_t* ptrInvMovAddr;
+using InventoryRotateFn = void(__thiscall*)(pzlPiece* item_piece, int direction);
+InventoryRotateFn InventoryRotate = nullptr;
 uintptr_t* ptrFocusAnimFldAddr;
 uintptr_t ptrRetryLoadDLGstate;
 
@@ -315,6 +317,9 @@ void re4t::init::KeyboardMouseTweaks()
 
 	// Inventory item flip binding
 	{
+		auto rotate_pattern = hook::pattern("6A 00 6A 20 6A 01 E8 ? ? ? ? 83 C4 0C 6A 00 84 C0 74 ? 8B CE E8 ? ? ? ? E8");
+		ReadCall(rotate_pattern.count(1).get(0).get<uint8_t>(0x16), InventoryRotate);
+
 		auto pattern = hook::pattern("A1 ? ? ? ? 75 ? A8 ? 74 ? 6A ? 8B CE E8 ? ? ? ? BB");
 		ptrInvMovAddr = *pattern.count(1).get(0).get<uint32_t*>(1);
 		struct InvFlip
@@ -323,10 +328,16 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				regs.eax = *(int32_t*)ptrInvMovAddr;
 				
+				unsigned int vk_rotate = pInput->vk_from_key_name(re4t::cfg->sRotateItem);
 				unsigned int vk_left = pInput->vk_from_key_name(re4t::cfg->sFlipItemLeft);
 				unsigned int vk_right = pInput->vk_from_key_name(re4t::cfg->sFlipItemRight);
 				unsigned int vk_up = pInput->vk_from_key_name(re4t::cfg->sFlipItemUp);
 				unsigned int vk_down = pInput->vk_from_key_name(re4t::cfg->sFlipItemDown);
+
+				// Use the game's native inventory rotation routine. Shoulder-button bits are
+				// handled by the separate model-flip path below and do not change the footprint.
+				if (pInput->is_key_pressed(vk_rotate))
+					InventoryRotate(reinterpret_cast<pzlPiece*>(regs.esi), 1); // clockwise
 
 				if (pInput->is_key_pressed(vk_left) || pInput->is_key_pressed(vk_right))
 					regs.eax = 0x00300000;
@@ -335,7 +346,7 @@ void re4t::init::KeyboardMouseTweaks()
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		spd::log()->info("{} -> Keyboard inventory item flipping enabled", __FUNCTION__);
+		spd::log()->info("{} -> Keyboard inventory item rotation and flipping enabled", __FUNCTION__);
 	}
 
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
