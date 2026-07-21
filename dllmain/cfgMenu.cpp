@@ -2001,21 +2001,21 @@ void cfgMenuRender()
 						ImGui::TextWrapped("Open console");
 					}
 
-					// Inv flip 
-					if ((OptionsFilter.PassFilter("inventory flip") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					// Inventory rotate / flip
+					if ((OptionsFilter.PassFilter("inventory rotate flip") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{
 						ImGui_ColumnSwitch();
 
-						ImGui::TextWrapped("Key bindings for flipping items in the inventory screen when using keyboard and mouse.");
+						ImGui::TextWrapped("Key bindings for rotating and flipping items in the inventory screen when using keyboard and mouse.");
 						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
 
-						ImGui::TextWrapped("Normally, you can only rotate them with the keyboard, not flip them. Flipping was possible in the old PC port and is possible using a controller.");
+						ImGui::TextWrapped("Rotate changes an item's inventory footprint (for example, 1x2 to 2x1). Flip changes only the 3D model orientation without changing its footprint.");
 						ImGui::Spacing();
 						ImGui::BulletText("Key combinations not supported");
 						ImGui::Spacing();
 
-						ImGui::TextWrapped("Rotate item clockwise (same as controller RB)");
-						ImGui::PushID("RotateItemRB");
+						ImGui::TextWrapped("Rotate clockwise (changes footprint)");
+						ImGui::PushID("RotateItem");
 						if (ImGui::Button(re4t::cfg->sRotateItem.c_str(), ImVec2(btn_size_x, 0)))
 						{
 							re4t::cfg->HasUnsavedChanges = true;
