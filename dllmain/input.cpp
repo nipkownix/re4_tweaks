@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Originally part of "ReShade", Copyright (C) 2014 Patrick Mours. All rights reserved.
  * License: https://github.com/crosire/reshade#license
  */
@@ -167,8 +167,12 @@ bool re4t::input::handle_window_message(const void* message_data)
 				input->_raw_mouse_absolutePos[1] = raw_data.data.mouse.lLastY;
 
 				// Update the delta values based on the difference between the current and previous absolute positions
-				input->_raw_mouse_delta[0] += input->_raw_mouse_absolutePos[0] - input->_raw_mouse_prevAbsolutePos[0];
-				input->_raw_mouse_delta[1] += input->_raw_mouse_absolutePos[1] - input->_raw_mouse_prevAbsolutePos[1];
+				const int delta_x = input->_raw_mouse_absolutePos[0] - input->_raw_mouse_prevAbsolutePos[0];
+				const int delta_y = input->_raw_mouse_absolutePos[1] - input->_raw_mouse_prevAbsolutePos[1];
+				input->_raw_mouse_delta[0] += delta_x;
+				input->_raw_mouse_delta[1] += delta_y;
+				input->_raw_mouse_game_delta[0] += delta_x;
+				input->_raw_mouse_game_delta[1] += delta_y;
 
 				// Update the previous absolute position
 				input->_raw_mouse_prevAbsolutePos[0] = input->_raw_mouse_absolutePos[0];
@@ -179,6 +183,8 @@ bool re4t::input::handle_window_message(const void* message_data)
 				// Update the delta values
 				input->_raw_mouse_delta[0] += raw_data.data.mouse.lLastX;
 				input->_raw_mouse_delta[1] += raw_data.data.mouse.lLastY;
+				input->_raw_mouse_game_delta[0] += raw_data.data.mouse.lLastX;
+				input->_raw_mouse_game_delta[1] += raw_data.data.mouse.lLastY;
 			}
 
 			if (raw_data.data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
@@ -438,6 +444,22 @@ void re4t::input::max_mouse_position(unsigned int position[2]) const
 	GetClientRect(static_cast<HWND>(_window), &rect);
 	position[0] = rect.right;
 	position[1] = rect.bottom;
+}
+
+int re4t::input::consume_raw_mouse_delta_x()
+{
+	const std::unique_lock<std::shared_mutex> lock(_mutex);
+	const int delta = _raw_mouse_game_delta[0];
+	_raw_mouse_game_delta[0] = 0;
+	return delta;
+}
+
+int re4t::input::consume_raw_mouse_delta_y()
+{
+	const std::unique_lock<std::shared_mutex> lock(_mutex);
+	const int delta = _raw_mouse_game_delta[1];
+	_raw_mouse_game_delta[1] = 0;
+	return delta;
 }
 
 void re4t::input::next_frame()
