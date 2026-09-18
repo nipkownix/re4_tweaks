@@ -77,6 +77,7 @@ namespace bio4 {
 	void(__cdecl* PlChangeData)();
 
 	uint32_t(__cdecl* SndCall)(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod);
+	bool(__cdecl* SndStop)(uint32_t id, int time);
 	bool(__cdecl* SndStrReq_0)(uint32_t snd_id, int flg, int time, int vol);
 
 	bool(__cdecl* SubScreenOpen)(SS_OPEN_FLAG open_flag, SS_ATTR_FLAG attr_flag);
@@ -1135,6 +1136,10 @@ bool re4t::init::Game()
 	// SndCall funcptr
 	pattern = hook::pattern("05 94 00 00 00 50 6A 0C 6A 01 E8");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xA)).as_int(), bio4::SndCall);
+
+	// SndStop funcptr
+	pattern = hook::pattern("E8 06 00 00 6A 00 50 E8 ? ? ? ?");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), bio4::SndStop);
 
 	// SndStrReq_0 funcptr
 	pattern = hook::pattern("E8 ? ? ? ? 83 C4 10 5F B0 01 5E 8B");

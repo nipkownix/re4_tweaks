@@ -4,6 +4,10 @@
 #include "Game.h"
 #include "Settings.h"
 #include "AudioTweaks.h"
+#include "ConsoleWnd.h"
+
+using re4t::AudioTweaks::SndDedup;
+using re4t::AudioTweaks::SndEntry;
 
 void(__cdecl* Snd_set_system_vol)(char flg, int16_t vol);
 void __cdecl Snd_set_system_vol_Hook(char flg, int16_t vol)
@@ -92,10 +96,103 @@ uint32_t __cdecl knife_r3_fire10_SndCall_Hook(uint16_t blk, uint16_t call_no, Ve
 	return bio4::SndCall(blk, call_no, pos, id, flag, pMod);
 }
 
+extern double FramelimiterPrevTicks;
+
+bool __cdecl SndStop_Hook(uint32_t id, int time)
+{
+	const double now = FramelimiterPrevTicks;
+
+	SndEntry* match = SndDedup::find(id);
+
+	if (match && !match->isStopped)
+	{
+		if ((now - match->startTick) < SndDedup::DEDUP_WINDOW)
+		{
+			// Some funcs use an `if (id) { SndStop(id); } id = SndCall(x)` pattern to start playing new sounds 
+			// At 30fps this is likely intended to allow interrupting an existing sound effect.
+			// but higher framerates can sometimes run this with the same SE multiple times within 33ms
+			// Stopping and restarting the same sound before it can play, causing pops/cracks in the audio.
+			//
+			// Possible some legitimate non-dupe SndStop calls could also be happening though
+			// So instead of skipping the call entirely we'll set an expiry timer to stop it in next 33ms
+			// De-duped sounds will clear the timer inside SndCall, allowing it to continue playback, while 
+			// SndDedup::Tick will stop any expired sounds.
+			if (match->pendingStopAt == 0)
+			{
+				match->pendingStopAt = now + SndDedup::DEDUP_WINDOW;
+				match->pendingStopParam = time;
+			}
+			return false;
+		}
+
+		// Outside window: stop normally.
+		match->pendingStopAt = 0;
+		match->isStopped = true;
+	}
+
+	return bio4::SndStop(id, time);
+}
+
+// SndCall_Hook: tracks all SndCall usages inside a 33ms/30FPS timeslice.
+// If we see a duplicate call (same blk/call_no/pMod/ret_addr) inside the current timeslice, skip it and return previous SndCall result
+// Fixes issues with sounds becoming doubled in volume/reverb at higher framerates.
+uint32_t __cdecl SndCall_Hook(uint16_t blk, uint16_t call_no, Vec* pos, uint8_t id, uint32_t flag, cModel* pMod)
+{
+	void* ret = _ReturnAddress();
+	const double now = FramelimiterPrevTicks;
+
+	// Spammy, enable for testing:
+#ifdef SNDCALL_HOOK_TEST
+	if (blk != 5)
+		con.log("SndCall blk %d call_no %d pos %p id %d flag %d pMod %p ret %p", blk, call_no, pos, id, flag, pMod, ret);
+#endif
+
+	SndEntry* match = SndDedup::find(ret, blk, call_no, flag, pMod);
+
+	// Dedupe sound if it was within last 33ms and hasn't been stopped with SndStop.
+	// (TODO: would be better if we could just check the sndCallHandle status and not return any that are stopped?)
+	if (match && (now - match->startTick) < SndDedup::DEDUP_WINDOW && !match->isStopped)
+	{
+		// Duplicate inside the window, reuse the prior handle and cancel any pending stop on it.
+		// TODO: be better to play the sound at 0 volume rather than returning handle of prev sound
+		// (in case game code uses handle to check when sound has ended, since this currently returns handle of the earliest trigger of this sound)
+		// Haven't found a way to force SndCall to play muted though :/
+		match->pendingStopAt = 0;
+		return match->sndCallHandle;
+	}
+
+	uint32_t result = bio4::SndCall(blk, call_no, pos, id, flag, pMod);
+
+	SndEntry entry{ ret, blk, call_no, pMod, flag, result, now, 0.0, 0, false };
+	if (!SndDedup::add(entry))
+	{
+		static bool hasWarned = false;
+		if (!hasWarned)
+		{
+			hasWarned = true;
+#ifdef VERBOSE
+			con.log("SndCall_Hook: exceeded %zu entries!", SndDedup::MAX_ENTRIES);
+#endif
+			spd::log()->info("SndCall_Hook: exceeded {} entries!", SndDedup::MAX_ENTRIES);
+		}
+	}
+
+	return result;
+}
+
 void re4t::init::AudioTweaks()
 {
+	// Hook SndCall to prevent duplicate calls within 33ms of each other
+	auto pattern = hook::pattern("05 94 00 00 00 50 6A 0C 6A 01 E8");
+	if (re4t::cfg->bReplaceFramelimiter) // Requires tick count from new framelimiter
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xA)).as_int(), SndCall_Hook);
+
+	pattern = hook::pattern("E8 06 00 00 6A 00 50 E8 ? ? ? ?");
+	if (re4t::cfg->bReplaceFramelimiter) // Requires tick count from new framelimiter
+		InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0x7)).as_int(), SndStop_Hook);
+
 	// Hook Snd_set_system_vol so we can override volume values with our own after game updates them
-	auto pattern = hook::pattern("B8 10 00 00 00 0F B6 55 ? 52 50 E8 ? ? ? ? 83 C4");
+	pattern = hook::pattern("B8 10 00 00 00 0F B6 55 ? 52 50 E8 ? ? ? ? 83 C4");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xB)).as_int(), Snd_set_system_vol);
 	InjectHook(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0xB)).as_int(), Snd_set_system_vol_Hook);
 
