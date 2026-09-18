@@ -60,6 +60,12 @@ struct __declspec(align(4)) DAMAGE {
 };
 static_assert(sizeof(DAMAGE) == 0x54, "sizeof(ATTACK_VALUE)");
 
+enum ROTATE_DIR
+{
+	ROTATE_P = 0x0,
+	ROTATE_M = 0x1,
+};
+
 extern SND_CTRL* Snd_ctrl_work;
 
 std::string GameVersion();
@@ -113,6 +119,8 @@ namespace bio4
 	extern void(__cdecl* C_MTXOrtho)(Mtx44 mtx, float PosY, float NegY, float NegX, float PosX, float Near, float Far);
 	extern uint8_t(__cdecl* WeaponId2MaxLevel)(ITEM_ID item_id, int type);
 	extern uint8_t(__cdecl* WeaponId2WeaponNo)(ITEM_ID item_id);
+
+	extern void(__fastcall* pzlPiece_rotate)(pzlPiece* thisptr, void* unused, ROTATE_DIR dir);
 
 	extern void(__cdecl* SceSleep)(uint32_t ctr);
 

@@ -84,6 +84,8 @@ namespace bio4 {
 	bool(__cdecl* CardLoad)(uint8_t a1);
 	void(__cdecl* CardSave)(uint8_t terminal_no, uint8_t attr);
 
+	void(__fastcall* pzlPiece_rotate)(pzlPiece* thisptr, void* unused, ROTATE_DIR dir);
+
 	void(__cdecl* GXSetBlendMode)(GXBlendMode type, GXBlendFactor src_factor, GXBlendFactor dst_factor, GXLogicOp op);
 	void(__cdecl* GXSetCullMode)(GXCullMode mode);
 	void(__cdecl* GXSetZMode)(bool compare_enable, GXCompare func, bool update_enable);
@@ -1131,6 +1133,10 @@ bool re4t::init::Game()
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::CardSave);
 	pattern = hook::pattern("6A 00 E8 ? ? ? ? 83 C4 04 3C 01 75 ? 6A 17");
 	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(2)).as_int(), bio4::CardLoad);
+
+	// pzlPiece_rotate funcptr
+	pattern = hook::pattern("E8 ? ? ? ? BB ? ? ? ? E9 ? ? ? ? 83 3D ? ? ? ? ? A1 ? ? ? ? 75 35 A8 10 74 13 6A 01 8B CE E8 ? ? ? ? BB ? ? ? ? E9");
+	ReadCall(injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int(), bio4::pzlPiece_rotate);
 
 	// SndCall funcptr
 	pattern = hook::pattern("05 94 00 00 00 50 6A 0C 6A 01 E8");
