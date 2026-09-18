@@ -63,8 +63,9 @@ A project designed to fix and tweak the "UHD" port of Resident Evil 4 on [Steam]
  
  * **Allow reload without aiming** - Removes the need to be aiming the weapon before you can reload it. KB/M and Controller supported. (DInput untested). Also provides an extra option to disable the camera zoom when you reload weapons.
 
- * **Flip items in your inventory using the keyboard** - Creates key bindings to flip (not just rotate) items when playing with a keyboard and mouse, just like you can do if you play with a controller.
+ * **Rotate and flip items in your inventory using the keyboard** - Creates configurable keyboard and mouse bindings for two distinct actions: rotation changes an item's inventory footprint, while flipping changes only its 3D model orientation.
     * Default bindings: 
+		 * Rotate clockwise: C
 		 * Flip up: Home
 		 * Flip down: End
 		 * Flip left: Insert

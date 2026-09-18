@@ -330,10 +330,16 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				regs.eax = *(int32_t*)ptrInvMovAddr;
 				
+				unsigned int vk_rotate = pInput->vk_from_key_name(re4t::cfg->sRotateItem);
 				unsigned int vk_left = pInput->vk_from_key_name(re4t::cfg->sFlipItemLeft);
 				unsigned int vk_right = pInput->vk_from_key_name(re4t::cfg->sFlipItemRight);
 				unsigned int vk_up = pInput->vk_from_key_name(re4t::cfg->sFlipItemUp);
 				unsigned int vk_down = pInput->vk_from_key_name(re4t::cfg->sFlipItemDown);
+
+				// Use the game's native inventory rotation routine. Shoulder-button bits are
+				// handled by the separate model-flip path below and do not change the footprint.
+				if (pInput->is_key_pressed(vk_rotate))
+					bio4::pzlPiece_rotate(reinterpret_cast<pzlPiece*>(regs.esi), 0, ROTATE_P); // clockwise
 
 				if (pInput->is_key_pressed(vk_left) || pInput->is_key_pressed(vk_right))
 					regs.eax = 0x00300000;
@@ -342,7 +348,7 @@ void re4t::init::KeyboardMouseTweaks()
 			}
 		}; injector::MakeInline<InvFlip>(pattern.count(1).get(0).get<uint32_t>(0), pattern.count(1).get(0).get<uint32_t>(5));
 
-		spd::log()->info("{} -> Keyboard inventory item flipping enabled", __FUNCTION__);
+		spd::log()->info("{} -> Keyboard inventory item rotation and flipping enabled", __FUNCTION__);
 	}
 
 	// Prevent the game from overriding your selection in the "Retry/Load" screen when moving the mouse before confirming an action.
