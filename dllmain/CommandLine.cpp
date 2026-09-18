@@ -423,7 +423,7 @@ void re4t::init::CommandLine()
 				PatchCodeRefsToData("42 49 4F 34 2F 75 76 64 61 74 61 2E 74 33 64 00", 1, &g_GameDir_uvdata);
 			}
 
-			// BIO4\snd\ 
+			// BIO4\snd
 			{
 				PatchCodeRefsToData("42 49 4F 34 5C 73 6E 64 5C 00", 2, &g_GameDir_snd);
 

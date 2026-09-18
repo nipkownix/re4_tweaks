@@ -4,77 +4,12 @@
 #include <imgui_impl_dx9.h>
 #include "Patches.h"
 #include "Settings.h"
-#include "../dxvk/src/dxvk-cache.hpp"
-
-#pragma warning(push, 0)
-#include "../dxvk/src/d3d9/d3d9_main.h"
-#include "../dxvk/src/config.h"
-#pragma warning(pop)
 
 static IDirect3D9* (WINAPI* orgDirect3DCreate9)(UINT SDKVersion);
 static IDirect3D9* WINAPI hook_Direct3DCreate9(UINT SDKVersion)
 {
 	spd::log()->info("{} -> Creating IDirect3D9 object...", __FUNCTION__);
 
-	if (re4t::dxvk::cfg->bUseVulkanRenderer)
-	{
-		spd::log()->info("{} -> UseVulkanRenderer is enabled, using D3D9 -> VK translation layer...", __FUNCTION__);
-
-		// Check if vulkan-1.dll can be loaded, else fallback to d3d9
-		HMODULE vulkanDll = LoadLibraryA("vulkan-1.dll");
-
-		if (vulkanDll)
-		{
-			FreeLibrary(vulkanDll);
-
-			// Make sure a cache file exists in re4_tweaks/state_cache, otherwise copy our own pre-baked one
-			std::filesystem::path cachePath = rootPath + L"re4_tweaks\\state_cache\\bio4.dxvk-cache";
-
-			if (!std::filesystem::exists(cachePath))
-			{
-				spd::log()->info("{} -> Cache file missing, creating new one...", __FUNCTION__);
-
-				// Create directory if it doesn't exist
-				std::filesystem::create_directories(cachePath.parent_path());
-
-				// Save cache
-				std::ofstream out(cachePath, std::ios::binary);
-				out.write(reinterpret_cast<const char*>(&dxvk_cache_data[0]), dxvk_cache_size);
-				out.close();
-			}
-
-			IDirect3D9Ex* pDirect3D = nullptr;
-
-			// Try to create DXVK instance, fallback to native d3d9 if any problem occurs
-			try
-			{
-				dxvk::CreateD3D9(false, &pDirect3D);
-
-				if (pDirect3D->GetAdapterCount() < 1)
-				{
-					spd::log()->info("{} -> Failed to get Vulkan adapter! Falling back to D3D9", __FUNCTION__);
-
-					// Cleanup
-					pDirect3D->Release();
-					pDirect3D = nullptr;
-				}
-				else
-				{
-					return new hook_Direct3D9(pDirect3D);
-				}
-			}
-			catch (const dxvk::DxvkError& e) 
-			{
-				spd::log()->info("{} -> DXVK error: {}", __FUNCTION__, e.message());
-				spd::log()->info("{} -> Falling back to D3D9", __FUNCTION__);
-			}
-		}
-		else
-		{
-			spd::log()->info("{} -> Failed to load vulkan-1.dll! Falling back to D3D9", __FUNCTION__);
-		}
-	}
-	
 	IDirect3D9* d3dInterface = orgDirect3DCreate9(SDKVersion);
 	return new hook_Direct3D9(d3dInterface);
 }
