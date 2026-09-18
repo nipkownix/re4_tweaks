@@ -85,11 +85,15 @@ namespace re4t
 
 		auto raw_mouse_delta_x() { auto delta = static_cast<int>(_raw_mouse_delta[0]); /*_raw_mouse_delta[0] = 0;*/ return delta; }
 		auto raw_mouse_delta_y() { auto delta = static_cast<int>(_raw_mouse_delta[1]); /*_raw_mouse_delta[1] = 0;*/ return delta; }
+		int consume_raw_mouse_delta_x();
+		int consume_raw_mouse_delta_y();
 
 		void clear_raw_mouse_delta()
 		{
 			_raw_mouse_delta[0] = 0;
 			_raw_mouse_delta[1] = 0;
+			_raw_mouse_game_delta[0] = 0;
+			_raw_mouse_game_delta[1] = 0;
 		}
 
 		void clear_mouse_wheel_delta()
@@ -175,6 +179,7 @@ namespace re4t
 		std::wstring _text_input;
 
 		int _raw_mouse_delta[2] = {};
+		int _raw_mouse_game_delta[2] = {};
 		int _raw_mouse_absolutePos[2] = {};
 		int _raw_mouse_prevAbsolutePos[2] = {};
 	};

@@ -186,7 +186,11 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				double deltaX = 0;
 				if (re4t::cfg->bUseRawMouseInput)
-					deltaX = (pInput->raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS();
+				{
+					// The game can run more than one update while recovering from a slow frame.
+					// Consume the movement so those updates cannot apply the same delta repeatedly.
+					deltaX = (pInput->consume_raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS();
+				}
 				else
 					deltaX = double(int(regs.eax));
 
@@ -207,7 +211,10 @@ void re4t::init::KeyboardMouseTweaks()
 			{
 				double deltaY = 0;
 				if (re4t::cfg->bUseRawMouseInput)
-					deltaY = -((pInput->raw_mouse_delta_y() / 7.0f) * g_MOUSE_SENS());
+				{
+					// See MouseDeltaX above. Each axis is consumed by its corresponding hook.
+					deltaY = -((pInput->consume_raw_mouse_delta_y() / 7.0f) * g_MOUSE_SENS());
+				}
 				else
 					deltaY = double(int(regs.eax));
 
