@@ -5,6 +5,10 @@
 
 #include "input.hpp"
 #include <algorithm>
+#include <atomic>
+#include <utility>
+#include <vector>
+#include <mutex>
 #include <unordered_map>
 #include <cassert>
 #include <Windows.h>
@@ -14,7 +18,17 @@
 #include <ModUtils/Patterns.h>
 
 static std::shared_mutex s_windows_mutex;
-static std::unordered_map<HWND, unsigned int> s_raw_input_windows;
+struct raw_input_window_flags
+{
+	unsigned int mouse = 0;
+	unsigned int keyboard = 0;
+};
+static std::unordered_map<HWND, raw_input_window_flags> s_raw_input_windows;
+
+static bool has_nolegacy(unsigned int flags)
+{
+	return (flags & RIDEV_NOLEGACY) == RIDEV_NOLEGACY;
+}
 static std::unordered_map<HWND, std::weak_ptr<re4t::input>> s_windows;
 
 static std::unordered_map<unsigned int, std::string> _keyboardStringMap;
@@ -30,15 +44,28 @@ re4t::input::input(window_handle window)
 {
 }
 
-void re4t::input::register_window_with_raw_input(window_handle window, unsigned int flags)
+void re4t::input::register_window_with_raw_input(window_handle window, unsigned short usage, unsigned int flags)
 {
 	assert(window != nullptr);
 
 	const std::unique_lock<std::shared_mutex> lock(s_windows_mutex);
 
-	const auto insert = s_raw_input_windows.emplace(static_cast<HWND>(window), flags);
+	auto& entry = s_raw_input_windows[static_cast<HWND>(window)];
 
-	if (!insert.second) insert.first->second |= flags;
+	// Store the latest flags for this usage instead of OR-ing them in. DirectInput re-registers whenever the game changes the
+	// cooperative level (RE4 switches the mouse between exclusive and non-exclusive on focus/size-move changes),
+	// and the current mode is what matters for us.
+	switch (usage)
+	{
+	case 0x02: // HID_USAGE_GENERIC_MOUSE
+		entry.mouse = flags;
+		break;
+	case 0x06: // HID_USAGE_GENERIC_KEYBOARD
+		entry.keyboard = flags;
+		break;
+	default:
+		break;
+	}
 }
 std::shared_ptr<re4t::input> re4t::input::register_window(window_handle window)
 {
@@ -116,7 +143,7 @@ bool re4t::input::handle_window_message(const void* message_data)
 	}
 
 	if (input_window == s_windows.end() && raw_input_window != s_raw_input_windows.end() &&
-		(raw_input_window->second & (RIDEV_INPUTSINK | RIDEV_EXINPUTSINK | RIDEV_CAPTUREMOUSE)) != 0)
+		((raw_input_window->second.mouse | raw_input_window->second.keyboard) & (RIDEV_INPUTSINK | RIDEV_EXINPUTSINK | RIDEV_CAPTUREMOUSE)) != 0)
 	{
 		// Reroute this raw input message to the window with the most rendering
 		input_window = std::max_element(s_windows.begin(), s_windows.end(),
@@ -147,8 +174,13 @@ bool re4t::input::handle_window_message(const void* message_data)
 	{
 	case WM_INPUT:
 		RAWINPUT raw_data;
+		// Ignore input sink messages when the game window is not focused. Sink messages still have to be accepted while the game
+		// window IS in the foreground, though. If raw input was registered to a helper window (e.g. DirectInput's own message window,
+		// as Wine/Proton does), every message arrives as RIM_INPUTSINK even though the game has focus.
+		if (GET_RAWINPUT_CODE_WPARAM(details.wParam) != RIM_INPUT &&
+			GetForegroundWindow() != static_cast<HWND>(input->_window))
+			break;
 		if (UINT raw_data_size = sizeof(raw_data);
-			GET_RAWINPUT_CODE_WPARAM(details.wParam) != RIM_INPUT || // Ignore all input sink messages (when window is not focused)
 			GetRawInputData(reinterpret_cast<HRAWINPUT>(details.lParam), RID_INPUT, &raw_data, &raw_data_size, sizeof(raw_data.header)) == UINT(-1))
 			break;
 		switch (raw_data.header.dwType)
@@ -156,36 +188,34 @@ bool re4t::input::handle_window_message(const void* message_data)
 		case RIM_TYPEMOUSE:
 			is_mouse_message = true;
 
-			if (raw_input_window == s_raw_input_windows.end() || (raw_input_window->second & RIDEV_NOLEGACY) == 0)
-				break; // Input is already handled (since legacy mouse messages are enabled), so nothing to do here
-
-			// Check if the input is an absolute mouse position event
+			// Movement is tracked for every raw mouse message, regardless of legacy mode.
 			if (raw_data.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)
 			{
-				// Update the absolute mouse position
-				input->_raw_mouse_absolutePos[0] = raw_data.data.mouse.lLastX;
-				input->_raw_mouse_absolutePos[1] = raw_data.data.mouse.lLastY;
+				// Absolute devices (Remote Desktop, streaming clients, VMs with mouse integration, pen tablets) report a position,
+				// normalized to 0..65535, not a movement in counts..
+				input->_raw_mouse_absolute_seen = true;
 
-				// Update the delta values based on the difference between the current and previous absolute positions
-				const int delta_x = input->_raw_mouse_absolutePos[0] - input->_raw_mouse_prevAbsolutePos[0];
-				const int delta_y = input->_raw_mouse_absolutePos[1] - input->_raw_mouse_prevAbsolutePos[1];
-				input->_raw_mouse_delta[0] += delta_x;
-				input->_raw_mouse_delta[1] += delta_y;
-				input->_raw_mouse_game_delta[0] += delta_x;
-				input->_raw_mouse_game_delta[1] += delta_y;
+				const int x = raw_data.data.mouse.lLastX;
+				const int y = raw_data.data.mouse.lLastY;
 
-				// Update the previous absolute position
-				input->_raw_mouse_prevAbsolutePos[0] = input->_raw_mouse_absolutePos[0];
-				input->_raw_mouse_prevAbsolutePos[1] = input->_raw_mouse_absolutePos[1];
+				if (input->_raw_mouse_prev_absolute_valid)
+				{
+					input->_raw_mouse_accum[0] += x - input->_raw_mouse_prev_absolute[0];
+					input->_raw_mouse_accum[1] += y - input->_raw_mouse_prev_absolute[1];
+				}
+
+				input->_raw_mouse_prev_absolute[0] = x;
+				input->_raw_mouse_prev_absolute[1] = y;
+				input->_raw_mouse_prev_absolute_valid = true;
 			}
 			else
 			{
-				// Update the delta values
-				input->_raw_mouse_delta[0] += raw_data.data.mouse.lLastX;
-				input->_raw_mouse_delta[1] += raw_data.data.mouse.lLastY;
-				input->_raw_mouse_game_delta[0] += raw_data.data.mouse.lLastX;
-				input->_raw_mouse_game_delta[1] += raw_data.data.mouse.lLastY;
+				input->_raw_mouse_accum[0] += raw_data.data.mouse.lLastX;
+				input->_raw_mouse_accum[1] += raw_data.data.mouse.lLastY;
 			}
+
+			if (raw_input_window == s_raw_input_windows.end() || !has_nolegacy(raw_input_window->second.mouse))
+				break; // Buttons/wheel are already handled via legacy WM_*BUTTON*/WM_MOUSEWHEEL messages
 
 			if (raw_data.data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
 				input->_keys[VK_LBUTTON] = 0x88;
@@ -222,7 +252,7 @@ bool re4t::input::handle_window_message(const void* message_data)
 			if (input->_block_keyboard && (raw_data.data.keyboard.Flags & RI_KEY_BREAK) != 0 && raw_data.data.keyboard.VKey < 0xFF && (input->_keys[raw_data.data.keyboard.VKey] & 0x04) == 0)
 				is_keyboard_message = false;
 
-			if (raw_input_window == s_raw_input_windows.end() || (raw_input_window->second & 0x1) == 0)
+			if (raw_input_window == s_raw_input_windows.end() || !has_nolegacy(raw_input_window->second.keyboard))
 				break; // Input is already handled by 'WM_KEYDOWN' and friends (since legacy keyboard messages are enabled), so nothing to do here
 
 			// Filter out prefix messages without a key code
@@ -446,22 +476,6 @@ void re4t::input::max_mouse_position(unsigned int position[2]) const
 	position[1] = rect.bottom;
 }
 
-int re4t::input::consume_raw_mouse_delta_x()
-{
-	const std::unique_lock<std::shared_mutex> lock(_mutex);
-	const int delta = _raw_mouse_game_delta[0];
-	_raw_mouse_game_delta[0] = 0;
-	return delta;
-}
-
-int re4t::input::consume_raw_mouse_delta_y()
-{
-	const std::unique_lock<std::shared_mutex> lock(_mutex);
-	const int delta = _raw_mouse_game_delta[1];
-	_raw_mouse_game_delta[1] = 0;
-	return delta;
-}
-
 void re4t::input::next_frame()
 {
 	_frame_count++;
@@ -474,6 +488,9 @@ void re4t::input::next_frame()
 				hotkey.func();
 		}
 	}
+
+	// Without this lock, a key press arriving between the read and write of "_keys[i]" could be lost.
+	const std::unique_lock<std::shared_mutex> lock(_mutex);
 
 	for (auto& state : _keys)
 		state &= ~0x08;
@@ -493,8 +510,9 @@ void re4t::input::next_frame()
 	//_mouse_wheel_delta = 0;
 	_last_mouse_position[0] = _mouse_position[0];
 	_last_mouse_position[1] = _mouse_position[1];
-	_raw_mouse_delta[0] = 0;
-	_raw_mouse_delta[1] = 0;
+	// Raw mouse delta is intentionally no longer cleared here. WM_INPUT is pumped on the GX render thread, whose timing is
+	// unrelated to this point in the main loop; clearing here throws away any movement pumped after PadRead() already ran.
+	// The accumulator is only ever drained by latch_raw_mouse_delta() at the start of PadRead().
 
 	// Update caps lock state
 	_keys[VK_CAPITAL] |= GetKeyState(VK_CAPITAL) & 0x1;
@@ -509,6 +527,26 @@ void re4t::input::next_frame()
 		(GetAsyncKeyState(VK_SNAPSHOT) & 0x8000) != 0)
 		(_keys[VK_SNAPSHOT] = 0x88),
 		(_keys_time[VK_SNAPSHOT] = time);
+}
+
+void re4t::input::latch_raw_mouse_delta()
+{
+	const std::unique_lock<std::shared_mutex> lock(_mutex);
+
+	_raw_mouse_frame_delta[0] = std::exchange(_raw_mouse_accum[0], 0);
+	_raw_mouse_frame_delta[1] = std::exchange(_raw_mouse_accum[1], 0);
+	_raw_mouse_frame_absolute = std::exchange(_raw_mouse_absolute_seen, false);
+}
+
+void re4t::input::clear_raw_mouse_delta()
+{
+	const std::unique_lock<std::shared_mutex> lock(_mutex);
+
+	_raw_mouse_accum[0] = 0;
+	_raw_mouse_accum[1] = 0;
+
+	// Re-seed absolute devices on the next event, so the jump across the focus change isn't applied as movement
+	_raw_mouse_prev_absolute_valid = false;
 }
 
 void re4t::input::imgui_next_frame()
@@ -748,8 +786,162 @@ BOOL WINAPI PostMessageW_hook(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 }
 
 BOOL(WINAPI* RegisterRawInputDevices_orig)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
+
+// ---- State logging -------------------------------------------------------------------------------------------------
+// Only state CHANGES are logged by default (focus, who has the mouse registered for raw input). Per-call details of every
+// RegisterRawInputDevices call are only logged with bVerboseLog.
+
+static std::atomic<uint32_t> s_focus_session{ 0 };
+static std::atomic<bool> s_has_focus{ true };
+
+void re4t::input::notify_focus_changed(bool focused)
+{
+	if (s_has_focus.exchange(focused) == focused)
+		return;
+
+	// State is always tracked (the setting can be toggled at runtime), only logged when raw mouse input is in use
+	if (focused)
+		s_focus_session++;
+
+	if (!re4t::cfg->bUseRawMouseInput)
+		return;
+
+	if (focused)
+		spd::log()->info("Input -> Game window regained focus");
+	else
+		spd::log()->info("Input -> Game window lost focus (alt-tab/minimize)");
+}
+
+uint32_t re4t::input::focus_session()
+{
+	return s_focus_session.load();
+}
+
+enum class raw_mouse_owner
+{
+	unknown,
+	none,  // Mouse not registered for raw input: no WM_INPUT will arrive
+	game,  // Registered by the game (DirectInput)
+	re4t,  // Registered by us (passive registration)
+};
+
+static std::mutex s_raw_mouse_owner_mutex;
+static raw_mouse_owner s_raw_mouse_owner = raw_mouse_owner::unknown;
+static unsigned int s_raw_mouse_owner_flags = 0;
+static thread_local bool s_registering_passive = false;
+
+static void update_raw_mouse_owner(raw_mouse_owner owner, unsigned int flags, const char* reason)
+{
+	const std::lock_guard<std::mutex> lock(s_raw_mouse_owner_mutex);
+
+	if (owner == s_raw_mouse_owner && flags == s_raw_mouse_owner_flags)
+		return;
+
+	s_raw_mouse_owner = owner;
+	s_raw_mouse_owner_flags = flags;
+
+	if (!re4t::cfg->bUseRawMouseInput)
+		return;
+
+	switch (owner)
+	{
+	case raw_mouse_owner::game:
+		spd::log()->info("Input -> Raw mouse input: game acquired the mouse ({}); raw input active",
+			has_nolegacy(flags) ? "exclusive mode" : "shared mode");
+		break;
+	case raw_mouse_owner::re4t:
+		spd::log()->info("Input -> Raw mouse input: {}; keeping raw input registered ourselves", reason);
+		break;
+	case raw_mouse_owner::none:
+		spd::log()->warn("Input -> Raw mouse input: mouse is no longer registered; no raw input until the game reacquires it");
+		break;
+	default:
+		break;
+	}
+}
+
+static bool is_mouse_device(const RAWINPUTDEVICE& device)
+{
+	return device.usUsagePage == 0x01 /* HID_USAGE_PAGE_GENERIC */ && device.usUsage == 0x02 /* HID_USAGE_GENERIC_MOUSE */;
+}
+
+// Raw mouse registration we fall back to whenever nobody else has the mouse registered: legacy messages stay enabled
+// (no RIDEV_NOLEGACY / RIDEV_CAPTUREMOUSE), no background input (no RIDEV_INPUTSINK), delivered to the game window.
+// This is the least intrusive registration possible: it only adds WM_INPUT on top of normal window behavior.
+static RAWINPUTDEVICE make_passive_mouse_registration(HWND target)
+{
+	RAWINPUTDEVICE device = {};
+	device.usUsagePage = 0x01;
+	device.usUsage = 0x02;
+	device.dwFlags = 0;
+	device.hwndTarget = target;
+	return device;
+}
+
+void re4t::input::ensure_raw_mouse_registration(window_handle window)
+{
+	assert(window != nullptr);
+
+	// Only one raw input registration per device type exists per process, and the last call wins. If something (DirectInput)
+	// already registered the mouse, leave it alone: overriding it would change DirectInput's exclusive-mode behavior.
+	UINT count = 0;
+	if (GetRegisteredRawInputDevices(nullptr, &count, sizeof(RAWINPUTDEVICE)) == 0 && count > 0)
+	{
+		std::vector<RAWINPUTDEVICE> devices(count);
+		if (GetRegisteredRawInputDevices(devices.data(), &count, sizeof(RAWINPUTDEVICE)) != UINT(-1))
+		{
+			for (UINT i = 0; i < count; ++i)
+			{
+				if (is_mouse_device(devices[i]))
+				{
+					if (re4t::cfg->bVerboseLog)
+						spd::log()->info("{0} -> Mouse already registered for raw input (flags = {1}, target = {2}); leaving it as is",
+							__FUNCTION__, IntToHexStr(devices[i].dwFlags), IntToHexStr(devices[i].hwndTarget));
+					return;
+				}
+			}
+		}
+	}
+
+	const RAWINPUTDEVICE device = make_passive_mouse_registration(static_cast<HWND>(window));
+
+	// Goes through our own hook, which records the registration in s_raw_input_windows and logs the ownership change
+	s_registering_passive = true;
+	const BOOL registered = RegisterRawInputDevices(&device, 1, sizeof(device));
+	s_registering_passive = false;
+
+	if (!registered)
+		spd::log()->warn("{0} -> Failed to register mouse for raw input (error {1})", __FUNCTION__, GetLastError());
+}
+
 BOOL WINAPI RegisterRawInputDevices_hook(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
+	// DirectInput unregisters the mouse (RIDEV_REMOVE) whenever the game unacquires it: on focus changes, window moves/resizes,
+	// and when an exclusive acquire fails (e.g. the game started behind another window). Until it re-acquires, no WM_INPUT
+	// would arrive at all, and raw aiming would be dead. Instead of removing the registration, swap it for the passive one.
+	// This only affects our WM_INPUT; DirectInput itself stays unacquired and ignores the data.
+	const PCRAWINPUTDEVICE pOriginalDevices = pRawInputDevices;
+	std::vector<RAWINPUTDEVICE> patched;
+	std::vector<bool> substituted(uiNumDevices, false);
+	if (re4t::cfg->bUseRawMouseInput && pInput != nullptr && pRawInputDevices != nullptr && cbSize == sizeof(RAWINPUTDEVICE))
+	{
+		for (UINT i = 0; i < uiNumDevices; ++i)
+		{
+			if (is_mouse_device(pRawInputDevices[i]) && (pRawInputDevices[i].dwFlags & RIDEV_REMOVE) != 0)
+			{
+				patched.assign(pRawInputDevices, pRawInputDevices + uiNumDevices);
+				patched[i] = make_passive_mouse_registration(static_cast<HWND>(pInput->get_window_handle()));
+				substituted[i] = true;
+
+				if (re4t::cfg->bVerboseLog)
+					spd::log()->info("{0} -> Mouse raw input removal replaced with passive registration", __FUNCTION__);
+			}
+		}
+
+		if (!patched.empty())
+			pRawInputDevices = patched.data();
+	}
+
 	if (re4t::cfg->bVerboseLog)
 		spd::log()->info("{0} -> Redirecting RegisterRawInputDevices (pRawInputDevices = {1}, uiNumDevices = {2}, cbSize = {3})", __FUNCTION__, IntToHexStr(pRawInputDevices), uiNumDevices, cbSize);
 
@@ -773,13 +965,44 @@ BOOL WINAPI RegisterRawInputDevices_hook(PCRAWINPUTDEVICE pRawInputDevices, UINT
 		if (device.usUsagePage != 1 || device.hwndTarget == nullptr)
 			continue;
 
-		re4t::input::register_window_with_raw_input(device.hwndTarget, device.dwFlags);
+		re4t::input::register_window_with_raw_input(device.hwndTarget, device.usUsage, device.dwFlags);
 	}
 
 	if (!RegisterRawInputDevices_orig(pRawInputDevices, uiNumDevices, cbSize))
 	{
 		spd::log()->info("{0} -> Failed with error code {1}", __FUNCTION__, GetLastError());
+
+		// If our substitution was rejected (e.g. the window is being destroyed), let the caller's original request through
+		if (!patched.empty())
+		{
+			if (RegisterRawInputDevices_orig(pOriginalDevices, uiNumDevices, cbSize))
+			{
+				for (UINT i = 0; i < uiNumDevices; ++i)
+					if (is_mouse_device(pOriginalDevices[i]))
+						update_raw_mouse_owner((pOriginalDevices[i].dwFlags & RIDEV_REMOVE) ? raw_mouse_owner::none : raw_mouse_owner::game,
+							pOriginalDevices[i].dwFlags, "");
+				return TRUE;
+			}
+		}
+
 		return FALSE;
+	}
+
+	// Registration succeeded: log what the mouse raw input state is now (only logs on change)
+	for (UINT i = 0; i < uiNumDevices; ++i)
+	{
+		const auto& device = pRawInputDevices[i];
+		if (!is_mouse_device(device))
+			continue;
+
+		if (substituted[i])
+			update_raw_mouse_owner(raw_mouse_owner::re4t, device.dwFlags, "game released the mouse");
+		else if (s_registering_passive)
+			update_raw_mouse_owner(raw_mouse_owner::re4t, device.dwFlags, "game hasn't acquired the mouse yet");
+		else if ((device.dwFlags & RIDEV_REMOVE) != 0)
+			update_raw_mouse_owner(raw_mouse_owner::none, device.dwFlags, "");
+		else
+			update_raw_mouse_owner(raw_mouse_owner::game, device.dwFlags, "");
 	}
 
 	return TRUE;

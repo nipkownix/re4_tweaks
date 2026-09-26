@@ -14,6 +14,138 @@ uintptr_t ptrRetryLoadDLGstate;
 static uint32_t* ptrMouseDeltaX;
 static uint32_t* ptrMouseDeltaY;
 
+// Raw mouse aim values for the current game frame, computed once per PadRead() call.
+static int32_t g_RawAimDeltaX = 0;
+static int32_t g_RawAimDeltaY = 0;
+
+// Sub-unit remainder carried between frames, so int truncation doesn't silently eat small movements at high FPS.
+static double g_RawAimCarryX = 0.0;
+static double g_RawAimCarryY = 0.0;
+
+// Whether this frame's aim should come from raw input. False when: 
+// - raw input is disabled;
+// - this frame's movement came from an absolute-position device;
+// - the raw input safety fallback is active.
+static bool g_UseRawAimThisFrame = false;
+
+// Safety net for systems where WM_INPUT never reaches us (DirectInput/driver/overlay/Wine differences we can't reproduce):
+// if the game's own DirectInput mouse keeps reporting aim movement while raw input reports none, fall back to the game's
+// value instead of leaving the player unable to aim. Recovers automatically as soon as raw input shows up.
+static bool g_GameAimMovedLastFrame = false; // Set by the X/Y aim hooks from the game's own (DirectInput) value
+static int g_FramesGameMovedWithoutRaw = 0;
+static bool g_RawAimFallback = false;
+constexpr int RAW_AIM_FALLBACK_FRAMES = 30; // Should be good?
+
+static void UpdateRawAimFallback()
+{
+	const bool rawMoved = pInput->raw_mouse_delta_x() != 0 || pInput->raw_mouse_delta_y() != 0;
+
+	if (rawMoved)
+	{
+		if (g_RawAimFallback)
+			spd::log()->info("Input -> Raw mouse input: data received again; aiming switched back to raw input");
+
+		g_FramesGameMovedWithoutRaw = 0;
+		g_RawAimFallback = false;
+	}
+	else if (!g_GameAimMovedLastFrame)
+	{
+		// Only count consecutive frames of "game moved, raw didn't". Raw input can legitimately lag the game's
+		// DirectInput value by a frame at the start of a movement, and that must never add up to a false fallback.
+		g_FramesGameMovedWithoutRaw = 0;
+	}
+	else if (!g_RawAimFallback && ++g_FramesGameMovedWithoutRaw >= RAW_AIM_FALLBACK_FRAMES)
+	{
+		g_RawAimFallback = true;
+		spd::log()->warn("Input -> Raw mouse input: no data for {} frames while the game sees mouse movement; "
+			"aiming switched to the game's own mouse input", RAW_AIM_FALLBACK_FRAMES);
+	}
+
+	g_GameAimMovedLastFrame = false;
+}
+
+static int32_t QuantizeRawAim(double target, double deltaTime, double& carry)
+{
+	// The game multiplies Joy[0].leftStick_X_0/Y_4 by deltaTime when applying aim, so we divide by it here.
+	// Net rotation this frame = n * deltaTime ~= target, independent of frame rate.
+	const double total = target + carry;
+	const int32_t n = int32_t(total / deltaTime);
+	carry = total - double(n) * deltaTime;
+	return n;
+}
+
+// Per focus session (startup, and every time the window regains focus), log once where aiming input actually comes from.
+static uint32_t g_LoggedFocusSession = UINT32_MAX;
+static bool g_LoggedAimSourceThisSession = false;
+static bool g_LoggedAbsoluteThisSession = false;
+
+static void LogRawAimState()
+{
+	const uint32_t session = re4t::input::focus_session();
+	if (session != g_LoggedFocusSession)
+	{
+		g_LoggedFocusSession = session;
+		g_LoggedAimSourceThisSession = false;
+		g_LoggedAbsoluteThisSession = false;
+	}
+
+	if (pInput->raw_mouse_is_absolute() && !g_LoggedAbsoluteThisSession)
+	{
+		g_LoggedAbsoluteThisSession = true;
+		spd::log()->info("Input -> Raw mouse input: absolute-position device detected (Remote Desktop/streaming/VM/tablet); "
+			"aiming will use the game's regular DirectInput mouse input values.");
+	}
+
+	const bool rawMoved = pInput->raw_mouse_delta_x() != 0 || pInput->raw_mouse_delta_y() != 0;
+	if (rawMoved && !g_LoggedAimSourceThisSession)
+	{
+		g_LoggedAimSourceThisSession = true;
+
+		const char* source = g_UseRawAimThisFrame ? "raw input" :
+			g_RawAimFallback ? "game's own mouse input (fallback)" : "game's own mouse input";
+
+		spd::log()->info("Input -> Raw mouse input: receiving data{}; aiming uses {}",
+			session == 0 ? "" : " after regaining focus", source);
+	}
+}
+
+void(__cdecl* PadRead_orig)();
+void __cdecl PadRead_hook()
+{
+	// Consume everything WM_INPUT accumulated since the previous PadRead().
+	// Every consumer during this frame will read this same snapshot.
+	pInput->latch_raw_mouse_delta();
+
+	if (re4t::cfg->bUseRawMouseInput)
+		UpdateRawAimFallback();
+
+	// Absolute devices report positions (0..65535), not counts. 
+	// Using those as aim deltas gives wild/broken aim.
+	// Fall back to the game's DirectInput path instead.
+	g_UseRawAimThisFrame = re4t::cfg->bUseRawMouseInput && !g_RawAimFallback && !pInput->raw_mouse_is_absolute();
+
+	if (g_UseRawAimThisFrame)
+	{
+		double deltaTime = GlobalPtr()->deltaTime_70;
+		if (deltaTime <= 0.0)
+			deltaTime = 1.0;
+
+		const double sens = double(g_MOUSE_SENS());
+
+		// Same scaling as before, 0.5 halves the delta to match the slower 60FPS speed most people are used to.
+		const double targetX = (pInput->raw_mouse_delta_x() / 10.0) * sens * 0.5;
+		const double targetY = -((pInput->raw_mouse_delta_y() / 7.0) * sens) * 0.5;
+
+		g_RawAimDeltaX = QuantizeRawAim(targetX, deltaTime, g_RawAimCarryX);
+		g_RawAimDeltaY = QuantizeRawAim(targetY, deltaTime, g_RawAimCarryY);
+	}
+
+	if (re4t::cfg->bUseRawMouseInput)
+		LogRawAimState();
+
+	PadRead_orig();
+}
+
 int iMinFocusTime;
 
 std::vector<uint32_t> jetSkiTrickCombo;
@@ -169,6 +301,15 @@ void re4t::init::KeyboardMouseTweaks()
 {
 	re4t::init::MouseTurning();
 
+	// Wrap PadRead() so raw mouse delta is latched exactly once per game tick, right before the game reads input.
+	{
+		auto pattern = hook::pattern("E8 ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? 6A 04 E8 ? ? ? ? 83 C4 18 E8 ? ? ? ? E8 ? ? ? ? A1");
+		auto PadRead = injector::GetBranchDestination(pattern.count(1).get(0).get<uint32_t>(0)).as_int();
+
+		ReadCall(PadRead, PadRead_orig);
+		InjectHook(PadRead, PadRead_hook);
+	}
+
 	// Useful when debugging/breakpointing
 	if (re4t::cfg->bNeverHideCursor)
 	{
@@ -184,16 +325,20 @@ void re4t::init::KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				double deltaX = 0;
 				if (re4t::cfg->bUseRawMouseInput)
 				{
-					// The game can run more than one update while recovering from a slow frame.
-					// Consume the movement so those updates cannot apply the same delta repeatedly.
-					deltaX = (pInput->consume_raw_mouse_delta_x() / 10.0f) * g_MOUSE_SENS();
-				}
-				else
-					deltaX = double(int(regs.eax));
+					// Game's own DirectInput-based value, used for the raw aim fallback.
+					if (int32_t(regs.eax) != 0)
+						g_GameAimMovedLastFrame = true;
 
+					if (g_UseRawAimThisFrame)
+					{
+						*(int32_t*)(ptrMouseDeltaX) = g_RawAimDeltaX;
+						return;
+					}
+				}
+
+				double deltaX = double(int(regs.eax));
 				deltaX = deltaX * 0.5; // halve delta value to make it match the slower 60FPS speed that most people are used to
 
 				*(int32_t*)(ptrMouseDeltaX) = int32_t(deltaX / GlobalPtr()->deltaTime_70);
@@ -209,15 +354,20 @@ void re4t::init::KeyboardMouseTweaks()
 		{
 			void operator()(injector::reg_pack& regs)
 			{
-				double deltaY = 0;
 				if (re4t::cfg->bUseRawMouseInput)
 				{
-					// See MouseDeltaX above. Each axis is consumed by its corresponding hook.
-					deltaY = -((pInput->consume_raw_mouse_delta_y() / 7.0f) * g_MOUSE_SENS());
-				}
-				else
-					deltaY = double(int(regs.eax));
+					// Game's own DirectInput-based value, used for the raw aim fallback.
+					if (int32_t(regs.eax) != 0)
+						g_GameAimMovedLastFrame = true;
 
+					if (g_UseRawAimThisFrame)
+					{
+						*(int32_t*)(ptrMouseDeltaY) = g_RawAimDeltaY;
+						return;
+					}
+				}
+
+				double deltaY = double(int(regs.eax));
 				deltaY = deltaY * 0.5; // halve delta value to make it match the slower 60FPS speed that most people are used to
 
 				*(int32_t*)(ptrMouseDeltaY) = int32_t(deltaY / GlobalPtr()->deltaTime_70);

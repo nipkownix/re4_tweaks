@@ -120,6 +120,9 @@ LRESULT CALLBACK WndProc_hook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case WM_EXITSIZEMOVE:
 			bIsMoving = false;
 
+			// Raw mouse input keeps flowing while the window is dragged/resized; don't turn that into an aim jump
+			pInput->clear_raw_mouse_delta();
+
 			EnableClipCursor(hWindow);
 
 			// Write new window position
@@ -151,6 +154,9 @@ LRESULT CALLBACK WndProc_hook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			break;
 
 		case WM_ACTIVATEAPP:
+			// Log focus changes (alt-tab/minimize) so input issues can be traced in the log
+			re4t::input::notify_focus_changed(wParam != FALSE);
+
 			if (wParam == WA_ACTIVE)
 			{
 				// Lock cursor inside window
@@ -198,6 +204,11 @@ HWND __stdcall CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR 
 	spd::log()->info("{} -> Window created; Registering for input", __FUNCTION__);
 
 	pInput = re4t::input::register_window(hWindow);
+
+	// Don't depend on DirectInput for WM_INPUT: if its exclusive acquire fails (e.g. the game started unfocused) it never
+	// registers the mouse, and raw aiming would get no data. DirectInput's own later registrations take precedence.
+	if (re4t::cfg->bUseRawMouseInput && hWindow != nullptr)
+		re4t::input::ensure_raw_mouse_registration(hWindow);
 
 	return hWindow;
 }

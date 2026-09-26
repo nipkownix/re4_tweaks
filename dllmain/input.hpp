@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <shared_mutex>
@@ -45,14 +46,30 @@ namespace re4t
 		/// Registers a window using raw input with the input manager.
 		/// </summary>
 		/// <param name="window">Window handle of the target window.</param>
+		/// <param name="usage">HID usage of the registered device (0x02 = mouse, 0x06 = keyboard).</param>
 		/// <param name="flags">Raw input mode flags that were used to register the device.</param>
-		static void register_window_with_raw_input(window_handle window, unsigned int flags);
+		static void register_window_with_raw_input(window_handle window, unsigned short usage, unsigned int flags);
 		/// <summary>
 		/// Registers a window using normal input window messages with the input manager.
 		/// </summary>
 		/// <param name="window">Window handle of the target window.</param>
 		/// <returns>Pointer to the input manager registered for this <paramref name="window"/>.</returns>
 		static std::shared_ptr<input> register_window(window_handle window);
+
+		/// <summary>
+		/// Registers the mouse for raw input on <paramref name="window"/> (legacy messages kept, foreground only),
+		/// unless something already has the mouse registered. Call once, right after the game window is created.
+		/// </summary>
+		static void ensure_raw_mouse_registration(window_handle window);
+
+		/// <summary>
+		/// Call from the window procedure on WM_ACTIVATEAPP. Logs focus changes (alt-tab, minimize) and starts a new focus session.
+		/// </summary>
+		static void notify_focus_changed(bool focused);
+		/// <summary>
+		/// Increments every time the game window regains focus. Lets the game thread tell "first frames after alt-tab" apart.
+		/// </summary>
+		static uint32_t focus_session();
 
 		window_handle get_window_handle() const { return _window; }
 
@@ -83,18 +100,30 @@ namespace re4t
 		unsigned int mouse_position_y() const { return _mouse_position[1]; }
 		void max_mouse_position(unsigned int position[2]) const;
 
-		auto raw_mouse_delta_x() { auto delta = static_cast<int>(_raw_mouse_delta[0]); /*_raw_mouse_delta[0] = 0;*/ return delta; }
-		auto raw_mouse_delta_y() { auto delta = static_cast<int>(_raw_mouse_delta[1]); /*_raw_mouse_delta[1] = 0;*/ return delta; }
-		int consume_raw_mouse_delta_x();
-		int consume_raw_mouse_delta_y();
+		/// <summary>
+		/// Raw mouse movement for the current game frame, as latched by latch_raw_mouse_delta.
+		/// The value is stable for the whole frame and can be read any number of times, by any number of consumers.
+		/// Game thread only.
+		/// </summary>
+		int raw_mouse_delta_x() const { return _raw_mouse_frame_delta[0]; }
+		int raw_mouse_delta_y() const { return _raw_mouse_frame_delta[1]; }
 
-		void clear_raw_mouse_delta()
-		{
-			_raw_mouse_delta[0] = 0;
-			_raw_mouse_delta[1] = 0;
-			_raw_mouse_game_delta[0] = 0;
-			_raw_mouse_game_delta[1] = 0;
-		}
+		/// <summary>
+		/// Checks if any of this frame's raw mouse movement came from an absolute-position device
+		/// (Remote Desktop, streaming, VMs, tablets). Such deltas are not in mouse counts and should not be used for aiming.
+		/// </summary>
+		bool raw_mouse_is_absolute() const { return _raw_mouse_frame_absolute; }
+
+		/// <summary>
+		/// Moves everything accumulated from WM_INPUT since the previous call into the per-frame snapshot, and zeroes the accumulator.
+		/// Call exactly once per game tick, at the start of PadRead, from the game thread.
+		/// </summary>
+		void latch_raw_mouse_delta();
+
+		/// <summary>
+		/// Discards any raw mouse movement that has not been latched yet (e.g. on focus loss). Thread-safe.
+		/// </summary>
+		void clear_raw_mouse_delta();
 
 		void clear_mouse_wheel_delta()
 		{
@@ -178,10 +207,15 @@ namespace re4t
 		uint64_t _frame_count = 0; // Keep track of frame count to identify windows with a lot of rendering
 		std::wstring _text_input;
 
-		int _raw_mouse_delta[2] = {};
-		int _raw_mouse_game_delta[2] = {};
-		int _raw_mouse_absolutePos[2] = {};
-		int _raw_mouse_prevAbsolutePos[2] = {};
+		// Written by the window thread (GX render thread in RE4) under _mutex
+		int _raw_mouse_accum[2] = {};
+		bool _raw_mouse_absolute_seen = false;
+		int _raw_mouse_prev_absolute[2] = {};
+		bool _raw_mouse_prev_absolute_valid = false;
+
+		// Per-frame snapshot. Written and read only by the game thread
+		int _raw_mouse_frame_delta[2] = {};
+		bool _raw_mouse_frame_absolute = false;
 	};
 }
 
