@@ -1612,5 +1612,8 @@ void re4t::init::FrameRateFixes()
 		}
 	}; injector::MakeInline<ModelRenderDistHack>(pattern.count(2).get(1).get<uint8_t>(0), pattern.count(2).get(1).get<uint8_t>(6));
 
+	//  Calling it here since it is related to frame rate..
+	re4t::init::MotionFixes();
+
 	spd::log()->info("{} -> FPS fixes applied", __FUNCTION__);
 }

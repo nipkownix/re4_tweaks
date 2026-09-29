@@ -103,6 +103,7 @@ public:
 	bool bSmoothAnalogTurning = false;
 
 	// FRAME RATE
+	bool bMotionFixes = true;
 	bool bFixFallingItemsSpeed = true;
 	bool bFixCompartmentsOpeningSpeed = true;
 	bool bFixMovingGeometrySpeed = true;

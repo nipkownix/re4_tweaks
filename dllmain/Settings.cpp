@@ -236,6 +236,7 @@ void ReadSettingsIni(std::wstring ini_path, setType type)
 		re4t::cfg->bReloadWithoutZoom_controller = ini.getBool("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
 
 		// FRAME RATE
+		re4t::cfg->bMotionFixes = ini.getBool("FRAME RATE", "MotionFixes", re4t::cfg->bMotionFixes);
 		re4t::cfg->bFixFallingItemsSpeed = ini.getBool("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
 		re4t::cfg->bFixCompartmentsOpeningSpeed = ini.getBool("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
 		re4t::cfg->bFixMovingGeometrySpeed = ini.getBool("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
@@ -682,6 +683,7 @@ void re4t_cfg::WriteSettings(bool trainerOnly)
 		ini.setBool("CONTROLLER", "ReloadWithoutZoom", re4t::cfg->bReloadWithoutZoom_controller);
 
 		// FRAME RATE
+		ini.setBool("FRAME RATE", "MotionFixes", re4t::cfg->bMotionFixes);
 		ini.setBool("FRAME RATE", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed);
 		ini.setBool("FRAME RATE", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed);
 		ini.setBool("FRAME RATE", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed);
@@ -1035,6 +1037,7 @@ void re4t_cfg::LogSettings()
 
 	// FRAME RATE
 	spd::log()->info("+ FRAME RATE---------------------+-----------------+");
+	spd::log()->info("| {:<30} | {:>15} |", "MotionFixes", re4t::cfg->bMotionFixes ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixFallingItemsSpeed", re4t::cfg->bFixFallingItemsSpeed ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixCompartmentsOpeningSpeed", re4t::cfg->bFixCompartmentsOpeningSpeed ? "true" : "false");
 	spd::log()->info("| {:<30} | {:>15} |", "FixMovingGeometrySpeed", re4t::cfg->bFixMovingGeometrySpeed ? "true" : "false");

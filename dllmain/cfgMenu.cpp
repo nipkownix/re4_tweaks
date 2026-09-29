@@ -1260,6 +1260,25 @@ void cfgMenuRender()
 				{
 					ImGui_ColumnInit();
 
+					// MotionFixes
+					if ((OptionsFilter.PassFilter("MotionFixes") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
+					{
+						ImGui_ColumnSwitch();
+
+						re4t::cfg->HasUnsavedChanges |= ImGui::Checkbox("MotionFixes", &re4t::cfg->bMotionFixes);
+
+						ImGui_ItemSeparator();
+
+						ImGui::Dummy(ImVec2(10, 10 * esHook._cur_monitor_dpi));
+						ImGui::TextWrapped("Fixes motion interpolation at 60fps (and above?)");
+						ImGui::TextWrapped("At 60fps, some animations play at 30fps as a fallback due to a problem with the original motion interpolation code.");
+						ImGui::TextWrapped("This tries to reimplement some of that code to properly play those animations at higher frame rates.");
+						ImGui::TextWrapped("Main affected animations:");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Player's rifle reload and fire (bolt cycle), both rifles;");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("Ada's bowgun \"ready\" animation;");
+						ImGui::Bullet(); ImGui::SameLine(); ImGui::TextWrapped("The head-eating Plaga parasites.");
+					}
+
 					// FixFallingItemsSpeed
 					if ((OptionsFilter.PassFilter("FixFallingItemsSpeed") && OptionsFilter.IsActive()) || !OptionsFilter.IsActive())
 					{

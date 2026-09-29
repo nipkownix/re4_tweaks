@@ -26,6 +26,7 @@ namespace re4t
 		void DisplayTweaks();
 		void ExceptionHandler();
 		void FrameRateFixes();
+		void MotionFixes();
 		void FilterXXFixes();
 		void FrameRateFixes();
 		bool Game();
